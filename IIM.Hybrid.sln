@@ -1,5 +1,34 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Create a real solution with:
-# dotnet new sln -n IIM.Hybrid
-# dotnet sln IIM.Hybrid.sln add src/IIM.App.Hybrid/IIM.App.Hybrid.csproj src/IIM.Shared/IIM.Shared.csproj src/IIM.Api/IIM.Api.csproj
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{30933657-AA1A-4348-A771-40371A975DB1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.Core", "src\IIM.Core\IIM.Core.csproj", "{774ADCB6-0EC7-4C0E-8C27-C30364094184}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{774ADCB6-0EC7-4C0E-8C27-C30364094184}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{774ADCB6-0EC7-4C0E-8C27-C30364094184}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{774ADCB6-0EC7-4C0E-8C27-C30364094184}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{774ADCB6-0EC7-4C0E-8C27-C30364094184}.Debug|x64.Build.0 = Debug|Any CPU
+		{774ADCB6-0EC7-4C0E-8C27-C30364094184}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{774ADCB6-0EC7-4C0E-8C27-C30364094184}.Debug|x86.Build.0 = Debug|Any CPU
+		{774ADCB6-0EC7-4C0E-8C27-C30364094184}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{774ADCB6-0EC7-4C0E-8C27-C30364094184}.Release|Any CPU.Build.0 = Release|Any CPU
+		{774ADCB6-0EC7-4C0E-8C27-C30364094184}.Release|x64.ActiveCfg = Release|Any CPU
+		{774ADCB6-0EC7-4C0E-8C27-C30364094184}.Release|x64.Build.0 = Release|Any CPU
+		{774ADCB6-0EC7-4C0E-8C27-C30364094184}.Release|x86.ActiveCfg = Release|Any CPU
+		{774ADCB6-0EC7-4C0E-8C27-C30364094184}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{774ADCB6-0EC7-4C0E-8C27-C30364094184} = {30933657-AA1A-4348-A771-40371A975DB1}
+	EndGlobalSection
+EndGlobal

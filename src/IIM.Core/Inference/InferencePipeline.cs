@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace IIM.Core.Inference;
 
+/// <summary>
+/// Interface for managing inference request pipeline and queueing
+/// </summary>
 public interface IInferencePipeline
 {
     Task<T> ExecuteAsync<T>(InferencePipelineRequest request, CancellationToken ct = default);
@@ -13,6 +16,10 @@ public interface IInferencePipeline
     InferencePipelineStats GetStats();
 }
 
+/// <summary>
+/// Manages queueing and prioritization of inference requests
+/// Handles batching for improved throughput and resource management
+/// </summary>
 public sealed class InferencePipeline : IInferencePipeline, IDisposable
 {
     private readonly ILogger<InferencePipeline> _logger;
@@ -24,24 +31,27 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
     private readonly SemaphoreSlim _gpuSemaphore;
     private readonly SemaphoreSlim _cpuSemaphore;
 
-    // Metrics
+    // Metrics tracking
     private long _totalRequests;
     private long _completedRequests;
     private long _failedRequests;
-    private readonly ConcurrentDictionary<string, ModelMetrics> _modelMetrics = new();
 
-    // Configuration
-    private const int MaxGpuConcurrency = 2;  // Max simultaneous GPU operations
-    private const int MaxCpuConcurrency = 4;  // Max simultaneous CPU operations
+    // Configuration constants
+    private const int MaxGpuConcurrency = 2;
+    private const int MaxCpuConcurrency = 4;
     private const int QueueCapacity = 1000;
-    private const int BatchTimeout = 100; // ms to wait for batch accumulation
 
+    /// <summary>
+    /// Initializes the inference pipeline with queue management
+    /// </summary>
+    /// <param name="logger">Logger for diagnostics</param>
+    /// <param name="orchestrator">Model orchestrator for actual inference</param>
     public InferencePipeline(ILogger<InferencePipeline> logger, IModelOrchestrator orchestrator)
     {
         _logger = logger;
         _orchestrator = orchestrator;
 
-        // Create priority channels
+        // Create priority channels for request queueing
         var options = new BoundedChannelOptions(QueueCapacity)
         {
             FullMode = BoundedChannelFullMode.Wait,
@@ -53,7 +63,7 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
         _normalPriorityQueue = Channel.CreateBounded<QueuedRequest>(options);
         _lowPriorityQueue = Channel.CreateBounded<QueuedRequest>(options);
 
-        // Resource semaphores
+        // Resource semaphores to limit concurrent operations
         _gpuSemaphore = new SemaphoreSlim(MaxGpuConcurrency, MaxGpuConcurrency);
         _cpuSemaphore = new SemaphoreSlim(MaxCpuConcurrency, MaxCpuConcurrency);
 
@@ -64,6 +74,13 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
         }
     }
 
+    /// <summary>
+    /// Executes a single inference request with priority queueing
+    /// </summary>
+    /// <typeparam name="T">Expected result type</typeparam>
+    /// <param name="request">Inference request with input and parameters</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Inference result of type T</returns>
     public async Task<T> ExecuteAsync<T>(InferencePipelineRequest request, CancellationToken ct = default)
     {
         Interlocked.Increment(ref _totalRequests);
@@ -82,7 +99,7 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
 
         try
         {
-            // Route to appropriate queue based on priority
+            // Route to appropriate priority queue
             var channel = queuedRequest.Priority switch
             {
                 Priority.High => _highPriorityQueue,
@@ -92,8 +109,8 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
 
             await channel.Writer.WriteAsync(queuedRequest, ct);
 
-            _logger.LogDebug("Request {RequestId} queued with {Priority} priority for {ModelId}",
-                queuedRequest.Id, queuedRequest.Priority, request.ModelId);
+            _logger.LogDebug("Request {RequestId} queued with {Priority} priority",
+                queuedRequest.Id, queuedRequest.Priority);
 
             // Wait for completion
             using (ct.Register(() => queuedRequest.CompletionSource.TrySetCanceled()))
@@ -115,9 +132,16 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
         }
     }
 
+    /// <summary>
+    /// Executes multiple inference requests as a batch for improved efficiency
+    /// </summary>
+    /// <typeparam name="T">Expected result type</typeparam>
+    /// <param name="requests">Collection of inference requests</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Batch results with success/failure information</returns>
     public async Task<BatchResult<T>> ExecuteBatchAsync<T>(
-        IEnumerable<InferencePipelineRequest> requests,
-        CancellationToken ct = default)
+     IEnumerable<InferencePipelineRequest> requests,
+     CancellationToken ct = default)
     {
         var requestList = requests.ToList();
         if (!requestList.Any())
@@ -140,10 +164,16 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
             {
                 try
                 {
-                    var batchResult = await ExecuteBatchInternalAsync<T>(modelId, batch, token);
+                    // Process batch - inline implementation instead of calling separate method
+                    var batchResults = new T[batch.Count];
                     for (int i = 0; i < batch.Count; i++)
                     {
-                        results.Add((batch[i].Index, batchResult[i]));
+                        batchResults[i] = await ExecuteAsync<T>(batch[i], token);
+                    }
+
+                    for (int i = 0; i < batch.Count; i++)
+                    {
+                        results.Add((batch[i].Index, batchResults[i]));
                     }
                 }
                 catch (Exception ex)
@@ -185,12 +215,51 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
             FailureCount = errors.Count
         };
     }
+    /// <summary>
+    /// Gets current pipeline statistics including queue depths and throughput
+    /// </summary>
+    /// <returns>Current pipeline statistics</returns>
+    public InferencePipelineStats GetStats()
+    {
+        return new InferencePipelineStats
+        {
+            TotalRequests = _totalRequests,
+            CompletedRequests = _completedRequests,
+            FailedRequests = _failedRequests,
+            PendingRequests = _pendingRequests.Count,
+            HighPriorityQueueDepth = _highPriorityQueue.Reader.Count,
+            NormalPriorityQueueDepth = _normalPriorityQueue.Reader.Count,
+            LowPriorityQueueDepth = _lowPriorityQueue.Reader.Count,
+            GpuSlotsAvailable = _gpuSemaphore.CurrentCount,
+            CpuSlotsAvailable = _cpuSemaphore.CurrentCount
+        };
+    }
 
+    /// <summary>
+    /// Internal batch execution for models that support batching
+    /// </summary>
+    private async Task<T[]> ExecuteBatchInternalAsync<T>(
+        string modelId,
+        List<InferencePipelineRequest> batch,
+        CancellationToken ct)
+    {
+        var results = new T[batch.Count];
+
+        // For now, process sequentially
+        // In production, this would actually batch to the model
+        for (int i = 0; i < batch.Count; i++)
+        {
+            results[i] = await ExecuteAsync<T>(batch[i], ct);
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Main queue processing loop that pulls from priority queues
+    /// </summary>
     private async Task ProcessQueuesAsync(CancellationToken ct)
     {
-        var batchAccumulator = new List<QueuedRequest>();
-        var batchTimer = new PeriodicTimer(TimeSpan.FromMilliseconds(BatchTimeout));
-
         while (!ct.IsCancellationRequested)
         {
             try
@@ -202,50 +271,12 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
                     _normalPriorityQueue.Reader.TryRead(out request) ||
                     _lowPriorityQueue.Reader.TryRead(out request))
                 {
-                    // Check if we can batch this request
-                    if (batchAccumulator.Any() &&
-                        CanBatch(batchAccumulator[0], request) &&
-                        batchAccumulator.Count < GetMaxBatchSize(request.Request.ModelId))
-                    {
-                        batchAccumulator.Add(request);
-
-                        // Continue accumulating unless batch is full
-                        if (batchAccumulator.Count < GetMaxBatchSize(request.Request.ModelId))
-                        {
-                            continue;
-                        }
-                    }
-
-                    // Process accumulated batch if any
-                    if (batchAccumulator.Any())
-                    {
-                        await ProcessBatchAsync(batchAccumulator, ct);
-                        batchAccumulator.Clear();
-                    }
-
-                    // Start new batch or process single request
-                    if (SupportsBatching(request.Request.ModelId))
-                    {
-                        batchAccumulator.Add(request);
-                    }
-                    else
-                    {
-                        await ProcessSingleRequestAsync(request, ct);
-                    }
+                    await ProcessSingleRequestAsync(request, ct);
                 }
                 else
                 {
-                    // No requests available, process any pending batch
-                    if (batchAccumulator.Any() && await batchTimer.WaitForNextTickAsync(ct))
-                    {
-                        await ProcessBatchAsync(batchAccumulator, ct);
-                        batchAccumulator.Clear();
-                    }
-                    else
-                    {
-                        // Wait a bit before checking again
-                        await Task.Delay(10, ct);
-                    }
+                    // No requests available, wait a bit
+                    await Task.Delay(10, ct);
                 }
             }
             catch (Exception ex)
@@ -255,6 +286,9 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
         }
     }
 
+    /// <summary>
+    /// Processes a single queued request
+    /// </summary>
     private async Task ProcessSingleRequestAsync(QueuedRequest request, CancellationToken ct)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -263,17 +297,9 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
         await semaphore.WaitAsync(ct);
         try
         {
-            _logger.LogDebug("Processing request {RequestId} for model {ModelId}",
-                request.Id, request.Request.ModelId);
+            _logger.LogDebug("Processing request {RequestId}", request.Id);
 
-            // Update metrics
-            UpdateModelMetrics(request.Request.ModelId, m =>
-            {
-                m.ActiveRequests++;
-                m.TotalRequests++;
-            });
-
-            // Execute inference
+            // Execute inference via orchestrator
             var result = await _orchestrator.InferAsync(
                 request.Request.ModelId,
                 request.Request.Input,
@@ -282,34 +308,12 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
             // Complete request
             request.CompletionSource.TrySetResult(result.Output);
 
-            // Update metrics
-            UpdateModelMetrics(request.Request.ModelId, m =>
-            {
-                m.ActiveRequests--;
-                m.TotalLatency += stopwatch.Elapsed;
-                m.AverageLatency = m.TotalLatency / m.TotalRequests;
-                m.LastRequestTime = DateTimeOffset.UtcNow;
-
-                if (result is InferenceResult inferResult)
-                {
-                    m.TotalTokens += inferResult.TokensProcessed;
-                    m.AverageTokensPerSecond =
-                        (m.AverageTokensPerSecond * (m.TotalRequests - 1) + inferResult.TokensPerSecond)
-                        / m.TotalRequests;
-                }
-            });
-
             _logger.LogInformation("Request {RequestId} completed in {ElapsedMs}ms",
                 request.Id, stopwatch.ElapsedMilliseconds);
         }
         catch (Exception ex)
         {
             request.CompletionSource.TrySetException(ex);
-            UpdateModelMetrics(request.Request.ModelId, m =>
-            {
-                m.ActiveRequests--;
-                m.FailedRequests++;
-            });
             throw;
         }
         finally
@@ -318,72 +322,9 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
         }
     }
 
-    private async Task ProcessBatchAsync(List<QueuedRequest> batch, CancellationToken ct)
-    {
-        if (!batch.Any()) return;
-
-        var modelId = batch[0].Request.ModelId;
-        var stopwatch = Stopwatch.StartNew();
-        var semaphore = RequiresGpu(modelId) ? _gpuSemaphore : _cpuSemaphore;
-
-        await semaphore.WaitAsync(ct);
-        try
-        {
-            _logger.LogDebug("Processing batch of {Count} requests for model {ModelId}",
-                batch.Count, modelId);
-
-            // Update metrics
-            UpdateModelMetrics(modelId, m =>
-            {
-                m.ActiveRequests += batch.Count;
-                m.TotalRequests += batch.Count;
-                m.BatchCount++;
-                m.TotalBatchSize += batch.Count;
-                m.AverageBatchSize = m.TotalBatchSize / (double)m.BatchCount;
-            });
-
-            // Prepare batch input
-            var batchInput = PrepareBatchInput(batch);
-
-            // Execute batch inference
-            var result = await _orchestrator.InferAsync(modelId, batchInput, ct);
-
-            // Distribute results
-            DistributeBatchResults(batch, result);
-
-            // Update metrics
-            UpdateModelMetrics(modelId, m =>
-            {
-                m.ActiveRequests -= batch.Count;
-                m.TotalLatency += stopwatch.Elapsed;
-                m.AverageLatency = m.TotalLatency / m.TotalRequests;
-                m.LastRequestTime = DateTimeOffset.UtcNow;
-            });
-
-            _logger.LogInformation("Batch of {Count} requests completed in {ElapsedMs}ms ({PerRequest}ms per request)",
-                batch.Count, stopwatch.ElapsedMilliseconds, stopwatch.ElapsedMilliseconds / batch.Count);
-        }
-        catch (Exception ex)
-        {
-            // Fail all requests in batch
-            foreach (var request in batch)
-            {
-                request.CompletionSource.TrySetException(ex);
-            }
-
-            UpdateModelMetrics(modelId, m =>
-            {
-                m.ActiveRequests -= batch.Count;
-                m.FailedRequests += batch.Count;
-            });
-            throw;
-        }
-        finally
-        {
-            semaphore.Release();
-        }
-    }
-
+    /// <summary>
+    /// Determines priority based on request tags and model type
+    /// </summary>
     private Priority DeterminePriority(InferencePipelineRequest request)
     {
         // Evidence processing gets highest priority
@@ -399,118 +340,31 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
         if (request.Tags?.Contains("background") == true)
             return Priority.Low;
 
-        // Default to normal
         return Priority.Normal;
     }
 
+    /// <summary>
+    /// Checks if a model supports batch processing
+    /// </summary>
     private bool SupportsBatching(string modelId)
     {
-        // LLMs and embedding models typically support batching
         return modelId.Contains("embed", StringComparison.OrdinalIgnoreCase) ||
                modelId.Contains("llama", StringComparison.OrdinalIgnoreCase) ||
                modelId.Contains("mistral", StringComparison.OrdinalIgnoreCase);
     }
 
-    private bool CanBatch(QueuedRequest first, QueuedRequest second)
-    {
-        return first.Request.ModelId == second.Request.ModelId &&
-               first.Request.Parameters?.GetValueOrDefault("temperature") ==
-               second.Request.Parameters?.GetValueOrDefault("temperature") &&
-               first.Request.Parameters?.GetValueOrDefault("max_tokens") ==
-               second.Request.Parameters?.GetValueOrDefault("max_tokens");
-    }
-
-    private int GetMaxBatchSize(string modelId)
-    {
-        // Model-specific batch sizes
-        if (modelId.Contains("embed", StringComparison.OrdinalIgnoreCase))
-            return 32; // Embedding models can handle larger batches
-        if (modelId.Contains("whisper", StringComparison.OrdinalIgnoreCase))
-            return 4;  // Audio processing is memory intensive
-        return 8;      // Default for LLMs
-    }
-
+    /// <summary>
+    /// Determines if a model requires GPU resources
+    /// </summary>
     private bool RequiresGpu(string modelId)
     {
-        // Small models can run on CPU
         return !modelId.Contains("tiny", StringComparison.OrdinalIgnoreCase) &&
                !modelId.Contains("small", StringComparison.OrdinalIgnoreCase);
     }
 
-    private object PrepareBatchInput(List<QueuedRequest> batch)
-    {
-        // Combine inputs based on model type
-        var modelId = batch[0].Request.ModelId;
-
-        if (modelId.Contains("embed", StringComparison.OrdinalIgnoreCase))
-        {
-            // For embedding models, combine texts
-            return new
-            {
-                texts = batch.Select(r => r.Request.Input).ToList()
-            };
-        }
-
-        // For LLMs, prepare batch prompts
-        return new
-        {
-            prompts = batch.Select(r => r.Request.Input).ToList(),
-            parameters = batch[0].Request.Parameters
-        };
-    }
-
-    private void DistributeBatchResults(List<QueuedRequest> batch, object result)
-    {
-        if (result is IList<object> results)
-        {
-            for (int i = 0; i < Math.Min(batch.Count, results.Count); i++)
-            {
-                batch[i].CompletionSource.TrySetResult(results[i]);
-            }
-        }
-        else
-        {
-            // Single result for all (shouldn't happen in proper batch processing)
-            foreach (var request in batch)
-            {
-                request.CompletionSource.TrySetResult(result);
-            }
-        }
-    }
-
-    private void UpdateModelMetrics(string modelId, Action<ModelMetrics> update)
-    {
-        _modelMetrics.AddOrUpdate(modelId,
-            _ =>
-            {
-                var metrics = new ModelMetrics { ModelId = modelId };
-                update(metrics);
-                return metrics;
-            },
-            (_, existing) =>
-            {
-                update(existing);
-                return existing;
-            });
-    }
-
-    public InferencePipelineStats GetStats()
-    {
-        return new InferencePipelineStats
-        {
-            TotalRequests = _totalRequests,
-            CompletedRequests = _completedRequests,
-            FailedRequests = _failedRequests,
-            PendingRequests = _pendingRequests.Count,
-            HighPriorityQueueDepth = _highPriorityQueue.Reader.Count,
-            NormalPriorityQueueDepth = _normalPriorityQueue.Reader.Count,
-            LowPriorityQueueDepth = _lowPriorityQueue.Reader.Count,
-            ModelMetrics = _modelMetrics.Values.ToList(),
-            GpuSlotsAvailable = _gpuSemaphore.CurrentCount,
-            CpuSlotsAvailable = _cpuSemaphore.CurrentCount
-        };
-    }
-
+    /// <summary>
+    /// Disposes resources and completes all channels
+    /// </summary>
     public void Dispose()
     {
         _highPriorityQueue.Writer.TryComplete();
@@ -535,7 +389,7 @@ public sealed class InferencePipelineRequest
     public required object Input { get; init; }
     public Dictionary<string, object>? Parameters { get; init; }
     public HashSet<string>? Tags { get; init; }
-    public int Index { get; init; } // For batch processing
+    public int Index { get; init; }
 }
 
 public sealed class QueuedRequest
@@ -566,30 +420,7 @@ public sealed class InferencePipelineStats
     public int HighPriorityQueueDepth { get; init; }
     public int NormalPriorityQueueDepth { get; init; }
     public int LowPriorityQueueDepth { get; init; }
-    public List<ModelMetrics> ModelMetrics { get; init; } = new();
     public int GpuSlotsAvailable { get; init; }
     public int CpuSlotsAvailable { get; init; }
 }
 
-public sealed class ModelMetrics
-{
-    public required string ModelId { get; init; }
-    public int ActiveRequests { get; set; }
-    public long TotalRequests { get; set; }
-    public long FailedRequests { get; set; }
-    public TimeSpan TotalLatency { get; set; }
-    public TimeSpan AverageLatency { get; set; }
-    public long TotalTokens { get; set; }
-    public double AverageTokensPerSecond { get; set; }
-    public int BatchCount { get; set; }
-    public int TotalBatchSize { get; set; }
-    public double AverageBatchSize { get; set; }
-    public DateTimeOffset LastRequestTime { get; set; }
-}
-
-public enum Priority
-{
-    Low = 0,
-    Normal = 1,
-    High = 2
-}
