@@ -1,0 +1,69 @@
+
+@page "/rag"
+@using Microsoft.AspNetCore.Components.Forms
+@using IIM.App.Hybrid.Services
+@inject IimClient Iim
+
+<div class="container py-4">
+  <h3 class="mb-3">RAG Agent</h3>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5>Upload & Index</h5>
+      <div class="form-check form-switch mb-2">
+        <input class="form-check-input" type="checkbox" role="switch" id="sentMode" @bind="sentenceMode">
+        <label class="form-check-label" for="sentMode">Sentence chunking</label>
+      </div>
+      <InputFile OnChange="OnFilesSelected" multiple />
+      <div class="form-text">Accepted: .txt, .md, .pdf, .docx</div>
+      <button class="btn btn-primary mt-2" @onclick="IndexFiles" disabled="@(!files.Any())">Index</button>
+      <div class="mt-2 text-muted">@indexStatus</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <h5>Ask with RAG</h5>
+      <div class="row g-2">
+        <div class="col-md-9"><input class="form-control" @bind="query" placeholder="Ask a question..." /></div>
+        <div class="col-md-3"><input class="form-control" type="number" @bind="k" min="1" /></div>
+      </div>
+      <button class="btn btn-success mt-2" @onclick="Ask">Ask</button>
+      <pre class="mt-3">@answer</pre>
+      <ul>
+        @foreach (var c in citations)
+        {
+          <li>@c</li>
+        }
+      </ul>
+    </div>
+  </div>
+</div>
+
+@code {
+  private List<IBrowserFile> files = new();
+  private string indexStatus = string.Empty;
+  private bool sentenceMode = true;
+  private string query = "What did I upload?";
+  private int k = 3;
+  private string answer = string.Empty;
+  private List<string> citations = new();
+
+  private void OnFilesSelected(InputFileChangeEventArgs e)
+  {
+      files = e.GetMultipleFiles().ToList();
+  }
+
+  private async Task IndexFiles()
+  {
+      var ok = await Iim.RagUploadAsync(files, sentenceMode);
+      indexStatus = ok ? $"Indexed {files.Count} file(s)." : "Failed.";
+  }
+
+  private async Task Ask()
+  {
+      var res = await Iim.RagQueryAsync(query, k);
+      answer = res.answer;
+      citations = res.citations ?? new();
+  }
+}

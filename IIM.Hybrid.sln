@@ -1,0 +1,5 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Create a real solution with:
+# dotnet new sln -n IIM.Hybrid
+# dotnet sln IIM.Hybrid.sln add src/IIM.App.Hybrid/IIM.App.Hybrid.csproj src/IIM.Shared/IIM.Shared.csproj src/IIM.Api/IIM.Api.csproj
