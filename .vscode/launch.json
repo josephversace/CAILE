@@ -1,0 +1,40 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-api",
+            "program": "${workspaceFolder}/src/IIM.Api/bin/Debug/net8.0/IIM.Api.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/IIM.Api",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5080"
+            }
+        },
+        {
+            "name": "Launch Blazor App",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-app",
+            "program": "${workspaceFolder}/src/IIM.App.Hybrid/bin/Debug/net8.0/IIM.App.Hybrid.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/IIM.App.Hybrid",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5000"
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Launch All",
+            "configurations": ["Launch API", "Launch Blazor App"],
+            "stopAll": true
+        }
+    ]
+}
