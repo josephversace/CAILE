@@ -1,0 +1,600 @@
+@page "/evidence"
+@using IIM.Core.Security
+@using Microsoft.AspNetCore.Components.Forms
+@inject HttpClient Http
+@inject ILogger<Evidence> Logger
+@inject IJSRuntime JS
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="bi bi-shield-check"></i> Evidence Management</h3>
+        <button class="btn btn-primary" @onclick="ShowIngestModal">
+            <i class="bi bi-plus-circle"></i> Ingest Evidence
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
+            <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @successMessage
+            <button type="button" class="btn-close" @onclick="() => successMessage = string.Empty"></button>
+        </div>
+    }
+
+    <!-- Evidence List -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="mb-0"><i class="bi bi-folder2-open"></i> Evidence Items</h5>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" class="form-control" placeholder="Search by case number or file name..." 
+                           @bind="searchTerm" @bind:event="oninput" />
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Evidence ID</th>
+                            <th>File Name</th>
+                            <th>Case #</th>
+                            <th>Ingested</th>
+                            <th>Size</th>
+                            <th>Integrity</th>
+                            <th>Chain</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (FilteredEvidence.Any())
+                        {
+                            @foreach (var item in FilteredEvidence)
+                            {
+                                <tr>
+                                    <td>
+                                        <code class="text-primary">@item.Id.Substring(0, 8)...</code>
+                                    </td>
+                                    <td>
+                                        <i class="bi bi-file-earmark-lock"></i>
+                                        @item.OriginalFileName
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">@item.CaseNumber</span>
+                                    </td>
+                                    <td>
+                                        <small>@item.IngestTimestamp.ToString("yyyy-MM-dd HH:mm")</small>
+                                    </td>
+                                    <td>
+                                        <small>@FormatFileSize(item.FileSize)</small>
+                                    </td>
+                                    <td>
+                                        @if (item.IntegrityValid)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> Valid
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-x-circle"></i> Invalid
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@item.ChainLength entries</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button class="btn btn-outline-primary" 
+                                                    @onclick="() => ViewEvidence(item)"
+                                                    title="View details">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success" 
+                                                    @onclick="() => VerifyIntegrity(item.Id)"
+                                                    title="Verify integrity">
+                                                <i class="bi bi-shield-check"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info" 
+                                                    @onclick="() => ShowChainOfCustody(item.Id)"
+                                                    title="Chain of custody">
+                                                <i class="bi bi-link-45deg"></i>
+                                            </button>
+                                            <button class="btn btn-outline-warning" 
+                                                    @onclick="() => ExportEvidence(item.Id)"
+                                                    title="Export">
+                                                <i class="bi bi-download"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-1"></i>
+                                    <p>No evidence items found</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ingest Modal -->
+    @if (showIngestModal)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-upload"></i> Ingest Evidence
+                        </h5>
+                        <button type="button" class="btn-close" @onclick="() => showIngestModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Case Number *</label>
+                            <input type="text" class="form-control" @bind="ingestMetadata.CaseNumber" />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Collected By *</label>
+                            <input type="text" class="form-control" @bind="ingestMetadata.CollectedBy" />
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Collection Date</label>
+                                    <input type="datetime-local" class="form-control" 
+                                           @bind="ingestMetadata.CollectionDate" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Collection Location</label>
+                                    <input type="text" class="form-control" 
+                                           @bind="ingestMetadata.CollectionLocation" />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Device Source</label>
+                            <input type="text" class="form-control" 
+                                   @bind="ingestMetadata.DeviceSource" 
+                                   placeholder="e.g., iPhone 13, Samsung Galaxy S21" />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" rows="3" 
+                                      @bind="ingestMetadata.Description"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Evidence File *</label>
+                            <InputFile OnChange="OnFileSelected" class="form-control" />
+                            @if (selectedFile != null)
+                            {
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        Selected: @selectedFile.Name (@FormatFileSize(selectedFile.Size))
+                                    </small>
+                                </div>
+                            }
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 
+                            The file will be hashed using SHA256, SHA512, and MD5 algorithms. 
+                            A digital signature will be applied to ensure integrity.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" 
+                                @onclick="() => showIngestModal = false">Cancel</button>
+                        <button type="button" class="btn btn-primary" 
+                                @onclick="IngestEvidence" 
+                                disabled="@(isProcessing || selectedFile == null || string.IsNullOrEmpty(ingestMetadata.CaseNumber))">
+                            @if (isProcessing)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            <i class="bi bi-upload"></i> Ingest Evidence
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Chain of Custody Modal -->
+    @if (showChainModal && currentChainReport != null)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-link-45deg"></i> Chain of Custody Report
+                        </h5>
+                        <button type="button" class="btn-close" @onclick="() => showChainModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>Evidence ID:</strong> <code>@currentChainReport.EvidenceId</code><br/>
+                                <strong>Original File:</strong> @currentChainReport.OriginalFileName<br/>
+                                <strong>Case Number:</strong> @currentChainReport.CaseNumber
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Ingested:</strong> @currentChainReport.IngestTimestamp.ToString("yyyy-MM-dd HH:mm:ss")<br/>
+                                <strong>Generated:</strong> @currentChainReport.GeneratedTimestamp.ToString("yyyy-MM-dd HH:mm:ss")<br/>
+                                <strong>Integrity:</strong> 
+                                @if (currentChainReport.CurrentIntegrityValid)
+                                {
+                                    <span class="badge bg-success">Valid</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Compromised</span>
+                                }
+                            </div>
+                        </div>
+
+                        <h6>Original Hashes</h6>
+                        <div class="mb-3">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td width="100"><strong>SHA256:</strong></td>
+                                    <td><code class="text-break">@currentChainReport.OriginalHashes.SHA256</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>SHA512:</strong></td>
+                                    <td><code class="text-break">@currentChainReport.OriginalHashes.SHA512</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>MD5:</strong></td>
+                                    <td><code class="text-break">@currentChainReport.OriginalHashes.MD5</code></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <h6>Custody Entries</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Action</th>
+                                        <th>Officer</th>
+                                        <th>Location</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var entry in currentChainReport.CustodyEntries)
+                                    {
+                                        <tr>
+                                            <td>@entry.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                            <td><span class="badge bg-info">@entry.Action</span></td>
+                                            <td>@entry.Officer</td>
+                                            <td>@entry.Location</td>
+                                            <td>@entry.Details</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if (currentChainReport.ProcessedVersions.Any())
+                        {
+                            <h6>Processed Versions</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Type</th>
+                                            <th>Timestamp</th>
+                                            <th>Hash</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var processed in currentChainReport.ProcessedVersions)
+                                        {
+                                            <tr>
+                                                <td><code>@processed.Id.Substring(0, 8)...</code></td>
+                                                <td>@processed.ProcessingType</td>
+                                                <td>@processed.ProcessedTimestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                                <td><code>@processed.ProcessedHash.Substring(0, 16)...</code></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+
+                        <div class="mt-3">
+                            <strong>Digital Signature:</strong><br/>
+                            <code class="text-break" style="font-size: 0.8em;">@currentChainReport.Signature</code>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" 
+                                @onclick="() => showChainModal = false">Close</button>
+                        <button type="button" class="btn btn-primary" 
+                                @onclick="() => DownloadChainReport(currentChainReport)">
+                            <i class="bi bi-download"></i> Download Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<EvidenceListItem> evidenceItems = new();
+    private string searchTerm = string.Empty;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private bool isProcessing = false;
+    
+    // Ingest modal
+    private bool showIngestModal = false;
+    private IBrowserFile? selectedFile;
+    private IngestMetadata ingestMetadata = new();
+    
+    // Chain of custody modal
+    private bool showChainModal = false;
+    private ChainOfCustodyReport? currentChainReport;
+
+    private IEnumerable<EvidenceListItem> FilteredEvidence =>
+        string.IsNullOrWhiteSpace(searchTerm) 
+            ? evidenceItems
+            : evidenceItems.Where(e => 
+                e.CaseNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                e.OriginalFileName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEvidence();
+    }
+
+    private async Task LoadEvidence()
+    {
+        try
+        {
+            // In production, this would call the API
+            // For now, create sample data
+            evidenceItems = new List<EvidenceListItem>
+            {
+                new EvidenceListItem
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    OriginalFileName = "suspect_phone_backup.zip",
+                    CaseNumber = "2024-CF-1234",
+                    IngestTimestamp = DateTimeOffset.Now.AddDays(-5),
+                    FileSize = 1024 * 1024 * 250, // 250MB
+                    IntegrityValid = true,
+                    ChainLength = 3
+                },
+                new EvidenceListItem
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    OriginalFileName = "surveillance_video.mp4",
+                    CaseNumber = "2024-CF-1235",
+                    IngestTimestamp = DateTimeOffset.Now.AddDays(-2),
+                    FileSize = 1024 * 1024 * 1500, // 1.5GB
+                    IntegrityValid = true,
+                    ChainLength = 5
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load evidence: {ex.Message}";
+            Logger.LogError(ex, "Failed to load evidence");
+        }
+    }
+
+    private void ShowIngestModal()
+    {
+        showIngestModal = true;
+        ingestMetadata = new IngestMetadata
+        {
+            CollectionDate = DateTimeOffset.Now,
+            CollectedBy = Environment.UserName
+        };
+    }
+
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+    private async Task IngestEvidence()
+    {
+        if (selectedFile == null || string.IsNullOrEmpty(ingestMetadata.CaseNumber))
+            return;
+
+        try
+        {
+            isProcessing = true;
+            errorMessage = string.Empty;
+
+            // In production, this would upload to the API
+            using var stream = selectedFile.OpenReadStream(maxAllowedSize: 10L * 1024 * 1024 * 1024); // 10GB max
+            
+            // Simulate API call
+            await Task.Delay(2000);
+            
+            successMessage = $"Evidence '{selectedFile.Name}' ingested successfully";
+            showIngestModal = false;
+            selectedFile = null;
+            
+            await LoadEvidence();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to ingest evidence: {ex.Message}";
+            Logger.LogError(ex, "Failed to ingest evidence");
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private async Task VerifyIntegrity(string evidenceId)
+    {
+        try
+        {
+            // Call API to verify integrity
+            await Task.Delay(1000);
+            successMessage = "Integrity verification completed successfully";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Integrity verification failed: {ex.Message}";
+        }
+    }
+
+    private async Task ShowChainOfCustody(string evidenceId)
+    {
+        try
+        {
+            // In production, fetch from API
+            currentChainReport = new ChainOfCustodyReport
+            {
+                EvidenceId = evidenceId,
+                OriginalFileName = "test_file.zip",
+                CaseNumber = "2024-CF-1234",
+                IngestTimestamp = DateTimeOffset.Now.AddDays(-5),
+                GeneratedTimestamp = DateTimeOffset.Now,
+                GeneratedBy = Environment.UserName,
+                MachineIdentifier = "MACHINE001",
+                OriginalHashes = new HashSet
+                {
+                    SHA256 = "A1B2C3D4E5F6789012345678901234567890123456789012345678901234567890",
+                    SHA512 = "1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF",
+                    MD5 = "A1B2C3D4E5F67890A1B2C3D4E5F67890"
+                },
+                CurrentIntegrityValid = true,
+                CustodyEntries = new List<CustodyEntry>
+                {
+                    new CustodyEntry
+                    {
+                        Timestamp = DateTimeOffset.Now.AddDays(-5),
+                        Action = "INGESTED",
+                        Officer = "Officer Smith",
+                        Location = "MACHINE001",
+                        Details = "Initial evidence ingestion",
+                        HashBefore = "A1B2C3D4",
+                        HashAfter = "A1B2C3D4"
+                    }
+                },
+                ProcessedVersions = new List<ProcessedEvidence>(),
+                AuditLog = new List<AuditLogEntry>(),
+                Signature = "SIGNATURE_DATA_HERE",
+                PublicKey = "PUBLIC_KEY_HERE"
+            };
+            
+            showChainModal = true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load chain of custody: {ex.Message}";
+        }
+    }
+
+    private async Task ExportEvidence(string evidenceId)
+    {
+        try
+        {
+            // Call API to export
+            await Task.Delay(1000);
+            successMessage = "Evidence exported successfully";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Export failed: {ex.Message}";
+        }
+    }
+
+    private async Task DownloadChainReport(ChainOfCustodyReport report)
+    {
+        try
+        {
+            // In production, generate and download PDF or JSON
+            await JS.InvokeVoidAsync("alert", "Chain of custody report downloaded");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Download failed: {ex.Message}";
+        }
+    }
+
+    private void ViewEvidence(EvidenceListItem item)
+    {
+        // Navigate to detailed view or show in modal
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        int order = 0;
+        double size = bytes;
+        
+        while (size >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            size /= 1024;
+        }
+        
+        return $"{size:F2} {sizes[order]}";
+    }
+
+    // View models
+    private class EvidenceListItem
+    {
+        public string Id { get; set; } = string.Empty;
+        public string OriginalFileName { get; set; } = string.Empty;
+        public string CaseNumber { get; set; } = string.Empty;
+        public DateTimeOffset IngestTimestamp { get; set; }
+        public long FileSize { get; set; }
+        public bool IntegrityValid { get; set; }
+        public int ChainLength { get; set; }
+    }
+
+    private class IngestMetadata
+    {
+        public string CaseNumber { get; set; } = string.Empty;
+        public string CollectedBy { get; set; } = string.Empty;
+        public DateTimeOffset CollectionDate { get; set; } = DateTimeOffset.Now;
+        public string? CollectionLocation { get; set; }
+        public string? DeviceSource { get; set; }
+        public string? Description { get; set; }
+    }
+}

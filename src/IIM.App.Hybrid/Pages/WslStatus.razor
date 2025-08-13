@@ -1,0 +1,543 @@
+@page "/wsl-status"
+@using System.Text.Json
+@using System.Timers
+@inject HttpClient Http
+@inject ILogger<WslStatus> Logger
+@implements IDisposable
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="bi bi-hdd-network"></i> WSL2 Service Manager</h3>
+        <div>
+            @if (isHealthy)
+            {
+                <span class="badge bg-success me-2">
+                    <i class="bi bi-check-circle"></i> System Healthy
+                </span>
+            }
+            else
+            {
+                <span class="badge bg-danger me-2">
+                    <i class="bi bi-exclamation-circle"></i> Issues Detected
+                </span>
+            }
+            <button class="btn btn-sm btn-primary" @onclick="RefreshStatus" disabled="@isLoading">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    @if (isLoading && wslStatus == null)
+    {
+        <div class="d-flex justify-content-center p-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
+            <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @successMessage
+            <button type="button" class="btn-close" @onclick="() => successMessage = string.Empty"></button>
+        </div>
+    }
+
+    @if (wslStatus != null)
+    {
+        <!-- WSL Status Overview -->
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-3 mb-lg-0">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-gradient bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-pc-display"></i> WSL2 Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted">WSL Version:</td>
+                                    <td class="text-end">
+                                        @if (wslStatus.Version != null)
+                                        {
+                                            <span class="badge bg-info">@wslStatus.Version</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-danger">Not Installed</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Kernel:</td>
+                                    <td class="text-end font-monospace small">@(wslStatus.KernelVersion ?? "N/A")</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Virtual Machine Platform:</td>
+                                    <td class="text-end">
+                                        @if (wslStatus.VirtualMachinePlatform)
+                                        {
+                                            <i class="bi bi-check-circle text-success"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-x-circle text-danger"></i>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">IIM Distro:</td>
+                                    <td class="text-end">
+                                        @if (wslStatus.HasIimDistro)
+                                        {
+                                            <span class="badge bg-success">Installed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning">Not Installed</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        @if (!wslStatus.IsReady)
+                        {
+                            <div class="alert alert-warning mb-0">
+                                <small><i class="bi bi-info-circle"></i> @wslStatus.Message</small>
+                            </div>
+                            <button class="btn btn-primary mt-2 w-100" @onclick="EnsureDistro">
+                                <i class="bi bi-download"></i> Install IIM Distribution
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-gradient bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-ethernet"></i> Network Information</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (networkInfo != null)
+                        {
+                            <table class="table table-sm table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <td class="text-muted">WSL IP:</td>
+                                        <td class="text-end font-monospace">@(networkInfo.WslIpAddress ?? "N/A")</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Host IP:</td>
+                                        <td class="text-end font-monospace">@(networkInfo.WindowsHostIp ?? "N/A")</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Connection:</td>
+                                        <td class="text-end">
+                                            @if (networkInfo.IsConnected)
+                                            {
+                                                <span class="badge bg-success">Connected</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Disconnected</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="mt-3">
+                                <small class="text-muted">Service Endpoints:</small>
+                                <div class="list-group list-group-flush mt-1">
+                                    @foreach (var endpoint in networkInfo.ServiceEndpoints)
+                                    {
+                                        <div class="list-group-item px-0 py-1 border-0">
+                                            <small>
+                                                <span class="text-muted">@endpoint.Key:</span>
+                                                <code>@endpoint.Value</code>
+                                            </small>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center">No network information available</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Grid -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-gear"></i> Services</h5>
+                <button class="btn btn-sm btn-success" @onclick="EnsureAllServices" disabled="@isLoading">
+                    <i class="bi bi-play-circle"></i> Start All Critical
+                </button>
+            </div>
+            <div class="card-body p-0">
+                @if (services != null && services.Any())
+                {
+                    <div class="row g-3 p-3">
+                        @foreach (var service in services)
+                        {
+                            <div class="col-lg-6 col-xl-4">
+                                <div class="card h-100 @GetServiceCardClass(service.Value)">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <h6 class="mb-0">
+                                                    <i class="bi bi-@GetServiceIcon(service.Key)"></i> @service.Key
+                                                </h6>
+                                                <span class="badge @GetServiceBadgeClass(service.Value.State) mt-1">
+                                                    @service.Value.State
+                                                </span>
+                                            </div>
+                                            <div>
+                                                @if (service.Value.IsHealthy)
+                                                {
+                                                    <span class="badge bg-success" title="Healthy">
+                                                        <i class="bi bi-heart-pulse"></i>
+                                                    </span>
+                                                }
+                                                else if (service.Value.State == "Running")
+                                                {
+                                                    <span class="badge bg-warning" title="Unhealthy">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+
+                                        @if (!string.IsNullOrEmpty(service.Value.Endpoint))
+                                        {
+                                            <small class="text-muted d-block mb-2">
+                                                <code>@service.Value.Endpoint</code>
+                                            </small>
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(service.Value.Message))
+                                        {
+                                            <small class="text-muted">@service.Value.Message</small>
+                                        }
+
+                                        <div class="btn-group btn-group-sm w-100 mt-2" role="group">
+                                            @if (service.Value.State != "Running")
+                                            {
+                                                <button class="btn btn-outline-success" @onclick="() => StartService(service.Key)"
+                                                    disabled="@isLoading">
+                                                    <i class="bi bi-play"></i> Start
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-outline-warning" @onclick="() => RestartService(service.Key)"
+                                                    disabled="@isLoading">
+                                                    <i class="bi bi-arrow-repeat"></i> Restart
+                                                </button>
+                                                <button class="btn btn-outline-danger" @onclick="() => StopService(service.Key)"
+                                                    disabled="@isLoading">
+                                                    <i class="bi bi-stop"></i> Stop
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-inbox fs-1"></i>
+                        <p>No services configured</p>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private System.Timers.Timer? refreshTimer;
+    private bool isLoading = false;
+    private bool isHealthy = false;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+
+    private WslStatusInfo? wslStatus;
+    private NetworkInfo? networkInfo;
+    private Dictionary<string, ServiceInfo>? services;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshStatus();
+
+        // Auto-refresh every 10 seconds
+        refreshTimer = new System.Timers.Timer(10000);
+        refreshTimer.Elapsed += async (sender, e) => await InvokeAsync(async () =>
+        {
+            await RefreshStatus();
+            StateHasChanged();
+        });
+        refreshTimer.Start();
+    }
+
+    private async Task RefreshStatus()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+
+            // Get WSL status
+            var wslResponse = await Http.GetAsync("http://localhost:5080/api/wsl/status");
+            if (wslResponse.IsSuccessStatusCode)
+            {
+                var json = await wslResponse.Content.ReadAsStringAsync();
+                wslStatus = JsonSerializer.Deserialize<WslStatusInfo>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+
+            // Get network info
+            var networkResponse = await Http.GetAsync("http://localhost:5080/api/wsl/network");
+            if (networkResponse.IsSuccessStatusCode)
+            {
+                var json = await networkResponse.Content.ReadAsStringAsync();
+                networkInfo = JsonSerializer.Deserialize<NetworkInfo>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+
+            // Get services
+            var servicesResponse = await Http.GetAsync("http://localhost:5080/api/wsl/services");
+            if (servicesResponse.IsSuccessStatusCode)
+            {
+                var json = await servicesResponse.Content.ReadAsStringAsync();
+                services = JsonSerializer.Deserialize<Dictionary<string, ServiceInfo>>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+
+            // Check overall health
+            isHealthy = wslStatus?.IsReady == true &&
+            networkInfo?.IsConnected == true &&
+            services?.Values.Any(s => s.State != "Running" && GetServicePriority(s) == "Critical") == false;
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "Cannot connect to API. Ensure the service is running.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading status: {ex.Message}";
+            Logger.LogError(ex, "Failed to refresh WSL status");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task EnsureDistro()
+    {
+        try
+        {
+            isLoading = true;
+            var response = await Http.PostAsync("http://localhost:5080/api/wsl/ensure", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "WSL distribution installed successfully";
+                await RefreshStatus();
+            }
+            else
+            {
+                errorMessage = "Failed to install WSL distribution";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error installing distribution: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task StartService(string serviceName)
+    {
+        await ManageService(serviceName, "start", "started");
+    }
+
+    private async Task StopService(string serviceName)
+    {
+        await ManageService(serviceName, "stop", "stopped");
+    }
+
+    private async Task RestartService(string serviceName)
+    {
+        await ManageService(serviceName, "restart", "restarted");
+    }
+
+    private async Task ManageService(string serviceName, string action, string pastTense)
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+
+            var response = await Http.PostAsync($"http://localhost:5080/api/wsl/services/{serviceName}/{action}", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = $"Service {serviceName} {pastTense} successfully";
+                await RefreshStatus();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Failed to {action} service {serviceName}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error managing service: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task EnsureAllServices()
+    {
+        try
+        {
+            isLoading = true;
+            var response = await Http.PostAsync("http://localhost:5080/api/wsl/services/ensure-all", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "All critical services started successfully";
+                await RefreshStatus();
+            }
+            else
+            {
+                errorMessage = "Some services failed to start";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error starting services: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetServiceCardClass(ServiceInfo service)
+    {
+        if (service.State == "Running" && service.IsHealthy) return "border-success";
+        if (service.State == "Running") return "border-warning";
+        if (service.State == "Error") return "border-danger";
+        return "";
+    }
+
+    private string GetServiceBadgeClass(string state)
+    {
+        return state switch
+        {
+            "Running" => "bg-success",
+            "Starting" => "bg-info",
+            "Stopping" => "bg-warning",
+            "Stopped" => "bg-secondary",
+            "Error" => "bg-danger",
+            _ => "bg-dark"
+        };
+    }
+
+    private string GetServiceIcon(string serviceName)
+    {
+        return serviceName?.ToLower() switch
+        {
+            "qdrant" => "database",
+            "embed" => "vector-pen",
+            "ollama" => "robot",
+            "jupyter" => "journal-code",
+            "redis" => "memory",
+            "postgres" => "database-fill",
+            _ => "gear"
+        };
+    }
+
+    private string GetServicePriority(ServiceInfo service)
+    {
+        // This would come from the service config in real implementation
+        return service.Name?.ToLower() switch
+        {
+            "qdrant" => "Critical",
+            "embed" => "Critical",
+            "ollama" => "High",
+            _ => "Normal"
+        };
+    }
+
+    public void Dispose()
+    {
+        refreshTimer?.Dispose();
+    }
+
+    // Data models
+    private class WslStatusInfo
+    {
+        public bool IsInstalled { get; set; }
+        public bool IsWsl2 { get; set; }
+        public string? Version { get; set; }
+        public string? KernelVersion { get; set; }
+        public bool VirtualMachinePlatform { get; set; }
+        public bool HyperV { get; set; }
+        public bool HasIimDistro { get; set; }
+        public bool IsReady { get; set; }
+        public string Message { get; set; } = string.Empty;
+    }
+
+    private class NetworkInfo
+    {
+        public string DistroName { get; set; } = string.Empty;
+        public string? WslIpAddress { get; set; }
+        public string? WindowsHostIp { get; set; }
+        public bool IsConnected { get; set; }
+        public Dictionary<string, string> ServiceEndpoints { get; set; } = new();
+    }
+
+    private class ServiceInfo
+    {
+        public string Name { get; set; } = string.Empty;
+        public string State { get; set; } = string.Empty;
+        public bool IsHealthy { get; set; }
+        public string? Endpoint { get; set; }
+        public string? Message { get; set; }
+    }
+}

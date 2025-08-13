@@ -1,0 +1,13 @@
+/Users/josephversace/Projects/CAILE/src/IIM.Core/obj/Debug/net8.0/IIM.Core.csproj.AssemblyReference.cache
+/Users/josephversace/Projects/CAILE/src/IIM.Core/obj/Debug/net8.0/IIM.Core.GeneratedMSBuildEditorConfig.editorconfig
+/Users/josephversace/Projects/CAILE/src/IIM.Core/obj/Debug/net8.0/IIM.Core.AssemblyInfoInputs.cache
+/Users/josephversace/Projects/CAILE/src/IIM.Core/obj/Debug/net8.0/IIM.Core.AssemblyInfo.cs
+/Users/josephversace/Projects/CAILE/src/IIM.Core/obj/Debug/net8.0/IIM.Core.csproj.CoreCompileInputs.cache
+/Users/josephversace/Projects/CAILE/src/IIM.Core/obj/Debug/net8.0/IIM.Core.sourcelink.json
+/Users/josephversace/Projects/CAILE/src/IIM.Core/bin/Debug/net8.0/IIM.Core.deps.json
+/Users/josephversace/Projects/CAILE/src/IIM.Core/bin/Debug/net8.0/IIM.Core.dll
+/Users/josephversace/Projects/CAILE/src/IIM.Core/bin/Debug/net8.0/IIM.Core.pdb
+/Users/josephversace/Projects/CAILE/src/IIM.Core/obj/Debug/net8.0/IIM.Core.dll
+/Users/josephversace/Projects/CAILE/src/IIM.Core/obj/Debug/net8.0/refint/IIM.Core.dll
+/Users/josephversace/Projects/CAILE/src/IIM.Core/obj/Debug/net8.0/IIM.Core.pdb
+/Users/josephversace/Projects/CAILE/src/IIM.Core/obj/Debug/net8.0/ref/IIM.Core.dll
