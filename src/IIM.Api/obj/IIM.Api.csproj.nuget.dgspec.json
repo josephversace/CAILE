@@ -62,9 +62,17 @@
               "target": "Package",
               "version": "[3.3.0, )"
             },
+            "Microsoft.AspNetCore.OpenApi": {
+              "target": "Package",
+              "version": "[9.0.8, )"
+            },
             "PdfPig": {
               "target": "Package",
               "version": "[0.1.11, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[9.0.3, )"
             },
             "System.IO.Packaging": {
               "target": "Package",
