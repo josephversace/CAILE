@@ -1,16 +1,139 @@
-@* ToolResult Component *@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Chat/ToolResult.razor
+// ============================================
+@using IIM.Core.Models
 
-<div class="ToolResult">
-    <h3>ToolResult</h3>
-    @* TODO: Implement component *@
+<div class="tool-result-card @GetStatusClass()">
+    <div class="tool-result-header">
+        <div class="tool-info">
+            <i class="fas @GetToolIcon()"></i>
+            <span class="tool-name">@Result.ToolName</span>
+            <span class="tool-status badge @GetStatusBadgeClass()">@Result.Status</span>
+        </div>
+        <div class="tool-actions">
+            @if (Result.Status == ToolStatus.Success || Result.Status == ToolStatus.PartialSuccess)
+            {
+                <button class="btn-sm" @onclick="ExpandCollapse">
+                    <i class="fas @(IsExpanded ? "fa-compress" : "fa-expand")"></i>
+                </button>
+            }
+            @if (Result.Status == ToolStatus.Failed)
+            {
+                <button class="btn-sm" @onclick="Retry">
+                    <i class="fas fa-redo"></i> Retry
+                </button>
+            }
+        </div>
+    </div>
+
+    @if (IsExpanded)
+    {
+        <div class="tool-result-body">
+            @if (Result.Data != null)
+            {
+                <div class="tool-data">
+                    @RenderToolData(Result.Data)
+                </div>
+            }
+
+            @if (Result.Visualizations?.Any() == true)
+            {
+                <div class="tool-visualizations">
+                    @foreach (var viz in Result.Visualizations)
+                    {
+                        <VisualizationRenderer Visualization="@viz" />
+                    }
+                </div>
+            }
+
+            @if (Result.Recommendations?.Any() == true)
+            {
+                <div class="tool-recommendations">
+                    <h6>Recommendations</h6>
+                    <ul>
+                        @foreach (var rec in Result.Recommendations)
+                        {
+                            <li>@rec</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Result.ErrorMessage))
+            {
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    @Result.ErrorMessage
+                </div>
+            }
+        </div>
+    }
+
+    <div class="tool-result-footer">
+        <span class="execution-time">
+            <i class="fas fa-clock"></i> @Result.ExecutionTime.TotalSeconds.ToString("F2")s
+        </span>
+        <span class="execution-date">
+            @Result.ExecutedAt.ToString("MMM dd, HH:mm:ss")
+        </span>
+    </div>
 </div>
 
 @code {
-    [Parameter] public string Id { get; set; } = string.Empty;
-    
-    protected override async Task OnInitializedAsync()
+    [Parameter] public ToolResult Result { get; set; } = new();
+    [Parameter] public EventCallback<Dictionary<string, object>> OnRerun { get; set; }
+
+    private bool IsExpanded = true;
+
+    private void ExpandCollapse()
     {
-        // TODO: Initialize component
-        await base.OnInitializedAsync();
+        IsExpanded = !IsExpanded;
     }
+
+    private async Task Retry()
+    {
+        var parameters = Result.Metadata ?? new Dictionary<string, object>();
+        await OnRerun.InvokeAsync(parameters);
+    }
+
+    private string GetStatusClass() => Result.Status switch
+    {
+        ToolStatus.Success => "success",
+        ToolStatus.PartialSuccess => "warning",
+        ToolStatus.Failed => "danger",
+        ToolStatus.Running => "info",
+        _ => ""
+    };
+
+    private string GetStatusBadgeClass() => Result.Status switch
+    {
+        ToolStatus.Success => "badge-success",
+        ToolStatus.PartialSuccess => "badge-warning",
+        ToolStatus.Failed => "badge-danger",
+        ToolStatus.Running => "badge-info",
+        ToolStatus.Pending => "badge-secondary",
+        _ => ""
+    };
+
+    private string GetToolIcon() => Result.ToolName?.ToLower() switch
+    {
+        "osint" => "fa-globe",
+        "timeline" => "fa-clock",
+        "network" => "fa-project-diagram",
+        "forensics" => "fa-fingerprint",
+        "report" => "fa-file-alt",
+        _ => "fa-tools"
+    };
+
+    private RenderFragment RenderToolData(object data) => builder =>
+    {
+        // TODO: Implement proper data rendering based on type
+        builder.OpenElement(0, "pre");
+        builder.AddAttribute(1, "class", "tool-data-json");
+        builder.AddContent(2, System.Text.Json.JsonSerializer.Serialize(data, new System.Text.Json.JsonSerializerOptions
+        {
+            WriteIndented = true
+        }));
+        builder.CloseElement();
+    };
 }

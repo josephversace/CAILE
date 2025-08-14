@@ -1,16 +1,123 @@
-@* EvidenceCard Component *@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Chat/EvidenceCard.razor
+// ============================================
+@using IIM.Core.Models
 
-<div class="EvidenceCard">
-    <h3>EvidenceCard</h3>
-    @* TODO: Implement component *@
+<div class="evidence-card" @onclick="OnClick">
+    <div class="evidence-icon">
+        <i class="fas @GetEvidenceIcon() fa-2x"></i>
+    </div>
+
+    <div class="evidence-info">
+        <div class="evidence-name">@Evidence.OriginalFileName</div>
+        <div class="evidence-meta">
+            <span class="evidence-size">@FormatFileSize(Evidence.FileSize)</span>
+            <span class="evidence-date">@Evidence.IngestTimestamp.ToString("MMM dd")</span>
+        </div>
+
+        @if (Evidence.IntegrityValid)
+        {
+            <span class="integrity-badge valid">
+                <i class="fas fa-check-circle"></i> Verified
+            </span>
+        }
+        else
+        {
+            <span class="integrity-badge invalid">
+                <i class="fas fa-exclamation-triangle"></i> Integrity Issue
+            </span>
+        }
+
+        @if (ShowDetails)
+        {
+            <div class="evidence-details">
+                <div class="detail-item">
+                    <span class="detail-label">Case:</span>
+                    <span class="detail-value">@Evidence.CaseNumber</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Collected:</span>
+                    <span class="detail-value">@Evidence.Metadata.CollectionDate.ToString("yyyy-MM-dd")</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">By:</span>
+                    <span class="detail-value">@Evidence.Metadata.CollectedBy</span>
+                </div>
+                @if (Evidence.ProcessedVersions?.Any() == true)
+                {
+                    <div class="detail-item">
+                        <span class="detail-label">Processed:</span>
+                        <span class="detail-value">@Evidence.ProcessedVersions.Count versions</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="evidence-actions">
+        <button class="action-btn" @onclick:stopPropagation="true" @onclick="ViewEvidence">
+            <i class="fas fa-eye"></i>
+        </button>
+        <button class="action-btn" @onclick:stopPropagation="true" @onclick="AnalyzeEvidence">
+            <i class="fas fa-microscope"></i>
+        </button>
+        <button class="action-btn" @onclick:stopPropagation="true" @onclick="ShowChainOfCustody">
+            <i class="fas fa-link"></i>
+        </button>
+    </div>
 </div>
 
 @code {
-    [Parameter] public string Id { get; set; } = string.Empty;
-    
-    protected override async Task OnInitializedAsync()
+    [Parameter] public Evidence Evidence { get; set; } = new();
+    [Parameter] public bool ShowDetails { get; set; } = false;
+    [Parameter] public EventCallback<Evidence> OnClick { get; set; }
+    [Parameter] public EventCallback<Evidence> OnView { get; set; }
+    [Parameter] public EventCallback<Evidence> OnAnalyze { get; set; }
+    [Parameter] public EventCallback<Evidence> OnChainOfCustody { get; set; }
+
+    private string GetEvidenceIcon() => Evidence.Type switch
     {
-        // TODO: Initialize component
-        await base.OnInitializedAsync();
+        EvidenceType.Document => "fa-file-alt",
+        EvidenceType.Image => "fa-image",
+        EvidenceType.Video => "fa-video",
+        EvidenceType.Audio => "fa-microphone",
+        EvidenceType.Email => "fa-envelope",
+        EvidenceType.Database => "fa-database",
+        EvidenceType.DiskImage => "fa-hdd",
+        EvidenceType.MemoryDump => "fa-memory",
+        EvidenceType.NetworkCapture => "fa-network-wired",
+        EvidenceType.LogFile => "fa-file-code",
+        EvidenceType.Archive => "fa-file-archive",
+        _ => "fa-file"
+    };
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        int order = 0;
+        double size = bytes;
+
+        while (size >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            size /= 1024;
+        }
+
+        return $"{size:F1} {sizes[order]}";
+    }
+
+    private async Task ViewEvidence()
+    {
+        await OnView.InvokeAsync(Evidence);
+    }
+
+    private async Task AnalyzeEvidence()
+    {
+        await OnAnalyze.InvokeAsync(Evidence);
+    }
+
+    private async Task ShowChainOfCustody()
+    {
+        await OnChainOfCustody.InvokeAsync(Evidence);
     }
 }

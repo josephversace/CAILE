@@ -1,16 +1,84 @@
-@* SessionList Component *@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Investigation/SessionList.razor
+// ============================================
+@using IIM.Core.Models
 
-<div class="SessionList">
-    <h3>SessionList</h3>
-    @* TODO: Implement component *@
+<div class="session-list">
+    @if (Sessions != null && Sessions.Any())
+    {
+        @foreach (var group in GroupedSessions)
+        {
+            <div class="session-group">
+                <div class="session-group-title">@group.Title</div>
+                @foreach (var session in group.Sessions)
+                {
+                    <SessionItem Session="@session" IsActive="@(session.Id == ActiveSessionId)"
+                        OnClick="@(() => OnSessionSelected.InvokeAsync(session))" />
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="fas fa-comments fa-3x text-muted"></i>
+            <p class="text-muted mt-3">No investigation sessions yet</p>
+            <button class="btn btn-primary mt-2" @onclick="CreateNewSession">
+                <i class="fas fa-plus"></i> Start New Investigation
+            </button>
+        </div>
+    }
 </div>
 
 @code {
-    [Parameter] public string Id { get; set; } = string.Empty;
-    
-    protected override async Task OnInitializedAsync()
+    [Parameter] public List<InvestigationSession>? Sessions { get; set; }
+    [Parameter] public string? ActiveSessionId { get; set; }
+    [Parameter] public EventCallback<InvestigationSession> OnSessionSelected { get; set; }
+    [Parameter] public EventCallback OnCreateNew { get; set; }
+
+    private List<SessionGroup> GroupedSessions = new();
+
+    protected override void OnParametersSet()
     {
-        // TODO: Initialize component
-        await base.OnInitializedAsync();
+        if (Sessions != null)
+        {
+            GroupedSessions = GroupSessionsByDate(Sessions);
+        }
+    }
+
+    private List<SessionGroup> GroupSessionsByDate(List<InvestigationSession> sessions)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var groups = new List<SessionGroup>();
+
+        var today = sessions.Where(s => s.UpdatedAt.Date == now.Date).ToList();
+        if (today.Any())
+            groups.Add(new SessionGroup { Title = "Today", Sessions = today });
+
+        var yesterday = sessions.Where(s => s.UpdatedAt.Date == now.AddDays(-1).Date).ToList();
+        if (yesterday.Any())
+            groups.Add(new SessionGroup { Title = "Yesterday", Sessions = yesterday });
+
+        var thisWeek = sessions.Where(s => s.UpdatedAt.Date < now.AddDays(-1).Date &&
+        s.UpdatedAt.Date >= now.AddDays(-7).Date).ToList();
+        if (thisWeek.Any())
+            groups.Add(new SessionGroup { Title = "This Week", Sessions = thisWeek });
+
+        var older = sessions.Where(s => s.UpdatedAt.Date < now.AddDays(-7).Date).ToList();
+        if (older.Any())
+            groups.Add(new SessionGroup { Title = "Older", Sessions = older });
+
+        return groups;
+    }
+
+    private async Task CreateNewSession()
+    {
+        await OnCreateNew.InvokeAsync();
+    }
+
+    private class SessionGroup
+    {
+        public string Title { get; set; } = "";
+        public List<InvestigationSession> Sessions { get; set; } = new();
     }
 }

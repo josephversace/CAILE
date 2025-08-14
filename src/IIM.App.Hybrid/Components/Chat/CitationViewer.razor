@@ -1,16 +1,122 @@
-@* CitationViewer Component *@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Chat/CitationViewer.razor
+// ============================================
+@using IIM.Core.Models
 
-<div class="CitationViewer">
-    <h3>CitationViewer</h3>
-    @* TODO: Implement component *@
+<div class="citation-viewer">
+    @if (IsExpanded)
+    {
+        <div class="citation-expanded">
+            <div class="citation-header">
+                <h5>Citation Details</h5>
+                <button class="btn-close" @onclick="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="citation-content">
+                <div class="citation-source">
+                    <i class="fas fa-file-alt"></i>
+                    <span>@Citation.SourceType: @Citation.SourceId</span>
+                </div>
+
+                <div class="citation-text">
+                    <blockquote>
+                        @((MarkupString)HighlightText(Citation.Text))
+                    </blockquote>
+                </div>
+
+                @if (Citation.PageNumber.HasValue)
+                {
+                    <div class="citation-location">
+                        <span>Page @Citation.PageNumber</span>
+                        @if (!string.IsNullOrEmpty(Citation.Location))
+                        {
+                            <span> • @Citation.Location</span>
+                        }
+                    </div>
+                }
+
+                <div class="citation-relevance">
+                    <label>Relevance:</label>
+                    <div class="relevance-bar">
+                        <div class="relevance-fill" style="width: @(Citation.Relevance * 100)%"></div>
+                    </div>
+                    <span>@((Citation.Relevance * 100).ToString("F0"))%</span>
+                </div>
+
+                <div class="citation-actions">
+                    <button class="btn btn-sm btn-primary" @onclick="ViewSource">
+                        <i class="fas fa-external-link-alt"></i> View Source
+                    </button>
+                    <button class="btn btn-sm btn-secondary" @onclick="CopyCitation">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="citation-compact" @onclick="Expand">
+            <span class="citation-number">[@Index]</span>
+            <span class="citation-preview">@GetPreview()</span>
+            <i class="fas fa-chevron-right"></i>
+        </div>
+    }
 </div>
 
 @code {
-    [Parameter] public string Id { get; set; } = string.Empty;
-    
-    protected override async Task OnInitializedAsync()
+    [Parameter] public Citation Citation { get; set; } = new();
+    [Parameter] public int Index { get; set; } = 1;
+    [Parameter] public bool IsExpanded { get; set; } = false;
+    [Parameter] public EventCallback<Citation> OnViewSource { get; set; }
+    [Parameter] public string? HighlightQuery { get; set; }
+
+    private void Expand()
     {
-        // TODO: Initialize component
-        await base.OnInitializedAsync();
+        IsExpanded = true;
+    }
+
+    private void Close()
+    {
+        IsExpanded = false;
+    }
+
+    private string GetPreview()
+    {
+        var text = Citation.Text;
+        if (text.Length > 100)
+        {
+            text = text.Substring(0, 97) + "...";
+        }
+        return text;
+    }
+
+    private string HighlightText(string text)
+    {
+        if (string.IsNullOrEmpty(HighlightQuery))
+            return text;
+
+        // Simple highlighting - in production use proper text highlighting library
+        var highlighted = System.Text.RegularExpressions.Regex.Replace(
+        text,
+        $"({System.Text.RegularExpressions.Regex.Escape(HighlightQuery)})",
+        "<mark>$1</mark>",
+        System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
+
+        return highlighted;
+    }
+
+    private async Task ViewSource()
+    {
+        await OnViewSource.InvokeAsync(Citation);
+    }
+
+    private async Task CopyCitation()
+    {
+        // TODO: Implement copy to clipboard
+        var citationText = $"[{Index}] {Citation.Text} (Source: {Citation.SourceType} - {Citation.SourceId})";
     }
 }

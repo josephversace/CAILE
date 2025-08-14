@@ -1,16 +1,187 @@
-@* MultiModalInput Component *@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Investigation/MultiModalInput.razor
+// ============================================
+@using IIM.Core.Models
+@using Microsoft.AspNetCore.Components.Forms
 
-<div class="MultiModalInput">
-    <h3>MultiModalInput</h3>
-    @* TODO: Implement component *@
+<div class="input-area">
+    <div class="input-container @(IsFocused ? "focused" : "")">
+        <div class="input-toolbar">
+            <button class="input-tool" @onclick="ShowFileUpload" title="Attach Evidence">
+                <i class="fas fa-paperclip"></i>
+            </button>
+            <button class="input-tool @(IsRecording ? "recording" : "")" @onclick="ToggleVoiceRecording"
+                title="Voice Input">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button class="input-tool" @onclick="TakeScreenshot" title="Screenshot">
+                <i class="fas fa-camera"></i>
+            </button>
+            <button class="input-tool" @onclick="ShowModelSelector" title="Select Model">
+                <i class="fas fa-robot"></i>
+            </button>
+            <button class="input-tool" @onclick="ShowToolSelector" title="Tools">
+                <i class="fas fa-tools"></i>
+            </button>
+        </div>
+
+        @if (Attachments.Any())
+        {
+            <div class="attachment-preview">
+                @foreach (var attachment in Attachments)
+                {
+                    <div class="attachment-chip">
+                        <i class="fas @GetAttachmentIcon(attachment.Type)"></i>
+                        <span>@attachment.FileName</span>
+                        <button @onclick="() => RemoveAttachment(attachment)">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+
+        <textarea class="input-textarea" @bind="MessageText" @onfocus="@(() => IsFocused = true)"
+            @onblur="@(() => IsFocused = false)" @onkeydown="@HandleKeyDown"
+            placeholder="Ask questions, analyze evidence, or use @@ to reference specific files..." rows="@TextAreaRows"
+            disabled="@(!IsEnabled)"></textarea>
+
+        <div class="input-actions">
+            <span class="char-count">@MessageText.Length / 32000</span>
+            <button class="send-button" @onclick="SendMessage" disabled="@(!CanSend())">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <InputFile @ref="fileInput" OnChange="HandleFileSelected" multiple style="display: none;" />
 </div>
 
 @code {
-    [Parameter] public string Id { get; set; } = string.Empty;
-    
-    protected override async Task OnInitializedAsync()
+    [Parameter] public EventCallback<InvestigationQuery> OnSendMessage { get; set; }
+    [Parameter] public EventCallback<List<Attachment>> OnFileAttach { get; set; }
+    [Parameter] public EventCallback<Stream> OnVoiceInput { get; set; }
+    [Parameter] public EventCallback<string> OnToolSelect { get; set; }
+    [Parameter] public List<string> AvailableTools { get; set; } = new();
+    [Parameter] public Dictionary<string, ModelConfiguration> ActiveModels { get; set; } = new();
+    [Parameter] public bool IsEnabled { get; set; } = true;
+
+    private InputFile? fileInput;
+    private string MessageText = "";
+    private List<Attachment> Attachments = new();
+    private bool IsFocused = false;
+    private bool IsRecording = false;
+    private int TextAreaRows = 3;
+
+    private async Task SendMessage()
     {
-        // TODO: Initialize component
-        await base.OnInitializedAsync();
+        if (!CanSend()) return;
+
+        var query = new InvestigationQuery
+        {
+            Text = MessageText,
+            Attachments = Attachments.ToList(),
+            Timestamp = DateTimeOffset.UtcNow
+        };
+
+        await OnSendMessage.InvokeAsync(query);
+
+        // Clear input
+        MessageText = "";
+        Attachments.Clear();
+        TextAreaRows = 3;
     }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await SendMessage();
+        }
+        else if (e.Key == "Enter" && e.ShiftKey)
+        {
+            // Allow new line
+            TextAreaRows = Math.Min(10, TextAreaRows + 1);
+        }
+    }
+
+    private void ShowFileUpload()
+    {
+        fileInput?.Element?.Value.Click();
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        foreach (var file in e.GetMultipleFiles())
+        {
+            var attachment = new Attachment
+            {
+                FileName = file.Name,
+                ContentType = file.ContentType,
+                Size = file.Size,
+                Type = DetermineAttachmentType(file.ContentType),
+                Stream = file.OpenReadStream(maxAllowedSize: 100 * 1024 * 1024) // 100MB max
+            };
+
+            Attachments.Add(attachment);
+        }
+
+        await OnFileAttach.InvokeAsync(Attachments);
+    }
+
+    private async Task ToggleVoiceRecording()
+    {
+        IsRecording = !IsRecording;
+        if (IsRecording)
+        {
+            // Start recording
+        }
+        else
+        {
+            // Stop recording and process
+        }
+    }
+
+    private void TakeScreenshot()
+    {
+        // Implement screenshot functionality
+    }
+
+    private void ShowModelSelector()
+    {
+        // Show model selection dialog
+    }
+
+    private void ShowToolSelector()
+    {
+        // Show tool selection dialog
+    }
+
+    private void RemoveAttachment(Attachment attachment)
+    {
+        Attachments.Remove(attachment);
+    }
+
+    private bool CanSend()
+    {
+        return IsEnabled && (!string.IsNullOrWhiteSpace(MessageText) || Attachments.Any());
+    }
+
+    private AttachmentType DetermineAttachmentType(string contentType)
+    {
+        if (contentType.StartsWith("image/")) return AttachmentType.Image;
+        if (contentType.StartsWith("audio/")) return AttachmentType.Audio;
+        if (contentType.StartsWith("video/")) return AttachmentType.Video;
+        if (contentType.Contains("pdf") || contentType.Contains("document")) return AttachmentType.Document;
+        return AttachmentType.Other;
+    }
+
+    private string GetAttachmentIcon(AttachmentType type) => type switch
+    {
+        AttachmentType.Image => "fa-image",
+        AttachmentType.Audio => "fa-file-audio",
+        AttachmentType.Video => "fa-file-video",
+        AttachmentType.Document => "fa-file-alt",
+        _ => "fa-file"
+    };
 }

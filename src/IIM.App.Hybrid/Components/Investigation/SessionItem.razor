@@ -1,16 +1,61 @@
-@* SessionItem Component *@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Investigation/SessionItem.razor
+// ============================================
+@using IIM.Core.Models
 
-<div class="SessionItem">
-    <h3>SessionItem</h3>
-    @* TODO: Implement component *@
+<div class="session-item @(IsActive ? "active" : "") @(IsCollapsed ? "collapsed" : "")" @onclick="OnClick">
+    <div class="session-header">
+        <div class="session-icon">
+            <i class="fas @GetSessionIcon(Session.Type)"></i>
+        </div>
+        @if (!IsCollapsed)
+        {
+            <div class="session-info">
+                <div class="session-title">@Session.Title</div>
+                <div class="session-meta">
+                    <span class="session-time">@GetRelativeTime(Session.UpdatedAt)</span>
+                    @if (Session.Messages.Any())
+                    {
+                        <span class="session-count">@Session.Messages.Count messages</span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!IsCollapsed && IsActive && Session.Findings.Any())
+    {
+        <div class="session-findings">
+            <span class="badge badge-warning">@Session.Findings.Count findings</span>
+        </div>
+    }
 </div>
 
 @code {
-    [Parameter] public string Id { get; set; } = string.Empty;
-    
-    protected override async Task OnInitializedAsync()
+    [Parameter] public InvestigationSession Session { get; set; } = new();
+    [Parameter] public bool IsActive { get; set; }
+    [Parameter] public bool IsCollapsed { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    private string GetSessionIcon(InvestigationType type) => type switch
     {
-        // TODO: Initialize component
-        await base.OnInitializedAsync();
+        InvestigationType.EvidenceAnalysis => "fa-microscope",
+        InvestigationType.TimelineConstruction => "fa-clock",
+        InvestigationType.NetworkAnalysis => "fa-project-diagram",
+        InvestigationType.PatternRecognition => "fa-brain",
+        InvestigationType.OSINTResearch => "fa-globe",
+        InvestigationType.ForensicAnalysis => "fa-fingerprint",
+        _ => "fa-comments"
+    };
+
+    private string GetRelativeTime(DateTimeOffset time)
+    {
+        var diff = DateTimeOffset.UtcNow - time;
+
+        if (diff.TotalMinutes < 1) return "just now";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
+        return time.ToString("MMM dd");
     }
 }

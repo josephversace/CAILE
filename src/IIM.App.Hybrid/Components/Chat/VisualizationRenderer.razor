@@ -1,0 +1,148 @@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Chat/VisualizationRenderer.razor
+// ============================================
+@using IIM.Core.Models
+@using System.Text.Json
+
+<div class="visualization-container">
+    @if (!string.IsNullOrEmpty(Visualization.Title))
+    {
+        <h6 class="visualization-title">@Visualization.Title</h6>
+    }
+
+    @if (!string.IsNullOrEmpty(Visualization.Description))
+    {
+        <p class="visualization-description">@Visualization.Description</p>
+    }
+
+    <div class="visualization-content" @ref="visualizationElement">
+        @switch (Visualization.Type?.ToLower())
+        {
+            case "chart":
+            case "graph":
+                <canvas id="@_canvasId"></canvas>
+                break;
+
+            case "timeline":
+                <div class="timeline-visualization">
+                    @RenderTimeline()
+                </div>
+                break;
+
+            case "map":
+                <div id="@_mapId" class="map-container"></div>
+                break;
+
+            case "table":
+                @RenderTable()
+                break;
+
+            case "network":
+                <div id="@_networkId" class="network-container"></div>
+                break;
+
+            case "html":
+                @((MarkupString)GetHtmlContent())
+                break;
+
+            case "svg":
+                @((MarkupString)GetSvgContent())
+                break;
+
+            default:
+                <pre
+                    class="raw-data">@JsonSerializer.Serialize(Visualization.Data, new JsonSerializerOptions { WriteIndented = true })</pre>
+                break;
+        }
+    </div>
+
+    <div class="visualization-actions">
+        <button class="action-btn" @onclick="ToggleFullscreen">
+            <i class="fas @(_isFullscreen ? "fa-compress" : "fa-expand")"></i>
+        </button>
+        <button class="action-btn" @onclick="ExportVisualization">
+            <i class="fas fa-download"></i>
+        </button>
+        <button class="action-btn" @onclick="RefreshVisualization">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Visualization Visualization { get; set; } = new();
+
+    private ElementReference visualizationElement;
+    private string _canvasId = $"canvas-{Guid.NewGuid():N}";
+    private string _mapId = $"map-{Guid.NewGuid():N}";
+    private string _networkId = $"network-{Guid.NewGuid():N}";
+    private bool _isFullscreen = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await RenderVisualization();
+        }
+    }
+
+    private async Task RenderVisualization()
+    {
+        // TODO: Implement actual visualization rendering using JavaScript interop
+        // This would call JavaScript libraries like Chart.js, D3.js, Leaflet, etc.
+    }
+
+    private RenderFragment RenderTimeline() => builder =>
+    {
+        // TODO: Render timeline visualization
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "timeline");
+        builder.AddContent(2, "Timeline visualization here");
+        builder.CloseElement();
+    };
+
+    private RenderFragment RenderTable() => builder =>
+    {
+        // TODO: Render table from data
+        builder.OpenElement(0, "table");
+        builder.AddAttribute(1, "class", "table table-striped");
+
+        // Parse and render table data
+        if (Visualization.Data is JsonElement jsonElement)
+        {
+            // Render headers and rows from JSON data
+        }
+
+        builder.CloseElement();
+    };
+
+    private string GetHtmlContent()
+    {
+        if (Visualization.Data is string html)
+            return html;
+        return "";
+    }
+
+    private string GetSvgContent()
+    {
+        if (Visualization.Data is string svg)
+            return svg;
+        return "";
+    }
+
+    private void ToggleFullscreen()
+    {
+        _isFullscreen = !_isFullscreen;
+        // TODO: Implement fullscreen toggle
+    }
+
+    private async Task ExportVisualization()
+    {
+        // TODO: Implement export functionality
+    }
+
+    private async Task RefreshVisualization()
+    {
+        await RenderVisualization();
+    }
+}

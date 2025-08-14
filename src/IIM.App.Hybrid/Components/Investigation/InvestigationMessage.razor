@@ -1,16 +1,98 @@
-@* InvestigationMessage Component *@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Investigation/InvestigationMessage.razor
+// ============================================
+@using IIM.Core.Models
 
-<div class="InvestigationMessage">
-    <h3>InvestigationMessage</h3>
-    @* TODO: Implement component *@
+<div class="message-wrapper">
+    <div class="message @Message.Role.ToString().ToLower()">
+        <div class="message-avatar">
+            @if (Message.Role == MessageRole.User)
+            {
+                <span>U</span>
+            }
+            else if (Message.Role == MessageRole.Assistant)
+            {
+                <i class="fas fa-robot"></i>
+            }
+            else if (Message.Role == MessageRole.Tool)
+            {
+                <i class="fas fa-tools"></i>
+            }
+        </div>
+
+        <div class="message-content">
+            <div class="message-header">
+                <span class="message-author">@GetAuthorName()</span>
+                @if (!string.IsNullOrEmpty(Message.ModelUsed))
+                {
+                    <span class="message-badge">@Message.ModelUsed</span>
+                }
+                <span class="message-time">@Message.Timestamp.ToString("HH:mm")</span>
+            </div>
+
+            <div class="message-text">
+                @((MarkupString)FormatContent(Message.Content))
+            </div>
+
+            @if (Message.Attachments?.Any() == true)
+            {
+                <div class="message-attachments">
+                    @foreach (var attachment in Message.Attachments)
+                    {
+                        <AttachmentCard Attachment="@attachment" />
+                    }
+                </div>
+            }
+
+            @if (Message.ToolResults?.Any() == true)
+            {
+                <div class="tool-results">
+                    @foreach (var result in Message.ToolResults)
+                    {
+                        <ToolResult Result="@result" OnExecute="@((p) => OnToolExecute.InvokeAsync((result.ToolName, p)))" />
+                    }
+                </div>
+            }
+
+            @if (Message.Citations?.Any() == true)
+            {
+                <div class="citations">
+                    <div class="citations-header">
+                        <i class="fas fa-quote-right"></i>
+                        <span>Citations</span>
+                    </div>
+                    @foreach (var citation in Message.Citations)
+                    {
+                        <CitationCard Citation="@citation" OnClick="@(() => OnCitationClick.InvokeAsync(citation))" />
+                    }
+                </div>
+            }
+        </div>
+    </div>
 </div>
 
 @code {
-    [Parameter] public string Id { get; set; } = string.Empty;
-    
-    protected override async Task OnInitializedAsync()
+    [Parameter] public InvestigationMessage Message { get; set; } = new();
+    [Parameter] public EventCallback<(string toolName, Dictionary<string, object> parameters)> OnToolExecute { get; set; }
+    [Parameter] public EventCallback<string> OnEvidenceView { get; set; }
+    [Parameter] public EventCallback<Citation> OnCitationClick { get; set; }
+
+    private string GetAuthorName() => Message.Role switch
     {
-        // TODO: Initialize component
-        await base.OnInitializedAsync();
+        MessageRole.User => "You",
+        MessageRole.Assistant => "IIM Assistant",
+        MessageRole.System => "System",
+        MessageRole.Tool => "Tool",
+        _ => "Unknown"
+    };
+
+    private string FormatContent(string content)
+    {
+        // Basic markdown formatting
+        content = System.Text.RegularExpressions.Regex.Replace(content, @"\*\*(.*?)\*\*", "<strong>$1</strong>");
+        content = System.Text.RegularExpressions.Regex.Replace(content, @"\*(.*?)\*", "<em>$1</em>");
+        content = System.Text.RegularExpressions.Regex.Replace(content, @"`(.*?)`", "<code>$1</code>");
+        content = content.Replace("\n", "<br>");
+        return content;
     }
 }
