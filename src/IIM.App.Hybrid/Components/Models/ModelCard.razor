@@ -1,16 +1,263 @@
-@* ModelCard Component *@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Models/ModelCard.razor
+// ============================================
+@using IIM.Core.Models
 
-<div class="ModelCard">
-    <h3>ModelCard</h3>
-    @* TODO: Implement component *@
+<div class="model-card @(Model.Status == ModelStatus.Loaded ? "active" : "") @(IsSelected ? "selected" : "")"
+    @onclick="OnClick">
+    <div class="model-header">
+        <div class="model-icon" style="background: @GetGradientColor()">
+            <i class="fas @GetModelIcon()"></i>
+        </div>
+        <div class="model-info">
+            <div class="model-name">@Model.ModelId</div>
+            <div class="model-type">@Model.Type</div>
+        </div>
+        <div class="model-status">
+            <span class="status-badge @GetStatusClass()">@GetStatusText()</span>
+        </div>
+    </div>
+
+    <div class="model-body">
+        @if (!string.IsNullOrEmpty(Description))
+        {
+            <p class="model-description">@Description</p>
+        }
+
+        @if (ShowCapabilities && Model.Capabilities != null)
+        {
+            <div class="model-capabilities">
+                <div class="capability">
+                    <i class="fas fa-text-width"></i>
+                    <span>@Model.Capabilities.MaxContextLength.ToString("N0") tokens</span>
+                </div>
+                @if (Model.Capabilities.SupportsStreaming)
+                {
+                    <div class="capability">
+                        <i class="fas fa-stream"></i>
+                        <span>Streaming</span>
+                    </div>
+                }
+                @if (Model.Capabilities.SupportsFineTuning)
+                {
+                    <div class="capability">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Fine-tuning</span>
+                    </div>
+                }
+                @if (Model.Capabilities.SupportsMultiModal)
+                {
+                    <div class="capability">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Multi-modal</span>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (ShowStats)
+        {
+            <div class="model-stats">
+                <div class="stat">
+                    <span class="stat-label">Memory:</span>
+                    <span class="stat-value">@FormatBytes(Model.MemoryUsage)</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Provider:</span>
+                    <span class="stat-value">@Model.Provider</span>
+                </div>
+                @if (Model.LoadedAt.HasValue)
+                {
+                    <div class="stat">
+                        <span class="stat-label">Loaded:</span>
+                        <span class="stat-value">@GetRelativeTime(Model.LoadedAt.Value)</span>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (PerformanceMetrics != null)
+        {
+            <div class="performance-metrics">
+                <div class="metric">
+                    <div class="metric-label">Speed</div>
+                    <div class="metric-value">@PerformanceMetrics.TokensPerSecond.ToString("F1") tok/s</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Latency</div>
+                    <div class="metric-value">@PerformanceMetrics.AverageLatencyMs.ToString("F0") ms</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Accuracy</div>
+                    <div class="metric-value">@(PerformanceMetrics.Accuracy * 100).ToString("F1")%</div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="model-actions">
+        @switch (Model.Status)
+        {
+            case ModelStatus.Available:
+                <button class="btn btn-primary" @onclick:stopPropagation="true" @onclick="Load">
+                    <i class="fas fa-download"></i> Load
+                </button>
+                break;
+
+            case ModelStatus.Downloading:
+                <div class="download-progress">
+                    <div class="progress">
+                        <div class="progress-bar" style="width: @DownloadProgress%"></div>
+                    </div>
+                    <span>@DownloadProgress%</span>
+                </div>
+                break;
+
+            case ModelStatus.Loading:
+                <div class="spinner-border spinner-border-sm" role="status"></div>
+                <span>Loading...</span>
+                break;
+
+            case ModelStatus.Loaded:
+            case ModelStatus.Running:
+                <button class="btn btn-sm btn-success" @onclick:stopPropagation="true" @onclick="Configure">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="btn btn-sm btn-warning" @onclick:stopPropagation="true" @onclick="Unload">
+                    <i class="fas fa-eject"></i>
+                </button>
+                break;
+
+            case ModelStatus.Error:
+                <button class="btn btn-danger" @onclick:stopPropagation="true" @onclick="Retry">
+                    <i class="fas fa-redo"></i> Retry
+                </button>
+                break;
+        }
+
+        @if (ShowFineTune && Model.Capabilities?.SupportsFineTuning == true)
+        {
+            <button class="btn btn-sm btn-info" @onclick:stopPropagation="true" @onclick="FineTune">
+                <i class="fas fa-graduation-cap"></i> Fine-tune
+            </button>
+        }
+    </div>
 </div>
 
 @code {
-    [Parameter] public string Id { get; set; } = string.Empty;
-    
-    protected override async Task OnInitializedAsync()
+    [Parameter] public ModelConfiguration Model { get; set; } = new();
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public bool IsSelected { get; set; }
+    [Parameter] public bool ShowCapabilities { get; set; } = true;
+    [Parameter] public bool ShowStats { get; set; } = true;
+    [Parameter] public bool ShowFineTune { get; set; } = false;
+    [Parameter] public int DownloadProgress { get; set; } = 0;
+    [Parameter] public ModelPerformanceMetrics? PerformanceMetrics { get; set; }
+
+    [Parameter] public EventCallback<ModelConfiguration> OnClick { get; set; }
+    [Parameter] public EventCallback<ModelConfiguration> OnLoad { get; set; }
+    [Parameter] public EventCallback<ModelConfiguration> OnUnload { get; set; }
+    [Parameter] public EventCallback<ModelConfiguration> OnConfigure { get; set; }
+    [Parameter] public EventCallback<ModelConfiguration> OnFineTune { get; set; }
+
+    private async Task Load()
     {
-        // TODO: Initialize component
-        await base.OnInitializedAsync();
+        await OnLoad.InvokeAsync(Model);
+    }
+
+    private async Task Unload()
+    {
+        await OnUnload.InvokeAsync(Model);
+    }
+
+    private async Task Configure()
+    {
+        await OnConfigure.InvokeAsync(Model);
+    }
+
+    private async Task FineTune()
+    {
+        await OnFineTune.InvokeAsync(Model);
+    }
+
+    private async Task Retry()
+    {
+        await OnLoad.InvokeAsync(Model);
+    }
+
+    private string GetModelIcon() => Model.Type switch
+    {
+        ModelType.LLM => "fa-brain",
+        ModelType.Embedding => "fa-vector-square",
+        ModelType.Whisper => "fa-microphone",
+        ModelType.CLIP => "fa-image",
+        ModelType.OCR => "fa-file-alt",
+        ModelType.ObjectDetection => "fa-search",
+        ModelType.FaceRecognition => "fa-user-circle",
+        _ => "fa-cube"
+    };
+
+    private string GetGradientColor() => Model.Type switch
+    {
+        ModelType.LLM => "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        ModelType.Whisper => "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+        ModelType.CLIP => "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+        ModelType.OCR => "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+        _ => "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
+    };
+
+    private string GetStatusClass() => Model.Status switch
+    {
+        ModelStatus.Available => "badge-secondary",
+        ModelStatus.Downloading => "badge-info",
+        ModelStatus.Loading => "badge-warning",
+        ModelStatus.Loaded => "badge-success",
+        ModelStatus.Running => "badge-primary",
+        ModelStatus.Error => "badge-danger",
+        _ => "badge-secondary"
+    };
+
+    private string GetStatusText() => Model.Status switch
+    {
+        ModelStatus.Available => "Available",
+        ModelStatus.Downloading => "Downloading",
+        ModelStatus.Loading => "Loading",
+        ModelStatus.Loaded => "Ready",
+        ModelStatus.Running => "Active",
+        ModelStatus.Unloading => "Unloading",
+        ModelStatus.Error => "Error",
+        _ => "Unknown"
+    };
+
+    private string FormatBytes(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        int order = 0;
+        double size = bytes;
+
+        while (size >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            size /= 1024;
+        }
+
+        return $"{size:F1} {sizes[order]}";
+    }
+
+    private string GetRelativeTime(DateTimeOffset time)
+    {
+        var diff = DateTimeOffset.UtcNow - time;
+
+        if (diff.TotalMinutes < 1) return "just now";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        return time.ToString("MMM dd");
+    }
+
+    public class ModelPerformanceMetrics
+    {
+        public double TokensPerSecond { get; set; }
+        public double AverageLatencyMs { get; set; }
+        public double Accuracy { get; set; }
     }
 }

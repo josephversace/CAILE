@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("IIM.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e2db1dcf3deb0ef08b6ce68a97e4426ac7dcd445")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d1a6ecdbdca6ec880d232c79013d9c5ae65ddd22")]
 [assembly: System.Reflection.AssemblyProductAttribute("IIM.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("IIM.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

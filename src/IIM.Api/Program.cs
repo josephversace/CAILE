@@ -74,6 +74,8 @@ builder.Services.AddSingleton<IEvidenceManager>(sp =>
     return new EvidenceManager(logger, config);
 });
 
+// Register the background service
+builder.Services.AddHostedService<EvidenceIntegrityMonitor>();
 
 var app = builder.Build();
 
@@ -769,82 +771,6 @@ app.MapGet("/api/evidence/list", async (
 .WithName("ListEvidence")
 .WithOpenApi();
 
-// ============================================
-// Request/Response Models
-// ============================================
-
-public record ProcessingRequest(
-    string ProcessingType,
-    Dictionary<string, object>? Parameters = null
-);
-
-public record ExportRequest(
-    string? ExportPath = null,
-    bool IncludeProcessedVersions = true,
-    bool GenerateVerificationScript = true
-);
-
-// ============================================
-// Background Service for Integrity Monitoring
-// ============================================
-
-public class EvidenceIntegrityMonitor : BackgroundService
-{
-    private readonly IEvidenceManager _evidenceManager;
-    private readonly ILogger<EvidenceIntegrityMonitor> _logger;
-    private readonly TimeSpan _checkInterval = TimeSpan.FromHours(6);
-
-    public EvidenceIntegrityMonitor(
-        IEvidenceManager evidenceManager,
-        ILogger<EvidenceIntegrityMonitor> logger)
-    {
-        _evidenceManager = evidenceManager;
-        _logger = logger;
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try
-            {
-                _logger.LogInformation("Starting evidence integrity check");
-
-                // In production, get list of evidence IDs from database
-                // For now, this is a placeholder
-                var evidenceIds = new List<string>();
-
-                foreach (var evidenceId in evidenceIds)
-                {
-                    try
-                    {
-                        var isValid = await _evidenceManager.VerifyIntegrityAsync(evidenceId, stoppingToken);
-
-                        if (!isValid)
-                        {
-                            _logger.LogError("Integrity check failed for evidence {EvidenceId}", evidenceId);
-                            // Send alert to administrators
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error checking evidence {EvidenceId}", evidenceId);
-                    }
-                }
-
-                _logger.LogInformation("Evidence integrity check completed");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in integrity monitoring");
-            }
-
-            await Task.Delay(_checkInterval, stoppingToken);
-        }
-    }
-}
-
-
 // Start the application
 app.Run("http://localhost:5080");
 
@@ -959,9 +885,26 @@ public record GenerateRequest(
     HashSet<string>? Tags = null
 );
 
+public record ModelRequest(
+    string ModelId,
+    string? ModelPath = null,
+    Dictionary<string, object>? Options = null
+);
+
 public record QueryBody(string query, int k);
 
 public record FileSyncRequest(string WindowsPath, string WslPath);
+
+public record ProcessingRequest(
+    string ProcessingType,
+    Dictionary<string, object>? Parameters = null
+);
+
+public record ExportRequest(
+    string? ExportPath = null,
+    bool IncludeProcessedVersions = true,
+    bool GenerateVerificationScript = true
+);
 
 public record EmbedResponse(float[] embedding);
 
@@ -972,6 +915,66 @@ public record QdrantSearchResponse(List<Item> result)
     {
         public string id { get; set; } = string.Empty;
         public Dictionary<string, object>? payload { get; set; }
+    }
+}
+
+// ============================================
+// Background Service for Integrity Monitoring
+// ============================================
+
+public class EvidenceIntegrityMonitor : BackgroundService
+{
+    private readonly IEvidenceManager _evidenceManager;
+    private readonly ILogger<EvidenceIntegrityMonitor> _logger;
+    private readonly TimeSpan _checkInterval = TimeSpan.FromHours(6);
+
+    public EvidenceIntegrityMonitor(
+        IEvidenceManager evidenceManager,
+        ILogger<EvidenceIntegrityMonitor> logger)
+    {
+        _evidenceManager = evidenceManager;
+        _logger = logger;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                _logger.LogInformation("Starting evidence integrity check");
+
+                // In production, get list of evidence IDs from database
+                // For now, this is a placeholder
+                var evidenceIds = new List<string>();
+
+                foreach (var evidenceId in evidenceIds)
+                {
+                    try
+                    {
+                        var isValid = await _evidenceManager.VerifyIntegrityAsync(evidenceId, stoppingToken);
+
+                        if (!isValid)
+                        {
+                            _logger.LogError("Integrity check failed for evidence {EvidenceId}", evidenceId);
+                            // Send alert to administrators
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error checking evidence {EvidenceId}", evidenceId);
+                    }
+                }
+
+                _logger.LogInformation("Evidence integrity check completed");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in integrity monitoring");
+            }
+
+            await Task.Delay(_checkInterval, stoppingToken);
+        }
     }
 }
 

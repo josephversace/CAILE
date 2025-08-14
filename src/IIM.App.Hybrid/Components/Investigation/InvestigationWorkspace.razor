@@ -1,16 +1,232 @@
-@* InvestigationWorkspace Component *@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Investigation/InvestigationWorkspace.razor
+// ============================================
+@using IIM.Core.Models
+@using IIM.App.Hybrid.Services
+@using Microsoft.AspNetCore.SignalR.Client
+@inject IInvestigationService InvestigationService
+@inject IHubConnectionService HubService
+@implements IAsyncDisposable
 
-<div class="InvestigationWorkspace">
-    <h3>InvestigationWorkspace</h3>
-    @* TODO: Implement component *@
+<div class="investigation-workspace">
+    <div class="workspace-header">
+        @if (Session != null)
+        {
+            <h3>@Session.Title</h3>
+            <div class="session-meta">
+                <span class="badge @GetTypeClass(Session.Type)">@Session.Type</span>
+                <span class="text-muted">@Session.UpdatedAt.ToString("MMM dd, HH:mm")</span>
+            </div>
+        }
+    </div>
+
+    <div class="chat-container" @ref="chatContainer">
+        @if (Messages != null)
+        {
+            @foreach (var message in Messages)
+            {
+                <InvestigationMessage Message="@message" OnToolExecute="@ExecuteTool" OnEvidenceView="@ViewEvidence"
+                    OnCitationClick="@ShowCitation" />
+            }
+        }
+
+        @if (IsProcessing)
+        {
+            <div class="processing-indicator">
+                <div class="spinner-border spinner-border-sm" role="status"></div>
+                <span>@CurrentProcessingStep</span>
+            </div>
+        }
+    </div>
+
+    <MultiModalInput OnSendMessage="@SendMessage" OnFileAttach="@AttachFile" OnVoiceInput="@ProcessVoiceInput"
+        OnToolSelect="@SelectTool" AvailableTools="@AvailableTools" ActiveModels="@ActiveModels"
+        IsEnabled="@(!IsProcessing)" />
 </div>
 
 @code {
-    [Parameter] public string Id { get; set; } = string.Empty;
-    
+    [Parameter] public string? SessionId { get; set; }
+    [Parameter] public string? CaseId { get; set; }
+
+    private ElementReference chatContainer;
+    private InvestigationSession? Session;
+    private List<InvestigationMessage> Messages = new();
+    private List<string> AvailableTools = new();
+    private Dictionary<string, ModelConfiguration> ActiveModels = new();
+    private bool IsProcessing = false;
+    private string CurrentProcessingStep = "";
+    private HubConnection? _hubConnection;
+
     protected override async Task OnInitializedAsync()
     {
-        // TODO: Initialize component
-        await base.OnInitializedAsync();
+        if (!string.IsNullOrEmpty(SessionId))
+        {
+            await LoadSession(SessionId);
+        }
+        else if (!string.IsNullOrEmpty(CaseId))
+        {
+            await CreateNewSession();
+        }
+
+        await ConnectToHub();
+    }
+
+    private async Task LoadSession(string sessionId)
+    {
+        Session = await InvestigationService.GetSessionAsync(sessionId);
+        if (Session != null)
+        {
+            Messages = Session.Messages;
+            AvailableTools = Session.EnabledTools;
+            ActiveModels = Session.Models;
+        }
+    }
+
+    private async Task CreateNewSession()
+    {
+        Session = await InvestigationService.CreateSessionAsync(new CreateSessionRequest(
+        CaseId: CaseId!,
+        Title: "New Investigation",
+        InvestigationType: InvestigationType.GeneralInquiry.ToString()
+        ));
+        SessionId = Session.Id;
+    }
+
+    private async Task ConnectToHub()
+    {
+        _hubConnection = await HubService.ConnectAsync("investigationHub");
+
+        _hubConnection.On<InvestigationMessage>("ReceiveMessage", (message) =>
+        {
+            Messages.Add(message);
+            InvokeAsync(StateHasChanged);
+            InvokeAsync(ScrollToBottom);
+        });
+
+        _hubConnection.On<string>("ProcessingUpdate", (step) =>
+        {
+            CurrentProcessingStep = step;
+            InvokeAsync(StateHasChanged);
+        });
+
+        if (SessionId != null)
+        {
+            await _hubConnection.SendAsync("JoinSession", SessionId);
+        }
+    }
+
+    private async Task SendMessage(InvestigationQuery query)
+    {
+        if (Session == null) return;
+
+        IsProcessing = true;
+        CurrentProcessingStep = "Analyzing query...";
+
+        try
+        {
+            var response = await InvestigationService.ProcessQueryAsync(Session.Id, query);
+
+            // Add user message
+            Messages.Add(new InvestigationMessage
+            {
+                Role = MessageRole.User,
+                Content = query.Text,
+                Attachments = query.Attachments,
+                Timestamp = DateTimeOffset.UtcNow
+            });
+
+            // Add assistant response
+            Messages.Add(new InvestigationMessage
+            {
+                Role = MessageRole.Assistant,
+                Content = response.Message,
+                ToolResults = response.ToolResults,
+                Citations = response.Citations,
+                Timestamp = DateTimeOffset.UtcNow,
+                ModelUsed = ActiveModels.Values.FirstOrDefault()?.ModelId
+            });
+
+            await ScrollToBottom();
+        }
+        finally
+        {
+            IsProcessing = false;
+            CurrentProcessingStep = "";
+        }
+    }
+
+    private async Task ExecuteTool(string toolName, Dictionary<string, object> parameters)
+    {
+        IsProcessing = true;
+        CurrentProcessingStep = $"Running {toolName}...";
+
+        try
+        {
+            await _hubConnection!.SendAsync("ExecuteTool", SessionId, toolName, parameters);
+        }
+        finally
+        {
+            IsProcessing = false;
+        }
+    }
+
+    private async Task AttachFile(List<Attachment> attachments)
+    {
+        // Handle file attachments
+        foreach (var attachment in attachments)
+        {
+            // Process attachment
+        }
+    }
+
+    private async Task ProcessVoiceInput(Stream audioStream)
+    {
+        IsProcessing = true;
+        CurrentProcessingStep = "Transcribing audio...";
+
+        try
+        {
+            // Process voice input
+        }
+        finally
+        {
+            IsProcessing = false;
+        }
+    }
+
+    private async Task SelectTool(string toolId)
+    {
+        // Handle tool selection
+    }
+
+    private void ViewEvidence(string evidenceId)
+    {
+        // Navigate to evidence viewer
+    }
+
+    private void ShowCitation(Citation citation)
+    {
+        // Show citation details
+    }
+
+    private async Task ScrollToBottom()
+    {
+        await chatContainer.FocusAsync();
+    }
+
+    private string GetTypeClass(InvestigationType type) => type switch
+    {
+        InvestigationType.EvidenceAnalysis => "badge-primary",
+        InvestigationType.OSINTResearch => "badge-info",
+        InvestigationType.ForensicAnalysis => "badge-danger",
+        _ => "badge-secondary"
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection != null)
+        {
+            await _hubConnection.DisposeAsync();
+        }
     }
 }

@@ -1,0 +1,135 @@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Chat/AttachmentCard.razor
+// ============================================
+@using IIM.Core.Models
+
+<div class="attachment-card @GetAttachmentClass()" @onclick="OnClick">
+    <div class="attachment-icon">
+        <i class="fas @GetAttachmentIcon() fa-2x"></i>
+    </div>
+
+    <div class="attachment-details">
+        <div class="attachment-name">@Attachment.FileName</div>
+        <div class="attachment-meta">
+            <span class="attachment-size">@FormatFileSize(Attachment.Size)</span>
+            <span class="attachment-type">@Attachment.ContentType</span>
+        </div>
+    </div>
+
+    @if (ShowPreview && CanPreview())
+    {
+        <div class="attachment-preview">
+            @if (Attachment.Type == AttachmentType.Image)
+            {
+                <img src="@GetPreviewUrl()" alt="@Attachment.FileName" />
+            }
+            else if (Attachment.Type == AttachmentType.Audio)
+            {
+                <audio controls>
+                    <source src="@GetPreviewUrl()" type="@Attachment.ContentType">
+                </audio>
+            }
+            else if (Attachment.Type == AttachmentType.Video)
+            {
+                <video controls width="100%">
+                    <source src="@GetPreviewUrl()" type="@Attachment.ContentType">
+                </video>
+            }
+        </div>
+    }
+
+    <div class="attachment-actions">
+        @if (CanPreview())
+        {
+            <button class="action-btn" @onclick:stopPropagation="true" @onclick="TogglePreview">
+                <i class="fas @(ShowPreview ? "fa-eye-slash" : "fa-eye")"></i>
+            </button>
+        }
+        <button class="action-btn" @onclick:stopPropagation="true" @onclick="Download">
+            <i class="fas fa-download"></i>
+        </button>
+        @if (ShowRemove)
+        {
+            <button class="action-btn danger" @onclick:stopPropagation="true" @onclick="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public Attachment Attachment { get; set; } = new();
+    [Parameter] public bool ShowPreview { get; set; } = false;
+    [Parameter] public bool ShowRemove { get; set; } = false;
+    [Parameter] public EventCallback<Attachment> OnClick { get; set; }
+    [Parameter] public EventCallback<Attachment> OnRemove { get; set; }
+
+    private bool _showPreview = false;
+
+    protected override void OnInitialized()
+    {
+        _showPreview = ShowPreview;
+    }
+
+    private string GetAttachmentClass() => Attachment.Type switch
+    {
+        AttachmentType.Image => "image-attachment",
+        AttachmentType.Audio => "audio-attachment",
+        AttachmentType.Video => "video-attachment",
+        AttachmentType.Document => "document-attachment",
+        _ => "generic-attachment"
+    };
+
+    private string GetAttachmentIcon() => Attachment.Type switch
+    {
+        AttachmentType.Document => "fa-file-alt",
+        AttachmentType.Image => "fa-image",
+        AttachmentType.Audio => "fa-file-audio",
+        AttachmentType.Video => "fa-file-video",
+        AttachmentType.Archive => "fa-file-archive",
+        _ => "fa-file"
+    };
+
+    private bool CanPreview()
+    {
+        return Attachment.Type == AttachmentType.Image ||
+        Attachment.Type == AttachmentType.Audio ||
+        Attachment.Type == AttachmentType.Video;
+    }
+
+    private string GetPreviewUrl()
+    {
+        // TODO: Generate proper preview URL from storage
+        return $"/api/attachments/{Attachment.Id}/preview";
+    }
+
+    private void TogglePreview()
+    {
+        _showPreview = !_showPreview;
+    }
+
+    private async Task Download()
+    {
+        // TODO: Implement download
+    }
+
+    private async Task Remove()
+    {
+        await OnRemove.InvokeAsync(Attachment);
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        int order = 0;
+        double size = bytes;
+
+        while (size >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            size /= 1024;
+        }
+
+        return $"{size:F1} {sizes[order]}";
+    }
+}

@@ -1,0 +1,14 @@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Layout/ToolButton.razor
+// ============================================
+<button class="tool-button @(IsActive ? "active" : "")" @onclick="OnClick">
+    <i class="fas @Icon"></i>
+    <span>@Label</span>
+</button>
+
+@code {
+    [Parameter] public string Icon { get; set; } = "";
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public bool IsActive { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+}

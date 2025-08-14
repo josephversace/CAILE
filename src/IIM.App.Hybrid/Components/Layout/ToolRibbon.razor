@@ -1,16 +1,83 @@
-@* ToolRibbon Component *@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Layout/ToolRibbon.razor
+// ============================================
+@using IIM.Core.Models
+@inject NavigationManager Navigation
 
-<div class="ToolRibbon">
-    <h3>ToolRibbon</h3>
-    @* TODO: Implement component *@
+<div class="tool-ribbon">
+    <div class="tool-group">
+        <ToolButton Icon="fa-comments" Label="Chat" IsActive="@(ActiveTool == "chat")"
+            OnClick="@(() => SelectTool("chat"))" />
+
+        <ToolButton Icon="fa-search" Label="RAG Search" IsActive="@(ActiveTool == "rag")"
+            OnClick="@(() => SelectTool("rag"))" />
+    </div>
+
+    <div class="tool-group">
+        <ToolButton Icon="fa-cube" Label="Models" OnClick="@ShowModelLibrary" />
+
+        <ToolButton Icon="fa-sliders-h" Label="Fine-tune" OnClick="@ShowFineTuning" />
+    </div>
+
+    <div class="tool-group">
+        <ToolButton Icon="fa-microphone" Label="Transcribe" IsActive="@(ActiveTool == "transcribe")"
+            OnClick="@(() => SelectTool("transcribe"))" />
+
+        <ToolButton Icon="fa-image" Label="Analyze Image" IsActive="@(ActiveTool == "image")"
+            OnClick="@(() => SelectTool("image"))" />
+
+        <ToolButton Icon="fa-file-alt" Label="OCR" IsActive="@(ActiveTool == "ocr")"
+            OnClick="@(() => SelectTool("ocr"))" />
+    </div>
+
+    <div class="tool-group">
+        <ToolButton Icon="fa-globe" Label="OSINT" IsActive="@(ActiveTool == "osint")"
+            OnClick="@(() => SelectTool("osint"))" />
+
+        <ToolButton Icon="fa-project-diagram" Label="Timeline" IsActive="@(ActiveTool == "timeline")"
+            OnClick="@(() => SelectTool("timeline"))" />
+
+        <ToolButton Icon="fa-chart-bar" Label="Report" IsActive="@(ActiveTool == "report")"
+            OnClick="@(() => SelectTool("report"))" />
+    </div>
+
+    @if (CustomTools != null && CustomTools.Any())
+    {
+        <div class="tool-group">
+            @foreach (var tool in CustomTools)
+            {
+                <ToolButton Icon="@tool.Icon" Label="@tool.Label" IsActive="@(ActiveTool == tool.Id)"
+                    OnClick="@(() => SelectTool(tool.Id))" />
+            }
+        </div>
+    }
 </div>
 
 @code {
-    [Parameter] public string Id { get; set; } = string.Empty;
-    
-    protected override async Task OnInitializedAsync()
+    [Parameter] public string? ActiveTool { get; set; }
+    [Parameter] public EventCallback<string> OnToolSelected { get; set; }
+    [Parameter] public List<CustomTool>? CustomTools { get; set; }
+
+    private async Task SelectTool(string toolId)
     {
-        // TODO: Initialize component
-        await base.OnInitializedAsync();
+        ActiveTool = toolId;
+        await OnToolSelected.InvokeAsync(toolId);
+    }
+
+    private void ShowModelLibrary()
+    {
+        Navigation.NavigateTo("/models");
+    }
+
+    private void ShowFineTuning()
+    {
+        Navigation.NavigateTo("/fine-tuning");
+    }
+
+    public class CustomTool
+    {
+        public string Id { get; set; } = "";
+        public string Label { get; set; } = "";
+        public string Icon { get; set; } = "";
     }
 }

@@ -1,3 +1,6 @@
+
+namespace IIM.Core.Models;
+
 public enum Priority
 {
     Low = 0,
