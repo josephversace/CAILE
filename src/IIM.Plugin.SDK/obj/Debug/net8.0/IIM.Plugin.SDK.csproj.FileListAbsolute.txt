@@ -1,0 +1,6 @@
+\\Mac\Home\Projects\CAILE\src\IIM.Plugin.SDK\obj\Debug\net8.0\IIM.Plugin.SDK.csproj.AssemblyReference.cache
+\\Mac\Home\Projects\CAILE\src\IIM.Plugin.SDK\obj\Debug\net8.0\IIM.Plugin.SDK.GeneratedMSBuildEditorConfig.editorconfig
+\\Mac\Home\Projects\CAILE\src\IIM.Plugin.SDK\obj\Debug\net8.0\IIM.Plugin.SDK.AssemblyInfoInputs.cache
+\\Mac\Home\Projects\CAILE\src\IIM.Plugin.SDK\obj\Debug\net8.0\IIM.Plugin.SDK.AssemblyInfo.cs
+\\Mac\Home\Projects\CAILE\src\IIM.Plugin.SDK\obj\Debug\net8.0\IIM.Plugin.SDK.csproj.CoreCompileInputs.cache
+\\Mac\Home\Projects\CAILE\src\IIM.Plugin.SDK\obj\Debug\net8.0\IIM.Plugin.SDK.sourcelink.json

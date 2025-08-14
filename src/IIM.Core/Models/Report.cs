@@ -1,4 +1,7 @@
 
+using System;
+using System.Collections.Generic;
+
 namespace IIM.Core.Models;
 
 public class Report

@@ -1,4 +1,6 @@
 
+using System.Collections.Generic;
+
 namespace IIM.Core.Models;
 
 public class RAGSearchResult

@@ -1,27 +1,31 @@
-
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net8.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
     <OutputType>WinExe</OutputType>
     <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>
-    <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
-    <RootNamespace>IIM.App.Hybrid</RootNamespace>
-    <ApplicationTitle>IIM</ApplicationTitle>
-    <ApplicationId>com.icacai.iim</ApplicationId>
-    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
-    <Nullable>enable</Nullable>
+    <WindowsPackageType>None</WindowsPackageType>
+    <ApplicationTitle>IIM Investigation Suite</ApplicationTitle>
+    <ApplicationId>com.iim.investigation</ApplicationId>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>NU1605;NU1107</NoWarn>
   </PropertyGroup>
+  
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Maui" Version="8.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.100" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="8.0.100" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2592.51" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Forms" Version="8.0.6" />
+    <PackageReference Include="CommunityToolkit.Maui" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Forms" Version="8.0.10" />
   </ItemGroup>
+  
   <ItemGroup>
-    <MauiAsset Include="wwwroot\**\*" LogicalName="wwwroot\%(RecursiveDir)%(Filename)%(Extension)" />
-  </ItemGroup>
-  <ItemGroup>
+    <ProjectReference Include="..\IIM.Core\IIM.Core.csproj" />
     <ProjectReference Include="..\IIM.Shared\IIM.Shared.csproj" />
   </ItemGroup>
 </Project>

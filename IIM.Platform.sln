@@ -2,21 +2,59 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.Core", "src\IIM.Core\IIM.Core.csproj", "{1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.Core", "src\IIM.Core\IIM.Core.csproj", "{81560261-2AC0-45F2-80BD-3DEB7309768C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.App.Hybrid", "src\IIM.App.Hybrid\IIM.App.Hybrid.csproj", "{2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.App.Hybrid", "src\IIM.App.Hybrid\IIM.App.Hybrid.csproj", "{17FD9760-C0D8-4B26-8601-3A87C4303581}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.Api", "src\IIM.Api\IIM.Api.csproj", "{3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.Api", "src\IIM.Api\IIM.Api.csproj", "{AC02A209-E909-4A3B-B855-6FAA88A16316}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.Plugin.SDK", "src\IIM.Plugin.SDK\IIM.Plugin.SDK.csproj", "{9C3D42FD-2B5E-4F68-840E-C3BA28A0934F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.CLI", "tools\IIM.CLI\IIM.CLI.csproj", "{550B44BD-D92A-4950-9C59-195F2AD8209C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamplePlugin", "examples\SamplePlugin\SamplePlugin.csproj", "{BF806962-F60F-4CD4-9AEB-B3853CD299A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.Shared", "src\IIM.Shared\IIM.Shared.csproj", "{9BFF9D32-A474-0871-2E9B-A923D4F72570}"
 EndProject
 Global
-    GlobalSection(SolutionConfigurationPlatforms) = preSolution
-        Debug|Any CPU = Debug|Any CPU
-        Release|Any CPU = Release|Any CPU
-    EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{81560261-2AC0-45F2-80BD-3DEB7309768C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81560261-2AC0-45F2-80BD-3DEB7309768C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81560261-2AC0-45F2-80BD-3DEB7309768C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81560261-2AC0-45F2-80BD-3DEB7309768C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17FD9760-C0D8-4B26-8601-3A87C4303581}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17FD9760-C0D8-4B26-8601-3A87C4303581}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17FD9760-C0D8-4B26-8601-3A87C4303581}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17FD9760-C0D8-4B26-8601-3A87C4303581}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC02A209-E909-4A3B-B855-6FAA88A16316}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC02A209-E909-4A3B-B855-6FAA88A16316}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC02A209-E909-4A3B-B855-6FAA88A16316}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC02A209-E909-4A3B-B855-6FAA88A16316}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C3D42FD-2B5E-4F68-840E-C3BA28A0934F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C3D42FD-2B5E-4F68-840E-C3BA28A0934F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C3D42FD-2B5E-4F68-840E-C3BA28A0934F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C3D42FD-2B5E-4F68-840E-C3BA28A0934F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{550B44BD-D92A-4950-9C59-195F2AD8209C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{550B44BD-D92A-4950-9C59-195F2AD8209C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{550B44BD-D92A-4950-9C59-195F2AD8209C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{550B44BD-D92A-4950-9C59-195F2AD8209C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF806962-F60F-4CD4-9AEB-B3853CD299A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF806962-F60F-4CD4-9AEB-B3853CD299A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF806962-F60F-4CD4-9AEB-B3853CD299A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF806962-F60F-4CD4-9AEB-B3853CD299A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BFF9D32-A474-0871-2E9B-A923D4F72570}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BFF9D32-A474-0871-2E9B-A923D4F72570}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BFF9D32-A474-0871-2E9B-A923D4F72570}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BFF9D32-A474-0871-2E9B-A923D4F72570}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7E477EA1-DE14-49E6-BD37-140B8A949EA1}
+	EndGlobalSection
 EndGlobal
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.Plugin.SDK", "src\IIM.Plugin.SDK\IIM.Plugin.SDK.csproj", "{SDK-GUID-HERE}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.CLI", "tools\IIM.CLI\IIM.CLI.csproj", "{CLI-GUID-HERE}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamplePlugin", "examples\SamplePlugin\SamplePlugin.csproj", "{SAMPLE-GUID-HERE}"
-EndProject

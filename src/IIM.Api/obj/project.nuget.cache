@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "dgSpecHash": "DNWbYefMyx8=",
+  "success": false,
+  "projectFilePath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Api\\IIM.Api.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\josep\\.nuget\\packages\\documentformat.openxml\\3.0.2\\documentformat.openxml.3.0.2.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\documentformat.openxml.framework\\3.0.2\\documentformat.openxml.framework.3.0.2.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\system.io.packaging\\8.0.0\\system.io.packaging.8.0.0.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1103",
+      "level": "Error",
+      "message": "Unable to find a stable package UglyToad.PdfPig with version (>= 0.1.9)\r\n  - Found 2 version(s) in nuget.org [ Nearest version: 1.7.0-custom-5 ]\r\n  - Found 0 version(s) in C:\\Program Files\\dotnet\\library-packs",
+      "projectPath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Api\\IIM.Api.csproj",
+      "filePath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Api\\IIM.Api.csproj",
+      "libraryId": "UglyToad.PdfPig",
+      "targetGraphs": [
+        "net9.0"
+      ]
+    }
+  ]
+}

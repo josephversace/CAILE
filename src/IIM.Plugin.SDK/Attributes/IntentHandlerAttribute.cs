@@ -1,3 +1,7 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
 namespace IIM.Plugin.SDK;
 
 /// <summary>
@@ -29,3 +33,4 @@ public class IntentHandlerAttribute : Attribute
         Intent = intent;
     }
 }
+

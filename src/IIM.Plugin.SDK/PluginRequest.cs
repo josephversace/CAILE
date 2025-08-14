@@ -1,3 +1,7 @@
+﻿using System;
+using System.Collections.Generic;
+using IIM.Shared.Models;
+
 namespace IIM.Plugin.SDK;
 
 /// <summary>
@@ -40,3 +44,4 @@ public class PluginRequest
     /// </summary>
     public HashSet<string> Tags { get; set; } = new();
 }
+
