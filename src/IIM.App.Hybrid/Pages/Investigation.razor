@@ -1,16 +1,153 @@
-@* Investigation Component *@
+@page "/investigation"
+@using IIM.Core.Interfaces
+@using IIM.Core.Models
+@using Microsoft.AspNetCore.Components.Forms
+@inject IInferenceService InferenceService
+@inject IJSRuntime JS
 
-<div class="Investigation">
-    <h3>Investigation</h3>
-    @* TODO: Implement component *@
+<div class="investigation-container">
+    <h3>Investigation Dashboard</h3>
+    
+    <!-- System Status Card -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>System Status</h5>
+                </div>
+                <div class="card-body">
+                    @if (deviceInfo != null)
+                    {
+                        <span class="badge bg-info">@deviceInfo.DeviceType</span>
+                        <span class="ms-2">@deviceInfo.DeviceName</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Transcription Card -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Audio Transcription</h5>
+                </div>
+                <div class="card-body">
+                    <InputFile OnChange="@LoadAudioFile" accept="audio/*" class="form-control mb-2" />
+                    
+                    @if (audioFile != null)
+                    {
+                        <button class="btn btn-primary" @onclick="TranscribeAudio" disabled="@isProcessing">
+                            @if (isProcessing)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            Transcribe
+                        </button>
+                    }
+                    
+                    @if (transcription != null)
+                    {
+                        <div class="mt-3 p-3 bg-light rounded">
+                            <small class="text-muted">Confidence: @transcription.Confidence.ToString("P0")</small>
+                            <p class="mt-2">@transcription.Text</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Search Card -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Image Search (CLIP)</h5>
+                </div>
+                <div class="card-body">
+                    <InputFile OnChange="@LoadImageFile" accept="image/*" class="form-control mb-2" />
+                    
+                    @if (imageFile != null)
+                    {
+                        <button class="btn btn-primary" @onclick="SearchImages" disabled="@isProcessing">
+                            Search Similar
+                        </button>
+                    }
+                    
+                    @if (imageResults != null)
+                    {
+                        <div class="mt-3">
+                            <small class="text-muted">Found @imageResults.Matches.Count matches</small>
+                            @foreach (var match in imageResults.Matches.Take(3))
+                            {
+                                <div class="p-2 border-bottom">
+                                    <span class="badge bg-success">@match.Score.ToString("P0")</span>
+                                    <span class="ms-2">@match.Metadata["CaseId"]</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @code {
-    [Parameter] public string Id { get; set; } = string.Empty;
-    
+    private IBrowserFile? audioFile;
+    private IBrowserFile? imageFile;
+    private bool isProcessing = false;
+    private DeviceInfo? deviceInfo;
+    private TranscriptionResult? transcription;
+    private ImageSearchResults? imageResults;
+
     protected override async Task OnInitializedAsync()
     {
-        // TODO: Initialize component
-        await base.OnInitializedAsync();
+        // Get device info on load
+        deviceInfo = await InferenceService.GetDeviceInfo();
+    }
+
+    private void LoadAudioFile(InputFileChangeEventArgs e)
+    {
+        audioFile = e.File;
+    }
+
+    private void LoadImageFile(InputFileChangeEventArgs e)
+    {
+        imageFile = e.File;
+    }
+
+    private async Task TranscribeAudio()
+    {
+        if (audioFile == null) return;
+        
+        isProcessing = true;
+        try
+        {
+            // In real app, would save file first
+            transcription = await InferenceService.TranscribeAudioAsync(audioFile.Name);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private async Task SearchImages()
+    {
+        if (imageFile == null) return;
+        
+        isProcessing = true;
+        try
+        {
+            // In real app, would convert to byte array
+            var buffer = new byte[imageFile.Size];
+            await imageFile.OpenReadStream().ReadAsync(buffer);
+            imageResults = await InferenceService.SearchImagesAsync(buffer, 5);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
     }
 }

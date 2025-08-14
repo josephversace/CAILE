@@ -1,0 +1,12 @@
+\\Mac\Home\Projects\CAILE\src\IIM.Shared\bin\Debug\net9.0\IIM.Shared.deps.json
+\\Mac\Home\Projects\CAILE\src\IIM.Shared\bin\Debug\net9.0\IIM.Shared.dll
+\\Mac\Home\Projects\CAILE\src\IIM.Shared\bin\Debug\net9.0\IIM.Shared.pdb
+\\Mac\Home\Projects\CAILE\src\IIM.Shared\obj\Debug\net9.0\IIM.Shared.GeneratedMSBuildEditorConfig.editorconfig
+\\Mac\Home\Projects\CAILE\src\IIM.Shared\obj\Debug\net9.0\IIM.Shared.AssemblyInfoInputs.cache
+\\Mac\Home\Projects\CAILE\src\IIM.Shared\obj\Debug\net9.0\IIM.Shared.AssemblyInfo.cs
+\\Mac\Home\Projects\CAILE\src\IIM.Shared\obj\Debug\net9.0\IIM.Shared.csproj.CoreCompileInputs.cache
+\\Mac\Home\Projects\CAILE\src\IIM.Shared\obj\Debug\net9.0\IIM.Shared.sourcelink.json
+\\Mac\Home\Projects\CAILE\src\IIM.Shared\obj\Debug\net9.0\IIM.Shared.dll
+\\Mac\Home\Projects\CAILE\src\IIM.Shared\obj\Debug\net9.0\refint\IIM.Shared.dll
+\\Mac\Home\Projects\CAILE\src\IIM.Shared\obj\Debug\net9.0\IIM.Shared.pdb
+\\Mac\Home\Projects\CAILE\src\IIM.Shared\obj\Debug\net9.0\ref\IIM.Shared.dll

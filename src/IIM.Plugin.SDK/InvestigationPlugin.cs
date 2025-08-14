@@ -1,6 +1,16 @@
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Net.Http;
+using System.Linq;
+using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using IIM.Shared.Models;         // for ProcessResult (if defined there)
+using IIM.Shared.Interfaces;   // for IEvidenceStore (if defined there)
 
 namespace IIM.Plugin.SDK;
+
 
 /// <summary>
 /// Base class for investigation plugins with helper methods
@@ -86,6 +96,29 @@ public abstract class InvestigationPlugin : IInvestigationPlugin
     protected Task<HttpResponseMessage> CallApiAsync(string url, HttpContent? content = null) =>
         _context!.HttpClient.PostAsync(url, content);
     
+/// <summary>
+/// Helper to call an API securely with an allow-listed set of domains.
+/// Throws if the URL's host is not in the list.
+/// </summary>
+protected Task<HttpResponseMessage> CallApiAsync(
+    string url,
+    IEnumerable<string> allowedDomains,
+    HttpContent? content = null,
+    CancellationToken ct = default)
+{
+    var ok = false;
+    foreach (var d in allowedDomains)
+    {
+        if (PluginSecurity.IsAllowedDomain(url, d)) { ok = true; break; }
+    }
+    if (!ok)
+        throw new InvalidOperationException($"Domain not allowed for URL: {url}");
+
+    return _context!.HttpClient.PostAsync(url, content, ct);
+}
+
+
+
     /// <summary>
     /// Helper to run a tool securely
     /// </summary>

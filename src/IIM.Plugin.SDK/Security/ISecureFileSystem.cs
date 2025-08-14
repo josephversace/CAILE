@@ -1,3 +1,8 @@
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using IIM.Shared.Models;
+
 namespace IIM.Plugin.SDK;
 
 /// <summary>
@@ -35,3 +40,4 @@ public interface ISecureFileSystem
     /// </summary>
     Task<FileMetadata> GetMetadataAsync(string path);
 }
+

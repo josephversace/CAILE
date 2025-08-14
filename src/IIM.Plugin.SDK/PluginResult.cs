@@ -1,3 +1,6 @@
+﻿using System;
+using System.Collections.Generic;
+
 namespace IIM.Plugin.SDK;
 
 /// <summary>
@@ -65,3 +68,4 @@ public class PluginResult
         };
     }
 }
+

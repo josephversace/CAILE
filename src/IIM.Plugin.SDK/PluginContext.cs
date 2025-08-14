@@ -1,5 +1,8 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using IIM.Shared.Models;
+using IIM.Shared.Interfaces;
+using System;
 
 namespace IIM.Plugin.SDK;
 
@@ -31,8 +34,7 @@ public class PluginContext
     /// <summary>
     /// Process runner for executing whitelisted tools
     /// </summary>
-    public required ISecureProcessRunner ProcessRunner { get; init; }
-    
+    public required ISecureProcessRunner ProcessRunner  { get; init; } = default!;
     /// <summary>
     /// Evidence store for saving investigation data
     /// </summary>
@@ -48,3 +50,4 @@ public class PluginContext
     /// </summary>
     public required PluginInfo PluginInfo { get; init; }
 }
+

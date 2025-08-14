@@ -1,3 +1,6 @@
+﻿using System;
+using System.Collections.Generic;
+
 namespace IIM.Plugin.SDK;
 
 /// <summary>
@@ -36,3 +39,4 @@ public class PluginMetadataAttribute : Attribute
     /// </summary>
     public string? MinimumIIMVersion { get; set; }
 }
+

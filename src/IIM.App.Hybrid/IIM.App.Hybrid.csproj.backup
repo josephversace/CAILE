@@ -1,0 +1,28 @@
+
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0-windows10.0.19041.0</TargetFrameworks>
+    <OutputType>WinExe</OutputType>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
+    <RootNamespace>IIM.App.Hybrid</RootNamespace>
+    <ApplicationTitle>IIM</ApplicationTitle>
+    <ApplicationId>com.icacai.iim</ApplicationId>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Maui" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Forms" Version="8.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="9.0.100" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2592.51" />
+  </ItemGroup>
+  <ItemGroup>
+    <MauiAsset Include="wwwroot\**\*" LogicalName="wwwroot\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IIM.Shared\IIM.Shared.csproj" />
+  </ItemGroup>
+</Project>
