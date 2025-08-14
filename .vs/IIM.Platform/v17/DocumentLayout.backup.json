@@ -3,16 +3,25 @@
   "WorkspaceRootPath": "\\\\Mac\\Home\\Projects\\CAILE\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{BF806962-F60F-4CD4-9AEB-B3853CD299A1}|examples\\SamplePlugin\\SamplePlugin.csproj|\\\\mac\\home\\projects\\caile\\examples\\sampleplugin\\sampleplugin.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+      "AbsoluteMoniker": "D:0:0:{BF806962-F60F-4CD4-9AEB-B3853CD299A1}|examples\\SamplePlugin\\SamplePlugin.csproj|\\\\mac\\home\\projects\\caile\\examples\\sampleplugin\\hashanalyzerplugin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{550B44BD-D92A-4950-9C59-195F2AD8209C}|tools\\IIM.CLI\\IIM.CLI.csproj|\\\\mac\\home\\projects\\caile\\tools\\iim.cli\\iim.cli.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+      "AbsoluteMoniker": "D:0:0:{9BFF9D32-A474-0871-2E9B-A923D4F72570}|src\\IIM.Shared\\IIM.Shared.csproj|\\\\mac\\home\\projects\\caile\\src\\iim.shared\\models\\plugininfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|\\\\mac\\home\\projects\\caile\\src\\iim.app.hybrid\\iim.app.hybrid.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|\\\\mac\\home\\projects\\caile\\src\\iim.core\\plugins\\plugininfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|\\\\mac\\home\\projects\\caile\\src\\iim.core\\plugins\\security\\pluginsandbox.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BF806962-F60F-4CD4-9AEB-B3853CD299A1}|examples\\SamplePlugin\\SamplePlugin.csproj|\\\\mac\\home\\projects\\caile\\examples\\sampleplugin\\sampleplugin.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{550B44BD-D92A-4950-9C59-195F2AD8209C}|tools\\IIM.CLI\\IIM.CLI.csproj|\\\\mac\\home\\projects\\caile\\tools\\iim.cli\\iim.cli.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
     {
       "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|\\\\mac\\home\\projects\\caile\\src\\iim.core\\plugins\\pluginmanifest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
@@ -22,9 +31,6 @@
     },
     {
       "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|\\\\mac\\home\\projects\\caile\\src\\iim.core\\plugins\\pluginorchestrator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|\\\\mac\\home\\projects\\caile\\src\\iim.core\\plugins\\plugininfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|\\\\mac\\home\\projects\\caile\\src\\iim.core\\inference\\inferencepipeline.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
@@ -76,11 +82,37 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "PluginInfo.cs",
+              "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Shared\\Models\\PluginInfo.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Shared\\Models\\PluginInfo.cs",
+              "ToolTip": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Shared\\Models\\PluginInfo.cs",
+              "RelativeToolTip": "src\\IIM.Shared\\Models\\PluginInfo.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-14T17:35:49.906Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "HashAnalyzerPlugin.cs",
+              "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\examples\\SamplePlugin\\HashAnalyzerPlugin.cs",
+              "RelativeDocumentMoniker": "examples\\SamplePlugin\\HashAnalyzerPlugin.cs",
+              "ToolTip": "\\\\Mac\\Home\\Projects\\CAILE\\examples\\SamplePlugin\\HashAnalyzerPlugin.cs",
+              "RelativeToolTip": "examples\\SamplePlugin\\HashAnalyzerPlugin.cs",
+              "ViewState": "AgIAAFIAAACAmZmZmRkewGoAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-14T17:33:50.111Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
               "Title": "SamplePlugin",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\examples\\SamplePlugin\\SamplePlugin.csproj",
               "RelativeDocumentMoniker": "examples\\SamplePlugin\\SamplePlugin.csproj",
@@ -110,12 +142,12 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 6,
               "Title": "IIM.CLI",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\tools\\IIM.CLI\\IIM.CLI.csproj",
               "RelativeDocumentMoniker": "tools\\IIM.CLI\\IIM.CLI.csproj",
-              "ToolTip": "\\\\Mac\\Home\\Projects\\CAILE\\tools\\IIM.CLI\\IIM.CLI.csproj*",
-              "RelativeToolTip": "tools\\IIM.CLI\\IIM.CLI.csproj*",
+              "ToolTip": "\\\\Mac\\Home\\Projects\\CAILE\\tools\\IIM.CLI\\IIM.CLI.csproj",
+              "RelativeToolTip": "tools\\IIM.CLI\\IIM.CLI.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
               "WhenOpened": "2025-08-14T17:32:00.488Z",
@@ -123,7 +155,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 7,
               "Title": "PluginManifest.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Plugins\\PluginManifest.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Plugins\\PluginManifest.cs",
@@ -136,7 +168,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 3,
               "Title": "PluginInfo.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Plugins\\PluginInfo.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Plugins\\PluginInfo.cs",
@@ -149,7 +181,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 12,
               "Title": "Report.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Models\\Report.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Report.cs",
@@ -162,7 +194,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 13,
               "Title": "EvidenceManager.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Security\\EvidenceManager.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Security\\EvidenceManager.cs",
@@ -175,7 +207,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 8,
               "Title": "PluginValidator.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Plugins\\Security\\PluginValidator.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Plugins\\Security\\PluginValidator.cs",
@@ -188,20 +220,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "PluginSandbox.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Plugins\\Security\\PluginSandbox.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Plugins\\Security\\PluginSandbox.cs",
               "ToolTip": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Plugins\\Security\\PluginSandbox.cs",
               "RelativeToolTip": "src\\IIM.Core\\Plugins\\Security\\PluginSandbox.cs",
-              "ViewState": "AgIAAEoAAACgmZmZmRkWwEYAAAAyAAAAAAAAAA==",
+              "ViewState": "AgIAAEUAAAAAAAAAAAAlwFwAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-08-14T17:24:13.703Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 14,
               "Title": "SecurePluginManager.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Plugins\\SecurePluginManager.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Plugins\\SecurePluginManager.cs",
@@ -214,7 +246,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 9,
               "Title": "PluginOrchestrator.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Plugins\\PluginOrchestrator.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Plugins\\PluginOrchestrator.cs",
@@ -227,7 +259,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 17,
               "Title": "IPluginManager.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Plugins\\IPluginManager.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Plugins\\IPluginManager.cs",
@@ -240,7 +272,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 15,
               "Title": "WslServiceOrchestrator.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Platform\\WslServiceOrchestrator.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Platform\\WslServiceOrchestrator.cs",
@@ -253,7 +285,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 11,
               "Title": "WslManager.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Platform\\WslManager.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Platform\\WslManager.cs",
@@ -266,7 +298,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 10,
               "Title": "InferencePipeline.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Inference\\InferencePipeline.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Inference\\InferencePipeline.cs",
@@ -279,7 +311,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 19,
               "Title": "RAG.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Models\\RAG.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\RAG.cs",
@@ -292,7 +324,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 16,
               "Title": "Inference.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Models\\Inference.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Inference.cs",
@@ -305,7 +337,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 22,
               "Title": "Platform.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Models\\Platform.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Platform.cs",
@@ -318,7 +350,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 20,
               "Title": "Exceptions.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Models\\Exceptions.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Exceptions.cs",
@@ -331,7 +363,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 21,
               "Title": "Common.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Models\\Common.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Common.cs",
@@ -344,7 +376,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 23,
               "Title": "Analysis.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Models\\Analysis.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Analysis.cs",
@@ -357,7 +389,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 18,
               "Title": "ModelOrchestrator.cs",
               "DocumentMoniker": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\Inference\\ModelOrchestrator.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Inference\\ModelOrchestrator.cs",
