@@ -14,3 +14,9 @@ Global
         Release|Any CPU = Release|Any CPU
     EndGlobalSection
 EndGlobal
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.Plugin.SDK", "src\IIM.Plugin.SDK\IIM.Plugin.SDK.csproj", "{SDK-GUID-HERE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.CLI", "tools\IIM.CLI\IIM.CLI.csproj", "{CLI-GUID-HERE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamplePlugin", "examples\SamplePlugin\SamplePlugin.csproj", "{SAMPLE-GUID-HERE}"
+EndProject

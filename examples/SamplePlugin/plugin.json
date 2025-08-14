@@ -1,0 +1,26 @@
+{
+  "id": "com.iim.example.hash-analyzer",
+  "name": "Hash Analyzer",
+  "version": "1.0.0",
+  "description": "Analyzes file hashes and checks against known databases",
+  "author": {
+    "name": "IIM Team",
+    "email": "support@iim.example",
+    "organization": "IIM Project"
+  },
+  "iimVersion": "^1.0.0",
+  "category": "forensics",
+  "permissions": [
+    "filesystem.read",
+    "network.api"
+  ],
+  "capabilities": {
+    "intents": ["analyze_hash", "check_file_hash"],
+    "fileTypes": ["*"],
+    "requiresInternet": true,
+    "requiresGpu": false
+  },
+  "dependencies": {
+    "IIM.Plugin.SDK": "^1.0.0"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "id": "{PLUGIN_ID}",
+  "name": "{PLUGIN_NAME}",
+  "version": "1.0.0",
+  "description": "Description of what your plugin does",
+  "author": {
+    "name": "{AUTHOR}",
+    "email": "your.email@example.com",
+    "organization": "Your Organization"
+  },
+  "iimVersion": "^1.0.0",
+  "category": "general",
+  "permissions": [
+    "filesystem.read"
+  ],
+  "capabilities": {
+    "intents": ["example_intent"],
+    "fileTypes": ["*"],
+    "requiresInternet": false,
+    "requiresGpu": false
+  },
+  "dependencies": {
+    "IIM.Plugin.SDK": "^1.0.0"
+  }
+}
