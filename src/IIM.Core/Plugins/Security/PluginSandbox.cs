@@ -90,7 +90,7 @@ public class PluginSandbox : IPluginSandbox
             
             TempDirectory = tempDir,
             
-            PluginInfo = new PluginInfo
+         PluginInfo = new PluginInfo
             {
                 Id = manifest.Id,
                 Name = manifest.Name,

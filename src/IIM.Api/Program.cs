@@ -8,7 +8,9 @@ using UglyToad.PdfPig;
 using IIM.Core.Inference;
 using IIM.Core.Platform;
 using Microsoft.AspNetCore.Mvc;
+
 using Microsoft.Extensions.FileProviders;
+using IIM.Core.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -159,7 +161,7 @@ app.MapPost("/v1/models/load", async (
             message = $"Model {request.ModelId} loaded successfully"
         });
     }
-    catch (InsufficientMemoryException ex)
+    catch (IIM.Core.Inference.InsufficientMemoryException ex)
     {
         logger.LogWarning(ex, "Insufficient memory to load model");
         return Results.Problem(

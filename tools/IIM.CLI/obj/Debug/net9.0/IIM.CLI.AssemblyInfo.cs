@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("IIM.CLI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2fff0848165be120b18c45a3983313a0300a93d3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6c8e7a39e8e4c2e958984f517ff02f39c8723e1b")]
 [assembly: System.Reflection.AssemblyProductAttribute("IIM.CLI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("IIM.CLI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
