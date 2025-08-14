@@ -13,8 +13,6 @@
     "dotnet.defaultSolution": "IIM.Hybrid.sln",
     
     "omnisharp.enableRoslynAnalyzers": true,
-    "omnisharp.enableImportCompletion": true,
-    "omnisharp.organizeImportsOnFormat": true,
     
     "[csharp]": {
         "editor.defaultFormatter": "ms-dotnettools.csharp",
@@ -28,5 +26,7 @@
     
     "emmet.includeLanguages": {
         "razor": "html"
-    }
+    },
+    "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
+    "dotnet.formatting.organizeImportsOnFormat": true
 }

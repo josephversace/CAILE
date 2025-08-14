@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "IIM Team",
+  "classifications": ["IIM", "Plugin", "Investigation"],
+  "identity": "IIM.Plugin.Template",
+  "name": "IIM Investigation Plugin",
+  "shortName": "iimplugin",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "PluginTemplate",
+  "preferNameDirectory": true,
+  "symbols": {
+    "PluginId": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "The unique ID for your plugin",
+      "defaultValue": "com.example.myplugin",
+      "replaces": "{PLUGIN_ID}"
+    },
+    "PluginName": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "The display name for your plugin",
+      "defaultValue": "My Plugin",
+      "replaces": "{PLUGIN_NAME}"
+    },
+    "Author": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "Plugin author name",
+      "defaultValue": "Your Name",
+      "replaces": "{AUTHOR}"
+    }
+  }
+}
