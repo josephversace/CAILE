@@ -1,52 +1,49 @@
 {
   "format": 1,
   "restore": {
-    "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj": {}
+    "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj": {}
   },
   "projects": {
-    "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj": {
+    "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj",
+        "projectUniqueName": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj",
         "projectName": "IIM.App.Hybrid",
-        "projectPath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj",
+        "projectPath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj",
         "packagesPath": "C:\\Users\\josep\\.nuget\\packages\\",
-        "outputPath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.App.Hybrid\\obj\\",
+        "outputPath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\obj\\",
         "projectStyle": "PackageReference",
+        "crossTargeting": true,
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "\\\\Mac\\Home\\Projects\\CAILE\\NuGet.Config",
+          "C:\\Users\\josep\\source\\repos\\CAILE\\NuGet.Config",
           "C:\\Users\\josep\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "net9.0-windows10.0.19041.0"
+          "net8.0-windows10.0.19041.0"
         ],
         "sources": {
           "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net9.0-windows10.0.19041": {
-            "targetAlias": "net9.0-windows10.0.19041.0",
+          "net8.0-windows10.0.19041": {
+            "targetAlias": "net8.0-windows10.0.19041.0",
             "projectReferences": {
-              "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\IIM.Core.csproj": {
-                "projectPath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\IIM.Core.csproj"
+              "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\IIM.Core.csproj": {
+                "projectPath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\IIM.Core.csproj"
               },
-              "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj": {
-                "projectPath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj"
+              "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj": {
+                "projectPath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj"
               }
             }
           }
         },
         "warningProperties": {
-          "noWarn": [
-            "NU1107",
-            "NU1605"
-          ],
           "warnAsError": [
             "NU1605"
           ]
@@ -55,18 +52,25 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
-        "net9.0-windows10.0.19041": {
-          "targetAlias": "net9.0-windows10.0.19041.0",
+        "net8.0-windows10.0.19041": {
+          "targetAlias": "net8.0-windows10.0.19041.0",
           "dependencies": {
-            "CommunityToolkit.Maui": {
+            "Microsoft.AspNetCore.Components": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[8.0.10, )"
+            },
+            "Microsoft.AspNetCore.Components.Authorization": {
+              "target": "Package",
+              "version": "[8.0.10, )"
             },
             "Microsoft.AspNetCore.Components.Forms": {
+              "target": "Package",
+              "version": "[8.0.10, )"
+            },
+            "Microsoft.AspNetCore.Components.Web": {
               "target": "Package",
               "version": "[8.0.10, )"
             },
@@ -74,15 +78,43 @@
               "target": "Package",
               "version": "[8.0.100, )"
             },
-            "Microsoft.Extensions.Logging": {
+            "Microsoft.AspNetCore.SignalR.Client": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[8.0.10, )"
+            },
+            "Microsoft.Extensions.Configuration": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.Extensions.Configuration.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "Microsoft.Extensions.Hosting.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.2, )"
             },
             "Microsoft.Extensions.Logging.Debug": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[8.0.1, )"
+            },
+            "Microsoft.JSInterop": {
+              "target": "Package",
+              "version": "[8.0.10, )"
             },
             "Microsoft.Maui.Controls": {
+              "target": "Package",
+              "version": "[8.0.100, )"
+            },
+            "Microsoft.Maui.Controls.Compatibility": {
               "target": "Package",
               "version": "[8.0.100, )"
             }
@@ -101,18 +133,18 @@
           "downloadDependencies": [
             {
               "name": "Microsoft.Windows.SDK.NET.Ref",
-              "version": "[10.0.19041.57, 10.0.19041.57]"
+              "version": "[10.0.19041.56, 10.0.19041.56]"
             }
           ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             },
-            "Microsoft.Windows.SDK.NET.Ref.Windows": {
+            "Microsoft.Windows.SDK.NET.Ref": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413\\RuntimeIdentifierGraph.json"
         }
       },
       "runtimes": {
@@ -121,40 +153,40 @@
         }
       }
     },
-    "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\IIM.Core.csproj": {
+    "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\IIM.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\IIM.Core.csproj",
+        "projectUniqueName": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\IIM.Core.csproj",
         "projectName": "IIM.Core",
-        "projectPath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\IIM.Core.csproj",
+        "projectPath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\IIM.Core.csproj",
         "packagesPath": "C:\\Users\\josep\\.nuget\\packages\\",
-        "outputPath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Core\\obj\\",
+        "outputPath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "\\\\Mac\\Home\\Projects\\CAILE\\NuGet.Config",
+          "C:\\Users\\josep\\source\\repos\\CAILE\\NuGet.Config",
           "C:\\Users\\josep\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "net9.0"
+          "net8.0"
         ],
         "sources": {
           "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net9.0": {
-            "targetAlias": "net9.0",
+          "net8.0": {
+            "targetAlias": "net8.0",
             "projectReferences": {
-              "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Plugin.SDK\\IIM.Plugin.SDK.csproj": {
-                "projectPath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Plugin.SDK\\IIM.Plugin.SDK.csproj"
+              "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Plugin.SDK\\IIM.Plugin.SDK.csproj": {
+                "projectPath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Plugin.SDK\\IIM.Plugin.SDK.csproj"
               },
-              "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj": {
-                "projectPath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj"
+              "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj": {
+                "projectPath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj"
               }
             }
           }
@@ -172,32 +204,39 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
-        "net9.0": {
-          "targetAlias": "net9.0",
+        "net8.0": {
+          "targetAlias": "net8.0",
           "dependencies": {
             "Microsoft.Extensions.Configuration.Abstractions": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.2, )"
             },
             "Microsoft.Extensions.Hosting.Abstractions": {
               "target": "Package",
-              "version": "[9.0.8, )"
+              "version": "[8.0.1, )"
             },
             "Microsoft.Extensions.Http": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[8.0.1, )"
             },
             "Microsoft.Extensions.Logging": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[8.0.1, )"
             },
             "Microsoft.Extensions.Logging.Abstractions": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[8.0.2, )"
+            },
+            "System.Text.Json": {
+              "target": "Package",
+              "version": "[8.0.5, )"
             }
           },
           "imports": [
@@ -216,41 +255,41 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Plugin.SDK\\IIM.Plugin.SDK.csproj": {
+    "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Plugin.SDK\\IIM.Plugin.SDK.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Plugin.SDK\\IIM.Plugin.SDK.csproj",
+        "projectUniqueName": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Plugin.SDK\\IIM.Plugin.SDK.csproj",
         "projectName": "IIM.Plugin.SDK",
-        "projectPath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Plugin.SDK\\IIM.Plugin.SDK.csproj",
+        "projectPath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Plugin.SDK\\IIM.Plugin.SDK.csproj",
         "packagesPath": "C:\\Users\\josep\\.nuget\\packages\\",
-        "outputPath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Plugin.SDK\\obj\\",
+        "outputPath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Plugin.SDK\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "\\\\Mac\\Home\\Projects\\CAILE\\NuGet.Config",
+          "C:\\Users\\josep\\source\\repos\\CAILE\\NuGet.Config",
           "C:\\Users\\josep\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "net9.0"
+          "net8.0"
         ],
         "sources": {
           "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net9.0": {
-            "targetAlias": "net9.0",
+          "net8.0": {
+            "targetAlias": "net8.0",
             "projectReferences": {
-              "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj": {
-                "projectPath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj"
+              "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj": {
+                "projectPath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj"
               }
             }
           }
@@ -268,24 +307,23 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
-        "net9.0": {
-          "targetAlias": "net9.0",
+        "net8.0": {
+          "targetAlias": "net8.0",
           "dependencies": {
             "Microsoft.Extensions.Configuration.Abstractions": {
               "target": "Package",
-              "version": "[9.0.8, )"
+              "version": "[8.0.0, )"
             },
             "Microsoft.Extensions.Http": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[8.0.0, )"
             },
             "Microsoft.Extensions.Logging.Abstractions": {
               "target": "Package",
-              "version": "[9.0.8, )"
+              "version": "[8.0.1, )"
             }
           },
           "imports": [
@@ -304,38 +342,38 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj": {
+    "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj",
+        "projectUniqueName": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj",
         "projectName": "IIM.Shared",
-        "projectPath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj",
+        "projectPath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj",
         "packagesPath": "C:\\Users\\josep\\.nuget\\packages\\",
-        "outputPath": "\\\\Mac\\Home\\Projects\\CAILE\\src\\IIM.Shared\\obj\\",
+        "outputPath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Shared\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "\\\\Mac\\Home\\Projects\\CAILE\\NuGet.Config",
+          "C:\\Users\\josep\\source\\repos\\CAILE\\NuGet.Config",
           "C:\\Users\\josep\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "net9.0"
+          "net8.0"
         ],
         "sources": {
           "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net9.0": {
-            "targetAlias": "net9.0",
+          "net8.0": {
+            "targetAlias": "net8.0",
             "projectReferences": {}
           }
         },
@@ -348,12 +386,11 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
-        "net9.0": {
-          "targetAlias": "net9.0",
+        "net8.0": {
+          "targetAlias": "net8.0",
           "imports": [
             "net461",
             "net462",
@@ -370,7 +407,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

@@ -107,7 +107,7 @@
 </div>
 
 @code {
-    [Parameter] public InvestigationMessage Message { get; set; } = new();
+    [Parameter] public Core.Models.InvestigationMessage Message { get; set; } = new();
     [Parameter] public EventCallback<(string tool, Dictionary<string, object> parameters)> OnToolExecute { get; set; }
     [Parameter] public EventCallback<string> OnEvidenceClick { get; set; }
     [Parameter] public EventCallback<Citation> OnCitationClick { get; set; }

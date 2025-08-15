@@ -8,9 +8,9 @@ using UglyToad.PdfPig;
 using IIM.Core.Inference;
 using IIM.Core.Platform;
 using Microsoft.AspNetCore.Mvc;
-
 using Microsoft.Extensions.FileProviders;
 using IIM.Core.Security;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -143,16 +143,27 @@ app.MapGet("/v1/stats", async (IInferencePipeline pipeline, IModelOrchestrator o
 // ============================================
 // Model Management Endpoints
 // ============================================
-
 app.MapPost("/v1/models/load", async (
-    [FromBody] ModelRequest request,
+    [FromBody] ApiModelRequest request,
     IModelOrchestrator orchestrator,
     ILogger<Program> logger) =>
 {
     try
     {
         logger.LogInformation("Loading model {ModelId}", request.ModelId);
-        var handle = await orchestrator.LoadModelAsync(request);
+        
+        // Convert ApiModelRequest to IIM.Core.Inference.ModelRequest
+        var modelRequest = new IIM.Core.Inference.ModelRequest
+        {
+            ModelId = request.ModelId,
+            ModelPath = request.ModelPath,
+            ModelType = ModelType.LLM
+
+
+        };
+        
+        var handle = await orchestrator.LoadModelAsync(modelRequest);
+        
         return Results.Ok(new
         {
             success = true,
@@ -729,12 +740,11 @@ app.MapGet("/api/evidence/{evidenceId}/audit", async (
 })
 .WithName("GetAuditLog")
 .WithOpenApi();
-
 app.MapGet("/api/evidence/list", async (
+    IEvidenceManager evidenceManager,  // Required parameter FIRST
     [FromQuery] string? caseNumber,
     [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 20,
-    IEvidenceManager evidenceManager) =>
+    [FromQuery] int pageSize = 20) =>
 {
     try
     {
@@ -887,7 +897,7 @@ public record GenerateRequest(
     HashSet<string>? Tags = null
 );
 
-public record ModelRequest(
+public record ApiModelRequest(
     string ModelId,
     string? ModelPath = null,
     Dictionary<string, object>? Options = null
@@ -910,14 +920,16 @@ public record ExportRequest(
 
 public record EmbedResponse(float[] embedding);
 
-public record QdrantSearchResponse(List<Item> result)
+// Fix: Move Item class outside and rename it
+public class QdrantSearchItem
 {
-    public QdrantSearchResponse() : this(new()) { }
-    public class Item
-    {
-        public string id { get; set; } = string.Empty;
-        public Dictionary<string, object>? payload { get; set; }
-    }
+    public string id { get; set; } = string.Empty;
+    public Dictionary<string, object>? payload { get; set; }
+}
+
+public record QdrantSearchResponse(List<QdrantSearchItem>? result = null)
+{
+    public List<QdrantSearchItem> Result { get; } = result ?? new();
 }
 
 // ============================================

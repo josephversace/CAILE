@@ -1,15 +1,17 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
-using IIM.Shared.Models;
+﻿using System;
+using System.Threading.Tasks;
 using IIM.Shared.Interfaces;
-using System;
+using IIM.Shared.Models;
+using IIM.Plugin.SDK.Security;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace IIM.Plugin.SDK;
 
 /// <summary>
 /// Secure context provided to plugins with access to IIM services
 /// </summary>
-public class PluginContext
+public class PluginContext : IAsyncDisposable
 {
     /// <summary>
     /// Logger scoped to the plugin
@@ -22,32 +24,39 @@ public class PluginContext
     public required IConfiguration Configuration { get; init; }
     
     /// <summary>
-    /// Secure file system access with permission checks
+    /// Secure file system access
     /// </summary>
     public required ISecureFileSystem FileSystem { get; init; }
     
     /// <summary>
-    /// HTTP client with rate limiting and domain restrictions
+    /// HTTP client with rate limiting
     /// </summary>
-    public required ISecureHttpClient HttpClient { get; init; }
+    public required IIM.Shared.Interfaces.ISecureHttpClient HttpClient { get; init; }
     
     /// <summary>
-    /// Process runner for executing whitelisted tools
+    /// Process runner with sandboxing
     /// </summary>
-    public required ISecureProcessRunner ProcessRunner  { get; init; } = default!;
+    public required ISecureProcessRunner ProcessRunner { get; init; }
+    
     /// <summary>
-    /// Evidence store for saving investigation data
+    /// Evidence store for chain of custody
     /// </summary>
     public required IEvidenceStore EvidenceStore { get; init; }
     
     /// <summary>
-    /// Plugin-specific temporary directory
-    /// </summary>
-    public required string TempDirectory { get; init; }
-    
-    /// <summary>
-    /// Current plugin instance information
+    /// Information about the current plugin
     /// </summary>
     public required PluginInfo PluginInfo { get; init; }
+
+    /// <summary>
+    /// Clean up resources
+    /// </summary>
+    public ValueTask DisposeAsync()
+    {
+        // Clean up any resources if needed
+        Logger.LogInformation("Disposing plugin context for {PluginId}", PluginInfo.Id);
+        return ValueTask.CompletedTask;
+    }
 }
+
 

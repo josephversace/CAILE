@@ -50,9 +50,9 @@
 
     private ElementReference chatContainer;
     private InvestigationSession? Session;
-    private List<InvestigationMessage> Messages = new();
+    private List<Core.Models.InvestigationMessage> Messages = new();
     private List<string> AvailableTools = new();
-    private Dictionary<string, ModelConfiguration> ActiveModels = new();
+    private Dictionary<string, Core.Models.ModelConfiguration> ActiveModels = new();
     private bool IsProcessing = false;
     private string CurrentProcessingStep = "";
     private HubConnection? _hubConnection;
@@ -127,7 +127,7 @@
             var response = await InvestigationService.ProcessQueryAsync(Session.Id, query);
 
             // Add user message
-            Messages.Add(new InvestigationMessage
+            Messages.Add(new Core.Models.InvestigationMessage
             {
                 Role = MessageRole.User,
                 Content = query.Text,
@@ -136,7 +136,7 @@
             });
 
             // Add assistant response
-            Messages.Add(new InvestigationMessage
+            Messages.Add(new Core.Models.InvestigationMessage
             {
                 Role = MessageRole.Assistant,
                 Content = response.Message,

@@ -1,0 +1,37 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\wwwroot\\css\\app.css",
+      "PackagePath": "staticwebassets\\css\\app.css"
+    },
+    {
+      "Id": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\wwwroot\\index.html",
+      "PackagePath": "staticwebassets\\index.html"
+    },
+    {
+      "Id": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\wwwroot\\js\\app.js",
+      "PackagePath": "staticwebassets\\js\\app.js"
+    },
+    {
+      "Id": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\wwwroot\\prototype.html",
+      "PackagePath": "staticwebassets\\prototype.html"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0-windows10.0.19041.0\\win10-arm64\\staticwebassets\\msbuild.IIM.App.Hybrid.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0-windows10.0.19041.0\\win10-arm64\\staticwebassets\\msbuild.build.IIM.App.Hybrid.props",
+      "PackagePath": "build\\IIM.App.Hybrid.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0-windows10.0.19041.0\\win10-arm64\\staticwebassets\\msbuild.buildMultiTargeting.IIM.App.Hybrid.props",
+      "PackagePath": "buildMultiTargeting\\IIM.App.Hybrid.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0-windows10.0.19041.0\\win10-arm64\\staticwebassets\\msbuild.buildTransitive.IIM.App.Hybrid.props",
+      "PackagePath": "buildTransitive\\IIM.App.Hybrid.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

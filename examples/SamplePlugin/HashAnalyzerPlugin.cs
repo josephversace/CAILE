@@ -16,6 +16,8 @@ namespace SamplePlugin;
 )]
 public class HashAnalyzerPlugin : InvestigationPlugin
 {
+    private PluginContext? _context;
+    
     /// <summary>
     /// Unique identifier for this plugin
     /// </summary>
@@ -43,6 +45,15 @@ public class HashAnalyzerPlugin : InvestigationPlugin
         SupportedIntents = new[] { "analyze_hash", "check_file_hash" },
         SupportedFileTypes = new[] { "*" }
     };
+    
+    /// <summary>
+    /// Initialize the plugin
+    /// </summary>
+    public override async Task InitializeAsync(PluginContext context)
+    {
+        _context = context;
+        await base.InitializeAsync(context);
+    }
     
     /// <summary>
     /// Main execution method
@@ -126,14 +137,14 @@ public class HashAnalyzerPlugin : InvestigationPlugin
             return PluginResult.CreateError("Missing required parameter: file");
         }
         
-        // Check if file exists and is accessible
-        if (!await FileSystem.ExistsAsync(filePath))
+        // Check if file exists and is accessible - FIX: Use _context.FileSystem
+        if (!await _context!.FileSystem.FileExistsAsync(filePath))
         {
             return PluginResult.CreateError($"File not found: {filePath}");
         }
         
-        // Calculate hash
-        var fileBytes = await FileSystem.ReadBytesAsync(filePath, ct);
+        // Calculate hash - FIX: Use _context.FileSystem
+        var fileBytes = await _context.FileSystem.ReadFileAsync(filePath, ct);
         var hash = CalculateHash(fileBytes, "SHA256");
         
         Logger.LogInformation("Calculated hash for {File}: {Hash}", filePath, hash);
@@ -142,16 +153,16 @@ public class HashAnalyzerPlugin : InvestigationPlugin
         request.Parameters["hash"] = hash;
         var analysisResult = await AnalyzeHashAsync(request, ct);
         
-        // Add file metadata
+        // Add file metadata - FIX: Use _context.FileSystem
         if (analysisResult.Success && analysisResult.Data is HashAnalysisResult result)
         {
-            var metadata = await FileSystem.GetMetadataAsync(filePath);
+            var metadata = await _context.FileSystem.GetFileMetadataAsync(filePath);
             result.FileInfo = new FileHashInfo
             {
                 FileName = Path.GetFileName(filePath),
                 FilePath = filePath,
-                FileSize = metadata.Size,
-                ModifiedDate = metadata.ModifiedDate
+                FileSize = metadata?.Size ?? 0,
+                ModifiedDate = metadata?.ModifiedAt ?? DateTime.MinValue
             };
         }
         
@@ -169,7 +180,7 @@ public class HashAnalyzerPlugin : InvestigationPlugin
             40 => "SHA1",
             64 => "SHA256",
             128 => "SHA512",
-            _ => "Unknown"
+            _ => "Unknown"  // FIX: Added default case
         };
     }
     
@@ -178,7 +189,7 @@ public class HashAnalyzerPlugin : InvestigationPlugin
     /// </summary>
     private string CalculateHash(byte[] data, string algorithm)
     {
-        using var hasher = algorithm switch
+        using HashAlgorithm hasher = algorithm switch
         {
             "MD5" => MD5.Create(),
             "SHA1" => SHA1.Create(),

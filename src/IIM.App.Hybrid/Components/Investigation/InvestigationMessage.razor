@@ -1,6 +1,7 @@
 // ============================================
 // File: src/IIM.App.Hybrid/Components/Investigation/InvestigationMessage.razor
 // ============================================
+@using IIM.App.Hybrid.Components.Chat
 @using IIM.Core.Models
 
 <div class="message-wrapper">
@@ -72,7 +73,7 @@
 </div>
 
 @code {
-    [Parameter] public InvestigationMessage Message { get; set; } = new();
+    [Parameter] public Core.Models.InvestigationMessage Message { get; set; } = new();
     [Parameter] public EventCallback<(string toolName, Dictionary<string, object> parameters)> OnToolExecute { get; set; }
     [Parameter] public EventCallback<string> OnEvidenceView { get; set; }
     [Parameter] public EventCallback<Citation> OnCitationClick { get; set; }

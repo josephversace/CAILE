@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using IIM.Core.Plugins.Security;
 using IIM.Plugin.SDK;
 using Microsoft.Extensions.Logging;
+using IIM.Shared.Models;
 
 namespace IIM.Core.Plugins;
 
@@ -64,8 +65,8 @@ public class SecurePluginManager : IPluginManager
                         Id = manifest.Id,
                         Name = manifest.Name,
                         Version = manifest.Version,
-                        Description = manifest.Description,
-                        Author = manifest.Author,
+                        Description = manifest.Description ?? string.Empty,
+                        Author = manifest.Author?.Name ?? "Unknown",
                         PackagePath = file,
                         IsLoaded = _plugins.ContainsKey(manifest.Id),
                         IsEnabled = true
@@ -115,14 +116,15 @@ public class SecurePluginManager : IPluginManager
             }
             
             // Check permissions
-            if (!await CheckPermissionsAsync(manifest.Permissions))
+            if (manifest.Permissions != null && 
+                !await CheckPermissionsAsync(manifest.Permissions.RequiredAPIs.ToArray()))
             {
                 _logger.LogWarning("Plugin {Id} requires excessive permissions", manifest.Id);
                 return false;
             }
             
             // Create sandboxed context
-            var context = await _sandbox.CreateContextAsync(manifest, tempDir);
+            var context = await _sandbox.CreateContextAsync(manifest);
             
             // Load the plugin assembly
             var plugin = await LoadPluginAssemblyAsync(tempDir, manifest, context);

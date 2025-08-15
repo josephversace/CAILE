@@ -3,6 +3,16 @@ using System.IO.Compression;
 using IIM.Core.Plugins;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using IIM.Core.Plugins.Security;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.IO;
+using Microsoft.Extensions.Configuration;
+using IIM.Plugin.SDK;
+using IIM.Shared.Models;
+using IIM.Shared.Interfaces;
 
 namespace IIM.CLI;
 
@@ -20,62 +30,64 @@ class Program
         rootCommand.Add(pluginCommand);
         
         // Build command
-        var buildCommand = new Command("build", "Build a plugin package")
+        var buildCommand = new Command("build", "Build a plugin package");
+        var projectOption = new Option<string>("--project", getDefaultValue: () => ".", "Project directory");
+        var outputOption = new Option<string>("--output", getDefaultValue: () => "./bin/Release", "Output directory");
+        var signOption = new Option<bool>("--sign", "Sign the plugin package");
+        
+        buildCommand.AddOption(projectOption);
+        buildCommand.AddOption(outputOption);
+        buildCommand.AddOption(signOption);
+        
+        buildCommand.SetHandler(async (project, output, sign) =>
         {
-            new Option<string>(
-                "--project", 
-                getDefaultValue: () => ".",
-                "Project directory"),
-            new Option<string>(
-                "--output",
-                getDefaultValue: () => "./bin/Release",
-                "Output directory"),
-            new Option<bool>(
-                "--sign",
-                "Sign the plugin package")
-        };
-        buildCommand.SetHandler(BuildPlugin, 
-            buildCommand.Options.ToArray());
+            await BuildPlugin(project, output, sign);
+        }, projectOption, outputOption, signOption);
+        
         pluginCommand.Add(buildCommand);
         
         // Test command
-        var testCommand = new Command("test", "Test a plugin locally")
+        var testCommand = new Command("test", "Test a plugin locally");
+        var pluginArg = new Argument<string>("plugin", "Path to plugin package");
+        var intentOption = new Option<string>("--intent", "Intent to test");
+        var paramsOption = new Option<string>("--params", "JSON parameters for the intent");
+        
+        testCommand.AddArgument(pluginArg);
+        testCommand.AddOption(intentOption);
+        testCommand.AddOption(paramsOption);
+        
+        testCommand.SetHandler(async (pluginPath, intent, paramsJson) =>
         {
-            new Argument<string>("plugin", "Path to plugin package"),
-            new Option<string>(
-                "--intent",
-                "Intent to test"),
-            new Option<string>(
-                "--params",
-                "JSON parameters for the intent")
-        };
-        testCommand.SetHandler(TestPlugin,
-            testCommand.Arguments[0],
-            testCommand.Options.ToArray());
+            await TestPlugin(pluginPath, intent, paramsJson);
+        }, pluginArg, intentOption, paramsOption);
+        
         pluginCommand.Add(testCommand);
         
         // Validate command
-        var validateCommand = new Command("validate", "Validate a plugin package")
+        var validateCommand = new Command("validate", "Validate a plugin package");
+        var validatePluginArg = new Argument<string>("plugin", "Path to plugin package");
+        validateCommand.AddArgument(validatePluginArg);
+        
+        validateCommand.SetHandler(async (pluginPath) =>
         {
-            new Argument<string>("plugin", "Path to plugin package")
-        };
-        validateCommand.SetHandler(ValidatePlugin,
-            validateCommand.Arguments[0]);
+            await ValidatePlugin(pluginPath);
+        }, validatePluginArg);
+        
         pluginCommand.Add(validateCommand);
         
         // Package command
-        var packageCommand = new Command("package", "Package a plugin for distribution")
+        var packageCommand = new Command("package", "Package a plugin for distribution");
+        var packageProjectOption = new Option<string>("--project", getDefaultValue: () => ".", "Project directory");
+        var packageOutputOption = new Option<string>("--output", "Output file path");
+        
+        packageCommand.AddOption(packageProjectOption);
+        packageCommand.AddOption(packageOutputOption);
+        
+        packageCommand.SetHandler(async (project, output) =>
         {
-            new Option<string>(
-                "--project",
-                getDefaultValue: () => ".",
-                "Project directory"),
-            new Option<string>(
-                "--output",
-                "Output file path")
-        };
-        packageCommand.SetHandler(PackagePlugin,
-            packageCommand.Options.ToArray());
+            await PackagePlugin(project, output);
+        }, packageProjectOption, packageOutputOption);
+        
         pluginCommand.Add(packageCommand);
         
         return await rootCommand.InvokeAsync(args);
@@ -84,12 +96,8 @@ class Program
     /// <summary>
     /// Build a plugin project
     /// </summary>
-    static async Task BuildPlugin(params IOption[] options)
+    static async Task BuildPlugin(string project, string output, bool sign)
     {
-        var project = GetOptionValue<string>(options, "--project") ?? ".";
-        var output = GetOptionValue<string>(options, "--output") ?? "./bin/Release";
-        var sign = GetOptionValue<bool>(options, "--sign");
-        
         Console.WriteLine($"Building plugin in {project}...");
         
         // Run dotnet build
@@ -129,11 +137,8 @@ class Program
     /// <summary>
     /// Test a plugin package
     /// </summary>
-    static async Task TestPlugin(string pluginPath, params IOption[] options)
+    static async Task TestPlugin(string pluginPath, string? intent, string? paramsJson)
     {
-        var intent = GetOptionValue<string>(options, "--intent");
-        var paramsJson = GetOptionValue<string>(options, "--params");
-        
         Console.WriteLine($"Testing plugin: {pluginPath}");
         
         // Create service provider
@@ -193,7 +198,7 @@ class Program
                 }
             }
             
-            var request = new IIM.Plugin.SDK.PluginRequest
+            var request = new PluginRequest
             {
                 Intent = intent,
                 Parameters = parameters,
@@ -304,18 +309,15 @@ class Program
     /// <summary>
     /// Package a plugin for distribution
     /// </summary>
-    static async Task PackagePlugin(params IOption[] options)
+    static async Task PackagePlugin(string project, string? output)
     {
-        var project = GetOptionValue<string>(options, "--project") ?? ".";
-        var output = GetOptionValue<string>(options, "--output");
-        
         Console.WriteLine($"Packaging plugin from {project}...");
         
         // First build the project
-        await BuildPlugin(options);
+        await BuildPlugin(project, Path.Combine(project, "bin", "Release"), false);
         
         // Find the output directory
-        var binDir = Path.Combine(project, "bin", "Release", "net8.0");
+        var binDir = Path.Combine(project, "bin", "Release", "net9.0");
         if (!Directory.Exists(binDir))
         {
             binDir = Path.Combine(project, "bin", "Release");
@@ -383,20 +385,6 @@ class Program
         Console.WriteLine($"✓ Plugin packaged successfully: {output}");
         Console.WriteLine($"  Size: {new FileInfo(output).Length / 1024} KB");
     }
-    
-    /// <summary>
-    /// Helper to get option value
-    /// </summary>
-    static T? GetOptionValue<T>(IOption[] options, string name)
-    {
-        var option = options.FirstOrDefault(o => o.Name == name);
-        if (option is Option<T> typedOption)
-        {
-            // This is simplified - in real implementation would need proper parsing
-            return default(T);
-        }
-        return default(T);
-    }
 }
 
 // Mock implementations for testing
@@ -412,12 +400,10 @@ internal class MockPluginValidator : IPluginValidator
 
 internal class MockPluginSandbox : IPluginSandbox
 {
-    public Task<IIM.Plugin.SDK.PluginContext> CreateContextAsync(
-        PluginManifest manifest, 
-        string workingDirectory)
+    public Task<PluginContext> CreateContextAsync(PluginManifest plugin)
     {
         // Return a mock context for testing
-        return Task.FromResult(new IIM.Plugin.SDK.PluginContext
+        var context = new PluginContext
         {
             Logger = LoggerFactory.Create(b => b.AddConsole()).CreateLogger("Test"),
             Configuration = new ConfigurationBuilder().Build(),
@@ -425,20 +411,88 @@ internal class MockPluginSandbox : IPluginSandbox
             HttpClient = new MockHttpClient(),
             ProcessRunner = new MockProcessRunner(),
             EvidenceStore = new MockEvidenceStore(),
-            TempDirectory = Path.GetTempPath(),
             PluginInfo = new PluginInfo
             {
-                Id = manifest.Id,
-                Name = manifest.Name,
-                Version = manifest.Version,
-                Description = manifest.Description,
-                Author = manifest.Author,
-                PackagePath = workingDirectory,
+                Id = plugin.Id,
+                Name = plugin.Name,
+                Version = plugin.Version,
+                Description = plugin.Description ?? string.Empty,
+                Author = plugin.Author?.Name ?? "Unknown",
                 IsLoaded = true,
                 IsEnabled = true
             }
-        });
+        };
+        return Task.FromResult(context);
+    }
+
+    public Task DestroyContextAsync(string pluginId)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> ValidateSecurityAsync(PluginManifest plugin)
+    {
+        return Task.FromResult(true);
     }
 }
 
-// Additional mock implementations would go here...
+// Mock file system implementation
+internal class MockFileSystem : IIM.Plugin.SDK.Security.ISecureFileSystem
+{
+    public Task<byte[]> ReadFileAsync(string path, CancellationToken cancellationToken = default)
+        => Task.FromResult(Array.Empty<byte>());
+
+    public Task<string> ReadTextAsync(string path, CancellationToken cancellationToken = default)
+        => Task.FromResult(string.Empty);
+
+    public Task WriteFileAsync(string path, byte[] data, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
+
+    public Task WriteTextAsync(string path, string text, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
+
+    public Task<bool> FileExistsAsync(string path, CancellationToken cancellationToken = default)
+        => Task.FromResult(false);
+
+    public Task<FileMetadata?> GetFileMetadataAsync(string path, CancellationToken cancellationToken = default)
+        => Task.FromResult<FileMetadata?>(null);
+
+    public Task<string[]> ListFilesAsync(string directory, string searchPattern = "*", CancellationToken cancellationToken = default)
+        => Task.FromResult(Array.Empty<string>());
+}
+
+// Mock HTTP client implementation
+internal class MockHttpClient : IIM.Shared.Interfaces.ISecureHttpClient
+{
+    public Task<T?> GetAsync<T>(string url, CancellationToken cancellationToken = default)
+        => Task.FromResult<T?>(default);
+
+    public Task<TResponse?> PostAsync<TRequest, TResponse>(string url, TRequest data, CancellationToken cancellationToken = default)
+        => Task.FromResult<TResponse?>(default);
+
+    public Task<byte[]> DownloadAsync(string url, CancellationToken cancellationToken = default)
+        => Task.FromResult(Array.Empty<byte>());
+
+        public Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken = default)
+    => Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
+}
+
+// Mock process runner implementation
+internal class MockProcessRunner : ISecureProcessRunner
+{
+    public Task<ProcessResult> RunAsync(string command, string[] args, CancellationToken cancellationToken = default)
+        => Task.FromResult(new ProcessResult { ExitCode = 0, StandardOutput = string.Empty, StandardError = string.Empty });
+}
+
+// Mock evidence store implementation
+internal class MockEvidenceStore : IEvidenceStore
+{
+    public Task StoreAsync(string key, object data, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
+
+    public Task<T?> RetrieveAsync<T>(string key, CancellationToken cancellationToken = default)
+        => Task.FromResult<T?>(default);
+
+    public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
+        => Task.FromResult(false);
+}

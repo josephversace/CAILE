@@ -49,7 +49,7 @@
 </div>
 
 @code {
-    [Parameter] public List<InvestigationMessage> Messages { get; set; } = new();
+    [Parameter] public List<Core.Models.InvestigationMessage> Messages { get; set; } = new();
     [Parameter] public bool IsTyping { get; set; }
     [Parameter] public EventCallback<(string tool, Dictionary<string, object> parameters)> OnToolExecute { get; set; }
     [Parameter] public EventCallback<string> OnEvidenceClick { get; set; }
