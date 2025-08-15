@@ -3,6 +3,7 @@
 // ============================================
 @using IIM.Core.Models
 @using IIM.App.Hybrid.Services
+@using IIM.Core.Services
 @inject IModelManagementService ModelService
 
 <div class="model-library">
@@ -18,25 +19,22 @@
         </div>
 
         <div class="filter-chips">
-            <button class="filter-chip @(ActiveFilter == "all" ? "active" : "")" @onclick="() => SetFilter('all')">
+            <button class="filter-chip @(ActiveFilter == "all" ? "active" : "")" @onclick="SetFilterAll">
                 All Models
             </button>
-            <button class="filter-chip @(ActiveFilter == "llm" ? "active" : "")" @onclick="() => SetFilter('llm')">
+            <button class="filter-chip @(ActiveFilter == "llm" ? "active" : "")" @onclick="SetFilterLLM">
                 Language
             </button>
-            <button class="filter-chip @(ActiveFilter == "vision" ? "active" : "")"
-                @onclick="() => SetFilter('vision')">
+            <button class="filter-chip @(ActiveFilter == "vision" ? "active" : "")" @onclick="SetFilterVision">
                 Vision
             </button>
-            <button class="filter-chip @(ActiveFilter == "audio" ? "active" : "")" @onclick="() => SetFilter('audio')">
+            <button class="filter-chip @(ActiveFilter == "audio" ? "active" : "")" @onclick="SetFilterAudio">
                 Audio
             </button>
-            <button class="filter-chip @(ActiveFilter == "specialized" ? "active" : "")"
-                @onclick="() => SetFilter('specialized')">
+            <button class="filter-chip @(ActiveFilter == "specialized" ? "active" : "")" @onclick="SetFilterSpecialized">
                 Specialized
             </button>
-            <button class="filter-chip @(ActiveFilter == "finetuned" ? "active" : "")"
-                @onclick="() => SetFilter('finetuned')">
+            <button class="filter-chip @(ActiveFilter == "finetuned" ? "active" : "")" @onclick="SetFilterFineTuned">
                 Fine-tuned
             </button>
         </div>
@@ -62,9 +60,14 @@
         {
             @foreach (var model in FilteredModels)
             {
-                <ModelCard Model="@model.Configuration" Description="@model.Description" PerformanceMetrics="@model.Metrics"
-                    OnLoad="@LoadModel" OnUnload="@UnloadModel" OnConfigure="@ConfigureModel" OnFineTune="@FineTuneModel"
-                    ShowFineTune="true" />
+                <ModelCard Model="@model.Configuration"
+                           Description="@model.Description"
+                           PerformanceMetrics="@model.Metrics"
+                           OnLoad="@(async (config) => await LoadModel(config))"
+                           OnUnload="@(async (config) => await UnloadModel(config))"
+                           OnConfigure="@((config) => ConfigureModel(config))"
+                           OnFineTune="@((config) => FineTuneModel(config))"
+                           ShowFineTune="true" />
             }
         }
         else
@@ -102,11 +105,30 @@
 
     private async Task LoadModelLibrary()
     {
-        AvailableModels = await ModelService.GetAvailableModelsAsync();
+        // Get available models from the service
+        var availableConfigs = await ModelService.GetAvailableModelsAsync();
+
+        // Convert to ModelLibraryItem
+        AvailableModels = availableConfigs.Select(config => new ModelLibraryItem
+        {
+            Configuration = config,
+            Description = GetModelDescription(config),
+            IsFineTuned = config.ModelId.Contains("finetuned") || config.ModelId.Contains("custom"),
+            Metrics = GetModelMetrics(config)
+        }).ToList();
+
         LoadedModels = AvailableModels.Where(m => m.Configuration.Status == ModelStatus.Loaded).ToList();
         TotalMemoryUsed = LoadedModels.Sum(m => m.Configuration.MemoryUsage);
         FilterModels();
     }
+
+    // Individual methods for each filter to avoid string literals in onclick
+    private void SetFilterAll() => SetFilter("all");
+    private void SetFilterLLM() => SetFilter("llm");
+    private void SetFilterVision() => SetFilter("vision");
+    private void SetFilterAudio() => SetFilter("audio");
+    private void SetFilterSpecialized() => SetFilter("specialized");
+    private void SetFilterFineTuned() => SetFilter("finetuned");
 
     private void SetFilter(string filter)
     {
@@ -124,7 +146,7 @@
             if (!string.IsNullOrEmpty(query))
             {
                 if (!m.Configuration.ModelId.ToLower().Contains(query) &&
-        !(m.Description?.ToLower().Contains(query) ?? false))
+                    !(m.Description?.ToLower().Contains(query) ?? false))
                 {
                     return false;
                 }
@@ -135,11 +157,11 @@
             {
                 "llm" => m.Configuration.Type == ModelType.LLM,
                 "vision" => m.Configuration.Type == ModelType.CLIP ||
-        m.Configuration.Type == ModelType.ObjectDetection ||
-        m.Configuration.Type == ModelType.FaceRecognition,
+                           m.Configuration.Type == ModelType.ObjectDetection ||
+                           m.Configuration.Type == ModelType.FaceRecognition,
                 "audio" => m.Configuration.Type == ModelType.Whisper,
                 "specialized" => m.Configuration.Type == ModelType.OCR ||
-        m.Configuration.Type == ModelType.Custom,
+                                m.Configuration.Type == ModelType.Custom,
                 "finetuned" => m.IsFineTuned,
                 _ => true
             };
@@ -193,11 +215,37 @@
         return $"{size:F1} {sizes[order]}";
     }
 
+    private string GetModelDescription(ModelConfiguration config)
+    {
+        return config.Type switch
+        {
+            ModelType.LLM => "Large language model for text generation and analysis",
+            ModelType.Whisper => "Speech-to-text transcription model",
+            ModelType.CLIP => "Vision-language model for image understanding",
+            ModelType.OCR => "Optical character recognition for document processing",
+            ModelType.Embedding => "Text embedding model for semantic search",
+            ModelType.ObjectDetection => "Object detection and classification",
+            ModelType.FaceRecognition => "Facial recognition and analysis",
+            _ => "Specialized AI model"
+        };
+    }
+
+    private PerformanceMetrics? GetModelMetrics(ModelConfiguration config)
+    {
+        // Return mock metrics for now - in production, get from service
+        return new PerformanceMetrics
+        {
+            TokensPerSecond = config.Type == ModelType.LLM ? 50.0 : 0,
+            AverageLatencyMs = 250,
+            Accuracy = 0.95
+        };
+    }
+
     private class ModelLibraryItem
     {
         public ModelConfiguration Configuration { get; set; } = new();
         public string? Description { get; set; }
         public bool IsFineTuned { get; set; }
-        public ModelCard.ModelPerformanceMetrics? Metrics { get; set; }
+        public PerformanceMetrics? Metrics { get; set; }
     }
 }

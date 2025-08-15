@@ -1,233 +1,207 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
-namespace IIM.Core.Security;
 
-/// <summary>
-/// Configuration for Evidence Manager
-/// </summary>
-public class EvidenceConfiguration
+namespace IIM.Core.Security
 {
-    public string StorePath { get; set; } = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
-        "IIM", 
-        "Evidence");
-    public bool EnableEncryption { get; set; } = false;
-    public bool RequireDualControl { get; set; } = false;
-    public int MaxFileSizeMb { get; set; } = 10240;
-}
-
-/// <summary>
-/// Evidence metadata
-/// </summary>
-public class EvidenceMetadata
-{
-    public string CaseNumber { get; set; } = string.Empty;
-    public string CollectedBy { get; set; } = string.Empty;
-    public DateTimeOffset CollectionDate { get; set; }
-    public string CollectionLocation { get; set; } = string.Empty;
-    public string DeviceSource { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-}
-
-/// <summary>
-/// Evidence record
-/// </summary>
-public class EvidenceRecord
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string OriginalFileName { get; set; } = string.Empty;
-    public string CaseNumber { get; set; } = string.Empty;
-    public long FileSize { get; set; }
-    public Dictionary<string, string> Hashes { get; set; } = new();
-    public string Signature { get; set; } = string.Empty;
-}
-
-/// <summary>
-/// Processed evidence record
-/// </summary>
-public class ProcessedEvidence
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string OriginalEvidenceId { get; set; } = string.Empty;
-    public string ProcessingType { get; set; } = string.Empty;
-    public string ProcessedHash { get; set; } = string.Empty;
-}
-
-/// <summary>
-/// Evidence export result
-/// </summary>
-public class EvidenceExport
-{
-    public string ExportId { get; set; } = Guid.NewGuid().ToString();
-    public string EvidenceId { get; set; } = string.Empty;
-    public string ExportPath { get; set; } = string.Empty;
-    public List<string> Files { get; set; } = new();
-    public bool IntegrityValid { get; set; }
-}
-
-/// <summary>
-/// Chain of custody report
-/// </summary>
-public class ChainOfCustodyReport
-{
-    public string EvidenceId { get; set; } = string.Empty;
-    public List<string> Events { get; set; } = new();
-    public bool IntegrityValid { get; set; }
-}
-
-/// <summary>
-/// Evidence not found exception
-/// </summary>
-public class EvidenceNotFoundException : Exception
-{
-    public EvidenceNotFoundException(string message) : base(message) { }
-}
-
-/// <summary>
-/// Integrity check exception
-/// </summary>
-public class IntegrityException : Exception
-{
-    public IntegrityException(string message) : base(message) { }
-}
-
-/// <summary>
-/// Interface for managing evidence
-/// </summary>
-public interface IEvidenceManager
-{
-    Task<EvidenceRecord> IngestEvidenceAsync(Stream data, string fileName, EvidenceMetadata metadata, CancellationToken cancellationToken = default);
-    Task<bool> VerifyIntegrityAsync(string evidenceId, CancellationToken cancellationToken = default);
-    Task<ChainOfCustodyReport> GenerateChainOfCustodyAsync(string evidenceId, CancellationToken cancellationToken = default);
-    Task<ProcessedEvidence> ProcessEvidenceAsync(string evidenceId, string processingType, Func<Stream, Task<Stream>> processor, CancellationToken cancellationToken = default);
-    Task<EvidenceExport> ExportEvidenceAsync(string evidenceId, string exportPath, CancellationToken cancellationToken = default);
-    Task<List<object>> GetAuditLogAsync(string evidenceId, CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// Evidence manager implementation
-/// </summary>
-public class EvidenceManager : IEvidenceManager
-{
-    private readonly ILogger<EvidenceManager> _logger;
-    private readonly EvidenceConfiguration _config;
-    private readonly Dictionary<string, EvidenceRecord> _evidenceStore = new();
-
-    public EvidenceManager(ILogger<EvidenceManager> logger, EvidenceConfiguration config)
+    /// <summary>
+    /// Configuration for evidence storage, security, and chain of custody requirements.
+    /// This is the single source of truth for evidence configuration across the platform.
+    /// </summary>
+    public class EvidenceConfiguration
     {
-        _logger = logger;
-        _config = config;
-        
-        // Ensure storage directory exists
-        if (!Directory.Exists(_config.StorePath))
-        {
-            Directory.CreateDirectory(_config.StorePath);
-        }
-    }
+        // Storage Settings
+        public string StorePath { get; set; } = GetDefaultStorePath();
+        public string TempPath { get; set; } = GetDefaultTempPath();
+        public string QuarantinePath { get; set; } = GetDefaultQuarantinePath();
 
-    public Task<EvidenceRecord> IngestEvidenceAsync(Stream data, string fileName, EvidenceMetadata metadata, CancellationToken cancellationToken = default)
-    {
-        var evidence = new EvidenceRecord
+        // Security Settings
+        public bool EnableEncryption { get; set; } = true;  // Default to secure
+        public bool RequireDualControl { get; set; } = false;
+        public bool EnableIntegrityChecking { get; set; } = true;
+        public bool RequireDigitalSignatures { get; set; } = false;
+        public string HashAlgorithm { get; set; } = "SHA256";
+
+        // Size and Type Restrictions
+        public int MaxFileSizeMb { get; set; } = 10240; // 10GB default
+        public long MaxTotalStorageGb { get; set; } = 500; // 500GB default
+        public List<string> AllowedFileTypes { get; set; } = GetDefaultAllowedTypes();
+        public List<string> BlockedFileTypes { get; set; } = GetDefaultBlockedTypes();
+
+        // Chain of Custody Settings
+        public bool EnableChainOfCustody { get; set; } = true;
+        public bool RequireWitnessForAccess { get; set; } = false;
+        public int MinimumAuthorizationLevel { get; set; } = 1;
+        public bool LogAllAccess { get; set; } = true;
+
+        // Advanced Security Settings
+        public Dictionary<string, object> SecuritySettings { get; set; } = new()
         {
-            Id = Guid.NewGuid().ToString("N"),
-            OriginalFileName = fileName,
-            CaseNumber = metadata.CaseNumber,
-            FileSize = data.Length,
-            Hashes = new Dictionary<string, string> { ["SHA256"] = "mock-hash" },
-            Signature = "mock-signature"
+            ["EnableVirusScan"] = true,
+            ["EnableSandboxing"] = true,
+            ["RequireMFA"] = false,
+            ["SessionTimeoutMinutes"] = 30,
+            ["MaxConcurrentAccess"] = 5,
+            ["EnableWatermarking"] = false,
+            ["PreserveMetadata"] = true,
+            ["EnableForensicMode"] = true
         };
-        
-        _evidenceStore[evidence.Id] = evidence;
-        _logger.LogInformation("Evidence ingested: {EvidenceId}", evidence.Id);
-        
-        return Task.FromResult(evidence);
-    }
 
-    public Task<bool> VerifyIntegrityAsync(string evidenceId, CancellationToken cancellationToken = default)
-    {
-        if (!_evidenceStore.ContainsKey(evidenceId))
+        // Audit Settings
+        public bool EnableAuditLog { get; set; } = true;
+        public bool EnableVideoRecording { get; set; } = false;
+        public int AuditRetentionDays { get; set; } = 2555; // 7 years
+
+        // Performance Settings
+        public int ChunkSizeMb { get; set; } = 64;
+        public int MaxConcurrentUploads { get; set; } = 3;
+        public bool EnableCompression { get; set; } = true;
+        public bool EnableDeduplication { get; set; } = true;
+
+        // Helper Methods
+        private static string GetDefaultStorePath()
         {
-            throw new EvidenceNotFoundException($"Evidence {evidenceId} not found");
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "IIM",
+                "Evidence",
+                "Store");
         }
-        
-        // Mock verification - always returns true
-        _logger.LogInformation("Verifying integrity for {EvidenceId}", evidenceId);
-        return Task.FromResult(true);
-    }
 
-    public Task<ChainOfCustodyReport> GenerateChainOfCustodyAsync(string evidenceId, CancellationToken cancellationToken = default)
-    {
-        if (!_evidenceStore.ContainsKey(evidenceId))
+        private static string GetDefaultTempPath()
         {
-            throw new EvidenceNotFoundException($"Evidence {evidenceId} not found");
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "IIM",
+                "Evidence",
+                "Temp");
         }
-        
-        var report = new ChainOfCustodyReport
-        {
-            EvidenceId = evidenceId,
-            Events = new List<string> { "Ingested", "Verified" },
-            IntegrityValid = true
-        };
-        
-        return Task.FromResult(report);
-    }
 
-    public async Task<ProcessedEvidence> ProcessEvidenceAsync(string evidenceId, string processingType, Func<Stream, Task<Stream>> processor, CancellationToken cancellationToken = default)
-    {
-        if (!_evidenceStore.ContainsKey(evidenceId))
+        private static string GetDefaultQuarantinePath()
         {
-            throw new EvidenceNotFoundException($"Evidence {evidenceId} not found");
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "IIM",
+                "Evidence",
+                "Quarantine");
         }
-        
-        // Mock processing
-        using var inputStream = new MemoryStream();
-        var outputStream = await processor(inputStream);
-        
-        var processed = new ProcessedEvidence
-        {
-            Id = Guid.NewGuid().ToString("N"),
-            OriginalEvidenceId = evidenceId,
-            ProcessingType = processingType,
-            ProcessedHash = "mock-processed-hash"
-        };
-        
-        _logger.LogInformation("Evidence {EvidenceId} processed", evidenceId);
-        return processed;
-    }
 
-    public Task<EvidenceExport> ExportEvidenceAsync(string evidenceId, string exportPath, CancellationToken cancellationToken = default)
-    {
-        if (!_evidenceStore.ContainsKey(evidenceId))
+        private static List<string> GetDefaultAllowedTypes()
         {
-            throw new EvidenceNotFoundException($"Evidence {evidenceId} not found");
+            return new List<string>
+            {
+                // Documents
+                ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
+                ".txt", ".rtf", ".odt", ".ods", ".odp", ".csv", ".xml", ".json",
+                
+                // Images
+                ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif",
+                ".raw", ".svg", ".webp", ".ico", ".heic", ".heif",
+                
+                // Video
+                ".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv", ".webm",
+                ".m4v", ".mpg", ".mpeg", ".3gp", ".h264", ".h265",
+                
+                // Audio
+                ".mp3", ".wav", ".flac", ".aac", ".ogg", ".wma", ".m4a",
+                ".opus", ".amr", ".ac3", ".aiff",
+                
+                // Archives
+                ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz",
+                ".iso", ".dmg", ".pkg",
+                
+                // Forensic
+                ".dd", ".e01", ".ex01", ".aff", ".aff4", ".raw", ".img",
+                ".vmdk", ".vhd", ".vhdx", ".ova", ".ovf",
+                
+                // Database
+                ".db", ".sqlite", ".mdb", ".accdb", ".dbf",
+                
+                // Email
+                ".eml", ".msg", ".pst", ".ost", ".mbox",
+                
+                // Log files
+                ".log", ".evtx", ".etl", ".pcap", ".pcapng",
+                
+                // Mobile
+                ".apk", ".ipa", ".xap", ".appx", ".backup"
+            };
         }
-        
-        var export = new EvidenceExport
-        {
-            ExportId = Guid.NewGuid().ToString("N"),
-            EvidenceId = evidenceId,
-            ExportPath = exportPath,
-            Files = new List<string> { "evidence.dat", "chain.json", "verify.ps1" },
-            IntegrityValid = true
-        };
-        
-        _logger.LogInformation("Evidence {EvidenceId} exported to {Path}", evidenceId, exportPath);
-        return Task.FromResult(export);
-    }
 
-    public Task<List<object>> GetAuditLogAsync(string evidenceId, CancellationToken cancellationToken = default)
-    {
-        var log = new List<object>
+        private static List<string> GetDefaultBlockedTypes()
         {
-            new { timestamp = DateTimeOffset.UtcNow, action = "ingested", user = "system" },
-            new { timestamp = DateTimeOffset.UtcNow, action = "verified", user = "system" }
-        };
-        
-        return Task.FromResult(log);
+            return new List<string>
+            {
+                ".exe", ".com", ".bat", ".cmd", ".scr", ".msi",
+                ".vbs", ".vbe", ".js", ".jse", ".ws", ".wsf",
+                ".ps1", ".ps2", ".psc1", ".psc2", ".lnk", ".inf",
+                ".reg", ".dll", ".sys", ".drv", ".cpl", ".action"
+            };
+        }
+
+        /// <summary>
+        /// Validates if a file type is allowed based on configuration
+        /// </summary>
+        public bool IsFileTypeAllowed(string fileName)
+        {
+            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension))
+                return false;
+
+            // Check blocked list first (takes precedence)
+            if (BlockedFileTypes.Contains(extension))
+                return false;
+
+            // If we have an allow list, file must be in it
+            if (AllowedFileTypes.Any())
+                return AllowedFileTypes.Contains(extension);
+
+            // If no allow list, allow by default (unless blocked)
+            return true;
+        }
+
+        /// <summary>
+        /// Gets the appropriate storage path for evidence based on its classification
+        /// </summary>
+        public string GetStoragePathForClassification(string classification)
+        {
+            return classification?.ToUpperInvariant() switch
+            {
+                "TOP SECRET" => Path.Combine(StorePath, "TopSecret"),
+                "SECRET" => Path.Combine(StorePath, "Secret"),
+                "CONFIDENTIAL" => Path.Combine(StorePath, "Confidential"),
+                "RESTRICTED" => Path.Combine(StorePath, "Restricted"),
+                _ => Path.Combine(StorePath, "Unclassified")
+            };
+        }
+
+        /// <summary>
+        /// Validates the configuration settings
+        /// </summary>
+        public (bool IsValid, List<string> Errors) Validate()
+        {
+            var errors = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(StorePath))
+                errors.Add("StorePath cannot be empty");
+
+            if (MaxFileSizeMb <= 0)
+                errors.Add("MaxFileSizeMb must be greater than 0");
+
+            if (MaxTotalStorageGb <= 0)
+                errors.Add("MaxTotalStorageGb must be greater than 0");
+
+            if (ChunkSizeMb <= 0 || ChunkSizeMb > MaxFileSizeMb)
+                errors.Add("ChunkSizeMb must be between 1 and MaxFileSizeMb");
+
+            if (EnableEncryption && string.IsNullOrWhiteSpace(HashAlgorithm))
+                errors.Add("HashAlgorithm is required when encryption is enabled");
+
+            if (RequireDualControl && !EnableChainOfCustody)
+                errors.Add("Chain of custody must be enabled for dual control");
+
+            return (errors.Count == 0, errors);
+        }
     }
 }

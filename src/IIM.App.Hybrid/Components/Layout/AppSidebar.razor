@@ -3,26 +3,27 @@
 // ============================================
 @using IIM.Core.Models
 @using IIM.App.Hybrid.Services
+@using IIM.Core.Services
 @inject NavigationManager Navigation
 @inject IInvestigationService InvestigationService
 
 <div class="app-sidebar @(IsCollapsed ? "collapsed" : "")">
     <div class="sidebar-tabs">
-        <button class="sidebar-tab @(ActiveTab == "chats" ? "active" : "")" @onclick="() => SetActiveTab('chats')">
+        <button class="sidebar-tab @(ActiveTab == "chats" ? "active" : "")" @onclick="SetActiveTabChats">
             <i class="fas fa-comments"></i>
             @if (!IsCollapsed)
             {
                 <span>Chats</span>
             }
         </button>
-        <button class="sidebar-tab @(ActiveTab == "cases" ? "active" : "")" @onclick="() => SetActiveTab('cases')">
+        <button class="sidebar-tab @(ActiveTab == "cases" ? "active" : "")" @onclick="SetActiveTabCases">
             <i class="fas fa-folder"></i>
             @if (!IsCollapsed)
             {
                 <span>Cases</span>
             }
         </button>
-        <button class="sidebar-tab @(ActiveTab == "history" ? "active" : "")" @onclick="() => SetActiveTab('history')">
+        <button class="sidebar-tab @(ActiveTab == "history" ? "active" : "")" @onclick="SetActiveTabHistory">
             <i class="fas fa-history"></i>
             @if (!IsCollapsed)
             {
@@ -57,7 +58,7 @@
                             @foreach (var session in group.Sessions)
                             {
                                 <SessionItem Session="@session" IsActive="@(session.Id == ActiveSessionId)" IsCollapsed="@IsCollapsed"
-                                    OnClick="@(() => SelectSession(session))" />
+                                             OnClick="@(() => SelectSession(session))" />
                             }
                         </div>
                     }
@@ -71,7 +72,7 @@
                         @foreach (var caseItem in RecentCases)
                         {
                             <div class="case-item @(caseItem.Id == CurrentCaseId ? "active" : "")"
-                                @onclick="() => SelectCase(caseItem)">
+                                 @onclick="() => SelectCase(caseItem)">
                                 <div class="case-icon">
                                     <i class="fas @GetCaseIcon(caseItem.Type)"></i>
                                 </div>
@@ -135,10 +136,15 @@
         RecentCases = await InvestigationService.GetRecentCasesAsync(10);
     }
 
-    private void SetActiveTab(string tab)
+    public void SetActiveTab(string tab)
     {
         ActiveTab = tab;
+        StateHasChanged();
     }
+
+    private void SetActiveTabChats() => SetActiveTab("chats");
+    private void SetActiveTabCases() => SetActiveTab("cases");
+    private void SetActiveTabHistory() => SetActiveTab("history");
 
     private void CreateNewSession()
     {
@@ -174,7 +180,7 @@
             groups.Add(new SessionGroup { Title = "Yesterday", Sessions = yesterday });
 
         var thisWeek = sessions.Where(s => s.UpdatedAt.Date < now.AddDays(-1).Date &&
-        s.UpdatedAt.Date >= now.AddDays(-7).Date).ToList();
+            s.UpdatedAt.Date >= now.AddDays(-7).Date).ToList();
         if (thisWeek.Any())
             groups.Add(new SessionGroup { Title = "Previous 7 Days", Sessions = thisWeek });
 

@@ -19,6 +19,8 @@ public class Case
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
     public Dictionary<string, object> Metadata { get; set; } = new();
+    public CasePriority Priority { get; set; } = CasePriority.Medium;
+
 
     // Relationships
     public List<Evidence> Evidence { get; set; } = new();
@@ -29,6 +31,15 @@ public class Case
     // Security
     public string Classification { get; set; } = "UNCLASSIFIED";
     public List<string> AccessControlList { get; set; } = new();
+}
+
+public enum CasePriority
+{
+    Low = 0,
+    Medium = 1,
+    High = 2,
+    Critical = 3,
+    Emergency = 4
 }
 
 public enum CaseType
@@ -50,6 +61,9 @@ public enum CaseType
 public enum CaseStatus
 {
     Active,
+    Open,
+    InProgress,
+    AssignedTo,
     Pending,
     UnderReview,
     Closed,

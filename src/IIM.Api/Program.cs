@@ -10,6 +10,8 @@ using IIM.Core.Platform;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using IIM.Core.Security;
+using IIM.Core.Models;
+using IIM.Core.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);

@@ -1,11 +1,11 @@
-// ============================================
-// File: src/IIM.App.Hybrid/Components/Investigation/InvestigationWorkspace.razor
-// ============================================
+
 @using IIM.Core.Models
 @using IIM.App.Hybrid.Services
+@using IIM.Core.Services
 @using Microsoft.AspNetCore.SignalR.Client
 @inject IInvestigationService InvestigationService
 @inject IHubConnectionService HubService
+@inject ILogger<InvestigationWorkspace> Logger
 @implements IAsyncDisposable
 
 <div class="investigation-workspace">
@@ -25,8 +25,10 @@
         {
             @foreach (var message in Messages)
             {
-                <InvestigationMessage Message="@message" OnToolExecute="@ExecuteTool" OnEvidenceView="@ViewEvidence"
-                    OnCitationClick="@ShowCitation" />
+                <InvestigationMessage Message="@message"
+                                      OnToolExecute="@(async (args) => await ExecuteTool(args.toolName, args.parameters))"
+                                      OnEvidenceView="@((evidenceId) => ViewEvidence(evidenceId))"
+                                      OnCitationClick="@((citation) => ShowCitation(citation))" />
             }
         }
 
@@ -37,11 +39,23 @@
                 <span>@CurrentProcessingStep</span>
             </div>
         }
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                @ErrorMessage
+                <button type="button" class="btn-close" @onclick="@(() => ErrorMessage = string.Empty)"></button>
+            </div>
+        }
     </div>
 
-    <MultiModalInput OnSendMessage="@SendMessage" OnFileAttach="@AttachFile" OnVoiceInput="@ProcessVoiceInput"
-        OnToolSelect="@SelectTool" AvailableTools="@AvailableTools" ActiveModels="@ActiveModels"
-        IsEnabled="@(!IsProcessing)" />
+    <MultiModalInput OnSendMessage="@SendMessage"
+                     OnFileAttach="@AttachFile"
+                     OnVoiceInput="@ProcessVoiceInput"
+                     OnToolSelect="@SelectTool"
+                     AvailableTools="@AvailableTools"
+                     ActiveModels="@ActiveModels"
+                     IsEnabled="@(!IsProcessing)" />
 </div>
 
 @code {
@@ -55,6 +69,7 @@
     private Dictionary<string, Core.Models.ModelConfiguration> ActiveModels = new();
     private bool IsProcessing = false;
     private string CurrentProcessingStep = "";
+    private string ErrorMessage = "";  // FIX: Added missing field
     private HubConnection? _hubConnection;
 
     protected override async Task OnInitializedAsync()
@@ -84,11 +99,13 @@
 
     private async Task CreateNewSession()
     {
-        Session = await InvestigationService.CreateSessionAsync(new CreateSessionRequest(
-        CaseId: CaseId!,
-        Title: "New Investigation",
-        InvestigationType: InvestigationType.GeneralInquiry.ToString()
-        ));
+        // FIX: Use correct constructor with positional parameters
+        Session = await InvestigationService.CreateSessionAsync(
+            new CreateSessionRequest(
+                CaseId!,  // positional parameter, not named
+                "New Investigation",
+                InvestigationType.GeneralInquiry.ToString()
+            ));
         SessionId = Session.Id;
     }
 
@@ -96,7 +113,7 @@
     {
         _hubConnection = await HubService.ConnectAsync("investigationHub");
 
-        _hubConnection.On<InvestigationMessage>("ReceiveMessage", (message) =>
+        _hubConnection.On<Core.Models.InvestigationMessage>("ReceiveMessage", (message) =>
         {
             Messages.Add(message);
             InvokeAsync(StateHasChanged);
@@ -121,6 +138,7 @@
 
         IsProcessing = true;
         CurrentProcessingStep = "Analyzing query...";
+        ErrorMessage = "";  // Clear any previous errors
 
         try
         {
@@ -148,6 +166,11 @@
 
             await ScrollToBottom();
         }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to send message");
+            ErrorMessage = $"Failed to send message: {ex.Message}";
+        }
         finally
         {
             IsProcessing = false;
@@ -159,14 +182,58 @@
     {
         IsProcessing = true;
         CurrentProcessingStep = $"Running {toolName}...";
+        ErrorMessage = "";  // Clear any previous errors
 
         try
         {
-            await _hubConnection!.SendAsync("ExecuteTool", SessionId, toolName, parameters);
+            // Execute the tool and get the result
+            var toolResult = await InvestigationService.ExecuteToolAsync(SessionId!, toolName, parameters);
+
+            // Send the result through SignalR if needed
+            if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
+            {
+                await _hubConnection.SendAsync("ToolExecuted", SessionId, toolResult);
+            }
+
+            // Update the UI with the tool result
+            if (toolResult.Status == ToolStatus.Success)
+            {
+                // Handle successful execution
+                if (toolResult.Visualizations.Any())
+                {
+                    // Render visualizations
+                    foreach (var viz in toolResult.Visualizations)
+                    {
+                        // Handle visualization rendering
+                        Logger.LogInformation("Rendering visualization: {Type} - {Title}", viz.Type, viz.Title);
+                    }
+                }
+
+                if (toolResult.Recommendations.Any())
+                {
+                    // Show recommendations to user
+                    foreach (var recommendation in toolResult.Recommendations)
+                    {
+                        Logger.LogInformation("Recommendation: {Recommendation}", recommendation);
+                    }
+                }
+            }
+            else if (toolResult.Status == ToolStatus.Failed)
+            {
+                // Handle failure - FIX: Use ErrorMessage field
+                ErrorMessage = toolResult.ErrorMessage ?? "Tool execution failed";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to execute tool {ToolName}", toolName);
+            ErrorMessage = $"Failed to execute {toolName}: {ex.Message}";  // FIX: Use ErrorMessage field
         }
         finally
         {
             IsProcessing = false;
+            CurrentProcessingStep = "";
+            StateHasChanged();
         }
     }
 
@@ -176,7 +243,9 @@
         foreach (var attachment in attachments)
         {
             // Process attachment
+            Logger.LogInformation("Processing attachment: {FileName}", attachment.FileName);
         }
+        await Task.CompletedTask;
     }
 
     private async Task ProcessVoiceInput(Stream audioStream)
@@ -187,6 +256,13 @@
         try
         {
             // Process voice input
+            Logger.LogInformation("Processing voice input");
+            await Task.Delay(1000); // Placeholder for actual processing
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to process voice input");
+            ErrorMessage = "Failed to process voice input";
         }
         finally
         {
@@ -197,16 +273,20 @@
     private async Task SelectTool(string toolId)
     {
         // Handle tool selection
+        Logger.LogInformation("Tool selected: {ToolId}", toolId);
+        await Task.CompletedTask;
     }
 
     private void ViewEvidence(string evidenceId)
     {
         // Navigate to evidence viewer
+        Logger.LogInformation("Viewing evidence: {EvidenceId}", evidenceId);
     }
 
-    private void ShowCitation(Citation citation)
+    private void ShowCitation(Core.Models.Citation citation)
     {
         // Show citation details
+        Logger.LogInformation("Showing citation: {Source}", citation.Source);
     }
 
     private async Task ScrollToBottom()

@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using IIM.Core.Models;
 
 namespace IIM.Core.Platform;
 
@@ -731,15 +732,6 @@ public enum ServiceType
     Binary
 }
 
-public enum ServiceState
-{
-    NotFound,
-    Stopped,
-    Starting,
-    Running,
-    Stopping,
-    Error
-}
 
 public enum ServicePriority
 {

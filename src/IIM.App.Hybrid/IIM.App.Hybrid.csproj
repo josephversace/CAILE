@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
     <TargetFrameworks>net8.0-windows10.0.19041.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
@@ -13,49 +13,34 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
 
+    <!-- Windows specific settings -->
     <WindowsPackageType>None</WindowsPackageType>
-    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
 
+    <!-- Disable static web assets -->
+    <EnableDefaultStaticWebAssets>false</EnableDefaultStaticWebAssets>
+    <StaticWebAssetEnabled>false</StaticWebAssetEnabled>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Core MAUI packages -->
-    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.10" />
-    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
-
-    <!-- UPDATE: Use higher versions to match MAUI requirements -->
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
-
-    <!-- ASP.NET Core Components - use 8.0.10 to match WebView.Maui -->
-    <PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.10" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Forms" Version="8.0.10" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.10" />
+    <!-- Use .NET 8 compatible versions that work -->
+    <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.3" />
+    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="8.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
 
     <!-- SignalR -->
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.10" />
-
-    <!-- JavaScript Interop -->
-    <PackageReference Include="Microsoft.JSInterop" Version="8.0.10" />
   </ItemGroup>
-
-
-
 
   <ItemGroup>
     <ProjectReference Include="..\IIM.Core\IIM.Core.csproj" />
     <ProjectReference Include="..\IIM.Shared\IIM.Shared.csproj" />
   </ItemGroup>
 
-  <!-- Rest of the file stays the same... -->
-  <Target Name="LoadStaticWebAssetsPublishManifest" />
-  <Target Name="StaticWebAssetsPrepareForRun" />
-  <Target Name="StaticWebAssetsPrepareForPublish" />
+  <!-- Content includes -->
+  <ItemGroup>
+    <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
 </Project>

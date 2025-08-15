@@ -17,6 +17,7 @@ public class ModelConfiguration
     public string? LoadedPath { get; set; }
     public DateTimeOffset? LoadedAt { get; set; }
     public ModelCapabilities Capabilities { get; set; } = new();
+    public string Name { get; set; } = string.Empty;
 }
 
 public class ModelRequest

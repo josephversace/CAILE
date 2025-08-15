@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("IIM.Plugin.SDK")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3180063a1e355af15e747aa7cfb3394764972c84")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cef8272015837dbfd687a8b8f81333d76b1d59a9")]
 [assembly: System.Reflection.AssemblyProductAttribute("IIM.Plugin.SDK")]
 [assembly: System.Reflection.AssemblyTitleAttribute("IIM.Plugin.SDK")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
