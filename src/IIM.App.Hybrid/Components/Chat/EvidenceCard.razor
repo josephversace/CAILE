@@ -70,7 +70,7 @@
 @code {
     [Parameter] public Evidence Evidence { get; set; } = new();
     [Parameter] public bool ShowDetails { get; set; } = false;
-    [Parameter] public EventCallback<Evidence> OnClick { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
     [Parameter] public EventCallback<Evidence> OnView { get; set; }
     [Parameter] public EventCallback<Evidence> OnAnalyze { get; set; }
     [Parameter] public EventCallback<Evidence> OnChainOfCustody { get; set; }

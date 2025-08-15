@@ -58,65 +58,25 @@
         "net8.0-windows10.0.19041": {
           "targetAlias": "net8.0-windows10.0.19041.0",
           "dependencies": {
-            "Microsoft.AspNetCore.Components": {
-              "target": "Package",
-              "version": "[8.0.10, )"
-            },
-            "Microsoft.AspNetCore.Components.Authorization": {
-              "target": "Package",
-              "version": "[8.0.10, )"
-            },
-            "Microsoft.AspNetCore.Components.Forms": {
-              "target": "Package",
-              "version": "[8.0.10, )"
-            },
-            "Microsoft.AspNetCore.Components.Web": {
-              "target": "Package",
-              "version": "[8.0.10, )"
-            },
             "Microsoft.AspNetCore.Components.WebView.Maui": {
               "target": "Package",
-              "version": "[8.0.100, )"
+              "version": "[8.0.3, )"
             },
             "Microsoft.AspNetCore.SignalR.Client": {
               "target": "Package",
               "version": "[8.0.10, )"
             },
-            "Microsoft.Extensions.Configuration": {
-              "target": "Package",
-              "version": "[8.0.0, )"
-            },
-            "Microsoft.Extensions.Configuration.Abstractions": {
-              "target": "Package",
-              "version": "[8.0.0, )"
-            },
-            "Microsoft.Extensions.DependencyInjection": {
-              "target": "Package",
-              "version": "[8.0.1, )"
-            },
-            "Microsoft.Extensions.Hosting.Abstractions": {
-              "target": "Package",
-              "version": "[8.0.1, )"
-            },
-            "Microsoft.Extensions.Logging.Abstractions": {
-              "target": "Package",
-              "version": "[8.0.2, )"
-            },
             "Microsoft.Extensions.Logging.Debug": {
               "target": "Package",
-              "version": "[8.0.1, )"
-            },
-            "Microsoft.JSInterop": {
-              "target": "Package",
-              "version": "[8.0.10, )"
+              "version": "[8.0.0, )"
             },
             "Microsoft.Maui.Controls": {
               "target": "Package",
-              "version": "[8.0.100, )"
+              "version": "[8.0.3, )"
             },
             "Microsoft.Maui.Controls.Compatibility": {
               "target": "Package",
-              "version": "[8.0.100, )"
+              "version": "[8.0.3, )"
             }
           },
           "imports": [
@@ -210,6 +170,14 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Microsoft.AspNetCore.SignalR.Client": {
+              "target": "Package",
+              "version": "[8.0.10, )"
+            },
+            "Microsoft.AspNetCore.SignalR.Client.Core": {
+              "target": "Package",
+              "version": "[8.0.10, )"
+            },
             "Microsoft.Extensions.Configuration.Abstractions": {
               "target": "Package",
               "version": "[8.0.0, )"

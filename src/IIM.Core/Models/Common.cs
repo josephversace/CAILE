@@ -5,20 +5,11 @@ using System.IO;
 
 namespace IIM.Core.Models;
 
-public class Attachment
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString("N");
-    public string FileName { get; set; } = string.Empty;
-    public string ContentType { get; set; } = string.Empty;
-    public long Size { get; set; }
-    public AttachmentType Type { get; set; }
-    public string? StoragePath { get; set; }
-    public Stream? Stream { get; set; }
-}
 
 public class Citation
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    public string Source { get; set; } = string.Empty;
     public string SourceId { get; set; } = string.Empty;
     public string SourceType { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
@@ -55,14 +46,4 @@ public class AnalysisResult
     public Dictionary<string, object> Results { get; set; } = new();
     public double Confidence { get; set; }
     public List<string> Tags { get; set; } = new();
-}
-
-public enum AttachmentType
-{
-    Document,
-    Image,
-    Audio,
-    Video,
-    Archive,
-    Other
 }

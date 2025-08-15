@@ -4,7 +4,7 @@
 @using IIM.Core.Models
 
 <div class="model-card @(Model.Status == ModelStatus.Loaded ? "active" : "") @(IsSelected ? "selected" : "")"
-    @onclick="OnClick">
+     @onclick="OnClick">
     <div class="model-header">
         <div class="model-icon" style="background: @GetGradientColor()">
             <i class="fas @GetModelIcon()"></i>
@@ -152,8 +152,9 @@
     [Parameter] public bool ShowStats { get; set; } = true;
     [Parameter] public bool ShowFineTune { get; set; } = false;
     [Parameter] public int DownloadProgress { get; set; } = 0;
-  
-    [Parameter] public EventCallback<Core.Models.ModelConfiguration> OnClick { get; set; }
+    [Parameter] public PerformanceMetrics? PerformanceMetrics { get; set; }  // ONLY REAL CHANGE - Added as parameter
+
+    [Parameter] public EventCallback OnClick { get; set; }
     [Parameter] public EventCallback<Core.Models.ModelConfiguration> OnLoad { get; set; }
     [Parameter] public EventCallback<Core.Models.ModelConfiguration> OnUnload { get; set; }
     [Parameter] public EventCallback<Core.Models.ModelConfiguration> OnConfigure { get; set; }
@@ -253,10 +254,5 @@
         return time.ToString("MMM dd");
     }
 
-    public class ModelPerformanceMetrics
-    {
-        public double TokensPerSecond { get; set; }
-        public double AverageLatencyMs { get; set; }
-        public double Accuracy { get; set; }
-    }
+    // REMOVED the duplicate ModelPerformanceMetrics class that was here
 }

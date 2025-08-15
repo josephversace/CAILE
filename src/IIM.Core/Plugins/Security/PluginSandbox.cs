@@ -12,6 +12,7 @@ using IIM.Plugin.SDK;
 using IIM.Plugin.SDK.Security;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
+using IIM.Core.Services;
 
 namespace IIM.Core.Plugins.Security;
 

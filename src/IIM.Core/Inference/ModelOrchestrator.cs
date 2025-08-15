@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Core.Models;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Core.Inference;
@@ -604,13 +605,6 @@ public sealed class ModelInfo
     public TimeSpan LoadTime { get; init; }
 }
 
-public enum ModelType
-{
-    LLM,
-    Whisper,
-    CLIP,
-    Embedding
-}
 
 public enum InferenceBackend
 {
@@ -625,7 +619,3 @@ public class InsufficientMemoryException : Exception
     public InsufficientMemoryException(string message) : base(message) { }
 }
 
-public class ModelNotLoadedException : Exception
-{
-    public ModelNotLoadedException(string message) : base(message) { }
-}

@@ -61,7 +61,7 @@
     [Parameter] public Core.Models.Attachment Attachment { get; set; } = new();
     [Parameter] public bool ShowPreview { get; set; } = false;
     [Parameter] public bool ShowRemove { get; set; } = false;
-    [Parameter] public EventCallback<Core.Models.Attachment> OnClick { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
     [Parameter] public EventCallback<Core.Models.Attachment> OnRemove { get; set; }
 
     private bool _showPreview = false;

@@ -29,6 +29,12 @@ public interface IWslManager
     Task<bool> SyncFilesAsync(string windowsPath, string wslPath, CancellationToken ct = default);
     Task<bool> InstallDistroAsync(string distroPath, string installName, CancellationToken ct = default);
     Task<HealthCheckResult> HealthCheckAsync(CancellationToken ct = default);
+
+    Task<bool> IsWslEnabled();
+    Task<bool> EnableWsl();
+    Task<bool> DistroExists(string distroName = "IIM-Ubuntu");
+    Task<bool> StartIim();
+
 }
 
 /// <summary>
@@ -414,6 +420,98 @@ public sealed class WslManager : IWslManager
         }
 
         return result;
+    }
+
+    public async Task<bool> IsWslEnabled()
+    {
+        try
+        {
+            var status = await GetStatusAsync();
+            return status.IsInstalled && status.IsWsl2;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to check if WSL is enabled");
+            return false;
+        }
+    }
+
+    public async Task<bool> EnableWsl()
+    {
+        try
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                _logger.LogWarning("WSL is only available on Windows");
+                return false;
+            }
+
+            // Enable WSL feature
+            var wslResult = await RunPowerShellAsync(
+                "Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux -NoRestart",
+                CancellationToken.None);
+
+            // Enable Virtual Machine Platform
+            var vmResult = await RunPowerShellAsync(
+                "Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart",
+                CancellationToken.None);
+
+            // Set WSL2 as default
+            await RunCommandAsync("wsl", "--set-default-version 2", CancellationToken.None);
+
+            _logger.LogInformation("WSL2 enabled successfully. Restart may be required.");
+            return wslResult.ExitCode == 0 && vmResult.ExitCode == 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to enable WSL");
+            return false;
+        }
+    }
+
+    public async Task<bool> DistroExists(string distroName = "IIM-Ubuntu")
+    {
+        try
+        {
+            var distros = await GetInstalledDistrosAsync(CancellationToken.None);
+            return distros.Any(d => d.Name.Equals(distroName, StringComparison.OrdinalIgnoreCase));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to check if distro {DistroName} exists", distroName);
+            return false;
+        }
+    }
+
+    public async Task<bool> StartIim()
+    {
+        try
+        {
+            _logger.LogInformation("Starting IIM services");
+
+            // Ensure distro is installed and running
+            var distro = await EnsureDistroAsync(DefaultDistroName);
+            if (distro == null)
+            {
+                _logger.LogError("Failed to ensure IIM distro");
+                return false;
+            }
+
+            // Start all services
+            var servicesStarted = await StartServicesAsync(distro);
+            if (!servicesStarted)
+            {
+                _logger.LogWarning("Some services failed to start");
+            }
+
+            _logger.LogInformation("IIM started successfully");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to start IIM");
+            return false;
+        }
     }
 
     #region Private Helper Methods

@@ -2,12 +2,12 @@
   "version": 3,
   "targets": {
     "net8.0-windows10.0.19041": {
-      "Microsoft.AspNetCore.Authorization/8.0.10": {
+      "Microsoft.AspNetCore.Authorization/8.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Metadata": "8.0.10",
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.2",
-          "Microsoft.Extensions.Options": "8.0.2"
+          "Microsoft.AspNetCore.Metadata": "8.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
+          "Microsoft.Extensions.Options": "8.0.0"
         },
         "compile": {
           "lib/net8.0/Microsoft.AspNetCore.Authorization.dll": {
@@ -20,11 +20,11 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Components/8.0.10": {
+      "Microsoft.AspNetCore.Components/8.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Authorization": "8.0.10",
-          "Microsoft.AspNetCore.Components.Analyzers": "8.0.10"
+          "Microsoft.AspNetCore.Authorization": "8.0.0",
+          "Microsoft.AspNetCore.Components.Analyzers": "8.0.0"
         },
         "compile": {
           "lib/net8.0/Microsoft.AspNetCore.Components.dll": {
@@ -37,33 +37,16 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Components.Analyzers/8.0.10": {
+      "Microsoft.AspNetCore.Components.Analyzers/8.0.0": {
         "type": "package",
         "build": {
           "buildTransitive/netstandard2.0/Microsoft.AspNetCore.Components.Analyzers.targets": {}
         }
       },
-      "Microsoft.AspNetCore.Components.Authorization/8.0.10": {
+      "Microsoft.AspNetCore.Components.Forms/8.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Authorization": "8.0.10",
-          "Microsoft.AspNetCore.Components": "8.0.10"
-        },
-        "compile": {
-          "lib/net8.0/Microsoft.AspNetCore.Components.Authorization.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net8.0/Microsoft.AspNetCore.Components.Authorization.dll": {
-            "related": ".xml"
-          }
-        }
-      },
-      "Microsoft.AspNetCore.Components.Forms/8.0.10": {
-        "type": "package",
-        "dependencies": {
-          "Microsoft.AspNetCore.Components": "8.0.10"
+          "Microsoft.AspNetCore.Components": "8.0.0"
         },
         "compile": {
           "lib/net8.0/Microsoft.AspNetCore.Components.Forms.dll": {
@@ -76,14 +59,14 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Components.Web/8.0.10": {
+      "Microsoft.AspNetCore.Components.Web/8.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Components": "8.0.10",
-          "Microsoft.AspNetCore.Components.Forms": "8.0.10",
-          "Microsoft.Extensions.DependencyInjection": "8.0.1",
+          "Microsoft.AspNetCore.Components": "8.0.0",
+          "Microsoft.AspNetCore.Components.Forms": "8.0.0",
+          "Microsoft.Extensions.DependencyInjection": "8.0.0",
           "Microsoft.Extensions.Primitives": "8.0.0",
-          "Microsoft.JSInterop": "8.0.10",
+          "Microsoft.JSInterop": "8.0.0",
           "System.IO.Pipelines": "8.0.0"
         },
         "compile": {
@@ -97,15 +80,15 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Components.WebView/8.0.10": {
+      "Microsoft.AspNetCore.Components.WebView/8.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Components.Web": "8.0.10",
-          "Microsoft.Extensions.Configuration.Binder": "8.0.2",
-          "Microsoft.Extensions.Configuration.Json": "8.0.1",
+          "Microsoft.AspNetCore.Components.Web": "8.0.0",
+          "Microsoft.Extensions.Configuration.Binder": "8.0.0",
+          "Microsoft.Extensions.Configuration.Json": "8.0.0",
           "Microsoft.Extensions.FileProviders.Composite": "8.0.0",
-          "Microsoft.Extensions.FileProviders.Embedded": "8.0.10",
-          "Microsoft.Extensions.Logging": "8.0.1"
+          "Microsoft.Extensions.FileProviders.Embedded": "8.0.0",
+          "Microsoft.Extensions.Logging": "8.0.0"
         },
         "compile": {
           "lib/net8.0/Microsoft.AspNetCore.Components.WebView.dll": {
@@ -116,20 +99,14 @@
           "lib/net8.0/Microsoft.AspNetCore.Components.WebView.dll": {
             "related": ".xml"
           }
-        },
-        "build": {
-          "buildTransitive/Microsoft.AspNetCore.Components.WebView.props": {}
-        },
-        "buildMultiTargeting": {
-          "buildMultiTargeting/Microsoft.AspNetCore.Components.WebView.props": {}
         }
       },
-      "Microsoft.AspNetCore.Components.WebView.Maui/8.0.100": {
+      "Microsoft.AspNetCore.Components.WebView.Maui/8.0.3": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Authorization": "8.0.10",
-          "Microsoft.AspNetCore.Components.WebView": "8.0.10",
-          "Microsoft.JSInterop": "8.0.10"
+          "Microsoft.AspNetCore.Authorization": "8.0.0",
+          "Microsoft.AspNetCore.Components.WebView": "8.0.0",
+          "Microsoft.JSInterop": "8.0.0"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.AspNetCore.Components.WebView.Maui.dll": {
@@ -197,7 +174,7 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Metadata/8.0.10": {
+      "Microsoft.AspNetCore.Metadata/8.0.0": {
         "type": "package",
         "compile": {
           "lib/net8.0/Microsoft.AspNetCore.Metadata.dll": {
@@ -319,7 +296,7 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
-      "Microsoft.Extensions.Configuration.Binder/8.0.2": {
+      "Microsoft.Extensions.Configuration.Binder/8.0.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration.Abstractions": "8.0.0"
@@ -338,7 +315,7 @@
           "buildTransitive/netstandard2.0/Microsoft.Extensions.Configuration.Binder.targets": {}
         }
       },
-      "Microsoft.Extensions.Configuration.FileExtensions/8.0.1": {
+      "Microsoft.Extensions.Configuration.FileExtensions/8.0.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "8.0.0",
@@ -361,13 +338,14 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
-      "Microsoft.Extensions.Configuration.Json/8.0.1": {
+      "Microsoft.Extensions.Configuration.Json/8.0.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "8.0.0",
           "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
-          "Microsoft.Extensions.Configuration.FileExtensions": "8.0.1",
-          "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0"
+          "Microsoft.Extensions.Configuration.FileExtensions": "8.0.0",
+          "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0",
+          "System.Text.Json": "8.0.0"
         },
         "compile": {
           "lib/net8.0/Microsoft.Extensions.Configuration.Json.dll": {
@@ -511,7 +489,7 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
-      "Microsoft.Extensions.FileProviders.Embedded/8.0.10": {
+      "Microsoft.Extensions.FileProviders.Embedded/8.0.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0"
@@ -657,12 +635,12 @@
           "buildTransitive/net6.0/Microsoft.Extensions.Logging.Abstractions.targets": {}
         }
       },
-      "Microsoft.Extensions.Logging.Debug/8.0.1": {
+      "Microsoft.Extensions.Logging.Debug/8.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.2",
-          "Microsoft.Extensions.Logging": "8.0.1",
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.2"
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.0",
+          "Microsoft.Extensions.Logging": "8.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0"
         },
         "compile": {
           "lib/net8.0/Microsoft.Extensions.Logging.Debug.dll": {
@@ -737,49 +715,36 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
-      "Microsoft.Graphics.Win2D/1.2.0": {
+      "Microsoft.Graphics.Win2D/1.0.5.1": {
         "type": "package",
         "dependencies": {
-          "Microsoft.WindowsAppSDK": "1.5.240227000"
+          "Microsoft.WindowsAppSDK": "1.0.4"
         },
         "compile": {
-          "lib/net6.0-windows10.0.19041.0/Microsoft.Graphics.Canvas.Interop.dll": {}
+          "lib/net5.0-windows10.0.17763.0/Microsoft.Graphics.Canvas.Interop.dll": {}
         },
         "runtime": {
-          "lib/net6.0-windows10.0.19041.0/Microsoft.Graphics.Canvas.Interop.dll": {}
+          "lib/net5.0-windows10.0.17763.0/Microsoft.Graphics.Canvas.Interop.dll": {}
         },
         "build": {
-          "build/net6.0-windows10.0.19041.0/_._": {}
+          "build/net5.0-windows10.0.17763.0/_._": {}
         },
         "runtimeTargets": {
-          "runtimes/win-arm64/native/Microsoft.Graphics.Canvas.dll": {
+          "runtimes/win10-arm64/native/Microsoft.Graphics.Canvas.dll": {
             "assetType": "native",
-            "rid": "win-arm64"
+            "rid": "win10-arm64"
           },
-          "runtimes/win-x64/native/Microsoft.Graphics.Canvas.dll": {
+          "runtimes/win10-x64/native/Microsoft.Graphics.Canvas.dll": {
             "assetType": "native",
-            "rid": "win-x64"
+            "rid": "win10-x64"
           },
-          "runtimes/win-x86/native/Microsoft.Graphics.Canvas.dll": {
+          "runtimes/win10-x86/native/Microsoft.Graphics.Canvas.dll": {
             "assetType": "native",
-            "rid": "win-x86"
+            "rid": "win10-x86"
           }
         }
       },
-      "Microsoft.IO.RecyclableMemoryStream/3.0.1": {
-        "type": "package",
-        "compile": {
-          "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.dll": {
-            "related": ".xml"
-          }
-        }
-      },
-      "Microsoft.JSInterop/8.0.10": {
+      "Microsoft.JSInterop/8.0.0": {
         "type": "package",
         "compile": {
           "lib/net8.0/Microsoft.JSInterop.dll": {
@@ -792,33 +757,34 @@
           }
         }
       },
-      "Microsoft.Maui.Controls/8.0.100": {
+      "Microsoft.Maui.Controls/8.0.3": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Maui.Controls.Build.Tasks": "8.0.100",
-          "Microsoft.Maui.Controls.Core": "8.0.100",
-          "Microsoft.Maui.Controls.Xaml": "8.0.100",
-          "Microsoft.Maui.Resizetizer": "8.0.100"
+          "Microsoft.Maui.Controls.Build.Tasks": "8.0.3",
+          "Microsoft.Maui.Controls.Core": "8.0.3",
+          "Microsoft.Maui.Controls.Xaml": "8.0.3",
+          "Microsoft.Maui.Resizetizer": "8.0.3"
         }
       },
-      "Microsoft.Maui.Controls.Build.Tasks/8.0.100": {
+      "Microsoft.Maui.Controls.Build.Tasks/8.0.3": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Maui.Controls.Core": "8.0.100",
-          "Microsoft.Maui.Controls.Xaml": "8.0.100"
+          "Microsoft.Maui.Controls.Core": "8.0.3",
+          "Microsoft.Maui.Controls.Xaml": "8.0.3"
         },
         "build": {
           "buildTransitive/net6.0-windows10.0.17763.0/Microsoft.Maui.Controls.Build.Tasks.props": {},
           "buildTransitive/net6.0-windows10.0.17763.0/Microsoft.Maui.Controls.Build.Tasks.targets": {}
         }
       },
-      "Microsoft.Maui.Controls.Compatibility/8.0.100": {
+      "Microsoft.Maui.Controls.Compatibility/8.0.3": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "8.0.0",
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.2",
-          "Microsoft.Maui.Controls.Core": "8.0.100",
-          "Microsoft.Maui.Controls.Xaml": "8.0.100"
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
+          "Microsoft.Maui.Controls": "8.0.3",
+          "Microsoft.Maui.Controls.Core": "8.0.3",
+          "Microsoft.Maui.Controls.Xaml": "8.0.3"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.Maui.Controls.Compatibility.dll": {
@@ -831,14 +797,14 @@
           }
         }
       },
-      "Microsoft.Maui.Controls.Core/8.0.100": {
+      "Microsoft.Maui.Controls.Core/8.0.3": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "8.0.0",
-          "Microsoft.Extensions.DependencyInjection": "8.0.1",
-          "Microsoft.Extensions.Logging": "8.0.1",
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.2",
-          "Microsoft.Maui.Core": "8.0.100"
+          "Microsoft.Extensions.DependencyInjection": "8.0.0",
+          "Microsoft.Extensions.Logging": "8.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
+          "Microsoft.Maui.Core": "8.0.3"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.Maui.Controls.dll": {
@@ -955,12 +921,12 @@
           }
         }
       },
-      "Microsoft.Maui.Controls.Xaml/8.0.100": {
+      "Microsoft.Maui.Controls.Xaml/8.0.3": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "8.0.0",
-          "Microsoft.Maui.Controls.Core": "8.0.100",
-          "Microsoft.Maui.Core": "8.0.100"
+          "Microsoft.Maui.Controls.Core": "8.0.3",
+          "Microsoft.Maui.Core": "8.0.3"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.Maui.Controls.Xaml.dll": {
@@ -973,19 +939,19 @@
           }
         }
       },
-      "Microsoft.Maui.Core/8.0.100": {
+      "Microsoft.Maui.Core/8.0.3": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "8.0.0",
-          "Microsoft.Extensions.DependencyInjection": "8.0.1",
-          "Microsoft.Extensions.Logging": "8.0.1",
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.2",
-          "Microsoft.Graphics.Win2D": "1.2.0",
-          "Microsoft.Maui.Essentials": "8.0.100",
-          "Microsoft.Maui.Graphics": "8.0.100",
-          "Microsoft.Maui.Graphics.Win2D.WinUI.Desktop": "8.0.100",
+          "Microsoft.Extensions.DependencyInjection": "8.0.0",
+          "Microsoft.Extensions.Logging": "8.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
+          "Microsoft.Graphics.Win2D": "1.0.5.1",
+          "Microsoft.Maui.Essentials": "8.0.3",
+          "Microsoft.Maui.Graphics": "8.0.3",
+          "Microsoft.Maui.Graphics.Win2D.WinUI.Desktop": "8.0.3",
           "Microsoft.Windows.SDK.BuildTools": "10.0.22621.756",
-          "Microsoft.WindowsAppSDK": "1.5.240802000"
+          "Microsoft.WindowsAppSDK": "1.3.230724000"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.Maui.dll": {
@@ -1002,11 +968,11 @@
           "buildTransitive/net6.0-windows10.0.17763.0/Microsoft.Maui.Core.targets": {}
         }
       },
-      "Microsoft.Maui.Essentials/8.0.100": {
+      "Microsoft.Maui.Essentials/8.0.3": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Maui.Graphics": "8.0.100",
-          "Microsoft.WindowsAppSDK": "1.5.240802000"
+          "Microsoft.Maui.Graphics": "8.0.3",
+          "Microsoft.WindowsAppSDK": "1.3.230724000"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.Maui.Essentials.dll": {
@@ -1019,12 +985,11 @@
           }
         }
       },
-      "Microsoft.Maui.Graphics/8.0.100": {
+      "Microsoft.Maui.Graphics/8.0.3": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Graphics.Win2D": "1.2.0",
-          "Microsoft.IO.RecyclableMemoryStream": "3.0.1",
-          "Microsoft.WindowsAppSDK": "1.5.240802000"
+          "Microsoft.Graphics.Win2D": "1.0.5.1",
+          "Microsoft.WindowsAppSDK": "1.3.230724000"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.Maui.Graphics.dll": {
@@ -1037,12 +1002,12 @@
           }
         }
       },
-      "Microsoft.Maui.Graphics.Win2D.WinUI.Desktop/8.0.100": {
+      "Microsoft.Maui.Graphics.Win2D.WinUI.Desktop/8.0.3": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Graphics.Win2D": "1.2.0",
-          "Microsoft.Maui.Graphics": "8.0.100",
-          "Microsoft.WindowsAppSDK": "1.5.240802000"
+          "Microsoft.Graphics.Win2D": "1.0.5.1",
+          "Microsoft.Maui.Graphics": "8.0.3",
+          "Microsoft.WindowsAppSDK": "1.3.230724000"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.Maui.Graphics.Win2D.WinUI.Desktop.dll": {
@@ -1055,7 +1020,7 @@
           }
         }
       },
-      "Microsoft.Maui.Resizetizer/8.0.100": {
+      "Microsoft.Maui.Resizetizer/8.0.3": {
         "type": "package",
         "build": {
           "buildTransitive/Microsoft.Maui.Resizetizer.props": {},
@@ -1069,10 +1034,10 @@
           "buildTransitive/Microsoft.Windows.SDK.BuildTools.targets": {}
         }
       },
-      "Microsoft.WindowsAppSDK/1.5.240802000": {
+      "Microsoft.WindowsAppSDK/1.3.230724000": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Windows.SDK.BuildTools": "10.0.22621.756"
+          "Microsoft.Windows.SDK.BuildTools": "10.0.22621.1"
         },
         "compile": {
           "lib/net6.0-windows10.0.18362.0/Microsoft.InteractiveExperiences.Projection.dll": {
@@ -1095,7 +1060,6 @@
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll": {
             "related": ".xml"
           },
-          "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Management.Deployment.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.PushNotifications.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Security.AccessControl.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.System.Power.Projection.dll": {
@@ -1103,7 +1067,8 @@
           },
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.System.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Widgets.Projection.dll": {},
-          "lib/net6.0-windows10.0.18362.0/Microsoft.WindowsAppRuntime.Bootstrap.Net.dll": {}
+          "lib/net6.0-windows10.0.18362.0/Microsoft.WindowsAppRuntime.Bootstrap.Net.dll": {},
+          "lib/net6.0-windows10.0.18362.0/Microsoft.WindowsAppRuntime.Release.Net.dll": {}
         },
         "runtime": {
           "lib/net6.0-windows10.0.18362.0/Microsoft.InteractiveExperiences.Projection.dll": {
@@ -1126,7 +1091,6 @@
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll": {
             "related": ".xml"
           },
-          "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Management.Deployment.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.PushNotifications.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Security.AccessControl.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.System.Power.Projection.dll": {
@@ -1134,25 +1098,14 @@
           },
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.System.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Widgets.Projection.dll": {},
-          "lib/net6.0-windows10.0.18362.0/Microsoft.WindowsAppRuntime.Bootstrap.Net.dll": {}
+          "lib/net6.0-windows10.0.18362.0/Microsoft.WindowsAppRuntime.Bootstrap.Net.dll": {},
+          "lib/net6.0-windows10.0.18362.0/Microsoft.WindowsAppRuntime.Release.Net.dll": {}
         },
         "build": {
           "buildTransitive/Microsoft.WindowsAppSDK.props": {},
           "buildTransitive/Microsoft.WindowsAppSDK.targets": {}
         },
         "runtimeTargets": {
-          "runtimes/win-arm64/native/Microsoft.WindowsAppRuntime.Bootstrap.dll": {
-            "assetType": "native",
-            "rid": "win-arm64"
-          },
-          "runtimes/win-x64/native/Microsoft.WindowsAppRuntime.Bootstrap.dll": {
-            "assetType": "native",
-            "rid": "win-x64"
-          },
-          "runtimes/win-x86/native/Microsoft.WindowsAppRuntime.Bootstrap.dll": {
-            "assetType": "native",
-            "rid": "win-x86"
-          },
           "runtimes/win10-arm64/native/Microsoft.WindowsAppRuntime.Bootstrap.dll": {
             "assetType": "native",
             "rid": "win10-arm64"
@@ -1221,6 +1174,8 @@
         "dependencies": {
           "IIM.Plugin.SDK": "1.0.0",
           "IIM.Shared": "1.0.0",
+          "Microsoft.AspNetCore.SignalR.Client": "8.0.10",
+          "Microsoft.AspNetCore.SignalR.Client.Core": "8.0.10",
           "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.2",
           "Microsoft.Extensions.Hosting.Abstractions": "8.0.1",
@@ -1264,12 +1219,12 @@
       }
     },
     "net8.0-windows10.0.19041/win10-arm64": {
-      "Microsoft.AspNetCore.Authorization/8.0.10": {
+      "Microsoft.AspNetCore.Authorization/8.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Metadata": "8.0.10",
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.2",
-          "Microsoft.Extensions.Options": "8.0.2"
+          "Microsoft.AspNetCore.Metadata": "8.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
+          "Microsoft.Extensions.Options": "8.0.0"
         },
         "compile": {
           "lib/net8.0/Microsoft.AspNetCore.Authorization.dll": {
@@ -1282,11 +1237,11 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Components/8.0.10": {
+      "Microsoft.AspNetCore.Components/8.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Authorization": "8.0.10",
-          "Microsoft.AspNetCore.Components.Analyzers": "8.0.10"
+          "Microsoft.AspNetCore.Authorization": "8.0.0",
+          "Microsoft.AspNetCore.Components.Analyzers": "8.0.0"
         },
         "compile": {
           "lib/net8.0/Microsoft.AspNetCore.Components.dll": {
@@ -1299,33 +1254,16 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Components.Analyzers/8.0.10": {
+      "Microsoft.AspNetCore.Components.Analyzers/8.0.0": {
         "type": "package",
         "build": {
           "buildTransitive/netstandard2.0/Microsoft.AspNetCore.Components.Analyzers.targets": {}
         }
       },
-      "Microsoft.AspNetCore.Components.Authorization/8.0.10": {
+      "Microsoft.AspNetCore.Components.Forms/8.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Authorization": "8.0.10",
-          "Microsoft.AspNetCore.Components": "8.0.10"
-        },
-        "compile": {
-          "lib/net8.0/Microsoft.AspNetCore.Components.Authorization.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net8.0/Microsoft.AspNetCore.Components.Authorization.dll": {
-            "related": ".xml"
-          }
-        }
-      },
-      "Microsoft.AspNetCore.Components.Forms/8.0.10": {
-        "type": "package",
-        "dependencies": {
-          "Microsoft.AspNetCore.Components": "8.0.10"
+          "Microsoft.AspNetCore.Components": "8.0.0"
         },
         "compile": {
           "lib/net8.0/Microsoft.AspNetCore.Components.Forms.dll": {
@@ -1338,14 +1276,14 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Components.Web/8.0.10": {
+      "Microsoft.AspNetCore.Components.Web/8.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Components": "8.0.10",
-          "Microsoft.AspNetCore.Components.Forms": "8.0.10",
-          "Microsoft.Extensions.DependencyInjection": "8.0.1",
+          "Microsoft.AspNetCore.Components": "8.0.0",
+          "Microsoft.AspNetCore.Components.Forms": "8.0.0",
+          "Microsoft.Extensions.DependencyInjection": "8.0.0",
           "Microsoft.Extensions.Primitives": "8.0.0",
-          "Microsoft.JSInterop": "8.0.10",
+          "Microsoft.JSInterop": "8.0.0",
           "System.IO.Pipelines": "8.0.0"
         },
         "compile": {
@@ -1359,15 +1297,15 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Components.WebView/8.0.10": {
+      "Microsoft.AspNetCore.Components.WebView/8.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Components.Web": "8.0.10",
-          "Microsoft.Extensions.Configuration.Binder": "8.0.2",
-          "Microsoft.Extensions.Configuration.Json": "8.0.1",
+          "Microsoft.AspNetCore.Components.Web": "8.0.0",
+          "Microsoft.Extensions.Configuration.Binder": "8.0.0",
+          "Microsoft.Extensions.Configuration.Json": "8.0.0",
           "Microsoft.Extensions.FileProviders.Composite": "8.0.0",
-          "Microsoft.Extensions.FileProviders.Embedded": "8.0.10",
-          "Microsoft.Extensions.Logging": "8.0.1"
+          "Microsoft.Extensions.FileProviders.Embedded": "8.0.0",
+          "Microsoft.Extensions.Logging": "8.0.0"
         },
         "compile": {
           "lib/net8.0/Microsoft.AspNetCore.Components.WebView.dll": {
@@ -1378,20 +1316,14 @@
           "lib/net8.0/Microsoft.AspNetCore.Components.WebView.dll": {
             "related": ".xml"
           }
-        },
-        "build": {
-          "buildTransitive/Microsoft.AspNetCore.Components.WebView.props": {}
-        },
-        "buildMultiTargeting": {
-          "buildMultiTargeting/Microsoft.AspNetCore.Components.WebView.props": {}
         }
       },
-      "Microsoft.AspNetCore.Components.WebView.Maui/8.0.100": {
+      "Microsoft.AspNetCore.Components.WebView.Maui/8.0.3": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Authorization": "8.0.10",
-          "Microsoft.AspNetCore.Components.WebView": "8.0.10",
-          "Microsoft.JSInterop": "8.0.10"
+          "Microsoft.AspNetCore.Authorization": "8.0.0",
+          "Microsoft.AspNetCore.Components.WebView": "8.0.0",
+          "Microsoft.JSInterop": "8.0.0"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.AspNetCore.Components.WebView.Maui.dll": {
@@ -1459,7 +1391,7 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Metadata/8.0.10": {
+      "Microsoft.AspNetCore.Metadata/8.0.0": {
         "type": "package",
         "compile": {
           "lib/net8.0/Microsoft.AspNetCore.Metadata.dll": {
@@ -1581,7 +1513,7 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
-      "Microsoft.Extensions.Configuration.Binder/8.0.2": {
+      "Microsoft.Extensions.Configuration.Binder/8.0.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration.Abstractions": "8.0.0"
@@ -1600,7 +1532,7 @@
           "buildTransitive/netstandard2.0/Microsoft.Extensions.Configuration.Binder.targets": {}
         }
       },
-      "Microsoft.Extensions.Configuration.FileExtensions/8.0.1": {
+      "Microsoft.Extensions.Configuration.FileExtensions/8.0.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "8.0.0",
@@ -1623,13 +1555,14 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
-      "Microsoft.Extensions.Configuration.Json/8.0.1": {
+      "Microsoft.Extensions.Configuration.Json/8.0.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "8.0.0",
           "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
-          "Microsoft.Extensions.Configuration.FileExtensions": "8.0.1",
-          "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0"
+          "Microsoft.Extensions.Configuration.FileExtensions": "8.0.0",
+          "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0",
+          "System.Text.Json": "8.0.0"
         },
         "compile": {
           "lib/net8.0/Microsoft.Extensions.Configuration.Json.dll": {
@@ -1773,7 +1706,7 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
-      "Microsoft.Extensions.FileProviders.Embedded/8.0.10": {
+      "Microsoft.Extensions.FileProviders.Embedded/8.0.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0"
@@ -1919,12 +1852,12 @@
           "buildTransitive/net6.0/Microsoft.Extensions.Logging.Abstractions.targets": {}
         }
       },
-      "Microsoft.Extensions.Logging.Debug/8.0.1": {
+      "Microsoft.Extensions.Logging.Debug/8.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.2",
-          "Microsoft.Extensions.Logging": "8.0.1",
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.2"
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.0",
+          "Microsoft.Extensions.Logging": "8.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0"
         },
         "compile": {
           "lib/net8.0/Microsoft.Extensions.Logging.Debug.dll": {
@@ -1999,38 +1932,25 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
-      "Microsoft.Graphics.Win2D/1.2.0": {
+      "Microsoft.Graphics.Win2D/1.0.5.1": {
         "type": "package",
         "dependencies": {
-          "Microsoft.WindowsAppSDK": "1.5.240227000"
+          "Microsoft.WindowsAppSDK": "1.0.4"
         },
         "compile": {
-          "lib/net6.0-windows10.0.19041.0/Microsoft.Graphics.Canvas.Interop.dll": {}
+          "lib/net5.0-windows10.0.17763.0/Microsoft.Graphics.Canvas.Interop.dll": {}
         },
         "runtime": {
-          "lib/net6.0-windows10.0.19041.0/Microsoft.Graphics.Canvas.Interop.dll": {}
+          "lib/net5.0-windows10.0.17763.0/Microsoft.Graphics.Canvas.Interop.dll": {}
         },
         "native": {
-          "runtimes/win-arm64/native/Microsoft.Graphics.Canvas.dll": {}
+          "runtimes/win10-arm64/native/Microsoft.Graphics.Canvas.dll": {}
         },
         "build": {
-          "build/net6.0-windows10.0.19041.0/_._": {}
+          "build/net5.0-windows10.0.17763.0/_._": {}
         }
       },
-      "Microsoft.IO.RecyclableMemoryStream/3.0.1": {
-        "type": "package",
-        "compile": {
-          "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.dll": {
-            "related": ".xml"
-          }
-        }
-      },
-      "Microsoft.JSInterop/8.0.10": {
+      "Microsoft.JSInterop/8.0.0": {
         "type": "package",
         "compile": {
           "lib/net8.0/Microsoft.JSInterop.dll": {
@@ -2043,33 +1963,34 @@
           }
         }
       },
-      "Microsoft.Maui.Controls/8.0.100": {
+      "Microsoft.Maui.Controls/8.0.3": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Maui.Controls.Build.Tasks": "8.0.100",
-          "Microsoft.Maui.Controls.Core": "8.0.100",
-          "Microsoft.Maui.Controls.Xaml": "8.0.100",
-          "Microsoft.Maui.Resizetizer": "8.0.100"
+          "Microsoft.Maui.Controls.Build.Tasks": "8.0.3",
+          "Microsoft.Maui.Controls.Core": "8.0.3",
+          "Microsoft.Maui.Controls.Xaml": "8.0.3",
+          "Microsoft.Maui.Resizetizer": "8.0.3"
         }
       },
-      "Microsoft.Maui.Controls.Build.Tasks/8.0.100": {
+      "Microsoft.Maui.Controls.Build.Tasks/8.0.3": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Maui.Controls.Core": "8.0.100",
-          "Microsoft.Maui.Controls.Xaml": "8.0.100"
+          "Microsoft.Maui.Controls.Core": "8.0.3",
+          "Microsoft.Maui.Controls.Xaml": "8.0.3"
         },
         "build": {
           "buildTransitive/net6.0-windows10.0.17763.0/Microsoft.Maui.Controls.Build.Tasks.props": {},
           "buildTransitive/net6.0-windows10.0.17763.0/Microsoft.Maui.Controls.Build.Tasks.targets": {}
         }
       },
-      "Microsoft.Maui.Controls.Compatibility/8.0.100": {
+      "Microsoft.Maui.Controls.Compatibility/8.0.3": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "8.0.0",
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.2",
-          "Microsoft.Maui.Controls.Core": "8.0.100",
-          "Microsoft.Maui.Controls.Xaml": "8.0.100"
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
+          "Microsoft.Maui.Controls": "8.0.3",
+          "Microsoft.Maui.Controls.Core": "8.0.3",
+          "Microsoft.Maui.Controls.Xaml": "8.0.3"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.Maui.Controls.Compatibility.dll": {
@@ -2082,14 +2003,14 @@
           }
         }
       },
-      "Microsoft.Maui.Controls.Core/8.0.100": {
+      "Microsoft.Maui.Controls.Core/8.0.3": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "8.0.0",
-          "Microsoft.Extensions.DependencyInjection": "8.0.1",
-          "Microsoft.Extensions.Logging": "8.0.1",
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.2",
-          "Microsoft.Maui.Core": "8.0.100"
+          "Microsoft.Extensions.DependencyInjection": "8.0.0",
+          "Microsoft.Extensions.Logging": "8.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
+          "Microsoft.Maui.Core": "8.0.3"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.Maui.Controls.dll": {
@@ -2206,12 +2127,12 @@
           }
         }
       },
-      "Microsoft.Maui.Controls.Xaml/8.0.100": {
+      "Microsoft.Maui.Controls.Xaml/8.0.3": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "8.0.0",
-          "Microsoft.Maui.Controls.Core": "8.0.100",
-          "Microsoft.Maui.Core": "8.0.100"
+          "Microsoft.Maui.Controls.Core": "8.0.3",
+          "Microsoft.Maui.Core": "8.0.3"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.Maui.Controls.Xaml.dll": {
@@ -2224,19 +2145,19 @@
           }
         }
       },
-      "Microsoft.Maui.Core/8.0.100": {
+      "Microsoft.Maui.Core/8.0.3": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "8.0.0",
-          "Microsoft.Extensions.DependencyInjection": "8.0.1",
-          "Microsoft.Extensions.Logging": "8.0.1",
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.2",
-          "Microsoft.Graphics.Win2D": "1.2.0",
-          "Microsoft.Maui.Essentials": "8.0.100",
-          "Microsoft.Maui.Graphics": "8.0.100",
-          "Microsoft.Maui.Graphics.Win2D.WinUI.Desktop": "8.0.100",
+          "Microsoft.Extensions.DependencyInjection": "8.0.0",
+          "Microsoft.Extensions.Logging": "8.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
+          "Microsoft.Graphics.Win2D": "1.0.5.1",
+          "Microsoft.Maui.Essentials": "8.0.3",
+          "Microsoft.Maui.Graphics": "8.0.3",
+          "Microsoft.Maui.Graphics.Win2D.WinUI.Desktop": "8.0.3",
           "Microsoft.Windows.SDK.BuildTools": "10.0.22621.756",
-          "Microsoft.WindowsAppSDK": "1.5.240802000"
+          "Microsoft.WindowsAppSDK": "1.3.230724000"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.Maui.dll": {
@@ -2253,11 +2174,11 @@
           "buildTransitive/net6.0-windows10.0.17763.0/Microsoft.Maui.Core.targets": {}
         }
       },
-      "Microsoft.Maui.Essentials/8.0.100": {
+      "Microsoft.Maui.Essentials/8.0.3": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Maui.Graphics": "8.0.100",
-          "Microsoft.WindowsAppSDK": "1.5.240802000"
+          "Microsoft.Maui.Graphics": "8.0.3",
+          "Microsoft.WindowsAppSDK": "1.3.230724000"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.Maui.Essentials.dll": {
@@ -2270,12 +2191,11 @@
           }
         }
       },
-      "Microsoft.Maui.Graphics/8.0.100": {
+      "Microsoft.Maui.Graphics/8.0.3": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Graphics.Win2D": "1.2.0",
-          "Microsoft.IO.RecyclableMemoryStream": "3.0.1",
-          "Microsoft.WindowsAppSDK": "1.5.240802000"
+          "Microsoft.Graphics.Win2D": "1.0.5.1",
+          "Microsoft.WindowsAppSDK": "1.3.230724000"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.Maui.Graphics.dll": {
@@ -2288,12 +2208,12 @@
           }
         }
       },
-      "Microsoft.Maui.Graphics.Win2D.WinUI.Desktop/8.0.100": {
+      "Microsoft.Maui.Graphics.Win2D.WinUI.Desktop/8.0.3": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Graphics.Win2D": "1.2.0",
-          "Microsoft.Maui.Graphics": "8.0.100",
-          "Microsoft.WindowsAppSDK": "1.5.240802000"
+          "Microsoft.Graphics.Win2D": "1.0.5.1",
+          "Microsoft.Maui.Graphics": "8.0.3",
+          "Microsoft.WindowsAppSDK": "1.3.230724000"
         },
         "compile": {
           "lib/net8.0-windows10.0.19041/Microsoft.Maui.Graphics.Win2D.WinUI.Desktop.dll": {
@@ -2306,7 +2226,7 @@
           }
         }
       },
-      "Microsoft.Maui.Resizetizer/8.0.100": {
+      "Microsoft.Maui.Resizetizer/8.0.3": {
         "type": "package",
         "build": {
           "buildTransitive/Microsoft.Maui.Resizetizer.props": {},
@@ -2320,10 +2240,10 @@
           "buildTransitive/Microsoft.Windows.SDK.BuildTools.targets": {}
         }
       },
-      "Microsoft.WindowsAppSDK/1.5.240802000": {
+      "Microsoft.WindowsAppSDK/1.3.230724000": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Windows.SDK.BuildTools": "10.0.22621.756"
+          "Microsoft.Windows.SDK.BuildTools": "10.0.22621.1"
         },
         "compile": {
           "lib/net6.0-windows10.0.18362.0/Microsoft.InteractiveExperiences.Projection.dll": {
@@ -2346,7 +2266,6 @@
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll": {
             "related": ".xml"
           },
-          "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Management.Deployment.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.PushNotifications.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Security.AccessControl.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.System.Power.Projection.dll": {
@@ -2354,7 +2273,8 @@
           },
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.System.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Widgets.Projection.dll": {},
-          "lib/net6.0-windows10.0.18362.0/Microsoft.WindowsAppRuntime.Bootstrap.Net.dll": {}
+          "lib/net6.0-windows10.0.18362.0/Microsoft.WindowsAppRuntime.Bootstrap.Net.dll": {},
+          "lib/net6.0-windows10.0.18362.0/Microsoft.WindowsAppRuntime.Release.Net.dll": {}
         },
         "runtime": {
           "lib/net6.0-windows10.0.18362.0/Microsoft.InteractiveExperiences.Projection.dll": {
@@ -2377,7 +2297,6 @@
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll": {
             "related": ".xml"
           },
-          "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Management.Deployment.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.PushNotifications.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Security.AccessControl.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.System.Power.Projection.dll": {
@@ -2385,7 +2304,8 @@
           },
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.System.Projection.dll": {},
           "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Widgets.Projection.dll": {},
-          "lib/net6.0-windows10.0.18362.0/Microsoft.WindowsAppRuntime.Bootstrap.Net.dll": {}
+          "lib/net6.0-windows10.0.18362.0/Microsoft.WindowsAppRuntime.Bootstrap.Net.dll": {},
+          "lib/net6.0-windows10.0.18362.0/Microsoft.WindowsAppRuntime.Release.Net.dll": {}
         },
         "native": {
           "runtimes/win10-arm64/native/Microsoft.WindowsAppRuntime.Bootstrap.dll": {}
@@ -2449,6 +2369,8 @@
         "dependencies": {
           "IIM.Plugin.SDK": "1.0.0",
           "IIM.Shared": "1.0.0",
+          "Microsoft.AspNetCore.SignalR.Client": "8.0.10",
+          "Microsoft.AspNetCore.SignalR.Client.Core": "8.0.10",
           "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.2",
           "Microsoft.Extensions.Hosting.Abstractions": "8.0.1",
@@ -2493,10 +2415,10 @@
     }
   },
   "libraries": {
-    "Microsoft.AspNetCore.Authorization/8.0.10": {
-      "sha512": "mENBehQP1H9oTB4Diu1l7vR1BeZrBNWA9sHZsln4l2oIs7D3qH3fokopU/8FWa9JSxQYNBT1MeYBCwguYOBjMQ==",
+    "Microsoft.AspNetCore.Authorization/8.0.0": {
+      "sha512": "OGIGJMnlWvQgcweHcv1Mq/P24Zx/brUHeEdD05NzqkSXmQSnFomTvVyCuBtCXT4JPfv2m70y1RSocmd9bIbJRg==",
       "type": "package",
-      "path": "microsoft.aspnetcore.authorization/8.0.10",
+      "path": "microsoft.aspnetcore.authorization/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2508,14 +2430,14 @@
         "lib/net8.0/Microsoft.AspNetCore.Authorization.xml",
         "lib/netstandard2.0/Microsoft.AspNetCore.Authorization.dll",
         "lib/netstandard2.0/Microsoft.AspNetCore.Authorization.xml",
-        "microsoft.aspnetcore.authorization.8.0.10.nupkg.sha512",
+        "microsoft.aspnetcore.authorization.8.0.0.nupkg.sha512",
         "microsoft.aspnetcore.authorization.nuspec"
       ]
     },
-    "Microsoft.AspNetCore.Components/8.0.10": {
-      "sha512": "qTsPBcK6Z2Yyt+A5GPub9CiUxfmSIrNQ22BT8efzXiz50Vx0KKTsE82pxbipgGU9XNXZhEtYSNTqQFuWyRlIRw==",
+    "Microsoft.AspNetCore.Components/8.0.0": {
+      "sha512": "kqspqWo3lT+rrSd39kvrV7SZYl0znYZQbQ8SJaHjDA8ffMPV6BkfVe0i6LvxRPwq/agwSWdIDq2j4x+78Frypg==",
       "type": "package",
-      "path": "microsoft.aspnetcore.components/8.0.10",
+      "path": "microsoft.aspnetcore.components/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2523,14 +2445,14 @@
         "THIRD-PARTY-NOTICES.txt",
         "lib/net8.0/Microsoft.AspNetCore.Components.dll",
         "lib/net8.0/Microsoft.AspNetCore.Components.xml",
-        "microsoft.aspnetcore.components.8.0.10.nupkg.sha512",
+        "microsoft.aspnetcore.components.8.0.0.nupkg.sha512",
         "microsoft.aspnetcore.components.nuspec"
       ]
     },
-    "Microsoft.AspNetCore.Components.Analyzers/8.0.10": {
-      "sha512": "czb81hXe2a+w1py/U2MrO3aSb0Ht0r1/I+4vJucjTZwbhHtGubneifS3h05DB6CakT8dgKyS0eypQaLuDKkWtQ==",
+    "Microsoft.AspNetCore.Components.Analyzers/8.0.0": {
+      "sha512": "lJMa9kQDw3vkqcMMbuicIpyax7QH6imQFbLRzVqJzrGs5LN954IPaJVkDzRCEXFVAN24Cml6g4mEF3b0D7Oa+Q==",
       "type": "package",
-      "path": "microsoft.aspnetcore.components.analyzers/8.0.10",
+      "path": "microsoft.aspnetcore.components.analyzers/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2539,29 +2461,14 @@
         "analyzers/dotnet/cs/Microsoft.AspNetCore.Components.Analyzers.dll",
         "build/netstandard2.0/Microsoft.AspNetCore.Components.Analyzers.targets",
         "buildTransitive/netstandard2.0/Microsoft.AspNetCore.Components.Analyzers.targets",
-        "microsoft.aspnetcore.components.analyzers.8.0.10.nupkg.sha512",
+        "microsoft.aspnetcore.components.analyzers.8.0.0.nupkg.sha512",
         "microsoft.aspnetcore.components.analyzers.nuspec"
       ]
     },
-    "Microsoft.AspNetCore.Components.Authorization/8.0.10": {
-      "sha512": "z9WZ2sbkKKChx8b75X+1kRpbUdYOqn7sanbNCGavwmgyVUj30F5se2BTXENCOyi1Ve7Hgi4VapH4k1zwO5YN8A==",
+    "Microsoft.AspNetCore.Components.Forms/8.0.0": {
+      "sha512": "iiYB/7Sl/vTURO4EiTUCmfIXujlJOl+Gh7nknCFhvFQ+kKMFFXYcrszYwLN9aQSolpswc/A9a78KL59/UIezig==",
       "type": "package",
-      "path": "microsoft.aspnetcore.components.authorization/8.0.10",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "Icon.png",
-        "THIRD-PARTY-NOTICES.txt",
-        "lib/net8.0/Microsoft.AspNetCore.Components.Authorization.dll",
-        "lib/net8.0/Microsoft.AspNetCore.Components.Authorization.xml",
-        "microsoft.aspnetcore.components.authorization.8.0.10.nupkg.sha512",
-        "microsoft.aspnetcore.components.authorization.nuspec"
-      ]
-    },
-    "Microsoft.AspNetCore.Components.Forms/8.0.10": {
-      "sha512": "YOdsdG/da7xc5uA0dRIe8qUz1rVbbptnYA2CrsxPNka3Nv7Sbh3rArlACGWPBkST3qTRollCx4dLEXpwg/6eEw==",
-      "type": "package",
-      "path": "microsoft.aspnetcore.components.forms/8.0.10",
+      "path": "microsoft.aspnetcore.components.forms/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2569,14 +2476,14 @@
         "THIRD-PARTY-NOTICES.txt",
         "lib/net8.0/Microsoft.AspNetCore.Components.Forms.dll",
         "lib/net8.0/Microsoft.AspNetCore.Components.Forms.xml",
-        "microsoft.aspnetcore.components.forms.8.0.10.nupkg.sha512",
+        "microsoft.aspnetcore.components.forms.8.0.0.nupkg.sha512",
         "microsoft.aspnetcore.components.forms.nuspec"
       ]
     },
-    "Microsoft.AspNetCore.Components.Web/8.0.10": {
-      "sha512": "gJa07Ni77Eoer/+3tocjnCzxfRcL0TJbKnzBP5auk/cxO5nxzJEHuTADX8gAzlyuLvdrnrtfqRAhR66MGkHmww==",
+    "Microsoft.AspNetCore.Components.Web/8.0.0": {
+      "sha512": "aokUKvFoNqxR6bf0+iKrDfQ79OLHWYn5UGYp5MU65/il1vuRK7MAF18oGj7QgiZJUu3cMAZjCFkHbsWLhQxCsA==",
       "type": "package",
-      "path": "microsoft.aspnetcore.components.web/8.0.10",
+      "path": "microsoft.aspnetcore.components.web/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2584,39 +2491,37 @@
         "THIRD-PARTY-NOTICES.txt",
         "lib/net8.0/Microsoft.AspNetCore.Components.Web.dll",
         "lib/net8.0/Microsoft.AspNetCore.Components.Web.xml",
-        "microsoft.aspnetcore.components.web.8.0.10.nupkg.sha512",
+        "microsoft.aspnetcore.components.web.8.0.0.nupkg.sha512",
         "microsoft.aspnetcore.components.web.nuspec"
       ]
     },
-    "Microsoft.AspNetCore.Components.WebView/8.0.10": {
-      "sha512": "wvVKYUo6f6eQZaWOedme0gkBFCT6Qli3M7aYOe1KFuQHCjo7WNVN50gRf1NWFSs57tj6ORx129iQ6o5TIO5aJA==",
+    "Microsoft.AspNetCore.Components.WebView/8.0.0": {
+      "sha512": "efT38dn43pA4EQMpJlbNWtsOtftUmeM2OypVtosIZd988jEnnXYlS0/4SPUPveUxu38gnWihvdqa90Sl9EjGqQ==",
       "type": "package",
-      "path": "microsoft.aspnetcore.components.webview/8.0.10",
+      "path": "microsoft.aspnetcore.components.webview/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "Icon.png",
         "THIRD-PARTY-NOTICES.txt",
-        "build/Microsoft.AspNetCore.Components.WebView.props",
-        "buildMultiTargeting/Microsoft.AspNetCore.Components.WebView.props",
-        "buildTransitive/Microsoft.AspNetCore.Components.WebView.props",
+        "buildTransitive/any/Microsoft.AspNetCore.Components.WebView.props",
         "lib/net8.0/Microsoft.AspNetCore.Components.WebView.dll",
         "lib/net8.0/Microsoft.AspNetCore.Components.WebView.xml",
-        "microsoft.aspnetcore.components.webview.8.0.10.nupkg.sha512",
+        "microsoft.aspnetcore.components.webview.8.0.0.nupkg.sha512",
         "microsoft.aspnetcore.components.webview.nuspec"
       ]
     },
-    "Microsoft.AspNetCore.Components.WebView.Maui/8.0.100": {
-      "sha512": "D1moRJnoGNwtInuTnEYfdyRSwKIgVez+0WxS9tlsOtNpT27Hbl9b2L/edNkrZktQeXjzb82JSxo71UCE9k1K8w==",
+    "Microsoft.AspNetCore.Components.WebView.Maui/8.0.3": {
+      "sha512": "UOH/Rzx8KyppU6J5hDCYE1fbd5IXVZ2tMX4lkfRsPQnQpQwng+L2fp2hmVurN7+kpPsEirSBjWfqjjuxGq5S7Q==",
       "type": "package",
-      "path": "microsoft.aspnetcore.components.webview.maui/8.0.100",
+      "path": "microsoft.aspnetcore.components.webview.maui/8.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "Icon.png",
         "LICENSE.TXT",
         "README.md",
         "THIRD-PARTY-NOTICES.TXT",
+        "aspnet-icon.png",
         "build/Microsoft.AspNetCore.Components.WebView.Maui.props",
         "build/Microsoft.AspNetCore.Components.WebView.Maui.targets",
         "lib/net8.0-android34.0/Microsoft.AspNetCore.Components.WebView.Maui.dll",
@@ -2625,15 +2530,9 @@
         "lib/net8.0-ios17.0/Microsoft.AspNetCore.Components.WebView.Maui.dll",
         "lib/net8.0-ios17.0/Microsoft.AspNetCore.Components.WebView.Maui.pdb",
         "lib/net8.0-ios17.0/Microsoft.AspNetCore.Components.WebView.Maui.xml",
-        "lib/net8.0-ios18.0/Microsoft.AspNetCore.Components.WebView.Maui.dll",
-        "lib/net8.0-ios18.0/Microsoft.AspNetCore.Components.WebView.Maui.pdb",
-        "lib/net8.0-ios18.0/Microsoft.AspNetCore.Components.WebView.Maui.xml",
         "lib/net8.0-maccatalyst17.0/Microsoft.AspNetCore.Components.WebView.Maui.dll",
         "lib/net8.0-maccatalyst17.0/Microsoft.AspNetCore.Components.WebView.Maui.pdb",
         "lib/net8.0-maccatalyst17.0/Microsoft.AspNetCore.Components.WebView.Maui.xml",
-        "lib/net8.0-maccatalyst18.0/Microsoft.AspNetCore.Components.WebView.Maui.dll",
-        "lib/net8.0-maccatalyst18.0/Microsoft.AspNetCore.Components.WebView.Maui.pdb",
-        "lib/net8.0-maccatalyst18.0/Microsoft.AspNetCore.Components.WebView.Maui.xml",
         "lib/net8.0-tizen7.0/Microsoft.AspNetCore.Components.WebView.Maui.dll",
         "lib/net8.0-tizen7.0/Microsoft.AspNetCore.Components.WebView.Maui.pdb",
         "lib/net8.0-tizen7.0/Microsoft.AspNetCore.Components.WebView.Maui.xml",
@@ -2646,7 +2545,7 @@
         "lib/net8.0/Microsoft.AspNetCore.Components.WebView.Maui.dll",
         "lib/net8.0/Microsoft.AspNetCore.Components.WebView.Maui.pdb",
         "lib/net8.0/Microsoft.AspNetCore.Components.WebView.Maui.xml",
-        "microsoft.aspnetcore.components.webview.maui.8.0.100.nupkg.sha512",
+        "microsoft.aspnetcore.components.webview.maui.8.0.3.nupkg.sha512",
         "microsoft.aspnetcore.components.webview.maui.nuspec"
       ]
     },
@@ -2711,10 +2610,10 @@
         "microsoft.aspnetcore.http.connections.common.nuspec"
       ]
     },
-    "Microsoft.AspNetCore.Metadata/8.0.10": {
-      "sha512": "E9YwEujZjXhMLi1hqJh+7iLk2DzNxa4dB9wYY8lHYpAzZdVqoGjaFsaaIzwCvSZZxd7S7Cds01Trlye2mTqeZA==",
+    "Microsoft.AspNetCore.Metadata/8.0.0": {
+      "sha512": "OmuSztiZMitRTYlbMNDkBk3BinSsVcOApSNBAsrw+KYNJh6ALarPhWLlKdtvMgrKzpyCY06xtLAjTmQLURHSlQ==",
       "type": "package",
-      "path": "microsoft.aspnetcore.metadata/8.0.10",
+      "path": "microsoft.aspnetcore.metadata/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2726,7 +2625,7 @@
         "lib/net8.0/Microsoft.AspNetCore.Metadata.xml",
         "lib/netstandard2.0/Microsoft.AspNetCore.Metadata.dll",
         "lib/netstandard2.0/Microsoft.AspNetCore.Metadata.xml",
-        "microsoft.aspnetcore.metadata.8.0.10.nupkg.sha512",
+        "microsoft.aspnetcore.metadata.8.0.0.nupkg.sha512",
         "microsoft.aspnetcore.metadata.nuspec"
       ]
     },
@@ -2868,10 +2767,10 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "Microsoft.Extensions.Configuration.Binder/8.0.2": {
-      "sha512": "7IQhGK+wjyGrNsPBjJcZwWAr+Wf6D4+TwOptUt77bWtgNkiV8tDEbhFS+dDamtQFZ2X7kWG9m71iZQRj2x3zgQ==",
+    "Microsoft.Extensions.Configuration.Binder/8.0.0": {
+      "sha512": "mBMoXLsr5s1y2zOHWmKsE9veDcx8h1x/c3rz4baEdQKTeDcmQAPNbB54Pi/lhFO3K431eEq6PFbMgLaa6PHFfA==",
       "type": "package",
-      "path": "microsoft.extensions.configuration.binder/8.0.2",
+      "path": "microsoft.extensions.configuration.binder/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2904,15 +2803,15 @@
         "lib/net8.0/Microsoft.Extensions.Configuration.Binder.xml",
         "lib/netstandard2.0/Microsoft.Extensions.Configuration.Binder.dll",
         "lib/netstandard2.0/Microsoft.Extensions.Configuration.Binder.xml",
-        "microsoft.extensions.configuration.binder.8.0.2.nupkg.sha512",
+        "microsoft.extensions.configuration.binder.8.0.0.nupkg.sha512",
         "microsoft.extensions.configuration.binder.nuspec",
         "useSharedDesignerContext.txt"
       ]
     },
-    "Microsoft.Extensions.Configuration.FileExtensions/8.0.1": {
-      "sha512": "EJzSNO9oaAXnTdtdNO6npPRsIIeZCBSNmdQ091VDO7fBiOtJAAeEq6dtrVXIi3ZyjC5XRSAtVvF8SzcneRHqKQ==",
+    "Microsoft.Extensions.Configuration.FileExtensions/8.0.0": {
+      "sha512": "McP+Lz/EKwvtCv48z0YImw+L1gi1gy5rHhNaNIY2CrjloV+XY8gydT8DjMR6zWeL13AFK+DioVpppwAuO1Gi1w==",
       "type": "package",
-      "path": "microsoft.extensions.configuration.fileextensions/8.0.1",
+      "path": "microsoft.extensions.configuration.fileextensions/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2934,15 +2833,15 @@
         "lib/net8.0/Microsoft.Extensions.Configuration.FileExtensions.xml",
         "lib/netstandard2.0/Microsoft.Extensions.Configuration.FileExtensions.dll",
         "lib/netstandard2.0/Microsoft.Extensions.Configuration.FileExtensions.xml",
-        "microsoft.extensions.configuration.fileextensions.8.0.1.nupkg.sha512",
+        "microsoft.extensions.configuration.fileextensions.8.0.0.nupkg.sha512",
         "microsoft.extensions.configuration.fileextensions.nuspec",
         "useSharedDesignerContext.txt"
       ]
     },
-    "Microsoft.Extensions.Configuration.Json/8.0.1": {
-      "sha512": "L89DLNuimOghjV3tLx0ArFDwVEJD6+uGB3BMCMX01kaLzXkaXHb2021xOMl2QOxUxbdePKUZsUY7n2UUkycjRg==",
+    "Microsoft.Extensions.Configuration.Json/8.0.0": {
+      "sha512": "C2wqUoh9OmRL1akaCcKSTmRU8z0kckfImG7zLNI8uyi47Lp+zd5LWAD17waPQEqCz3ioWOCrFUo+JJuoeZLOBw==",
       "type": "package",
-      "path": "microsoft.extensions.configuration.json/8.0.1",
+      "path": "microsoft.extensions.configuration.json/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2966,7 +2865,7 @@
         "lib/netstandard2.0/Microsoft.Extensions.Configuration.Json.xml",
         "lib/netstandard2.1/Microsoft.Extensions.Configuration.Json.dll",
         "lib/netstandard2.1/Microsoft.Extensions.Configuration.Json.xml",
-        "microsoft.extensions.configuration.json.8.0.1.nupkg.sha512",
+        "microsoft.extensions.configuration.json.8.0.0.nupkg.sha512",
         "microsoft.extensions.configuration.json.nuspec",
         "useSharedDesignerContext.txt"
       ]
@@ -3169,10 +3068,10 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "Microsoft.Extensions.FileProviders.Embedded/8.0.10": {
-      "sha512": "N/Ow71LLKXbC4fOFoAG7QNyyhgRypd8in8lc92xInZyyNFlBTgGR3R1BV91Wr5+1/l9+Qvo+2Ee2cAth43OP/Q==",
+    "Microsoft.Extensions.FileProviders.Embedded/8.0.0": {
+      "sha512": "TuRh62KcoOvaSDCbtHT8K0WYptZysYQHPRRNfOgqF7ZUtUL4O0WMV8RdxbtDFJDsg3jv9bgHwXbrgwTeI9+5uQ==",
       "type": "package",
-      "path": "microsoft.extensions.fileproviders.embedded/8.0.10",
+      "path": "microsoft.extensions.fileproviders.embedded/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -3187,7 +3086,7 @@
         "lib/net8.0/Microsoft.Extensions.FileProviders.Embedded.xml",
         "lib/netstandard2.0/Microsoft.Extensions.FileProviders.Embedded.dll",
         "lib/netstandard2.0/Microsoft.Extensions.FileProviders.Embedded.xml",
-        "microsoft.extensions.fileproviders.embedded.8.0.10.nupkg.sha512",
+        "microsoft.extensions.fileproviders.embedded.8.0.0.nupkg.sha512",
         "microsoft.extensions.fileproviders.embedded.nuspec",
         "tasks/netstandard2.0/Microsoft.Extensions.FileProviders.Embedded.Manifest.Task.dll"
       ]
@@ -3419,10 +3318,10 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "Microsoft.Extensions.Logging.Debug/8.0.1": {
-      "sha512": "B8hqNuYudC2RB+L/DI33uO4rf5by41fZVdcVL2oZj0UyoAZqnwTwYHp1KafoH4nkl1/23piNeybFFASaV2HkFg==",
+    "Microsoft.Extensions.Logging.Debug/8.0.0": {
+      "sha512": "dt0x21qBdudHLW/bjMJpkixv858RRr8eSomgVbU8qljOyfrfDGi1JQvpF9w8S7ziRPtRKisuWaOwFxJM82GxeA==",
       "type": "package",
-      "path": "microsoft.extensions.logging.debug/8.0.1",
+      "path": "microsoft.extensions.logging.debug/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -3444,7 +3343,7 @@
         "lib/net8.0/Microsoft.Extensions.Logging.Debug.xml",
         "lib/netstandard2.0/Microsoft.Extensions.Logging.Debug.dll",
         "lib/netstandard2.0/Microsoft.Extensions.Logging.Debug.xml",
-        "microsoft.extensions.logging.debug.8.0.1.nupkg.sha512",
+        "microsoft.extensions.logging.debug.8.0.0.nupkg.sha512",
         "microsoft.extensions.logging.debug.nuspec",
         "useSharedDesignerContext.txt"
       ]
@@ -3556,10 +3455,10 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "Microsoft.Graphics.Win2D/1.2.0": {
-      "sha512": "7bAo8ObjCy/br0eW0nONRfVKehJu5aDe/KQekWeNXslwTOO2rhrIfWaVGepsXyVqmqwHoLJ31g1HsT7FLdBCoQ==",
+    "Microsoft.Graphics.Win2D/1.0.5.1": {
+      "sha512": "9DVEVvyQWWz8kqhsFBAx9Zv4KRIAcmxuT7kFpK1Fgh6czSiMB+CQW0DlhZXT44Mtv41FRXG47lhEv+7a2YyiLA==",
       "type": "package",
-      "path": "microsoft.graphics.win2d/1.2.0",
+      "path": "microsoft.graphics.win2d/1.0.5.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -3567,7 +3466,8 @@
         "build/Win2D.common.targets",
         "build/native/Microsoft.Graphics.Win2D.targets",
         "build/net45/Microsoft.Graphics.Win2D.targets",
-        "build/net6.0-windows10.0.19041.0/Microsoft.Graphics.Win2D.targets",
+        "build/net5.0-windows10.0.17763.0/Microsoft.Graphics.Win2D.targets",
+        "build/netcoreapp3.0/Microsoft.Graphics.Win2D.targets",
         "build/win10/Microsoft.Graphics.Win2D.targets",
         "icon.png",
         "include/Microsoft.Graphics.Canvas.native.h",
@@ -3575,37 +3475,20 @@
         "include/x64/Microsoft.Graphics.Canvas.h",
         "include/x86/Microsoft.Graphics.Canvas.h",
         "lib/net45/Microsoft.Graphics.Canvas.winmd",
-        "lib/net6.0-windows10.0.19041.0/Microsoft.Graphics.Canvas.Interop.dll",
+        "lib/net5.0-windows10.0.17763.0/Microsoft.Graphics.Canvas.Interop.dll",
+        "lib/netcoreapp3.0/Microsoft.Graphics.Canvas.winmd",
         "lib/uap10.0/Microsoft.Graphics.Canvas.winmd",
-        "microsoft.graphics.win2d.1.2.0.nupkg.sha512",
+        "microsoft.graphics.win2d.1.0.5.1.nupkg.sha512",
         "microsoft.graphics.win2d.nuspec",
-        "runtimes/win-arm64/native/Microsoft.Graphics.Canvas.dll",
-        "runtimes/win-x64/native/Microsoft.Graphics.Canvas.dll",
-        "runtimes/win-x86/native/Microsoft.Graphics.Canvas.dll"
+        "runtimes/win10-arm64/native/Microsoft.Graphics.Canvas.dll",
+        "runtimes/win10-x64/native/Microsoft.Graphics.Canvas.dll",
+        "runtimes/win10-x86/native/Microsoft.Graphics.Canvas.dll"
       ]
     },
-    "Microsoft.IO.RecyclableMemoryStream/3.0.1": {
-      "sha512": "s/s20YTVY9r9TPfTrN5g8zPF1YhwxyqO6PxUkrYTGI2B+OGPe9AdajWZrLhFqXIvqIW23fnUE4+ztrUWNU1+9g==",
+    "Microsoft.JSInterop/8.0.0": {
+      "sha512": "qQqASbHxWIddssdEBKUQ/49j21SEstiho6VAepPQa9eISLCBCE6wq0m3YaB6cpdF5U+AWX5F3FvDfmssql3xtw==",
       "type": "package",
-      "path": "microsoft.io.recyclablememorystream/3.0.1",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "README.md",
-        "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.dll",
-        "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.xml",
-        "lib/netstandard2.0/Microsoft.IO.RecyclableMemoryStream.dll",
-        "lib/netstandard2.0/Microsoft.IO.RecyclableMemoryStream.xml",
-        "lib/netstandard2.1/Microsoft.IO.RecyclableMemoryStream.dll",
-        "lib/netstandard2.1/Microsoft.IO.RecyclableMemoryStream.xml",
-        "microsoft.io.recyclablememorystream.3.0.1.nupkg.sha512",
-        "microsoft.io.recyclablememorystream.nuspec"
-      ]
-    },
-    "Microsoft.JSInterop/8.0.10": {
-      "sha512": "VxiFlNValVtpRQomua6h1FOUBK0fiyQbNIh+PMRs9DMHczOHIZpLJmm5LO5h9voBXjW+V/cUE8aNH2GcWps40A==",
-      "type": "package",
-      "path": "microsoft.jsinterop/8.0.10",
+      "path": "microsoft.jsinterop/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -3613,33 +3496,32 @@
         "THIRD-PARTY-NOTICES.TXT",
         "lib/net8.0/Microsoft.JSInterop.dll",
         "lib/net8.0/Microsoft.JSInterop.xml",
-        "microsoft.jsinterop.8.0.10.nupkg.sha512",
+        "microsoft.jsinterop.8.0.0.nupkg.sha512",
         "microsoft.jsinterop.nuspec"
       ]
     },
-    "Microsoft.Maui.Controls/8.0.100": {
-      "sha512": "5t51qYH1m1bZX1+VLKcTqEuUBWY0NiVM6eYhQa7B0wNNzgP07Mo1ZKikdFprUm4oGgJL5lbOe2OeH+2D0afQfA==",
+    "Microsoft.Maui.Controls/8.0.3": {
+      "sha512": "u4758dDYaci/A+SYZxxOw1GOYIOt2erydMTAbhzIOUslki1VLuF7fdABlaow/AobbctOHHi48qdGZGVi4M7ALg==",
       "type": "package",
-      "path": "microsoft.maui.controls/8.0.100",
+      "path": "microsoft.maui.controls/8.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "Icon.png",
         "LICENSE.TXT",
         "README.md",
         "THIRD-PARTY-NOTICES.TXT",
-        "microsoft.maui.controls.8.0.100.nupkg.sha512",
+        "icon.png",
+        "microsoft.maui.controls.8.0.3.nupkg.sha512",
         "microsoft.maui.controls.nuspec"
       ]
     },
-    "Microsoft.Maui.Controls.Build.Tasks/8.0.100": {
-      "sha512": "fxN4/f6teRh+4j1WE8kqvt8O4B88z2637179dT4aZGFkDiMWBsfxOn+jjrDgwMIVyjFdCrGgtBUfrV9M7+AfnA==",
+    "Microsoft.Maui.Controls.Build.Tasks/8.0.3": {
+      "sha512": "MneJP5CnRkEelcitnbKoXw7E7SHo2GxkWZK+BX/MvDW3ATMMtuv6zkkBmQiiCcObjEnObpNZkwdiJf1L3dslIA==",
       "type": "package",
-      "path": "microsoft.maui.controls.build.tasks/8.0.100",
+      "path": "microsoft.maui.controls.build.tasks/8.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "Icon.png",
         "LICENSE.TXT",
         "README.md",
         "THIRD-PARTY-NOTICES.TXT",
@@ -3663,7 +3545,6 @@
         "buildTransitive/netstandard2.0/Microsoft.Maui.Controls.Common.targets",
         "buildTransitive/netstandard2.0/Microsoft.Maui.Controls.DefaultItems.targets",
         "buildTransitive/netstandard2.0/Microsoft.Maui.Controls.Globs.props",
-        "buildTransitive/netstandard2.0/Microsoft.Maui.Controls.SingleProject.Before.targets",
         "buildTransitive/netstandard2.0/Microsoft.Maui.Controls.SingleProject.targets",
         "buildTransitive/netstandard2.0/Microsoft.Maui.Controls.SourceGen.dll",
         "buildTransitive/netstandard2.0/Microsoft.Maui.Controls.SourceGen.pdb",
@@ -3714,21 +3595,22 @@
         "buildTransitive/netstandard2.0/zh-HK/Microsoft.Maui.Controls.Build.Tasks.resources.dll",
         "buildTransitive/netstandard2.0/zh-Hans/Microsoft.Maui.Controls.Build.Tasks.resources.dll",
         "buildTransitive/netstandard2.0/zh-Hant/Microsoft.Maui.Controls.Build.Tasks.resources.dll",
-        "microsoft.maui.controls.build.tasks.8.0.100.nupkg.sha512",
+        "icon.png",
+        "microsoft.maui.controls.build.tasks.8.0.3.nupkg.sha512",
         "microsoft.maui.controls.build.tasks.nuspec"
       ]
     },
-    "Microsoft.Maui.Controls.Compatibility/8.0.100": {
-      "sha512": "G1tJJGPX/FQKzdgSlts3lk0LACN3GBgvqoKizqf57ly6DwAS/T8h6fn2tnVvGAuQOZFx07ZAWSY9wDuIxEd0vA==",
+    "Microsoft.Maui.Controls.Compatibility/8.0.3": {
+      "sha512": "7qMC0eREbrj9hVVVXy6b15MNoOcXrXbXqAJ8E+5ahAGH6HwYFPkCPXwfL9dhaXWhzLaxrVD0vHH2qVg1kwFl8A==",
       "type": "package",
-      "path": "microsoft.maui.controls.compatibility/8.0.100",
+      "path": "microsoft.maui.controls.compatibility/8.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "Icon.png",
         "LICENSE.TXT",
         "README.md",
         "THIRD-PARTY-NOTICES.TXT",
+        "icon.png",
         "lib/net8.0-android34.0/Microsoft.Maui.Controls.Compatibility.aar",
         "lib/net8.0-android34.0/Microsoft.Maui.Controls.Compatibility.dll",
         "lib/net8.0-android34.0/Microsoft.Maui.Controls.Compatibility.pdb",
@@ -3736,15 +3618,9 @@
         "lib/net8.0-ios17.0/Microsoft.Maui.Controls.Compatibility.dll",
         "lib/net8.0-ios17.0/Microsoft.Maui.Controls.Compatibility.pdb",
         "lib/net8.0-ios17.0/Microsoft.Maui.Controls.Compatibility.xml",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Controls.Compatibility.dll",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Controls.Compatibility.pdb",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Controls.Compatibility.xml",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Controls.Compatibility.dll",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Controls.Compatibility.pdb",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Controls.Compatibility.xml",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Controls.Compatibility.dll",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Controls.Compatibility.pdb",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Controls.Compatibility.xml",
         "lib/net8.0-tizen7.0/Microsoft.Maui.Controls.Compatibility.dll",
         "lib/net8.0-tizen7.0/Microsoft.Maui.Controls.Compatibility.pdb",
         "lib/net8.0-tizen7.0/Microsoft.Maui.Controls.Compatibility.xml",
@@ -3765,21 +3641,21 @@
         "lib/netstandard2.1/Microsoft.Maui.Controls.Compatibility.dll",
         "lib/netstandard2.1/Microsoft.Maui.Controls.Compatibility.pdb",
         "lib/netstandard2.1/Microsoft.Maui.Controls.Compatibility.xml",
-        "microsoft.maui.controls.compatibility.8.0.100.nupkg.sha512",
+        "microsoft.maui.controls.compatibility.8.0.3.nupkg.sha512",
         "microsoft.maui.controls.compatibility.nuspec"
       ]
     },
-    "Microsoft.Maui.Controls.Core/8.0.100": {
-      "sha512": "LD4OSnfTN++obDYj2ldioTETIOI6jRZfZWpPydfPl/RCo3A2kadP6eL1SuuJdPafEgMP8UASdTXXCouY0LeFUA==",
+    "Microsoft.Maui.Controls.Core/8.0.3": {
+      "sha512": "53cAExyv1Lw+Dax85GRe6233OlPUZRbhoNbk7qN0so1novS7zRdtj3BGtsVJiWeA/20oU4lRqkkLphNLmp2pAA==",
       "type": "package",
-      "path": "microsoft.maui.controls.core/8.0.100",
+      "path": "microsoft.maui.controls.core/8.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "Icon.png",
         "LICENSE.TXT",
         "README.md",
         "THIRD-PARTY-NOTICES.TXT",
+        "icon.png",
         "lib/net8.0-android34.0/Design/Microsoft.Maui.Controls.DesignTools.dll",
         "lib/net8.0-android34.0/Design/Microsoft.Maui.Controls.DesignTools.pdb",
         "lib/net8.0-android34.0/Microsoft.Maui.Controls.aar",
@@ -3859,45 +3735,6 @@
         "lib/net8.0-ios17.0/zh-HK/Microsoft.Maui.Controls.resources.dll",
         "lib/net8.0-ios17.0/zh-Hans/Microsoft.Maui.Controls.resources.dll",
         "lib/net8.0-ios17.0/zh-Hant/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/Design/Microsoft.Maui.Controls.DesignTools.dll",
-        "lib/net8.0-ios18.0/Design/Microsoft.Maui.Controls.DesignTools.pdb",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Controls.dll",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Controls.pdb",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Controls.xml",
-        "lib/net8.0-ios18.0/ar/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/ca/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/cs/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/da/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/de/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/el/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/es/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/fi/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/fr/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/he/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/hi/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/hr/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/hu/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/id/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/it/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/ja/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/ko/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/ms/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/nb/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/nl/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/pl/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/pt-BR/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/pt/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/ro/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/ru/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/sk/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/sv/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/th/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/tr/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/uk/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/vi/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/zh-HK/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/zh-Hans/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-ios18.0/zh-Hant/Microsoft.Maui.Controls.resources.dll",
         "lib/net8.0-maccatalyst17.0/Design/Microsoft.Maui.Controls.DesignTools.dll",
         "lib/net8.0-maccatalyst17.0/Design/Microsoft.Maui.Controls.DesignTools.pdb",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Controls.dll",
@@ -3937,45 +3774,6 @@
         "lib/net8.0-maccatalyst17.0/zh-HK/Microsoft.Maui.Controls.resources.dll",
         "lib/net8.0-maccatalyst17.0/zh-Hans/Microsoft.Maui.Controls.resources.dll",
         "lib/net8.0-maccatalyst17.0/zh-Hant/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/Design/Microsoft.Maui.Controls.DesignTools.dll",
-        "lib/net8.0-maccatalyst18.0/Design/Microsoft.Maui.Controls.DesignTools.pdb",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Controls.dll",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Controls.pdb",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Controls.xml",
-        "lib/net8.0-maccatalyst18.0/ar/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/ca/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/cs/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/da/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/de/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/el/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/es/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/fi/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/fr/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/he/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/hi/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/hr/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/hu/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/id/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/it/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/ja/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/ko/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/ms/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/nb/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/nl/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/pl/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/pt-BR/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/pt/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/ro/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/ru/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/sk/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/sv/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/th/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/tr/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/uk/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/vi/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/zh-HK/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/zh-Hans/Microsoft.Maui.Controls.resources.dll",
-        "lib/net8.0-maccatalyst18.0/zh-Hant/Microsoft.Maui.Controls.resources.dll",
         "lib/net8.0-tizen7.0/Design/Microsoft.Maui.Controls.DesignTools.dll",
         "lib/net8.0-tizen7.0/Design/Microsoft.Maui.Controls.DesignTools.pdb",
         "lib/net8.0-tizen7.0/Microsoft.Maui.Controls.dll",
@@ -4212,21 +4010,21 @@
         "lib/netstandard2.1/zh-HK/Microsoft.Maui.Controls.resources.dll",
         "lib/netstandard2.1/zh-Hans/Microsoft.Maui.Controls.resources.dll",
         "lib/netstandard2.1/zh-Hant/Microsoft.Maui.Controls.resources.dll",
-        "microsoft.maui.controls.core.8.0.100.nupkg.sha512",
+        "microsoft.maui.controls.core.8.0.3.nupkg.sha512",
         "microsoft.maui.controls.core.nuspec"
       ]
     },
-    "Microsoft.Maui.Controls.Xaml/8.0.100": {
-      "sha512": "GBfjikOi5FBkpQKcYQnzYwImcYMKGR0eSFGcE8rThc9VBaPGGoRq9ttMEGuY5QclVs7NtSmaYpf38ShGLbLcqw==",
+    "Microsoft.Maui.Controls.Xaml/8.0.3": {
+      "sha512": "ka8DToOqVk+7Wht674DOU9JAl4zfILmtKmFKtmMsF8YZhbazKxgx4kvRB7HUPR0pBsnhrUs3zsX5zeFYjnYYZQ==",
       "type": "package",
-      "path": "microsoft.maui.controls.xaml/8.0.100",
+      "path": "microsoft.maui.controls.xaml/8.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "Icon.png",
         "LICENSE.TXT",
         "README.md",
         "THIRD-PARTY-NOTICES.TXT",
+        "icon.png",
         "lib/net8.0-android34.0/Design/Microsoft.Maui.Controls.Xaml.DesignTools.dll",
         "lib/net8.0-android34.0/Design/Microsoft.Maui.Controls.Xaml.DesignTools.pdb",
         "lib/net8.0-android34.0/Microsoft.Maui.Controls.Xaml.dll",
@@ -4237,21 +4035,11 @@
         "lib/net8.0-ios17.0/Microsoft.Maui.Controls.Xaml.dll",
         "lib/net8.0-ios17.0/Microsoft.Maui.Controls.Xaml.pdb",
         "lib/net8.0-ios17.0/Microsoft.Maui.Controls.Xaml.xml",
-        "lib/net8.0-ios18.0/Design/Microsoft.Maui.Controls.Xaml.DesignTools.dll",
-        "lib/net8.0-ios18.0/Design/Microsoft.Maui.Controls.Xaml.DesignTools.pdb",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Controls.Xaml.dll",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Controls.Xaml.pdb",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Controls.Xaml.xml",
         "lib/net8.0-maccatalyst17.0/Design/Microsoft.Maui.Controls.Xaml.DesignTools.dll",
         "lib/net8.0-maccatalyst17.0/Design/Microsoft.Maui.Controls.Xaml.DesignTools.pdb",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Controls.Xaml.dll",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Controls.Xaml.pdb",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Controls.Xaml.xml",
-        "lib/net8.0-maccatalyst18.0/Design/Microsoft.Maui.Controls.Xaml.DesignTools.dll",
-        "lib/net8.0-maccatalyst18.0/Design/Microsoft.Maui.Controls.Xaml.DesignTools.pdb",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Controls.Xaml.dll",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Controls.Xaml.pdb",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Controls.Xaml.xml",
         "lib/net8.0-tizen7.0/Design/Microsoft.Maui.Controls.Xaml.DesignTools.dll",
         "lib/net8.0-tizen7.0/Design/Microsoft.Maui.Controls.Xaml.DesignTools.pdb",
         "lib/net8.0-tizen7.0/Microsoft.Maui.Controls.Xaml.dll",
@@ -4282,29 +4070,29 @@
         "lib/netstandard2.1/Microsoft.Maui.Controls.Xaml.dll",
         "lib/netstandard2.1/Microsoft.Maui.Controls.Xaml.pdb",
         "lib/netstandard2.1/Microsoft.Maui.Controls.Xaml.xml",
-        "microsoft.maui.controls.xaml.8.0.100.nupkg.sha512",
+        "microsoft.maui.controls.xaml.8.0.3.nupkg.sha512",
         "microsoft.maui.controls.xaml.nuspec"
       ]
     },
-    "Microsoft.Maui.Core/8.0.100": {
-      "sha512": "vo3/EKN62z5/UtIzb7gkUk0ssrzrRN27ihVeBlE0vhby1LrY29SKDBvHzEgLqmG/heT0pPeELNaeF6yInjHYvw==",
+    "Microsoft.Maui.Core/8.0.3": {
+      "sha512": "4KP8EM/sI1aCLHMB6lZP3NE6vtq0ShlwZwqCCpQzWaDjKHa5K2PPagtOjzpntYFTQw3cE+sJEOk1xd4JRTELtw==",
       "type": "package",
-      "path": "microsoft.maui.core/8.0.100",
+      "path": "microsoft.maui.core/8.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "Icon.png",
         "LICENSE.TXT",
         "README.md",
         "THIRD-PARTY-NOTICES.TXT",
         "buildTransitive/Microsoft.Maui.Core.After.targets",
         "buildTransitive/Microsoft.Maui.Core.Before.targets",
-        "buildTransitive/Microsoft.Maui.Core.BundledVersions.targets",
         "buildTransitive/Microsoft.Maui.Core.props",
         "buildTransitive/Microsoft.Maui.Core.targets",
+        "buildTransitive/WinUI.Unpackaged.targets",
         "buildTransitive/WinUI.targets",
         "buildTransitive/net6.0-windows10.0.17763.0/Microsoft.Maui.Core.props",
         "buildTransitive/net6.0-windows10.0.17763.0/Microsoft.Maui.Core.targets",
+        "icon.png",
         "lib/net8.0-android34.0/Microsoft.Maui.aar",
         "lib/net8.0-android34.0/Microsoft.Maui.dll",
         "lib/net8.0-android34.0/Microsoft.Maui.pdb",
@@ -4313,15 +4101,9 @@
         "lib/net8.0-ios17.0/Microsoft.Maui.dll",
         "lib/net8.0-ios17.0/Microsoft.Maui.pdb",
         "lib/net8.0-ios17.0/Microsoft.Maui.xml",
-        "lib/net8.0-ios18.0/Microsoft.Maui.dll",
-        "lib/net8.0-ios18.0/Microsoft.Maui.pdb",
-        "lib/net8.0-ios18.0/Microsoft.Maui.xml",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.dll",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.pdb",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.xml",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.dll",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.pdb",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.xml",
         "lib/net8.0-tizen7.0/Microsoft.Maui.dll",
         "lib/net8.0-tizen7.0/Microsoft.Maui.pdb",
         "lib/net8.0-tizen7.0/Microsoft.Maui.xml",
@@ -4342,21 +4124,21 @@
         "lib/netstandard2.1/Microsoft.Maui.dll",
         "lib/netstandard2.1/Microsoft.Maui.pdb",
         "lib/netstandard2.1/Microsoft.Maui.xml",
-        "microsoft.maui.core.8.0.100.nupkg.sha512",
+        "microsoft.maui.core.8.0.3.nupkg.sha512",
         "microsoft.maui.core.nuspec"
       ]
     },
-    "Microsoft.Maui.Essentials/8.0.100": {
-      "sha512": "quiPMYj10eDiKUkHLEEKAjuI0SAn7ZeZohmrh90Ebdl6fz4hVdDCmVfFyITGLtNbbSpkXvNJpeZwOWp2H5V9kQ==",
+    "Microsoft.Maui.Essentials/8.0.3": {
+      "sha512": "VHI2a4QHYoc31xMkFDNuhMWmhxe9zYnHlPQXvj6e23w0GeNjSCiw+X1H3cb0SMuiSN6tK8HJrsyphxS3J50MHQ==",
       "type": "package",
-      "path": "microsoft.maui.essentials/8.0.100",
+      "path": "microsoft.maui.essentials/8.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "Icon.png",
         "LICENSE.TXT",
         "README.md",
         "THIRD-PARTY-NOTICES.TXT",
+        "icon.png",
         "lib/net7.0-android33.0/Microsoft.Maui.Essentials.aar",
         "lib/net7.0-android33.0/Microsoft.Maui.Essentials.dll",
         "lib/net7.0-android33.0/Microsoft.Maui.Essentials.pdb",
@@ -4386,15 +4168,9 @@
         "lib/net8.0-ios17.0/Microsoft.Maui.Essentials.dll",
         "lib/net8.0-ios17.0/Microsoft.Maui.Essentials.pdb",
         "lib/net8.0-ios17.0/Microsoft.Maui.Essentials.xml",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Essentials.dll",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Essentials.pdb",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Essentials.xml",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Essentials.dll",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Essentials.pdb",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Essentials.xml",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Essentials.dll",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Essentials.pdb",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Essentials.xml",
         "lib/net8.0-tizen7.0/Microsoft.Maui.Essentials.dll",
         "lib/net8.0-tizen7.0/Microsoft.Maui.Essentials.pdb",
         "lib/net8.0-tizen7.0/Microsoft.Maui.Essentials.xml",
@@ -4413,21 +4189,21 @@
         "lib/netstandard2.1/Microsoft.Maui.Essentials.dll",
         "lib/netstandard2.1/Microsoft.Maui.Essentials.pdb",
         "lib/netstandard2.1/Microsoft.Maui.Essentials.xml",
-        "microsoft.maui.essentials.8.0.100.nupkg.sha512",
+        "microsoft.maui.essentials.8.0.3.nupkg.sha512",
         "microsoft.maui.essentials.nuspec"
       ]
     },
-    "Microsoft.Maui.Graphics/8.0.100": {
-      "sha512": "FRvNIXnALXysAw0t0R5jmS4j4qs2n/NaWMcLrinMIoC2tQ/QIL68XEdN1OCtFRWvME8cR180TwSxpEjAIvlebA==",
+    "Microsoft.Maui.Graphics/8.0.3": {
+      "sha512": "RWXI/VKfxRljnzME5v2TgiT5N/Q/phpaCqFnz3V0NSAGey5GAPwzuH3W5ryU0fVgds9QPgukDeuGRn7hTD/MWw==",
       "type": "package",
-      "path": "microsoft.maui.graphics/8.0.100",
+      "path": "microsoft.maui.graphics/8.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "Icon.png",
         "LICENSE.TXT",
         "README.md",
         "THIRD-PARTY-NOTICES.TXT",
+        "icon.png",
         "lib/net7.0-android33.0/Microsoft.Maui.Graphics.dll",
         "lib/net7.0-android33.0/Microsoft.Maui.Graphics.pdb",
         "lib/net7.0-android33.0/Microsoft.Maui.Graphics.xml",
@@ -4458,15 +4234,9 @@
         "lib/net8.0-ios17.0/Microsoft.Maui.Graphics.dll",
         "lib/net8.0-ios17.0/Microsoft.Maui.Graphics.pdb",
         "lib/net8.0-ios17.0/Microsoft.Maui.Graphics.xml",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Graphics.dll",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Graphics.pdb",
-        "lib/net8.0-ios18.0/Microsoft.Maui.Graphics.xml",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Graphics.dll",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Graphics.pdb",
         "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Graphics.xml",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Graphics.dll",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Graphics.pdb",
-        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Graphics.xml",
         "lib/net8.0-macos14.0/Microsoft.Maui.Graphics.dll",
         "lib/net8.0-macos14.0/Microsoft.Maui.Graphics.pdb",
         "lib/net8.0-macos14.0/Microsoft.Maui.Graphics.xml",
@@ -4488,21 +4258,21 @@
         "lib/netstandard2.1/Microsoft.Maui.Graphics.dll",
         "lib/netstandard2.1/Microsoft.Maui.Graphics.pdb",
         "lib/netstandard2.1/Microsoft.Maui.Graphics.xml",
-        "microsoft.maui.graphics.8.0.100.nupkg.sha512",
+        "microsoft.maui.graphics.8.0.3.nupkg.sha512",
         "microsoft.maui.graphics.nuspec"
       ]
     },
-    "Microsoft.Maui.Graphics.Win2D.WinUI.Desktop/8.0.100": {
-      "sha512": "gdGt15gMqXVN6WzqI8UIfbS/jXHiuCd7BOeZFXpf+4Wfg7Xsn+fFhn6zPWiyOzIwKy/N3FxBqYIl5t9Bw33PXg==",
+    "Microsoft.Maui.Graphics.Win2D.WinUI.Desktop/8.0.3": {
+      "sha512": "/wf8PRqwPecWkTob62Gkc5KBCu9kVmHoy1UAinEcSeHu0KYVaCJ3zXBkS0OSBkgGm7JEon4Ruvg6i+p/GJfjFw==",
       "type": "package",
-      "path": "microsoft.maui.graphics.win2d.winui.desktop/8.0.100",
+      "path": "microsoft.maui.graphics.win2d.winui.desktop/8.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "Icon.png",
         "LICENSE.TXT",
         "README.md",
         "THIRD-PARTY-NOTICES.TXT",
+        "icon.png",
         "lib/net7.0-windows10.0.19041/Microsoft.Maui.Graphics.Win2D.WinUI.Desktop.dll",
         "lib/net7.0-windows10.0.19041/Microsoft.Maui.Graphics.Win2D.WinUI.Desktop.pdb",
         "lib/net7.0-windows10.0.20348/Microsoft.Maui.Graphics.Win2D.WinUI.Desktop.dll",
@@ -4511,22 +4281,20 @@
         "lib/net8.0-windows10.0.19041/Microsoft.Maui.Graphics.Win2D.WinUI.Desktop.pdb",
         "lib/net8.0-windows10.0.20348/Microsoft.Maui.Graphics.Win2D.WinUI.Desktop.dll",
         "lib/net8.0-windows10.0.20348/Microsoft.Maui.Graphics.Win2D.WinUI.Desktop.pdb",
-        "microsoft.maui.graphics.win2d.winui.desktop.8.0.100.nupkg.sha512",
+        "microsoft.maui.graphics.win2d.winui.desktop.8.0.3.nupkg.sha512",
         "microsoft.maui.graphics.win2d.winui.desktop.nuspec"
       ]
     },
-    "Microsoft.Maui.Resizetizer/8.0.100": {
-      "sha512": "wEVBLYTe/tu30z9yR+tFupXiixqMaxkSp/xqC7FGlV6g9MvYo/wAcwTO+XWay2k/ug5qlxz6MXt5mEac7FMLmA==",
+    "Microsoft.Maui.Resizetizer/8.0.3": {
+      "sha512": "SBaeM/1AF8ajCbQfFM15aN1IX+GQUw/V9NuqZV3is+Z202dfzz+bIZmBGtvEGcV4ik4YdjtQe2+vtJq0GLYTPw==",
       "type": "package",
-      "path": "microsoft.maui.resizetizer/8.0.100",
+      "path": "microsoft.maui.resizetizer/8.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "Icon.png",
         "LICENSE.TXT",
         "README.md",
         "THIRD-PARTY-NOTICES.TXT",
-        "buildTransitive/ExCSS.dll",
         "buildTransitive/Fizzler.dll",
         "buildTransitive/HarfBuzzSharp.dll",
         "buildTransitive/HarfBuzzSharp.pdb",
@@ -4569,7 +4337,8 @@
         "buildTransitive/x64/libSkiaSharp.so",
         "buildTransitive/x86/libHarfBuzzSharp.dll",
         "buildTransitive/x86/libSkiaSharp.dll",
-        "microsoft.maui.resizetizer.8.0.100.nupkg.sha512",
+        "icon.png",
+        "microsoft.maui.resizetizer.8.0.3.nupkg.sha512",
         "microsoft.maui.resizetizer.nuspec"
       ]
     },
@@ -4766,15 +4535,14 @@
         "schemas/10.0.22621.0/winrt/UapManifestSchema_v8.xsd"
       ]
     },
-    "Microsoft.WindowsAppSDK/1.5.240802000": {
-      "sha512": "XW6cNzbGKDuzn+iCY1L9pNDm3pF78te8PXjKWEYk+rgePVPV/j2otr75Q5NMbWzsMF461Qq7aPJZKUQAQJNISQ==",
+    "Microsoft.WindowsAppSDK/1.3.230724000": {
+      "sha512": "cCw26h8Uh8IjDMOUzHaR7/IKxEVJxuqEOgBlmLj0Pu1wDezZb9J0Wz53Vop10FQUOZaTfnwDcHavyPTxgkwbKQ==",
       "type": "package",
-      "path": "microsoft.windowsappsdk/1.5.240802000",
+      "path": "microsoft.windowsappsdk/1.3.230724000",
       "hasTools": true,
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "Icon.png",
         "NOTICE.txt",
         "WindowsAppSDK-VersionInfo.json",
         "WindowsAppSDK-VersionInfo.xml",
@@ -4841,10 +4609,10 @@
         "build/Microsoft.WindowsAppSDK.InteractiveExperiences.targets",
         "build/Microsoft.WindowsAppSDK.Metapackage.props",
         "build/Microsoft.WindowsAppSDK.SelfContained.targets",
-        "build/Microsoft.WindowsAppSDK.SingleFile.targets",
         "build/Microsoft.WindowsAppSDK.UndockedRegFreeWinRT.CS.targets",
         "build/Microsoft.WindowsAppSDK.UndockedRegFreeWinRTCommon.targets",
         "build/Microsoft.WindowsAppSDK.Widgets.targets",
+        "build/Microsoft.WindowsAppSDK.WinUI.Build.props",
         "build/Microsoft.WindowsAppSDK.WinUI.props",
         "build/Microsoft.WindowsAppSDK.WinUI.targets",
         "build/Microsoft.WindowsAppSDK.props",
@@ -5001,10 +4769,10 @@
         "buildTransitive/Microsoft.WindowsAppSDK.InteractiveExperiences.targets",
         "buildTransitive/Microsoft.WindowsAppSDK.Metapackage.props",
         "buildTransitive/Microsoft.WindowsAppSDK.SelfContained.targets",
-        "buildTransitive/Microsoft.WindowsAppSDK.SingleFile.targets",
         "buildTransitive/Microsoft.WindowsAppSDK.UndockedRegFreeWinRT.CS.targets",
         "buildTransitive/Microsoft.WindowsAppSDK.UndockedRegFreeWinRTCommon.targets",
         "buildTransitive/Microsoft.WindowsAppSDK.Widgets.targets",
+        "buildTransitive/Microsoft.WindowsAppSDK.WinUI.Build.props",
         "buildTransitive/Microsoft.WindowsAppSDK.WinUI.props",
         "buildTransitive/Microsoft.WindowsAppSDK.WinUI.targets",
         "buildTransitive/Microsoft.WindowsAppSDK.props",
@@ -5105,9 +4873,7 @@
         "include/MddBootstrapAutoInitializer.cpp",
         "include/MddBootstrapAutoInitializer.cs",
         "include/Microsoft.UI.Composition.Interop.h",
-        "include/Microsoft.UI.Dispatching.Interop.h",
         "include/Microsoft.UI.Input.InputCursor.Interop.h",
-        "include/Microsoft.UI.Input.InputPreTranslateSource.Interop.h",
         "include/Microsoft.UI.Interop.h",
         "include/Microsoft.Windows.ApplicationModel.Resources.idl",
         "include/MsixDynamicDependency.h",
@@ -5124,6 +4890,8 @@
         "include/dwrite_2.h",
         "include/dwrite_3.h",
         "include/dwrite_core.h",
+        "include/microsoft.ui.xaml.hosting.desktopwindowxamlsource.h",
+        "include/microsoft.ui.xaml.hosting.desktopwindowxamlsource.idl",
         "include/microsoft.ui.xaml.hosting.referencetracker.h",
         "include/microsoft.ui.xaml.hosting.referencetracker.idl",
         "include/microsoft.ui.xaml.media.dxinterop.h",
@@ -5133,15 +4901,11 @@
         "include/wil_msixdynamicdependency.h",
         "include/winrt/Microsoft.UI.Composition.Interop.h",
         "include/winrt/Microsoft.UI.Input.InputCursor.Interop.h",
-        "include/winrt/Microsoft.UI.Input.InputPreTranslateSource.Interop.h",
         "include/winrt/Microsoft.UI.Interop.h",
         "include/winrtdirect3d11.h",
         "include/winrtdirectxcommon.h",
         "include/xamlom.winui.h",
         "include/xamlom.winui.idl",
-        "lib/native/win10-arm64/Microsoft.UI.Dispatching.lib",
-        "lib/native/win10-x64/Microsoft.UI.Dispatching.lib",
-        "lib/native/win10-x86/Microsoft.UI.Dispatching.lib",
         "lib/net6.0-windows10.0.17763.0/Microsoft.InteractiveExperiences.Projection.dll",
         "lib/net6.0-windows10.0.17763.0/Microsoft.InteractiveExperiences.Projection.xml",
         "lib/net6.0-windows10.0.17763.0/Microsoft.WinUI.dll",
@@ -5157,7 +4921,6 @@
         "lib/net6.0-windows10.0.17763.0/Microsoft.Windows.ApplicationModel.Resources.Projection.xml",
         "lib/net6.0-windows10.0.17763.0/Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll",
         "lib/net6.0-windows10.0.17763.0/Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.xml",
-        "lib/net6.0-windows10.0.17763.0/Microsoft.Windows.Management.Deployment.Projection.dll",
         "lib/net6.0-windows10.0.17763.0/Microsoft.Windows.PushNotifications.Projection.dll",
         "lib/net6.0-windows10.0.17763.0/Microsoft.Windows.Security.AccessControl.Projection.dll",
         "lib/net6.0-windows10.0.17763.0/Microsoft.Windows.System.Power.Projection.dll",
@@ -5165,6 +4928,7 @@
         "lib/net6.0-windows10.0.17763.0/Microsoft.Windows.System.Projection.dll",
         "lib/net6.0-windows10.0.17763.0/Microsoft.Windows.Widgets.Projection.dll",
         "lib/net6.0-windows10.0.17763.0/Microsoft.WindowsAppRuntime.Bootstrap.Net.dll",
+        "lib/net6.0-windows10.0.17763.0/Microsoft.WindowsAppRuntime.Release.Net.dll",
         "lib/net6.0-windows10.0.18362.0/Microsoft.InteractiveExperiences.Projection.dll",
         "lib/net6.0-windows10.0.18362.0/Microsoft.InteractiveExperiences.Projection.xml",
         "lib/net6.0-windows10.0.18362.0/Microsoft.WinUI.dll",
@@ -5180,7 +4944,6 @@
         "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.ApplicationModel.Resources.Projection.xml",
         "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll",
         "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.xml",
-        "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Management.Deployment.Projection.dll",
         "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.PushNotifications.Projection.dll",
         "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Security.AccessControl.Projection.dll",
         "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.System.Power.Projection.dll",
@@ -5188,6 +4951,7 @@
         "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.System.Projection.dll",
         "lib/net6.0-windows10.0.18362.0/Microsoft.Windows.Widgets.Projection.dll",
         "lib/net6.0-windows10.0.18362.0/Microsoft.WindowsAppRuntime.Bootstrap.Net.dll",
+        "lib/net6.0-windows10.0.18362.0/Microsoft.WindowsAppRuntime.Release.Net.dll",
         "lib/uap10.0.17763/Microsoft.Foundation.winmd",
         "lib/uap10.0.17763/Microsoft.Foundation.xml",
         "lib/uap10.0.17763/Microsoft.Graphics.winmd",
@@ -5218,7 +4982,6 @@
         "lib/uap10.0/Microsoft.Windows.ApplicationModel.Resources.xml",
         "lib/uap10.0/Microsoft.Windows.ApplicationModel.WindowsAppRuntime.winmd",
         "lib/uap10.0/Microsoft.Windows.ApplicationModel.WindowsAppRuntime.xml",
-        "lib/uap10.0/Microsoft.Windows.Management.Deployment.winmd",
         "lib/uap10.0/Microsoft.Windows.PushNotifications.winmd",
         "lib/uap10.0/Microsoft.Windows.PushNotifications.xml",
         "lib/uap10.0/Microsoft.Windows.Security.AccessControl.winmd",
@@ -5243,29 +5006,26 @@
         "manifests/Microsoft.InteractiveExperiences.manifest",
         "manifests/Microsoft.WindowsAppSdk.Foundation.manifest",
         "manifests/manifests/Microsoft.WindowsAppSdk.WinUI.manifest",
-        "microsoft.windowsappsdk.1.5.240802000.nupkg.sha512",
+        "microsoft.windowsappsdk.1.3.230724000.nupkg.sha512",
         "microsoft.windowsappsdk.nuspec",
-        "runtimes/win-arm64/native/Microsoft.WindowsAppRuntime.Bootstrap.dll",
-        "runtimes/win-x64/native/Microsoft.WindowsAppRuntime.Bootstrap.dll",
-        "runtimes/win-x86/native/Microsoft.WindowsAppRuntime.Bootstrap.dll",
         "runtimes/win10-arm64/native/Microsoft.WindowsAppRuntime.Bootstrap.dll",
         "runtimes/win10-x64/native/Microsoft.WindowsAppRuntime.Bootstrap.dll",
         "runtimes/win10-x86/native/Microsoft.WindowsAppRuntime.Bootstrap.dll",
         "tools/MSIX/win10-arm64/MSIX.inventory",
-        "tools/MSIX/win10-arm64/Microsoft.WindowsAppRuntime.1.5.msix",
-        "tools/MSIX/win10-arm64/Microsoft.WindowsAppRuntime.DDLM.1.5.msix",
-        "tools/MSIX/win10-arm64/Microsoft.WindowsAppRuntime.Main.1.5.msix",
-        "tools/MSIX/win10-arm64/Microsoft.WindowsAppRuntime.Singleton.1.5.msix",
+        "tools/MSIX/win10-arm64/Microsoft.WindowsAppRuntime.1.3.msix",
+        "tools/MSIX/win10-arm64/Microsoft.WindowsAppRuntime.DDLM.1.3.msix",
+        "tools/MSIX/win10-arm64/Microsoft.WindowsAppRuntime.Main.1.3.msix",
+        "tools/MSIX/win10-arm64/Microsoft.WindowsAppRuntime.Singleton.1.3.msix",
         "tools/MSIX/win10-x64/MSIX.inventory",
-        "tools/MSIX/win10-x64/Microsoft.WindowsAppRuntime.1.5.msix",
-        "tools/MSIX/win10-x64/Microsoft.WindowsAppRuntime.DDLM.1.5.msix",
-        "tools/MSIX/win10-x64/Microsoft.WindowsAppRuntime.Main.1.5.msix",
-        "tools/MSIX/win10-x64/Microsoft.WindowsAppRuntime.Singleton.1.5.msix",
+        "tools/MSIX/win10-x64/Microsoft.WindowsAppRuntime.1.3.msix",
+        "tools/MSIX/win10-x64/Microsoft.WindowsAppRuntime.DDLM.1.3.msix",
+        "tools/MSIX/win10-x64/Microsoft.WindowsAppRuntime.Main.1.3.msix",
+        "tools/MSIX/win10-x64/Microsoft.WindowsAppRuntime.Singleton.1.3.msix",
         "tools/MSIX/win10-x86/MSIX.inventory",
-        "tools/MSIX/win10-x86/Microsoft.WindowsAppRuntime.1.5.msix",
-        "tools/MSIX/win10-x86/Microsoft.WindowsAppRuntime.DDLM.1.5.msix",
-        "tools/MSIX/win10-x86/Microsoft.WindowsAppRuntime.Main.1.5.msix",
-        "tools/MSIX/win10-x86/Microsoft.WindowsAppRuntime.Singleton.1.5.msix",
+        "tools/MSIX/win10-x86/Microsoft.WindowsAppRuntime.1.3.msix",
+        "tools/MSIX/win10-x86/Microsoft.WindowsAppRuntime.DDLM.1.3.msix",
+        "tools/MSIX/win10-x86/Microsoft.WindowsAppRuntime.Main.1.3.msix",
+        "tools/MSIX/win10-x86/Microsoft.WindowsAppRuntime.Singleton.1.3.msix",
         "tools/NOTICE.txt",
         "tools/arm64/GenXbf.dll",
         "tools/net472/Microsoft.Bcl.AsyncInterfaces.dll",
@@ -5349,13 +5109,20 @@
         "tools/net472/vi-VN/Microsoft.Build.Msix.resources.dll",
         "tools/net472/zh-CN/Microsoft.Build.Msix.resources.dll",
         "tools/net472/zh-TW/Microsoft.Build.Msix.resources.dll",
+        "tools/net5.0/Microsoft.Bcl.AsyncInterfaces.dll",
         "tools/net5.0/Microsoft.Build.Msix.dll",
         "tools/net5.0/Microsoft.Cci.dll",
+        "tools/net5.0/Microsoft.UI.Xaml.Markup.Compiler.IO.dll",
+        "tools/net5.0/Microsoft.UI.Xaml.Markup.Compiler.MSBuildInterop.dll",
+        "tools/net5.0/Microsoft.UI.Xaml.Markup.Compiler.dll",
         "tools/net5.0/Microsoft.VisualStudio.RemoteControl.dll",
         "tools/net5.0/Microsoft.VisualStudio.Setup.Configuration.Interop.dll",
         "tools/net5.0/Microsoft.VisualStudio.Telemetry.dll",
         "tools/net5.0/Microsoft.VisualStudio.Utilities.Internal.dll",
         "tools/net5.0/Newtonsoft.Json.dll",
+        "tools/net5.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "tools/net5.0/System.Text.Encodings.Web.dll",
+        "tools/net5.0/System.Text.Json.dll",
         "tools/net5.0/af-ZA/Microsoft.Build.Msix.resources.dll",
         "tools/net5.0/ar-SA/Microsoft.Build.Msix.resources.dll",
         "tools/net5.0/az-Latn-AZ/Microsoft.Build.Msix.resources.dll",
@@ -5411,13 +5178,6 @@
         "tools/net5.0/vi-VN/Microsoft.Build.Msix.resources.dll",
         "tools/net5.0/zh-CN/Microsoft.Build.Msix.resources.dll",
         "tools/net5.0/zh-TW/Microsoft.Build.Msix.resources.dll",
-        "tools/net6.0/Microsoft.Bcl.AsyncInterfaces.dll",
-        "tools/net6.0/Microsoft.UI.Xaml.Markup.Compiler.IO.dll",
-        "tools/net6.0/Microsoft.UI.Xaml.Markup.Compiler.MSBuildInterop.dll",
-        "tools/net6.0/Microsoft.UI.Xaml.Markup.Compiler.dll",
-        "tools/net6.0/System.Runtime.CompilerServices.Unsafe.dll",
-        "tools/net6.0/System.Text.Encodings.Web.dll",
-        "tools/net6.0/System.Text.Json.dll",
         "tools/x64/GenXbf.dll",
         "tools/x86/GenXbf.dll"
       ]
@@ -5576,21 +5336,11 @@
     "net8.0-windows10.0.19041": [
       "IIM.Core >= 1.0.0",
       "IIM.Shared >= 1.0.0",
-      "Microsoft.AspNetCore.Components >= 8.0.10",
-      "Microsoft.AspNetCore.Components.Authorization >= 8.0.10",
-      "Microsoft.AspNetCore.Components.Forms >= 8.0.10",
-      "Microsoft.AspNetCore.Components.Web >= 8.0.10",
-      "Microsoft.AspNetCore.Components.WebView.Maui >= 8.0.100",
+      "Microsoft.AspNetCore.Components.WebView.Maui >= 8.0.3",
       "Microsoft.AspNetCore.SignalR.Client >= 8.0.10",
-      "Microsoft.Extensions.Configuration >= 8.0.0",
-      "Microsoft.Extensions.Configuration.Abstractions >= 8.0.0",
-      "Microsoft.Extensions.DependencyInjection >= 8.0.1",
-      "Microsoft.Extensions.Hosting.Abstractions >= 8.0.1",
-      "Microsoft.Extensions.Logging.Abstractions >= 8.0.2",
-      "Microsoft.Extensions.Logging.Debug >= 8.0.1",
-      "Microsoft.JSInterop >= 8.0.10",
-      "Microsoft.Maui.Controls >= 8.0.100",
-      "Microsoft.Maui.Controls.Compatibility >= 8.0.100"
+      "Microsoft.Extensions.Logging.Debug >= 8.0.0",
+      "Microsoft.Maui.Controls >= 8.0.3",
+      "Microsoft.Maui.Controls.Compatibility >= 8.0.3"
     ]
   },
   "packageFolders": {
@@ -5651,65 +5401,25 @@
       "net8.0-windows10.0.19041": {
         "targetAlias": "net8.0-windows10.0.19041.0",
         "dependencies": {
-          "Microsoft.AspNetCore.Components": {
-            "target": "Package",
-            "version": "[8.0.10, )"
-          },
-          "Microsoft.AspNetCore.Components.Authorization": {
-            "target": "Package",
-            "version": "[8.0.10, )"
-          },
-          "Microsoft.AspNetCore.Components.Forms": {
-            "target": "Package",
-            "version": "[8.0.10, )"
-          },
-          "Microsoft.AspNetCore.Components.Web": {
-            "target": "Package",
-            "version": "[8.0.10, )"
-          },
           "Microsoft.AspNetCore.Components.WebView.Maui": {
             "target": "Package",
-            "version": "[8.0.100, )"
+            "version": "[8.0.3, )"
           },
           "Microsoft.AspNetCore.SignalR.Client": {
             "target": "Package",
             "version": "[8.0.10, )"
           },
-          "Microsoft.Extensions.Configuration": {
-            "target": "Package",
-            "version": "[8.0.0, )"
-          },
-          "Microsoft.Extensions.Configuration.Abstractions": {
-            "target": "Package",
-            "version": "[8.0.0, )"
-          },
-          "Microsoft.Extensions.DependencyInjection": {
-            "target": "Package",
-            "version": "[8.0.1, )"
-          },
-          "Microsoft.Extensions.Hosting.Abstractions": {
-            "target": "Package",
-            "version": "[8.0.1, )"
-          },
-          "Microsoft.Extensions.Logging.Abstractions": {
-            "target": "Package",
-            "version": "[8.0.2, )"
-          },
           "Microsoft.Extensions.Logging.Debug": {
             "target": "Package",
-            "version": "[8.0.1, )"
-          },
-          "Microsoft.JSInterop": {
-            "target": "Package",
-            "version": "[8.0.10, )"
+            "version": "[8.0.0, )"
           },
           "Microsoft.Maui.Controls": {
             "target": "Package",
-            "version": "[8.0.100, )"
+            "version": "[8.0.3, )"
           },
           "Microsoft.Maui.Controls.Compatibility": {
             "target": "Package",
-            "version": "[8.0.100, )"
+            "version": "[8.0.3, )"
           }
         },
         "imports": [

@@ -1,16 +1,182 @@
-@* ToolResults Component *@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Tools/ToolResult.razor
+// ============================================
+@using IIM.Core.Models
 
-<div class="ToolResults">
-    <h3>ToolResults</h3>
-    @* TODO: Implement component *@
+<div class="tool-result">
+    <div class="tool-result-header">
+        <div class="tool-icon">
+            <i class="fas @GetToolIcon()"></i>
+        </div>
+        <div class="tool-info">
+            <span class="tool-name">@Result.ToolName</span>
+            <span class="tool-status @GetStatusClass()">@Result.Status</span>
+        </div>
+       @{
+            try
+            {
+                if (Result.Metadata != null && Result.Metadata.TryGetValue("execution_time", out var execTime))
+                {
+                    Result.ExecutionTime = TimeSpan.FromMilliseconds(Convert.ToDouble(execTime));
+
+                    <span class="execution-time">@Result.ExecutionTime.TotalMilliseconds.ToString("F0")ms</span>
+                }
+            }
+            catch
+            {
+                Result.ExecutionTime = TimeSpan.Zero; // Fallback if metadata is not available or invalid
+            }
+        }
+          
+        
+    </div>
+
+    @if (Result.Status == ToolStatus.Success && Result.Data != null)
+    {
+        <div class="tool-result-content">
+            @if (Result.Visualizations?.Any() == true)
+            {
+                @foreach (var viz in Result.Visualizations)
+                {
+                    <div class="visualization">
+                        <h5>@viz.Title</h5>
+                        @if (!string.IsNullOrEmpty(viz.Description))
+                        {
+                            <p class="text-muted">@viz.Description</p>
+                        }
+                        <!-- Render visualization based on type -->
+                        @RenderVisualization(viz)
+                    </div>
+                }
+            }
+
+            @if (Result.Recommendations?.Any() == true)
+            {
+                <div class="recommendations">
+                    <h5>Recommendations</h5>
+                    <ul>
+                        @foreach (var rec in Result.Recommendations)
+                        {
+                            <li>@rec</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <div class="tool-data">
+                <pre><code>@System.Text.Json.JsonSerializer.Serialize(Result.Data, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</code></pre>
+            </div>
+        </div>
+    }
+    else if (Result.Status == ToolStatus.Failed)
+    {
+        <div class="tool-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>@(Result.ErrorMessage ?? "Tool execution failed")</span>
+        </div>
+    }
+
+    @if (ShowReExecute)
+    {
+        <div class="tool-actions">
+            <button class="btn btn-sm btn-outline-primary" @onclick="HandleReExecute">
+                <i class="fas fa-redo"></i> Re-execute
+            </button>
+        </div>
+    }
 </div>
 
 @code {
-    [Parameter] public string Id { get; set; } = string.Empty;
-    
-    protected override async Task OnInitializedAsync()
+    [Parameter] public ToolResult Result { get; set; } = new();
+    [Parameter] public EventCallback<Dictionary<string, object>> OnExecute { get; set; }
+    [Parameter] public bool ShowReExecute { get; set; } = true;
+
+    private async Task HandleReExecute()
     {
-        // TODO: Initialize component
-        await base.OnInitializedAsync();
+        if (OnExecute.HasDelegate)
+        {
+            // Pass the original parameters if available, or empty dictionary
+            var parameters = Result.Metadata ?? new Dictionary<string, object>();
+            await OnExecute.InvokeAsync(parameters);
+        }
+    }
+
+    private string GetToolIcon() => Result.ToolName?.ToLower() switch
+    {
+        "web_search" => "fa-search",
+        "image_analysis" => "fa-image",
+        "document_extraction" => "fa-file-alt",
+        "entity_recognition" => "fa-user-tag",
+        "sentiment_analysis" => "fa-smile",
+        "translation" => "fa-language",
+        "ocr" => "fa-font",
+        _ => "fa-tools"
+    };
+
+    private string GetStatusClass() => Result.Status switch
+    {
+        ToolStatus.Success => "badge-success",
+        ToolStatus.Failed => "badge-danger",
+        ToolStatus.Pending => "badge-warning",
+        ToolStatus.Running => "badge-info",
+        _ => "badge-secondary"
+    };
+
+    private RenderFragment RenderVisualization(Visualization viz) => builder =>
+    {
+        switch (viz.Type.ToLower())
+        {
+            case "chart":
+                builder.OpenElement(0, "div");
+                builder.AddAttribute(1, "class", "chart-container");
+                builder.AddContent(2, "Chart visualization would render here");
+                builder.CloseElement();
+                break;
+
+            case "graph":
+                builder.OpenElement(0, "div");
+                builder.AddAttribute(1, "class", "graph-container");
+                builder.AddContent(2, "Graph visualization would render here");
+                builder.CloseElement();
+                break;
+
+            case "table":
+                builder.OpenElement(0, "div");
+                builder.AddAttribute(1, "class", "table-container");
+                builder.AddContent(2, "Table visualization would render here");
+                builder.CloseElement();
+                break;
+
+            default:
+                builder.OpenElement(0, "div");
+                builder.AddAttribute(1, "class", "viz-container");
+                builder.AddContent(2, $"Visualization type '{viz.Type}' not implemented");
+                builder.CloseElement();
+                break;
+        }
+    };
+}
+
+// ============================================
+// Usage in parent component (InvestigationMessage.razor):
+// ============================================
+// The parent component should be fixed like this:
+
+@* 
+@if (Message.ToolResults?.Any() == true)
+{
+    <div class="tool-results">
+        @foreach (var result in Message.ToolResults)
+        {
+            <ToolResult Result="@result" OnExecute="@(parameters => HandleToolExecuteForResult(result, parameters))" />
+        }
+    </div>
+}
+
+@code {
+    private async Task HandleToolExecuteForResult(ToolResult result, Dictionary<string, object> parameters)
+    {
+        await OnToolExecute.InvokeAsync((result.ToolName, parameters));
     }
 }
+*@

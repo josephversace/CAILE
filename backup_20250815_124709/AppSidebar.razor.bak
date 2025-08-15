@@ -1,0 +1,203 @@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Layout/AppSidebar.razor
+// ============================================
+@using IIM.Core.Models
+@using IIM.App.Hybrid.Services
+@inject NavigationManager Navigation
+@inject IInvestigationService InvestigationService
+
+<div class="app-sidebar @(IsCollapsed ? "collapsed" : "")">
+    <div class="sidebar-tabs">
+        <button class="sidebar-tab @(ActiveTab == "chats" ? "active" : "")" @onclick="() => SetActiveTab('chats')">
+            <i class="fas fa-comments"></i>
+            @if (!IsCollapsed)
+            {
+                <span>Chats</span>
+            }
+        </button>
+        <button class="sidebar-tab @(ActiveTab == "cases" ? "active" : "")" @onclick="() => SetActiveTab('cases')">
+            <i class="fas fa-folder"></i>
+            @if (!IsCollapsed)
+            {
+                <span>Cases</span>
+            }
+        </button>
+        <button class="sidebar-tab @(ActiveTab == "history" ? "active" : "")" @onclick="() => SetActiveTab('history')">
+            <i class="fas fa-history"></i>
+            @if (!IsCollapsed)
+            {
+                <span>History</span>
+            }
+        </button>
+    </div>
+
+    <div class="sidebar-content">
+        @switch (ActiveTab)
+        {
+            case "chats":
+                <div class="sidebar-section">
+                    <button class="new-chat-btn" @onclick="CreateNewSession">
+                        <i class="fas fa-plus"></i>
+                        @if (!IsCollapsed)
+                        {
+                            <span>New Investigation</span>
+                        }
+                    </button>
+                </div>
+
+                @if (Sessions != null)
+                {
+                    @foreach (var group in GroupedSessions)
+                    {
+                        <div class="session-group">
+                            @if (!IsCollapsed)
+                            {
+                                <div class="session-group-title">@group.Title</div>
+                            }
+                            @foreach (var session in group.Sessions)
+                            {
+                                <SessionItem Session="@session" IsActive="@(session.Id == ActiveSessionId)" IsCollapsed="@IsCollapsed"
+                                    OnClick="@(() => SelectSession(session))" />
+                            }
+                        </div>
+                    }
+                }
+                break;
+
+            case "cases":
+                @if (RecentCases != null)
+                {
+                    <div class="case-list">
+                        @foreach (var caseItem in RecentCases)
+                        {
+                            <div class="case-item @(caseItem.Id == CurrentCaseId ? "active" : "")"
+                                @onclick="() => SelectCase(caseItem)">
+                                <div class="case-icon">
+                                    <i class="fas @GetCaseIcon(caseItem.Type)"></i>
+                                </div>
+                                @if (!IsCollapsed)
+                                {
+                                    <div class="case-info">
+                                        <div class="case-name">@caseItem.Name</div>
+                                        <div class="case-meta">@caseItem.CaseNumber</div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                break;
+
+            case "history":
+                <div class="history-list">
+                    <!-- History items here -->
+                </div>
+                break;
+        }
+    </div>
+
+    <div class="sidebar-footer">
+        <button class="collapse-toggle" @onclick="ToggleCollapse">
+            <i class="fas @(IsCollapsed ? "fa-chevron-right" : "fa-chevron-left")"></i>
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? CurrentCaseId { get; set; }
+    [Parameter] public string? ActiveSessionId { get; set; }
+    [Parameter] public EventCallback<InvestigationSession> OnSessionSelected { get; set; }
+    [Parameter] public EventCallback<Case> OnCaseSelected { get; set; }
+
+    private bool IsCollapsed = false;
+    private string ActiveTab = "chats";
+    private List<InvestigationSession>? Sessions;
+    private List<Case>? RecentCases;
+    private List<SessionGroup> GroupedSessions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSessions();
+        await LoadRecentCases();
+    }
+
+    private async Task LoadSessions()
+    {
+        if (!string.IsNullOrEmpty(CurrentCaseId))
+        {
+            Sessions = await InvestigationService.GetCaseSessionsAsync(CurrentCaseId);
+            GroupedSessions = GroupSessionsByDate(Sessions);
+        }
+    }
+
+    private async Task LoadRecentCases()
+    {
+        RecentCases = await InvestigationService.GetRecentCasesAsync(10);
+    }
+
+    private void SetActiveTab(string tab)
+    {
+        ActiveTab = tab;
+    }
+
+    private void CreateNewSession()
+    {
+        Navigation.NavigateTo("/investigation/new");
+    }
+
+    private async Task SelectSession(InvestigationSession session)
+    {
+        await OnSessionSelected.InvokeAsync(session);
+    }
+
+    private async Task SelectCase(Case caseItem)
+    {
+        await OnCaseSelected.InvokeAsync(caseItem);
+    }
+
+    private void ToggleCollapse()
+    {
+        IsCollapsed = !IsCollapsed;
+    }
+
+    private List<SessionGroup> GroupSessionsByDate(List<InvestigationSession> sessions)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var groups = new List<SessionGroup>();
+
+        var today = sessions.Where(s => s.UpdatedAt.Date == now.Date).ToList();
+        if (today.Any())
+            groups.Add(new SessionGroup { Title = "Today", Sessions = today });
+
+        var yesterday = sessions.Where(s => s.UpdatedAt.Date == now.AddDays(-1).Date).ToList();
+        if (yesterday.Any())
+            groups.Add(new SessionGroup { Title = "Yesterday", Sessions = yesterday });
+
+        var thisWeek = sessions.Where(s => s.UpdatedAt.Date < now.AddDays(-1).Date &&
+        s.UpdatedAt.Date >= now.AddDays(-7).Date).ToList();
+        if (thisWeek.Any())
+            groups.Add(new SessionGroup { Title = "Previous 7 Days", Sessions = thisWeek });
+
+        var older = sessions.Where(s => s.UpdatedAt.Date < now.AddDays(-7).Date).ToList();
+        if (older.Any())
+            groups.Add(new SessionGroup { Title = "Older", Sessions = older });
+
+        return groups;
+    }
+
+    private string GetCaseIcon(CaseType type) => type switch
+    {
+        CaseType.DigitalForensics => "fa-laptop",
+        CaseType.FinancialCrime => "fa-dollar-sign",
+        CaseType.Cybercrime => "fa-bug",
+        CaseType.OSINT => "fa-globe",
+        CaseType.MissingPerson => "fa-user-slash",
+        _ => "fa-folder"
+    };
+
+    private class SessionGroup
+    {
+        public string Title { get; set; } = "";
+        public List<InvestigationSession> Sessions { get; set; } = new();
+    }
+}

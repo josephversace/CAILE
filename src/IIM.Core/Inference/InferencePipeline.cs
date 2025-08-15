@@ -145,8 +145,8 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
     /// <param name="ct">Cancellation token</param>
     /// <returns>Batch results with success/failure information</returns>
     public async Task<BatchResult<T>> ExecuteBatchAsync<T>(
-     IEnumerable<InferencePipelineRequest> requests,
-     CancellationToken ct = default)
+       IEnumerable<InferencePipelineRequest> requests,
+       CancellationToken ct = default)
     {
         var requestList = requests.ToList();
         if (!requestList.Any())
@@ -154,7 +154,16 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
             return new BatchResult<T> { Results = new List<T>() };
         }
 
-        // Group by model for efficient batching
+        // Assign indices if not present
+        for (int i = 0; i < requestList.Count; i++)
+        {
+            if (!requestList[i].Index.HasValue)
+            {
+                requestList[i].Index = i;
+            }
+        }
+
+        // Now all requests have indices, proceed as before
         var grouped = requestList.GroupBy(r => r.ModelId);
         var results = new ConcurrentBag<(int index, T result)>();
         var errors = new ConcurrentBag<(int index, Exception error)>();
@@ -164,12 +173,10 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
             var modelId = group.Key;
             var batch = group.ToList();
 
-            // Check if model supports batching
             if (SupportsBatching(modelId))
             {
                 try
                 {
-                    // Process batch - inline implementation instead of calling separate method
                     var batchResults = new T[batch.Count];
                     for (int i = 0; i < batch.Count; i++)
                     {
@@ -178,36 +185,35 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
 
                     for (int i = 0; i < batch.Count; i++)
                     {
-                        results.Add((batch[i].Index, batchResults[i]));
+                        // Now we know Index is not null because we assigned it above
+                        results.Add((batch[i].Index!.Value, batchResults[i]));
                     }
                 }
                 catch (Exception ex)
                 {
                     foreach (var req in batch)
                     {
-                        errors.Add((req.Index, ex));
+                        errors.Add((req.Index!.Value, ex));
                     }
                 }
             }
             else
             {
-                // Fall back to sequential processing
                 foreach (var req in batch)
                 {
                     try
                     {
                         var result = await ExecuteAsync<T>(req, token);
-                        results.Add((req.Index, result));
+                        results.Add((req.Index!.Value, result));
                     }
                     catch (Exception ex)
                     {
-                        errors.Add((req.Index, ex));
+                        errors.Add((req.Index!.Value, ex));
                     }
                 }
             }
         });
 
-        // Sort results by original index
         var sortedResults = results.OrderBy(r => r.index).Select(r => r.result).ToList();
         var sortedErrors = errors.OrderBy(e => e.index).ToDictionary(e => e.index, e => e.error);
 
@@ -220,6 +226,8 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
             FailureCount = errors.Count
         };
     }
+
+
     /// <summary>
     /// Gets current pipeline statistics including queue depths and throughput
     /// </summary>
@@ -387,15 +395,7 @@ public sealed class InferencePipeline : IInferencePipeline, IDisposable
     }
 }
 
-// Supporting types
-public sealed class InferencePipelineRequest
-{
-    public required string ModelId { get; init; }
-    public required object Input { get; init; }
-    public Dictionary<string, object>? Parameters { get; init; }
-    public HashSet<string>? Tags { get; init; }
-    public int Index { get; init; }
-}
+
 
 public sealed class QueuedRequest
 {

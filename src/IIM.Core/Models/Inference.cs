@@ -5,17 +5,44 @@ using System.Threading;
 
 namespace IIM.Core.Models;
 
+/// <summary>
+/// Request for inference pipeline execution.
+/// This is the SINGLE source of truth - no duplicates elsewhere!
+/// </summary>
 public class InferencePipelineRequest
 {
+    // Identity
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
+
+    // Required fields
     public string ModelId { get; set; } = string.Empty;
     public object Input { get; set; } = new { };
+
+    // Optional parameters
     public Dictionary<string, object>? Parameters { get; set; }
     public HashSet<string>? Tags { get; set; }
-    public int Priority { get; set; } = 1;
-    public int? Index { get; set; }
-    public CancellationToken CancellationToken { get; set; }
+
+    // Execution control
+    public int Priority { get; set; } = 1;  // 0=Low, 1=Normal, 2=High
+    public int? Index { get; set; }  // For batch processing
+    public CancellationToken CancellationToken { get; set; } = default;
+
+    // Constructors for different use cases
+    public InferencePipelineRequest() { }
+
+    public InferencePipelineRequest(string modelId, object input)
+    {
+        ModelId = modelId ?? throw new ArgumentNullException(nameof(modelId));
+        Input = input ?? throw new ArgumentNullException(nameof(input));
+    }
+
+    public InferencePipelineRequest(string modelId, object input, Dictionary<string, object>? parameters = null)
+        : this(modelId, input)
+    {
+        Parameters = parameters;
+    }
 }
+
 
 public class InferencePipelineStats
 {

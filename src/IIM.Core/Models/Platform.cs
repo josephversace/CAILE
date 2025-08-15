@@ -102,13 +102,3 @@ public enum ServicePriority
     Low
 }
 
-// Evidence Management
-public class EvidenceConfiguration
-{
-    public string StorePath { get; set; } = string.Empty;
-    public bool EnableEncryption { get; set; }
-    public bool RequireDualControl { get; set; }
-    public int MaxFileSizeMb { get; set; }
-    public List<string> AllowedFileTypes { get; set; } = new();
-    public Dictionary<string, object> SecuritySettings { get; set; } = new();
-}

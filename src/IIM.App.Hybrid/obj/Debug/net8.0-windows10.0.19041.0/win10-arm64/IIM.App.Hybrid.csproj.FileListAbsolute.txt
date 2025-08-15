@@ -14,7 +14,6 @@ C:\Users\josep\source\repos\CAILE\src\IIM.App.Hybrid\obj\Debug\net8.0-windows10.
 C:\Users\josep\source\repos\CAILE\src\IIM.App.Hybrid\obj\Debug\net8.0-windows10.0.19041.0\win10-arm64\mauisplash.stamp
 C:\Users\josep\source\repos\CAILE\src\IIM.App.Hybrid\obj\Debug\net8.0-windows10.0.19041.0\win10-arm64\mauifont.stamp
 C:\Users\josep\source\repos\CAILE\src\IIM.App.Hybrid\obj\Debug\net8.0-windows10.0.19041.0\win10-arm64\mauiimage.stamp
-C:\Users\josep\source\repos\CAILE\src\IIM.App.Hybrid\obj\Debug\net8.0-windows10.0.19041.0\win10-arm64\mauiimage.outputs
 C:\Users\josep\source\repos\CAILE\src\IIM.App.Hybrid\obj\Debug\net8.0-windows10.0.19041.0\win10-arm64\IIM.App.Hybrid.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\josep\source\repos\CAILE\src\IIM.App.Hybrid\obj\Debug\net8.0-windows10.0.19041.0\win10-arm64\IIM.App.Hybrid.AssemblyInfoInputs.cache
 C:\Users\josep\source\repos\CAILE\src\IIM.App.Hybrid\obj\Debug\net8.0-windows10.0.19041.0\win10-arm64\IIM.App.Hybrid.AssemblyInfo.cs

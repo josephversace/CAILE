@@ -1,0 +1,203 @@
+// ============================================
+// File: src/IIM.App.Hybrid/Components/Models/ModelLibrary.razor
+// ============================================
+@using IIM.Core.Models
+@using IIM.App.Hybrid.Services
+@inject IModelManagementService ModelService
+
+<div class="model-library">
+    <div class="library-header">
+        <h3>Model Library</h3>
+        <p class="text-muted">Premium AI models optimized for law enforcement investigations</p>
+    </div>
+
+    <div class="library-controls">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search models..." @bind="SearchQuery" @oninput="FilterModels">
+        </div>
+
+        <div class="filter-chips">
+            <button class="filter-chip @(ActiveFilter == "all" ? "active" : "")" @onclick="() => SetFilter('all')">
+                All Models
+            </button>
+            <button class="filter-chip @(ActiveFilter == "llm" ? "active" : "")" @onclick="() => SetFilter('llm')">
+                Language
+            </button>
+            <button class="filter-chip @(ActiveFilter == "vision" ? "active" : "")"
+                @onclick="() => SetFilter('vision')">
+                Vision
+            </button>
+            <button class="filter-chip @(ActiveFilter == "audio" ? "active" : "")" @onclick="() => SetFilter('audio')">
+                Audio
+            </button>
+            <button class="filter-chip @(ActiveFilter == "specialized" ? "active" : "")"
+                @onclick="() => SetFilter('specialized')">
+                Specialized
+            </button>
+            <button class="filter-chip @(ActiveFilter == "finetuned" ? "active" : "")"
+                @onclick="() => SetFilter('finetuned')">
+                Fine-tuned
+            </button>
+        </div>
+    </div>
+
+    <div class="library-stats">
+        <div class="stat-item">
+            <i class="fas fa-cube"></i>
+            <span>@AvailableModels.Count available</span>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-check-circle"></i>
+            <span>@LoadedModels.Count loaded</span>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-memory"></i>
+            <span>@FormatBytes(TotalMemoryUsed) / @FormatBytes(TotalMemoryAvailable)</span>
+        </div>
+    </div>
+
+    <div class="models-grid">
+        @if (FilteredModels.Any())
+        {
+            @foreach (var model in FilteredModels)
+            {
+                <ModelCard Model="@model.Configuration" Description="@model.Description" PerformanceMetrics="@model.Metrics"
+                    OnLoad="@LoadModel" OnUnload="@UnloadModel" OnConfigure="@ConfigureModel" OnFineTune="@FineTuneModel"
+                    ShowFineTune="true" />
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-search fa-3x text-muted"></i>
+                <p class="text-muted mt-3">No models found matching your criteria</p>
+            </div>
+        }
+    </div>
+
+    <div class="library-footer">
+        <button class="btn btn-primary" @onclick="ImportCustomModel">
+            <i class="fas fa-upload"></i> Import Custom Model
+        </button>
+        <button class="btn btn-secondary" @onclick="RefreshLibrary">
+            <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+    </div>
+</div>
+
+@code {
+    private string SearchQuery = "";
+    private string ActiveFilter = "all";
+    private List<ModelLibraryItem> AvailableModels = new();
+    private List<ModelLibraryItem> LoadedModels = new();
+    private List<ModelLibraryItem> FilteredModels = new();
+    private long TotalMemoryUsed = 0;
+    private long TotalMemoryAvailable = 128L * 1024 * 1024 * 1024; // 128 GB
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadModelLibrary();
+    }
+
+    private async Task LoadModelLibrary()
+    {
+        AvailableModels = await ModelService.GetAvailableModelsAsync();
+        LoadedModels = AvailableModels.Where(m => m.Configuration.Status == ModelStatus.Loaded).ToList();
+        TotalMemoryUsed = LoadedModels.Sum(m => m.Configuration.MemoryUsage);
+        FilterModels();
+    }
+
+    private void SetFilter(string filter)
+    {
+        ActiveFilter = filter;
+        FilterModels();
+    }
+
+    private void FilterModels()
+    {
+        var query = SearchQuery?.ToLower() ?? "";
+
+        FilteredModels = AvailableModels.Where(m =>
+        {
+            // Apply search filter
+            if (!string.IsNullOrEmpty(query))
+            {
+                if (!m.Configuration.ModelId.ToLower().Contains(query) &&
+        !(m.Description?.ToLower().Contains(query) ?? false))
+                {
+                    return false;
+                }
+            }
+
+            // Apply type filter
+            return ActiveFilter switch
+            {
+                "llm" => m.Configuration.Type == ModelType.LLM,
+                "vision" => m.Configuration.Type == ModelType.CLIP ||
+        m.Configuration.Type == ModelType.ObjectDetection ||
+        m.Configuration.Type == ModelType.FaceRecognition,
+                "audio" => m.Configuration.Type == ModelType.Whisper,
+                "specialized" => m.Configuration.Type == ModelType.OCR ||
+        m.Configuration.Type == ModelType.Custom,
+                "finetuned" => m.IsFineTuned,
+                _ => true
+            };
+        }).ToList();
+    }
+
+    private async Task LoadModel(ModelConfiguration model)
+    {
+        await ModelService.LoadModelAsync(model.ModelId);
+        await LoadModelLibrary();
+    }
+
+    private async Task UnloadModel(ModelConfiguration model)
+    {
+        await ModelService.UnloadModelAsync(model.ModelId);
+        await LoadModelLibrary();
+    }
+
+    private void ConfigureModel(ModelConfiguration model)
+    {
+        // TODO: Show configuration dialog
+    }
+
+    private void FineTuneModel(ModelConfiguration model)
+    {
+        // TODO: Navigate to fine-tuning page
+    }
+
+    private void ImportCustomModel()
+    {
+        // TODO: Show import dialog
+    }
+
+    private async Task RefreshLibrary()
+    {
+        await LoadModelLibrary();
+    }
+
+    private string FormatBytes(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        int order = 0;
+        double size = bytes;
+
+        while (size >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            size /= 1024;
+        }
+
+        return $"{size:F1} {sizes[order]}";
+    }
+
+    private class ModelLibraryItem
+    {
+        public ModelConfiguration Configuration { get; set; } = new();
+        public string? Description { get; set; }
+        public bool IsFineTuned { get; set; }
+        public ModelCard.ModelPerformanceMetrics? Metrics { get; set; }
+    }
+}

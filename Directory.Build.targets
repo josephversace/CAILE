@@ -1,12 +1,14 @@
 <Project>
-  <!-- Override all problematic targets -->
-  <Target Name="StaticWebAssetsPrepareForRun" />
-  <Target Name="StaticWebAssetsPrepareForPublish" />
-  <Target Name="StaticWebAssetsGeneratePackagePropsFile" />
-  <Target Name="StaticWebAssetsGenerateProjectPropsFile" />
-  <Target Name="ResolveStaticWebAssetsConfiguration" />
-  <Target Name="GenerateStaticWebAssetsManifest" />
-  <Target Name="_GenerateStaticWebAssetsManifest" />
-  <Target Name="StaticWebAssetsPublish" />
-  <Target Name="StaticWebAssetsCopyToPublishDirectory" />
+  <!-- Simple override to disable Static Web Assets for MAUI projects -->
+  <PropertyGroup Condition="'$(UseMaui)' == 'true'">
+    <EnableDefaultStaticWebAssets>false</EnableDefaultStaticWebAssets>
+    <StaticWebAssetEnabled>false</StaticWebAssetEnabled>
+  </PropertyGroup>
+
+  <!-- Override the targets with empty implementations -->
+  <Target Name="ComputeStaticWebAssetsTargetPaths" Condition="'$(UseMaui)' == 'true'" />
+  <Target Name="ResolveStaticWebAssetsConfiguration" Condition="'$(UseMaui)' == 'true'" />
+  <Target Name="GenerateStaticWebAssetsManifest" Condition="'$(UseMaui)' == 'true'" />
+  <Target Name="StaticWebAssetsPrepareForRun" Condition="'$(UseMaui)' == 'true'" />
+  <Target Name="StaticWebAssetsPrepareForPublish" Condition="'$(UseMaui)' == 'true'" />
 </Project>

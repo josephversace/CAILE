@@ -1,9 +1,16 @@
 {
   "version": 2,
-  "dgSpecHash": "gqXUFYzis3M=",
+  "dgSpecHash": "xcDxHZVRjP4=",
   "success": true,
   "projectFilePath": "C:\\Users\\josep\\source\\repos\\CAILE\\tools\\IIM.CLI\\IIM.CLI.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\josep\\.nuget\\packages\\microsoft.aspnetcore.connections.abstractions\\8.0.10\\microsoft.aspnetcore.connections.abstractions.8.0.10.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\microsoft.aspnetcore.http.connections.client\\8.0.10\\microsoft.aspnetcore.http.connections.client.8.0.10.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\microsoft.aspnetcore.http.connections.common\\8.0.10\\microsoft.aspnetcore.http.connections.common.8.0.10.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\microsoft.aspnetcore.signalr.client\\8.0.10\\microsoft.aspnetcore.signalr.client.8.0.10.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\microsoft.aspnetcore.signalr.client.core\\8.0.10\\microsoft.aspnetcore.signalr.client.core.8.0.10.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\microsoft.aspnetcore.signalr.common\\8.0.10\\microsoft.aspnetcore.signalr.common.8.0.10.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\microsoft.aspnetcore.signalr.protocols.json\\8.0.10\\microsoft.aspnetcore.signalr.protocols.json.8.0.10.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.extensions.configuration\\8.0.0\\microsoft.extensions.configuration.8.0.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\8.0.0\\microsoft.extensions.configuration.abstractions.8.0.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.extensions.configuration.binder\\8.0.2\\microsoft.extensions.configuration.binder.8.0.2.nupkg.sha512",
@@ -11,6 +18,7 @@
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.2\\microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.extensions.diagnostics\\8.0.1\\microsoft.extensions.diagnostics.8.0.1.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.extensions.diagnostics.abstractions\\8.0.1\\microsoft.extensions.diagnostics.abstractions.8.0.1.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\microsoft.extensions.features\\8.0.10\\microsoft.extensions.features.8.0.10.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.extensions.fileproviders.abstractions\\8.0.0\\microsoft.extensions.fileproviders.abstractions.8.0.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.extensions.hosting.abstractions\\8.0.1\\microsoft.extensions.hosting.abstractions.8.0.1.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.extensions.http\\8.0.1\\microsoft.extensions.http.8.0.1.nupkg.sha512",
@@ -22,7 +30,9 @@
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.extensions.options.configurationextensions\\8.0.0\\microsoft.extensions.options.configurationextensions.8.0.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.extensions.primitives\\8.0.0\\microsoft.extensions.primitives.8.0.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\system.commandline\\2.0.0-beta4.22272.1\\system.commandline.2.0.0-beta4.22272.1.nupkg.sha512",
-    "C:\\Users\\josep\\.nuget\\packages\\system.text.json\\8.0.5\\system.text.json.8.0.5.nupkg.sha512"
+    "C:\\Users\\josep\\.nuget\\packages\\system.io.pipelines\\8.0.0\\system.io.pipelines.8.0.0.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\system.text.json\\8.0.5\\system.text.json.8.0.5.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\system.threading.channels\\8.0.0\\system.threading.channels.8.0.0.nupkg.sha512"
   ],
   "logs": []
 }
