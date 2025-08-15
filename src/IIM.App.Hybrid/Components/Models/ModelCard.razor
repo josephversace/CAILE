@@ -145,20 +145,19 @@
 </div>
 
 @code {
-    [Parameter] public ModelConfiguration Model { get; set; } = new();
+    [Parameter] public Core.Models.ModelConfiguration Model { get; set; } = new();
     [Parameter] public string? Description { get; set; }
     [Parameter] public bool IsSelected { get; set; }
     [Parameter] public bool ShowCapabilities { get; set; } = true;
     [Parameter] public bool ShowStats { get; set; } = true;
     [Parameter] public bool ShowFineTune { get; set; } = false;
     [Parameter] public int DownloadProgress { get; set; } = 0;
-    [Parameter] public ModelPerformanceMetrics? PerformanceMetrics { get; set; }
-
-    [Parameter] public EventCallback<ModelConfiguration> OnClick { get; set; }
-    [Parameter] public EventCallback<ModelConfiguration> OnLoad { get; set; }
-    [Parameter] public EventCallback<ModelConfiguration> OnUnload { get; set; }
-    [Parameter] public EventCallback<ModelConfiguration> OnConfigure { get; set; }
-    [Parameter] public EventCallback<ModelConfiguration> OnFineTune { get; set; }
+  
+    [Parameter] public EventCallback<Core.Models.ModelConfiguration> OnClick { get; set; }
+    [Parameter] public EventCallback<Core.Models.ModelConfiguration> OnLoad { get; set; }
+    [Parameter] public EventCallback<Core.Models.ModelConfiguration> OnUnload { get; set; }
+    [Parameter] public EventCallback<Core.Models.ModelConfiguration> OnConfigure { get; set; }
+    [Parameter] public EventCallback<Core.Models.ModelConfiguration> OnFineTune { get; set; }
 
     private async Task Load()
     {

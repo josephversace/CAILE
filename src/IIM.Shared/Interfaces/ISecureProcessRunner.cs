@@ -1,14 +1,10 @@
-﻿using System.Threading.Tasks;
-using System.Threading;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using IIM.Shared.Models;
 
-namespace IIM.Shared.Interfaces
+namespace IIM.Shared.Interfaces;
+
+public interface ISecureProcessRunner
 {
-    public interface ISecureProcessRunner
-    {
-        Task<ProcessResult> RunAsync(string fileName, string arguments);
-
-        Task<ProcessResult> RunAsync(string tool, string[] args, CancellationToken ct = default);
-
-    }
+    Task<ProcessResult> RunAsync(string command, string[] args, CancellationToken cancellationToken = default);
 }

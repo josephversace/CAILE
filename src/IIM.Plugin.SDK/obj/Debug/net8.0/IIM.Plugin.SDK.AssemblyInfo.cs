@@ -10,11 +10,10 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("IIM Team")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("IIM.Plugin.SDK")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
-[assembly: System.Reflection.AssemblyDescriptionAttribute("SDK for developing IIM investigation plugins")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2fff0848165be120b18c45a3983313a0300a93d3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3180063a1e355af15e747aa7cfb3394764972c84")]
 [assembly: System.Reflection.AssemblyProductAttribute("IIM.Plugin.SDK")]
 [assembly: System.Reflection.AssemblyTitleAttribute("IIM.Plugin.SDK")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

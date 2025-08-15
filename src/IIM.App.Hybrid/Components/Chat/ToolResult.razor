@@ -80,7 +80,7 @@
 </div>
 
 @code {
-    [Parameter] public ToolResult Result { get; set; } = new();
+    [Parameter] public Core.Models.ToolResult Result { get; set; } = new();
     [Parameter] public EventCallback<Dictionary<string, object>> OnRerun { get; set; }
 
     private bool IsExpanded = true;

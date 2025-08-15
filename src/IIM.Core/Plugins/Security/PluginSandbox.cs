@@ -1,38 +1,30 @@
-using IIM.Core.Security;
-using IIM.Plugin.SDK;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using IIM.Core.Plugins.Security.Implementations;
+using IIM.Core.Security;
+using IIM.Plugin.SDK;
+using IIM.Plugin.SDK.Security;
+using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 
 namespace IIM.Core.Plugins.Security;
 
 /// <summary>
-/// Creates sandboxed contexts for plugin execution
-/// </summary>
-public interface IPluginSandbox
-{
-    /// <summary>
-    /// Create a secure context for a plugin
-    /// </summary>
-    Task<PluginContext> CreateContextAsync(PluginManifest manifest, string workingDirectory);
-}
-
-/// <summary>
-/// Implementation of plugin sandbox
+/// Creates sandboxed execution contexts for plugins
 /// </summary>
 public class PluginSandbox : IPluginSandbox
 {
     private readonly ILoggerFactory _loggerFactory;
     private readonly IConfiguration _configuration;
     private readonly IEvidenceManager _evidenceManager;
-    
-    /// <summary>
-    /// Initialize the plugin sandbox
-    /// </summary>
+    private readonly Dictionary<string, PluginContext> _contexts = new();
+
     public PluginSandbox(
         ILoggerFactory loggerFactory,
         IConfiguration configuration,
@@ -42,132 +34,128 @@ public class PluginSandbox : IPluginSandbox
         _configuration = configuration;
         _evidenceManager = evidenceManager;
     }
-    
-    /// <summary>
-    /// Create a sandboxed context for plugin execution
-    /// </summary>
-    public async Task<PluginContext> CreateContextAsync(
-        PluginManifest manifest, 
-        string workingDirectory)
+
+    public async Task<PluginContext> CreateContextAsync(PluginManifest plugin)
     {
-        // Create plugin-specific temp directory
-        var tempDir = Path.Combine(workingDirectory, "temp");
-        Directory.CreateDirectory(tempDir);
+        // Create plugin-specific configuration
+        var pluginConfig = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["PluginId"] = plugin.Id,
+                ["PluginName"] = plugin.Name,
+                ["MaxMemoryMB"] = "100",
+                ["MaxCpuPercent"] = "25",
+                ["NetworkAccess"] = "Restricted"
+            })
+            .Build();
+
+        // Create sandboxed services
+        var tempPath = Path.Combine(Path.GetTempPath(), "IIM", "Plugins", plugin.Id);
+        Directory.CreateDirectory(tempPath);
         
-        // Create restricted services
+        var fileSystem = new RestrictedFileSystem(
+            tempPath,
+            _loggerFactory.CreateLogger<RestrictedFileSystem>()
+        );
+
+        var httpClient = new RateLimitedHttpClient(
+            new HttpClient(),
+            _loggerFactory.CreateLogger<RateLimitedHttpClient>()
+        );
+
+        var processRunner = new SandboxedProcessRunner(
+            _loggerFactory.CreateLogger<SandboxedProcessRunner>()
+        );
+
+        var evidenceStore = new NamespacedEvidenceStore(
+            plugin.Id,
+            _loggerFactory.CreateLogger<NamespacedEvidenceStore>()
+        );
+
         var context = new PluginContext
         {
-            Logger = _loggerFactory.CreateLogger($"Plugin.{manifest.Id}"),
-            
-            Configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
-                {
-                    ["PluginId"] = manifest.Id,
-                    ["PluginVersion"] = manifest.Version,
-                    ["TempDirectory"] = tempDir
-                })
-                .Build(),
-                
-            FileSystem = new RestrictedFileSystem(
-                allowedPaths: GetAllowedPaths(manifest, workingDirectory),
-                maxFileSize: 100 * 1024 * 1024 // 100MB
-            ),
-            
-            HttpClient = new RateLimitedHttpClient(
-                maxRequestsPerMinute: 60,
-                allowedDomains: GetAllowedDomains(manifest)
-            ),
-            
-            ProcessRunner = new SandboxedProcessRunner(
-                allowedTools: GetAllowedTools(manifest),
-                maxRuntime: TimeSpan.FromMinutes(5)
-            ),
-            
-            EvidenceStore = new NamespacedEvidenceStore(
-                _evidenceManager,
-                $"plugin_{manifest.Id}"
-            ),
-            
-            TempDirectory = tempDir,
-            
-         PluginInfo = new PluginInfo
+            Logger = _loggerFactory.CreateLogger($"Plugin.{plugin.Id}"),
+            Configuration = pluginConfig,
+            FileSystem = fileSystem,
+            HttpClient = httpClient,
+            ProcessRunner = processRunner,
+            EvidenceStore = evidenceStore,
+            PluginInfo = new PluginInfo
             {
-                Id = manifest.Id,
-                Name = manifest.Name,
-                Version = manifest.Version,
-                Description = manifest.Description,
-                Author = manifest.Author,
-                PackagePath = workingDirectory,
-                IsLoaded = true,
+                Id = plugin.Id,
+                Name = plugin.Name,
+                Version = plugin.Version,
+                Author = plugin.Author?.Name ?? "Unknown",
+                Description = plugin.Description ?? string.Empty,
                 IsEnabled = true,
-                LoadedAt = DateTime.UtcNow
+                IsLoaded = true
             }
         };
-        
+
+        _contexts[plugin.Id] = context;
         return context;
     }
-    
-    /// <summary>
-    /// Get allowed file paths for plugin
-    /// </summary>
-    private string[] GetAllowedPaths(PluginManifest manifest, string workingDir)
+
+    public async Task DestroyContextAsync(string pluginId)
     {
-        var paths = new List<string>
+        if (_contexts.TryGetValue(pluginId, out var context))
         {
-            workingDir,
-            Path.GetTempPath()
-        };
-        
-        // Add configured evidence paths if plugin has permission
-        if (manifest.Permissions.Contains("evidence.read"))
-        {
-            paths.Add(_configuration["Evidence:StorePath"]);
+            await context.DisposeAsync();
+            _contexts.Remove(pluginId);
         }
-        
-        return paths.ToArray();
     }
-    
-    /// <summary>
-    /// Get allowed domains for HTTP requests
-    /// </summary>
-    private string[] GetAllowedDomains(PluginManifest manifest)
+
+    public Task<bool> ValidateSecurityAsync(PluginManifest plugin)
     {
-        // Start with safe defaults
-        var domains = new List<string>();
-        
-        // Add specific domains based on plugin category
-        if (manifest.Category == "osint")
+        // Validate plugin security requirements
+        var violations = new List<string>();
+
+        // Check requested permissions
+        if (plugin.Permissions?.NetworkAccess == "Unrestricted")
         {
-            domains.AddRange(new[]
-            {
-                "haveibeenpwned.com",
-                "virustotal.com",
-                "shodan.io"
-            });
+            violations.Add("Unrestricted network access not allowed");
         }
-        
-        return domains.ToArray();
-    }
-    
-    /// <summary>
-    /// Get allowed tools for process execution
-    /// </summary>
-    private string[] GetAllowedTools(PluginManifest manifest)
-    {
-        var tools = new List<string>();
-        
-        // Add tools based on permissions
-        if (manifest.Permissions.Contains("tools.forensics"))
+
+        if (plugin.Permissions?.FileSystemAccess == "Full")
         {
-            tools.AddRange(new[]
-            {
-                "exiftool",
-                "strings",
-                "file",
-                "xxd"
-            });
+            violations.Add("Full file system access not allowed");
         }
-        
-        return tools.ToArray();
+
+        return Task.FromResult(violations.Count == 0);
     }
 }
+
+/// <summary>
+/// Plugin manifest with security permissions
+/// </summary>
+public class PluginManifest
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Version { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public PluginAuthor? Author { get; set; }
+    public PluginPermissions? Permissions { get; set; }
+}
+
+/// <summary>
+/// Plugin author information
+/// </summary>
+public class PluginAuthor
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Email { get; set; }
+    public string? Website { get; set; }
+}
+
+/// <summary>
+/// Plugin permission requirements
+/// </summary>
+public class PluginPermissions
+{
+    public string NetworkAccess { get; set; } = "None";
+    public string FileSystemAccess { get; set; } = "Sandboxed";
+    public bool ProcessExecution { get; set; } = false;
+    public List<string> RequiredAPIs { get; set; } = new();
+}
+

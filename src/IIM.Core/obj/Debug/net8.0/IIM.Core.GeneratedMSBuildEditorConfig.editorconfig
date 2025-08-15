@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = IIM.Core
-build_property.ProjectDir = /Users/josephversace/Projects/CAILE/src/IIM.Core/
+build_property.ProjectDir = C:\Users\josep\source\repos\CAILE\src\IIM.Core\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

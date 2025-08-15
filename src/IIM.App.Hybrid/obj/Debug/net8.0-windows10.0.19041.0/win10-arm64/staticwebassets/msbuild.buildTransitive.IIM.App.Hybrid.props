@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\buildMultiTargeting\IIM.App.Hybrid.props" />
+</Project>

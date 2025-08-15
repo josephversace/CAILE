@@ -13,6 +13,11 @@ public class ModelManagementService : IModelManagementService
     {
         _logger = logger;
     }
-    
+
+    public Task<List<Model>> GetModelsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
     // TODO: Implement service methods
 }

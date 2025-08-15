@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace IIM.Shared.Interfaces
+namespace IIM.Shared.Interfaces;
+
+public interface IEvidenceStore
 {
-    public interface IEvidenceStore
-    {
-        Task<string> StoreEvidenceAsync(byte[] data, string metadata);
-        Task<byte[]> RetrieveEvidenceAsync(string evidenceId);
-        Task<bool> VerifyIntegrityAsync(string evidenceId);
-    }
+    Task StoreAsync(string key, object data, CancellationToken cancellationToken = default);
+    Task<T?> RetrieveAsync<T>(string key, CancellationToken cancellationToken = default);
+    Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default);
 }

@@ -1,0 +1,12 @@
+<Project>
+  <!-- Override all problematic targets -->
+  <Target Name="StaticWebAssetsPrepareForRun" />
+  <Target Name="StaticWebAssetsPrepareForPublish" />
+  <Target Name="StaticWebAssetsGeneratePackagePropsFile" />
+  <Target Name="StaticWebAssetsGenerateProjectPropsFile" />
+  <Target Name="ResolveStaticWebAssetsConfiguration" />
+  <Target Name="GenerateStaticWebAssetsManifest" />
+  <Target Name="_GenerateStaticWebAssetsManifest" />
+  <Target Name="StaticWebAssetsPublish" />
+  <Target Name="StaticWebAssetsCopyToPublishDirectory" />
+</Project>

@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using IIM.Shared.Models;
 
-namespace IIM.Plugin.SDK;
+namespace IIM.Plugin.SDK.Security;
 
 /// <summary>
 /// Secure file system access for plugins
@@ -11,33 +11,37 @@ namespace IIM.Plugin.SDK;
 public interface ISecureFileSystem
 {
     /// <summary>
-    /// Read a file with permission and size checks
+    /// Read a file as bytes with security checks
     /// </summary>
-    Task<string> ReadTextAsync(string path, CancellationToken ct = default);
+    Task<byte[]> ReadFileAsync(string path, CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Read binary file with permission and size checks
+    /// Read a file as text with security checks
     /// </summary>
-    Task<byte[]> ReadBytesAsync(string path, CancellationToken ct = default);
+    Task<string> ReadTextAsync(string path, CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Write text to a file in the plugins temp directory
+    /// Write a file with security checks
     /// </summary>
-    Task WriteTextAsync(string filename, string content, CancellationToken ct = default);
+    Task WriteFileAsync(string path, byte[] data, CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Write bytes to a file in the plugins temp directory
+    /// Write text to a file with security checks
     /// </summary>
-    Task WriteBytesAsync(string filename, byte[] content, CancellationToken ct = default);
+    Task WriteTextAsync(string path, string text, CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Check if a file exists and is accessible
+    /// Check if a file exists
     /// </summary>
-    Task<bool> ExistsAsync(string path);
+    Task<bool> FileExistsAsync(string path, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Get file metadata
     /// </summary>
-    Task<FileMetadata> GetMetadataAsync(string path);
+    Task<FileMetadata?> GetFileMetadataAsync(string path, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// List files in a directory
+    /// </summary>
+    Task<string[]> ListFilesAsync(string directory, string searchPattern = "*", CancellationToken cancellationToken = default);
 }
-
