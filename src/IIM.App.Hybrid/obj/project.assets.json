@@ -54166,7 +54166,7 @@
       "code": "NU1603",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "IIM.App.Hybrid depends on Microsoft.AspNetCore.Components.WebView.Maui (>= 8.0.0) but Microsoft.AspNetCore.Components.WebView.Maui 8.0.0 was not found. An approximate best match of Microsoft.AspNetCore.Components.WebView.Maui 8.0.3 was resolved.",
+      "message": "IIM.App.Hybrid depends on Microsoft.AspNetCore.Components.WebView.Maui (>= 8.0.0) but Microsoft.AspNetCore.Components.WebView.Maui 8.0.0 was not found. Microsoft.AspNetCore.Components.WebView.Maui 8.0.3 was resolved instead.",
       "libraryId": "Microsoft.AspNetCore.Components.WebView.Maui",
       "targetGraphs": [
         "net8.0-windows10.0.19041",
@@ -54185,60 +54185,6 @@
       "code": "NU1605",
       "level": "Error",
       "message": "Warning As Error: Detected package downgrade: Microsoft.WindowsAppSDK from 1.5.240802000 to 1.4.231008000. Reference the package directly from the project to select a different version. \r\n IIM.App.Hybrid -> Microsoft.Maui.Controls 8.0.100 -> Microsoft.Maui.Controls.Core 8.0.100 -> Microsoft.Maui.Core 8.0.100 -> Microsoft.WindowsAppSDK (>= 1.5.240802000) \r\n IIM.App.Hybrid -> Microsoft.WindowsAppSDK (>= 1.4.231008000)",
-      "libraryId": "Microsoft.WindowsAppSDK",
-      "targetGraphs": [
-        "net8.0-windows10.0.19041",
-        "net8.0-windows10.0.19041/android-arm",
-        "net8.0-windows10.0.19041/android-arm64",
-        "net8.0-windows10.0.19041/android-x64",
-        "net8.0-windows10.0.19041/android-x86",
-        "net8.0-windows10.0.19041/iossimulator-arm64",
-        "net8.0-windows10.0.19041/maccatalyst-arm64",
-        "net8.0-windows10.0.19041/win-arm64",
-        "net8.0-windows10.0.19041/win-x64",
-        "net8.0-windows10.0.19041/win-x86"
-      ]
-    },
-    {
-      "code": "NU1605",
-      "level": "Error",
-      "message": "Warning As Error: Detected package downgrade: Microsoft.WindowsAppSDK from 1.5.240802000 to 1.4.231008000. Reference the package directly from the project to select a different version. \r\n IIM.App.Hybrid -> Microsoft.Maui.Controls 8.0.100 -> Microsoft.Maui.Controls.Xaml 8.0.100 -> Microsoft.Maui.Core 8.0.100 -> Microsoft.WindowsAppSDK (>= 1.5.240802000) \r\n IIM.App.Hybrid -> Microsoft.WindowsAppSDK (>= 1.4.231008000)",
-      "libraryId": "Microsoft.WindowsAppSDK",
-      "targetGraphs": [
-        "net8.0-windows10.0.19041",
-        "net8.0-windows10.0.19041/android-arm",
-        "net8.0-windows10.0.19041/android-arm64",
-        "net8.0-windows10.0.19041/android-x64",
-        "net8.0-windows10.0.19041/android-x86",
-        "net8.0-windows10.0.19041/iossimulator-arm64",
-        "net8.0-windows10.0.19041/maccatalyst-arm64",
-        "net8.0-windows10.0.19041/win-arm64",
-        "net8.0-windows10.0.19041/win-x64",
-        "net8.0-windows10.0.19041/win-x86"
-      ]
-    },
-    {
-      "code": "NU1605",
-      "level": "Error",
-      "message": "Warning As Error: Detected package downgrade: Microsoft.WindowsAppSDK from 1.5.240802000 to 1.4.231008000. Reference the package directly from the project to select a different version. \r\n IIM.App.Hybrid -> Microsoft.Maui.Controls.Compatibility 8.0.100 -> Microsoft.Maui.Controls.Core 8.0.100 -> Microsoft.Maui.Core 8.0.100 -> Microsoft.WindowsAppSDK (>= 1.5.240802000) \r\n IIM.App.Hybrid -> Microsoft.WindowsAppSDK (>= 1.4.231008000)",
-      "libraryId": "Microsoft.WindowsAppSDK",
-      "targetGraphs": [
-        "net8.0-windows10.0.19041",
-        "net8.0-windows10.0.19041/android-arm",
-        "net8.0-windows10.0.19041/android-arm64",
-        "net8.0-windows10.0.19041/android-x64",
-        "net8.0-windows10.0.19041/android-x86",
-        "net8.0-windows10.0.19041/iossimulator-arm64",
-        "net8.0-windows10.0.19041/maccatalyst-arm64",
-        "net8.0-windows10.0.19041/win-arm64",
-        "net8.0-windows10.0.19041/win-x64",
-        "net8.0-windows10.0.19041/win-x86"
-      ]
-    },
-    {
-      "code": "NU1605",
-      "level": "Error",
-      "message": "Warning As Error: Detected package downgrade: Microsoft.WindowsAppSDK from 1.5.240802000 to 1.4.231008000. Reference the package directly from the project to select a different version. \r\n IIM.App.Hybrid -> Microsoft.Maui.Controls.Compatibility 8.0.100 -> Microsoft.Maui.Controls.Xaml 8.0.100 -> Microsoft.Maui.Core 8.0.100 -> Microsoft.WindowsAppSDK (>= 1.5.240802000) \r\n IIM.App.Hybrid -> Microsoft.WindowsAppSDK (>= 1.4.231008000)",
       "libraryId": "Microsoft.WindowsAppSDK",
       "targetGraphs": [
         "net8.0-windows10.0.19041",

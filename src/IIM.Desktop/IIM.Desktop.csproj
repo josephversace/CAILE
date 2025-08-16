@@ -1,0 +1,127 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+   
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  
+    <StartupObject>IIM.Desktop.Program</StartupObject>
+    
+    <!-- Windows specific settings -->
+    <UseWPF>false</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    
+    <!-- Application info -->
+    <ApplicationTitle>Intelligent Investigation Machine</ApplicationTitle>
+    <ApplicationVersion>1.0.0</ApplicationVersion>
+    <Authors>IIM Development Team</Authors>
+    <Company>Law Enforcement AI Training</Company>
+    <Product>Intelligent Investigation Machine</Product>
+    <Copyright>Copyright © 2024</Copyright>
+    <Description>Premium AI-powered investigation platform for law enforcement</Description>
+    
+    <!-- Build settings -->
+    <PublishSingleFile>false</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- BlazorWebView for Windows Forms -->
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.WindowsForms" Version="8.0.*" />
+    
+    <!-- Core Microsoft Extensions -->
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.*" />
+    
+    <!-- AI/ML Packages -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.17.*" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.17.*" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.9.*" />
+    <PackageReference Include="System.Numerics.Tensors" Version="8.0.*" />
+    
+    <!-- Database and Storage -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.*" />
+    <PackageReference Include="LiteDB" Version="5.0.*" />
+    
+    <!-- Additional UI Support -->
+    <PackageReference Include="System.Drawing.Common" Version="8.0.*" />
+    <PackageReference Include="System.Windows.Extensions" Version="8.0.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reference to Razor Class Library -->
+    <ProjectReference Include="..\IIM.Components\IIM.Components.csproj" />
+    
+    <!-- Reference to Core library if it exists -->
+    <ProjectReference Include="..\IIM.Core\IIM.Core.csproj" Condition="Exists('..\IIM.Core\IIM.Core.csproj')" />
+    
+    <!-- Reference to Shared library if it exists -->
+    <ProjectReference Include="..\IIM.Shared\IIM.Shared.csproj" Condition="Exists('..\IIM.Shared\IIM.Shared.csproj')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Include wwwroot content -->
+    <Content Update="wwwroot\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    
+    <!-- Include app settings -->
+    <Content Update="appsettings.json" Condition="Exists('appsettings.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="appsettings.Development.json" Condition="Exists('appsettings.Development.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Ensure wwwroot folders exist -->
+    <Folder Include="wwwroot\" />
+    <Folder Include="wwwroot\css\" />
+    <Folder Include="wwwroot\js\" />
+    <Folder Include="wwwroot\images\" />
+  </ItemGroup>
+
+  <!-- Custom build targets for model files -->
+  <ItemGroup Condition="Exists('Models')">
+    <Content Include="Models\**\*.onnx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Models\**\*.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Models\**\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Development-specific settings -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DebugType>embedded</DebugType>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <!-- Release build settings -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>RELEASE</DefineConstants>
+    <PublishTrimmed>false</PublishTrimmed>
+    <TrimMode>link</TrimMode>
+  </PropertyGroup>
+
+</Project>
