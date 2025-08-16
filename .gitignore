@@ -1,1 +1,28 @@
-".vs/"  
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build output
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+artifacts/
+
+# Rider/VS Code
+.idea/
+.vscode/
+
+# Other common
+*.cache
+*.temp
+*.log

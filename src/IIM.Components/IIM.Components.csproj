@@ -21,4 +21,8 @@
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.9.*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\IIM.Core\IIM.Core.csproj" />
+  </ItemGroup>
+
 </Project>

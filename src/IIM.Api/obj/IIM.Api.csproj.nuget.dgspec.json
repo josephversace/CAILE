@@ -99,11 +99,6 @@
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
         }
-      },
-      "runtimes": {
-        "win-arm64": {
-          "#import": []
-        }
       }
     },
     "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\IIM.Core.csproj": {
@@ -222,11 +217,6 @@
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
         }
-      },
-      "runtimes": {
-        "win-arm64": {
-          "#import": []
-        }
       }
     },
     "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Plugin.SDK\\IIM.Plugin.SDK.csproj": {
@@ -314,11 +304,6 @@
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
         }
-      },
-      "runtimes": {
-        "win-arm64": {
-          "#import": []
-        }
       }
     },
     "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj": {
@@ -383,11 +368,6 @@
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
-        }
-      },
-      "runtimes": {
-        "win-arm64": {
-          "#import": []
         }
       }
     }
