@@ -12,6 +12,8 @@ using Microsoft.Extensions.FileProviders;
 using IIM.Core.Security;
 using IIM.Core.Models;
 using IIM.Core.Services;
+using IIM.Core.AI;
+using InsufficientMemoryException = IIM.Core.Models.InsufficientMemoryException;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,7 +33,7 @@ builder.Services.AddHttpClient("wsl-services", c =>
     c.Timeout = TimeSpan.FromSeconds(10));
 
 // Add Core services
-builder.Services.AddSingleton<IModelOrchestrator, ModelOrchestrator>();
+builder.Services.AddSingleton<IModelOrchestrator, DefaultModelOrchestrator>();
 builder.Services.AddSingleton<IInferencePipeline, InferencePipeline>();
 builder.Services.AddSingleton<IWslManager, WslManager>();
 builder.Services.AddSingleton<IWslServiceOrchestrator, WslServiceOrchestrator>();
@@ -155,7 +157,7 @@ app.MapPost("/v1/models/load", async (
         logger.LogInformation("Loading model {ModelId}", request.ModelId);
         
         // Convert ApiModelRequest to IIM.Core.Inference.ModelRequest
-        var modelRequest = new IIM.Core.Inference.ModelRequest
+        var modelRequest = new ModelRequest
         {
             ModelId = request.ModelId,
             ModelPath = request.ModelPath,
@@ -174,7 +176,7 @@ app.MapPost("/v1/models/load", async (
             message = $"Model {request.ModelId} loaded successfully"
         });
     }
-    catch (IIM.Core.Inference.InsufficientMemoryException ex)
+    catch (InsufficientMemoryException ex)
     {
         logger.LogWarning(ex, "Insufficient memory to load model");
         return Results.Problem(

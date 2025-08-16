@@ -114,3 +114,11 @@ C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\refint\IIM.Api.dl
 C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.pdb
 C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.genruntimeconfig.cache
 C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\ref\IIM.Api.dll
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\bin\Debug\net8.0\Microsoft.AspNetCore.Connections.Abstractions.dll
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\bin\Debug\net8.0\Microsoft.AspNetCore.Http.Connections.Client.dll
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\bin\Debug\net8.0\Microsoft.AspNetCore.Http.Connections.Common.dll
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\bin\Debug\net8.0\Microsoft.AspNetCore.SignalR.Client.dll
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\bin\Debug\net8.0\Microsoft.AspNetCore.SignalR.Client.Core.dll
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\bin\Debug\net8.0\Microsoft.AspNetCore.SignalR.Common.dll
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\bin\Debug\net8.0\Microsoft.AspNetCore.SignalR.Protocols.Json.dll
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\bin\Debug\net8.0\Microsoft.Extensions.Features.dll

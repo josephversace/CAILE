@@ -3,24 +3,127 @@
   "WorkspaceRootPath": "C:\\Users\\josep\\source\\repos\\CAILE\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\pages\\investigation.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\pages\\investigation.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\iim.app.hybrid.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\iim.app.hybrid.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\app.manifest||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\app.manifest||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\platforms\\windows\\app.manifest||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\platforms\\windows\\app.manifest||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\platforms\\windows\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\platforms\\windows\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\josep\\.nuget\\packages\\microsoft.windowsappsdk\\1.3.230724000\\buildTransitive\\Microsoft.WindowsAppSDK.SelfContained.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AC02A209-E909-4A3B-B855-6FAA88A16316}|src\\IIM.Api\\IIM.Api.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AC02A209-E909-4A3B-B855-6FAA88A16316}|src\\IIM.Api\\IIM.Api.csproj|solutionrelative:src\\iim.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\main.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\main.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\components\\layout\\mainlayout.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\components\\layout\\mainlayout.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\pages\\finetuning.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\pages\\finetuning.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\pages\\evidence.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\pages\\evidence.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\pages\\cases.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\pages\\cases.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\mainpage.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\mainpage.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\pages\\rag.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\pages\\rag.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\pages\\index.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\pages\\index.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\services\\iiimclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\services\\iiimclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\iim.app.hybrid.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
-      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\iim.app.hybrid.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\models\\rag.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\models\\rag.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\components\\investigation\\sessionitem.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\components\\investigation\\sessionitem.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\models\\investigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\models\\investigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\components\\investigation\\multimodalinput.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\components\\investigation\\multimodalinput.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\services\\iinferenceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\services\\iinferenceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\ai\\imodelorchestrator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\ai\\imodelorchestrator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\ai\\defaultmodelorchestrator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\ai\\defaultmodelorchestrator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\models\\modelstats.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\models\\modelstats.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\models\\modelconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\models\\modelconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\ai\\mockmodelorchestrator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\ai\\mockmodelorchestrator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\models\\inference.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\models\\inference.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\models\\inferencemodels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\models\\inferencemodels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\inference\\inferencepipeline.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\inference\\inferencepipeline.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\services\\imodelmanagementservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\services\\imodelmanagementservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\pages\\investigation.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\pages\\investigation.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\pages\\index.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\pages\\index.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\platform\\mockwslmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -29,14 +132,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\platform\\wslmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\platform\\wslmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\services\\iinferenceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\services\\iinferenceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\inference\\inferencepipeline.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\inference\\inferencepipeline.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\components\\models\\modelcard.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -51,20 +146,8 @@
       "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\components\\models\\modellibrary.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\services\\ievidencemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\services\\ievidencemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\models\\modelconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\models\\modelconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\services\\imodelmanagementservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\services\\imodelmanagementservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\components\\investigation\\investigationmessage.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -107,24 +190,12 @@
       "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\models\\common.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\models\\investigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\models\\investigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\ai\\mockmodelorchestrator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\ai\\mockmodelorchestrator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\services\\evidencemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\services\\evidencemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{AC02A209-E909-4A3B-B855-6FAA88A16316}|src\\IIM.Api\\IIM.Api.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.api\\dtos\\investigationdtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{AC02A209-E909-4A3B-B855-6FAA88A16316}|src\\IIM.Api\\IIM.Api.csproj|solutionrelative:src\\iim.api\\dtos\\investigationdtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\models\\inference.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\models\\inference.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\components\\layout\\appheader.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -139,24 +210,8 @@
       "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\models\\platform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{AC02A209-E909-4A3B-B855-6FAA88A16316}|src\\IIM.Api\\IIM.Api.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{AC02A209-E909-4A3B-B855-6FAA88A16316}|src\\IIM.Api\\IIM.Api.csproj|solutionrelative:src\\iim.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\inference\\modelorchestrator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\inference\\modelorchestrator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.app.hybrid\\pages\\evidence.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{17FD9760-C0D8-4B26-8601-3A87C4303581}|src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj|solutionrelative:src\\iim.app.hybrid\\pages\\evidence.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\plugins\\security\\pluginsandbox.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\plugins\\security\\pluginsandbox.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\ai\\modelorchestrator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|solutionrelative:src\\iim.core\\ai\\modelorchestrator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{81560261-2AC0-45F2-80BD-3DEB7309768C}|src\\IIM.Core\\IIM.Core.csproj|c:\\users\\josep\\source\\repos\\caile\\src\\iim.core\\models\\evidence.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -214,479 +269,236 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 9,
           "Children": [
             {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Rag.razor",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Rag.razor",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Pages\\Rag.razor",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Rag.razor",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\Pages\\Rag.razor",
-              "ViewState": "AgIAACkAAAAAAAAAAAAwwEAAAAAaAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-15T21:15:09.301Z",
-              "EditorCaption": ""
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Investigation.razor",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Investigation.razor",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Pages\\Investigation.razor",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Investigation.razor",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\Pages\\Investigation.razor",
-              "ViewState": "AgIAAFEAAAAAAAAAAAAwwGoAAAAsAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-15T21:14:50.2Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "WslManager.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Platform\\WslManager.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Platform\\WslManager.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Platform\\WslManager.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Platform\\WslManager.cs",
-              "ViewState": "AgIAAM8BAABkZmZmZiYgwOYBAAAFAAAAAAAAAA==",
+              "DocumentIndex": 3,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Platforms\\Windows\\Program.cs",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Platforms\\Windows\\Program.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Platforms\\Windows\\Program.cs",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Platforms\\Windows\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T20:59:20.055Z",
+              "WhenOpened": "2025-08-16T02:20:12.228Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "Index.razor",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Index.razor",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Pages\\Index.razor",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Index.razor",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\Pages\\Index.razor",
-              "ViewState": "AgIAAB8AAACAAAAAAAARwF0AAAABAAAAAAAAAA==",
+              "Title": "app.manifest",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Platforms\\Windows\\app.manifest",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Platforms\\Windows\\app.manifest",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Platforms\\Windows\\app.manifest",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Platforms\\Windows\\app.manifest",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001203|",
+              "WhenOpened": "2025-08-16T02:18:42.65Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Main.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Main.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Main.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Main.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Main.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-15T20:45:38.809Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "HubConnectionService.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\HubConnectionService.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\HubConnectionService.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\HubConnectionService.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Services\\HubConnectionService.cs",
-              "ViewState": "AgIAAA4AAAAAAAAAAAAwwCcAAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T20:43:21.1Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "IIimClient.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IIimClient.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\IIimClient.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IIimClient.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Services\\IIimClient.cs",
-              "ViewState": "AgIAAB8AAAAAAAAAAAAswEkAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T20:41:20.559Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "IInferenceService.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IInferenceService.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\IInferenceService.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IInferenceService.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Services\\IInferenceService.cs",
-              "ViewState": "AgIAAAAAAAAwzczMzMwHwB0AAAAkAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T20:39:47.25Z",
+              "WhenOpened": "2025-08-15T23:53:08.417Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 11,
-              "Title": "ModelLibrary.razor",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Models\\ModelLibrary.razor",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Models\\ModelLibrary.razor",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Models\\ModelLibrary.razor",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Models\\ModelLibrary.razor",
-              "ViewState": "AgIAAFkAAAAAAAAAAAAwwGoAAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-15T20:10:12.846Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "ModelCard.razor",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Models\\ModelCard.razor",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Models\\ModelCard.razor",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Models\\ModelCard.razor",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Models\\ModelCard.razor",
-              "ViewState": "AgIAAGkAAADA//////8gwIIAAAAjAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-15T19:34:10.693Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Program.cs",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Program.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Program.cs",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\Program.cs",
-              "ViewState": "AgIAAE0AAAAAMjMzMzMLwGIAAAAAAAAAAAAAAA==",
+              "Title": "MainPage.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\MainPage.xaml.cs",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\MainPage.xaml.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\MainPage.xaml.cs",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\MainPage.xaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T17:30:04.792Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 13,
-              "Title": "IEvidenceManager.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IEvidenceManager.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\IEvidenceManager.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IEvidenceManager.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Services\\IEvidenceManager.cs",
-              "ViewState": "AgIAAAUAAABAMzMzMzMlwCwAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T18:53:27.191Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "MockWslManager.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Platform\\MockWslManager.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Platform\\MockWslManager.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Platform\\MockWslManager.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Platform\\MockWslManager.cs",
-              "ViewState": "AgIAABUAAAAAZ2ZmZuYcwHMAAAArAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T18:24:13.662Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "IIM.App.Hybrid.csproj",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACQAAAANAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2025-08-15T13:39:00.669Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 15,
-              "Title": "IModelManagementService.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IModelManagementService.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\IModelManagementService.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IModelManagementService.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Services\\IModelManagementService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAADMAAAANAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T18:16:39.676Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 16,
-              "Title": "InvestigationMessage.razor",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationMessage.razor",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationMessage.razor",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationMessage.razor",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationMessage.razor",
-              "ViewState": "AgIAABoAAAAAAAAAAAAwwD0AAABAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-15T16:59:43.347Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "InferencePipeline.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Inference\\InferencePipeline.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Inference\\InferencePipeline.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Inference\\InferencePipeline.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Inference\\InferencePipeline.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAAAOAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T18:59:45.034Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 17,
-              "Title": "ToolResults.razor",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Tools\\ToolResults.razor",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Tools\\ToolResults.razor",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Tools\\ToolResults.razor",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Tools\\ToolResults.razor",
-              "ViewState": "AgIAAAIAAAAAzszMzAwswA0AAAAOAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-15T19:58:37.938Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 18,
-              "Title": "CitationViewer.razor",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Chat\\CitationViewer.razor",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Chat\\CitationViewer.razor",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Chat\\CitationViewer.razor",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Chat\\CitationViewer.razor",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAHoAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-15T20:07:41.404Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 19,
-              "Title": "PerformanceMetrics.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\PerformanceMetrics.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\PerformanceMetrics.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\PerformanceMetrics.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Models\\PerformanceMetrics.cs",
-              "ViewState": "AgIAAIYAAADMzMzMzMwRwKAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T20:04:41.774Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 21,
-              "Title": "EvidenceCard.razor",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Chat\\EvidenceCard.razor",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Chat\\EvidenceCard.razor",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Chat\\EvidenceCard.razor",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Chat\\EvidenceCard.razor",
-              "ViewState": "AgIAADcAAAAAZWZmZmYEwFIAAAAuAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-15T16:25:26.392Z",
+              "WhenOpened": "2025-08-15T23:48:05.605Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 14,
-              "Title": "ModelConfiguration.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\ModelConfiguration.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\ModelConfiguration.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\ModelConfiguration.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Models\\ModelConfiguration.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAABAAAAAAAAAAA==",
+              "Title": "RAG.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\RAG.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\RAG.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\RAG.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Models\\RAG.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAswDkAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T18:57:50.806Z",
+              "WhenOpened": "2025-08-15T23:33:54.596Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
-              "Title": "InvestigationWorkspace.razor",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationWorkspace.razor",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationWorkspace.razor",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationWorkspace.razor",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationWorkspace.razor",
-              "ViewState": "AgIAAAgBAAAAAAAAAAAwwDABAAApAAAAAAAAAA==",
+              "DocumentIndex": 15,
+              "Title": "SessionItem.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Investigation\\SessionItem.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Investigation\\SessionItem.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Investigation\\SessionItem.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Investigation\\SessionItem.razor",
+              "ViewState": "AgIAAAEAAAAAAAAAAAAwwBkAAAA1AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-15T16:59:57.765Z",
+              "WhenOpened": "2025-08-15T23:28:21.224Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 16,
               "Title": "Investigation.cs",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Investigation.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Investigation.cs",
               "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Investigation.cs",
               "RelativeToolTip": "src\\IIM.Core\\Models\\Investigation.cs",
-              "ViewState": "AgIAACAAAAAAAAAAAAAewDgAAAAjAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAABVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-08-15T17:35:14.954Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
-              "Title": "AttachmentCard.razor",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Chat\\AttachmentCard.razor",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Chat\\AttachmentCard.razor",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Chat\\AttachmentCard.razor",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Chat\\AttachmentCard.razor",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC0AAAAVAAAAAAAAAA==",
+              "DocumentIndex": 17,
+              "Title": "MultiModalInput.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Investigation\\MultiModalInput.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Investigation\\MultiModalInput.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Investigation\\MultiModalInput.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Investigation\\MultiModalInput.razor",
+              "ViewState": "AgIAADoAAAAAAAAAAAAYwE8AAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-15T16:25:21.643Z",
+              "WhenOpened": "2025-08-15T23:27:35.61Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
-              "Title": "Common.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Common.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Common.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Common.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Models\\Common.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAVAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T17:33:22.007Z",
+              "DocumentIndex": 0,
+              "Title": "IIM.App.Hybrid.csproj",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\IIM.App.Hybrid.csproj",
+              "ViewState": "AgIAAAUAAABAm5mZmVkhwCUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-08-15T13:39:00.669Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
-              "Title": "ToolResult.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\ToolResult.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\ToolResult.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\ToolResult.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Models\\ToolResult.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACYAAAAmAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T17:43:53.372Z",
+              "DocumentIndex": 1,
+              "Title": "app.manifest",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\app.manifest",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\app.manifest",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\app.manifest",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\app.manifest",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001203|",
+              "WhenOpened": "2025-08-16T01:58:16.424Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
-              "Title": "MockModelOrchestrator.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\AI\\MockModelOrchestrator.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\AI\\MockModelOrchestrator.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\AI\\MockModelOrchestrator.cs",
-              "RelativeToolTip": "src\\IIM.Core\\AI\\MockModelOrchestrator.cs",
-              "ViewState": "AgIAAGgAAAAANDMzMzPrv4oAAAAVAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T18:21:21.356Z",
+              "DocumentIndex": 4,
+              "Title": "Microsoft.WindowsAppSDK.SelfContained.targets",
+              "DocumentMoniker": "C:\\Users\\josep\\.nuget\\packages\\microsoft.windowsappsdk\\1.3.230724000\\buildTransitive\\Microsoft.WindowsAppSDK.SelfContained.targets",
+              "RelativeDocumentMoniker": "..\\..\\..\\.nuget\\packages\\microsoft.windowsappsdk\\1.3.230724000\\buildTransitive\\Microsoft.WindowsAppSDK.SelfContained.targets",
+              "ToolTip": "C:\\Users\\josep\\.nuget\\packages\\microsoft.windowsappsdk\\1.3.230724000\\buildTransitive\\Microsoft.WindowsAppSDK.SelfContained.targets",
+              "RelativeToolTip": "..\\..\\..\\.nuget\\packages\\microsoft.windowsappsdk\\1.3.230724000\\buildTransitive\\Microsoft.WindowsAppSDK.SelfContained.targets",
+              "ViewState": "AgIAAKsAAAAAAAAAAAAlwMUAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
+              "WhenOpened": "2025-08-16T02:01:36.889Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
-              "Title": "AppSidebar.razor",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Layout\\AppSidebar.razor",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Layout\\AppSidebar.razor",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Layout\\AppSidebar.razor",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Layout\\AppSidebar.razor",
-              "ViewState": "AgIAAAcAAAAAAAAAAIAZwCEAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-15T18:07:30.427Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 28,
-              "Title": "EvidenceManager.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\EvidenceManager.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\EvidenceManager.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\EvidenceManager.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Services\\EvidenceManager.cs",
-              "ViewState": "AgIAAFYBAACAmZmZmdkhwGoBAABMAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T18:54:15.275Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 29,
-              "Title": "InvestigationDtos.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Api\\DTOs\\InvestigationDtos.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Api\\DTOs\\InvestigationDtos.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Api\\DTOs\\InvestigationDtos.cs",
-              "RelativeToolTip": "src\\IIM.Api\\DTOs\\InvestigationDtos.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAOAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T19:06:30.301Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 30,
-              "Title": "Inference.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Inference.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Inference.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Inference.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Models\\Inference.cs",
-              "ViewState": "AgIAAFQAAAAAAAAAAAAAACQAAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T18:57:44.624Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 31,
-              "Title": "AppHeader.razor",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Layout\\AppHeader.razor",
-              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Layout\\AppHeader.razor",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Layout\\AppHeader.razor",
-              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Layout\\AppHeader.razor",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAIAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-15T16:57:29.526Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 32,
-              "Title": "WslServiceOrchestrator.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Platform\\WslServiceOrchestrator.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Platform\\WslServiceOrchestrator.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Platform\\WslServiceOrchestrator.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Platform\\WslServiceOrchestrator.cs",
-              "ViewState": "AgIAAMUCAAAAAAAAAAAAANMCAAAoAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T19:03:53.463Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 33,
-              "Title": "Platform.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Platform.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Platform.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Platform.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Models\\Platform.cs",
-              "ViewState": "AgIAADQAAAAAAAAAAAAwwE0AAAAMAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T18:39:18.521Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 5,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Api\\Program.cs",
               "RelativeDocumentMoniker": "src\\IIM.Api\\Program.cs",
               "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Api\\Program.cs",
               "RelativeToolTip": "src\\IIM.Api\\Program.cs",
-              "ViewState": "AgIAAC4BAAAAAAAAAAAwwEcBAAAnAAAAAAAAAA==",
+              "ViewState": "AgIAAKwAAAAAMDMzMzPrv6kAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T18:38:40.439Z",
+              "WhenOpened": "2025-08-16T02:02:40.186Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 35,
-              "Title": "ModelOrchestrator.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Inference\\ModelOrchestrator.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\Inference\\ModelOrchestrator.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Inference\\ModelOrchestrator.cs",
-              "RelativeToolTip": "src\\IIM.Core\\Inference\\ModelOrchestrator.cs",
-              "ViewState": "AgIAAFYCAAAAAAAAAAAewG0CAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T18:57:54.991Z",
+              "DocumentIndex": 10,
+              "Title": "Cases.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Cases.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Pages\\Cases.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Cases.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Pages\\Cases.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T23:54:50.97Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 36,
+              "DocumentIndex": 7,
+              "Title": "MainLayout.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Layout\\MainLayout.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Layout\\MainLayout.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Layout\\MainLayout.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Layout\\MainLayout.razor",
+              "ViewState": "AgIAAMgAAAAAAAAAAAAswPkAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T23:58:52.454Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "FineTuning.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\FineTuning.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Pages\\FineTuning.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\FineTuning.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Pages\\FineTuning.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T23:59:06.355Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "ModelStats.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\ModelStats.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\ModelStats.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\ModelStats.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Models\\ModelStats.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAABNAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T23:21:17.715Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "DefaultModelOrchestrator.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\AI\\DefaultModelOrchestrator.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\AI\\DefaultModelOrchestrator.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\AI\\DefaultModelOrchestrator.cs",
+              "RelativeToolTip": "src\\IIM.Core\\AI\\DefaultModelOrchestrator.cs",
+              "ViewState": "AgIAAF0BAAAAAAAAAAAwwHUBAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T23:11:22.322Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
               "Title": "Evidence.razor",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Evidence.razor",
               "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Pages\\Evidence.razor",
@@ -699,7 +511,449 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "IInferenceService.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IInferenceService.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\IInferenceService.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IInferenceService.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Services\\IInferenceService.cs",
+              "ViewState": "AgIAAMEAAAAAAAAAAAAwwNcAAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T20:39:47.25Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "ModelConfiguration.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\ModelConfiguration.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\ModelConfiguration.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\ModelConfiguration.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Models\\ModelConfiguration.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T18:57:50.806Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "IModelOrchestrator.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\AI\\IModelOrchestrator.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\AI\\IModelOrchestrator.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\AI\\IModelOrchestrator.cs",
+              "RelativeToolTip": "src\\IIM.Core\\AI\\IModelOrchestrator.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T18:14:41.331Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Rag.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Rag.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Pages\\Rag.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Rag.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Pages\\Rag.razor",
+              "ViewState": "AgIAACsAAAAAAAAAAABBwDYAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T21:15:09.301Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "IIimClient.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IIimClient.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\IIimClient.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IIimClient.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Services\\IIimClient.cs",
+              "ViewState": "AgIAAE8AAAAAAAAAAABBwGIAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T20:41:20.559Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "MockModelOrchestrator.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\AI\\MockModelOrchestrator.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\AI\\MockModelOrchestrator.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\AI\\MockModelOrchestrator.cs",
+              "RelativeToolTip": "src\\IIM.Core\\AI\\MockModelOrchestrator.cs",
+              "ViewState": "AgIAAJQAAAAAAAAAAAAewKwAAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T18:21:21.356Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "InferenceModels.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\InferenceModels.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\InferenceModels.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\InferenceModels.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Models\\InferenceModels.cs",
+              "ViewState": "AgIAADsAAADA/////78twE4AAAA8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T23:06:46.059Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "Inference.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Inference.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Inference.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Inference.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Models\\Inference.cs",
+              "ViewState": "AgIAADIAAADAzMzMzMwkwEUAAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T18:57:44.624Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "IModelManagementService.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IModelManagementService.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\IModelManagementService.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IModelManagementService.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Services\\IModelManagementService.cs",
+              "ViewState": "AgIAAAEAAAAAAAAAAAAcwBoAAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T18:16:39.676Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Program.cs",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Program.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Program.cs",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Program.cs",
+              "ViewState": "AgIAACgAAAAAzczMzEwawDwAAAA9AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T17:30:04.792Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "Investigation.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Investigation.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Pages\\Investigation.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Investigation.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Pages\\Investigation.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAPAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T21:14:50.2Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "InferencePipeline.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Inference\\InferencePipeline.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Inference\\InferencePipeline.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Inference\\InferencePipeline.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Inference\\InferencePipeline.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACEAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T18:59:45.034Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "ModelCard.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Models\\ModelCard.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Models\\ModelCard.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Models\\ModelCard.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Models\\ModelCard.razor",
+              "ViewState": "AgIAAGkAAADA//////8gwIIAAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T19:34:10.693Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 35,
+              "Title": "ModelLibrary.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Models\\ModelLibrary.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Models\\ModelLibrary.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Models\\ModelLibrary.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Models\\ModelLibrary.razor",
+              "ViewState": "AgIAAFkAAAAAAAAAAAAwwGoAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T20:10:12.846Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 34,
+              "Title": "HubConnectionService.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\HubConnectionService.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\HubConnectionService.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\HubConnectionService.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Services\\HubConnectionService.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAwwCcAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T20:43:21.1Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "Index.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Index.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Pages\\Index.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Pages\\Index.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Pages\\Index.razor",
+              "ViewState": "AgIAAB8AAACAAAAAAAARwF0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T20:45:38.809Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "WslManager.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Platform\\WslManager.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Platform\\WslManager.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Platform\\WslManager.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Platform\\WslManager.cs",
+              "ViewState": "AgIAAM8BAABkZmZmZiYgwOYBAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T20:59:20.055Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 36,
+              "Title": "IEvidenceManager.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IEvidenceManager.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\IEvidenceManager.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IEvidenceManager.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Services\\IEvidenceManager.cs",
+              "ViewState": "AgIAAAUAAABAMzMzMzMlwCwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T18:53:27.191Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "MockWslManager.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Platform\\MockWslManager.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Platform\\MockWslManager.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Platform\\MockWslManager.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Platform\\MockWslManager.cs",
+              "ViewState": "AgIAABUAAAAAZ2ZmZuYcwHMAAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T18:24:13.662Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 37,
+              "Title": "InvestigationMessage.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationMessage.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationMessage.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationMessage.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationMessage.razor",
+              "ViewState": "AgIAABoAAAAAAAAAAAAwwD0AAABAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T16:59:43.347Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 38,
+              "Title": "ToolResults.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Tools\\ToolResults.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Tools\\ToolResults.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Tools\\ToolResults.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Tools\\ToolResults.razor",
+              "ViewState": "AgIAAAIAAAAAzszMzAwswA0AAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T19:58:37.938Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 39,
+              "Title": "CitationViewer.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Chat\\CitationViewer.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Chat\\CitationViewer.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Chat\\CitationViewer.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Chat\\CitationViewer.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAHoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T20:07:41.404Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 40,
+              "Title": "PerformanceMetrics.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\PerformanceMetrics.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\PerformanceMetrics.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\PerformanceMetrics.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Models\\PerformanceMetrics.cs",
+              "ViewState": "AgIAAIYAAADMzMzMzMwRwKAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T20:04:41.774Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 42,
+              "Title": "EvidenceCard.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Chat\\EvidenceCard.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Chat\\EvidenceCard.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Chat\\EvidenceCard.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Chat\\EvidenceCard.razor",
+              "ViewState": "AgIAADcAAAAAZWZmZmYEwFIAAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T16:25:26.392Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 45,
+              "Title": "InvestigationWorkspace.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationWorkspace.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationWorkspace.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationWorkspace.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Investigation\\InvestigationWorkspace.razor",
+              "ViewState": "AgIAAAgBAAAAAAAAAAAwwDABAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T16:59:57.765Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 43,
+              "Title": "AttachmentCard.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Chat\\AttachmentCard.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Chat\\AttachmentCard.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Chat\\AttachmentCard.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Chat\\AttachmentCard.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC0AAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T16:25:21.643Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 46,
+              "Title": "Common.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Common.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Common.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Common.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Models\\Common.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T17:33:22.007Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 41,
+              "Title": "ToolResult.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\ToolResult.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\ToolResult.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\ToolResult.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Models\\ToolResult.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACYAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T17:43:53.372Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 44,
+              "Title": "AppSidebar.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Layout\\AppSidebar.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Layout\\AppSidebar.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Layout\\AppSidebar.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Layout\\AppSidebar.razor",
+              "ViewState": "AgIAAAcAAAAAAAAAAIAZwCEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T18:07:30.427Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 47,
+              "Title": "EvidenceManager.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\EvidenceManager.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\EvidenceManager.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\EvidenceManager.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Services\\EvidenceManager.cs",
+              "ViewState": "AgIAAFYBAACAmZmZmdkhwGoBAABMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T18:54:15.275Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 48,
+              "Title": "InvestigationDtos.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Api\\DTOs\\InvestigationDtos.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Api\\DTOs\\InvestigationDtos.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Api\\DTOs\\InvestigationDtos.cs",
+              "RelativeToolTip": "src\\IIM.Api\\DTOs\\InvestigationDtos.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T19:06:30.301Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 49,
+              "Title": "AppHeader.razor",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Layout\\AppHeader.razor",
+              "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Layout\\AppHeader.razor",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Layout\\AppHeader.razor",
+              "RelativeToolTip": "src\\IIM.App.Hybrid\\Components\\Layout\\AppHeader.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-15T16:57:29.526Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 50,
+              "Title": "WslServiceOrchestrator.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Platform\\WslServiceOrchestrator.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Platform\\WslServiceOrchestrator.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Platform\\WslServiceOrchestrator.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Platform\\WslServiceOrchestrator.cs",
+              "ViewState": "AgIAAMMCAAAAAAAAAABBwNMCAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T19:03:53.463Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 51,
+              "Title": "Platform.cs",
+              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Platform.cs",
+              "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Platform.cs",
+              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Platform.cs",
+              "RelativeToolTip": "src\\IIM.Core\\Models\\Platform.cs",
+              "ViewState": "AgIAADQAAAAAAAAAAAAwwE0AAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-15T18:39:18.521Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 52,
               "Title": "PluginSandbox.cs",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Plugins\\Security\\PluginSandbox.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Plugins\\Security\\PluginSandbox.cs",
@@ -712,20 +966,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 41,
+              "DocumentIndex": 55,
               "Title": "Case.cs",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Case.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Case.cs",
               "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Case.cs",
               "RelativeToolTip": "src\\IIM.Core\\Models\\Case.cs",
-              "ViewState": "AgIAACQAAAAAAAAAAAAAAD8AAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAACIAAAAAAAAAAABBwD8AAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-08-15T18:31:27.644Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 42,
+              "DocumentIndex": 56,
               "Title": "InvestigationService.cs",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\InvestigationService.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\InvestigationService.cs",
@@ -738,7 +992,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 44,
+              "DocumentIndex": 58,
               "Title": "IInvestigationService.cs",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\IInvestigationService.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\IInvestigationService.cs",
@@ -751,7 +1005,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 43,
+              "DocumentIndex": 57,
               "Title": "StatusBar.razor",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\Components\\Layout\\StatusBar.razor",
               "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\Components\\Layout\\StatusBar.razor",
@@ -764,7 +1018,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 40,
+              "DocumentIndex": 54,
               "Title": "EvidenceManager.cs",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Security\\EvidenceManager.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Security\\EvidenceManager.cs",
@@ -777,20 +1031,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 38,
-              "Title": "ModelOrchestrator.cs",
-              "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\AI\\ModelOrchestrator.cs",
-              "RelativeDocumentMoniker": "src\\IIM.Core\\AI\\ModelOrchestrator.cs",
-              "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\AI\\ModelOrchestrator.cs",
-              "RelativeToolTip": "src\\IIM.Core\\AI\\ModelOrchestrator.cs",
-              "ViewState": "AgIAAD8AAAAAAAAAAAAewFcAAAAPAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-15T18:14:41.331Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 45,
+              "DocumentIndex": 59,
               "Title": "ICaseManager.cs",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\ICaseManager.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\ICaseManager.cs",
@@ -803,7 +1044,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 46,
+              "DocumentIndex": 60,
               "Title": "CaseManager.cs",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\CaseManager.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\CaseManager.cs",
@@ -816,7 +1057,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 39,
+              "DocumentIndex": 53,
               "Title": "Evidence.cs",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Models\\Evidence.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Models\\Evidence.cs",
@@ -829,20 +1070,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 47,
+              "DocumentIndex": 61,
               "Title": "INotificationService.cs",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\INotificationService.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\Services\\INotificationService.cs",
               "ToolTip": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\Services\\INotificationService.cs",
               "RelativeToolTip": "src\\IIM.Core\\Services\\INotificationService.cs",
-              "ViewState": "AgIAAHsBAAAAAAAAAAAAAJABAAAvAAAAAAAAAA==",
+              "ViewState": "AgIAAHkBAAAAAAAAAABBwJABAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-08-15T18:29:57.985Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 48,
+              "DocumentIndex": 62,
               "Title": "MockQdrantService.cs",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\RAG\\MockQdrantService.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\RAG\\MockQdrantService.cs",
@@ -855,7 +1096,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 49,
+              "DocumentIndex": 63,
               "Title": "IQdrantService.cs",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\RAG\\IQdrantService.cs",
               "RelativeDocumentMoniker": "src\\IIM.Core\\RAG\\IQdrantService.cs",
@@ -867,12 +1108,8 @@
               "EditorCaption": ""
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
-            },
-            {
               "$type": "Document",
-              "DocumentIndex": 50,
+              "DocumentIndex": 64,
               "Title": "_Imports.razor",
               "DocumentMoniker": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.App.Hybrid\\_Imports.razor",
               "RelativeDocumentMoniker": "src\\IIM.App.Hybrid\\_Imports.razor",

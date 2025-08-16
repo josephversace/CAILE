@@ -54,16 +54,46 @@
       files = e.GetMultipleFiles().ToList();
   }
 
-  private async Task IndexFiles()
-  {
-      var ok = await Iim.RagUploadAsync(files, sentenceMode);
-      indexStatus = ok ? $"Indexed {files.Count} file(s)." : "Failed.";
-  }
+    private async Task IndexFiles()
+    {
+        try
+        {
+            if (!files.Any())
+            {
+                indexStatus = "No files selected";
+                return;
+            }
 
-  private async Task Ask()
-  {
-      var res = await Iim.RagQueryAsync(query, k);
-      answer = res.answer;
-      citations = res.citations ?? new();
-  }
+            var ok = await Iim.RagUploadAsync(files, sentenceMode);
+            indexStatus = ok ? $"Indexed {files.Count} file(s)." : "Failed.";
+        }
+        catch (Exception ex)
+        {
+            indexStatus = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task Ask()
+    {
+        // RagQueryAsync returns a tuple (string answer, List<RAGDocument> citations)
+        var (responseAnswer, responseCitations) = await Iim.RagQueryAsync(query, k);
+        answer = responseAnswer;
+
+        // Convert RAGDocument citations to strings for display
+        citations = responseCitations?.Select(doc =>
+        {
+            // Format each citation as a string
+            var citationText = doc.Content.Length > 150
+                ? doc.Content.Substring(0, 150) + "..."
+                : doc.Content;
+
+            // Include source info if available
+            if (!string.IsNullOrEmpty(doc.SourceId))
+            {
+                return $"[{doc.SourceType ?? "Doc"} #{doc.SourceId}] {citationText}";
+            }
+
+            return citationText;
+        }).ToList() ?? new List<string>();
+    }
 }

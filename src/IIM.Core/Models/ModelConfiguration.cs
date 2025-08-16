@@ -20,13 +20,20 @@ public class ModelConfiguration
     public string Name { get; set; } = string.Empty;
 }
 
-public class ModelRequest
+public sealed class ModelRequest
 {
-    public string ModelId { get; set; } = string.Empty;
-    public string? ModelPath { get; set; }
+    public required string ModelId { get; init; }
+    public required string ModelPath { get; init; }
+    public required ModelType ModelType { get; init; }
+    public string ModelSize { get; init; } = "medium";
+    public string Quantization { get; init; } = "Q4_K_M";
+    public int ContextSize { get; init; } = 4096;
+    public int BatchSize { get; init; } = 512;
+    public int GpuLayers { get; init; } = -1;
     public string? Provider { get; set; }
     public Dictionary<string, object>? Options { get; set; }
 }
+
 
 public class ModelHandle
 {
