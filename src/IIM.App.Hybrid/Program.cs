@@ -1,6 +1,7 @@
 
 using IIM.App.Hybrid.Services;
 using IIM.Core.AI;
+using IIM.Core.Inference;
 using IIM.Core.Platform;
 using IIM.Core.RAG;
 using IIM.Core.Security;

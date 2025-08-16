@@ -73,13 +73,3 @@ public class OrchestratorStats
     public Dictionary<string, ModelStats> Models { get; set; } = new();
 }
 
-public class ModelStats
-{
-    public string ModelId { get; set; } = string.Empty;
-    public ModelType Type { get; set; }
-    public long MemoryUsage { get; set; }
-    public int AccessCount { get; set; }
-    public DateTimeOffset LastAccessed { get; set; }
-    public TimeSpan AverageLatency { get; set; }
-    public double AverageTokensPerSecond { get; set; }
-}

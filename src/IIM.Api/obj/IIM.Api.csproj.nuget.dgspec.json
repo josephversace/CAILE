@@ -99,6 +99,11 @@
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
         }
+      },
+      "runtimes": {
+        "win-arm64": {
+          "#import": []
+        }
       }
     },
     "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Core\\IIM.Core.csproj": {
@@ -158,6 +163,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Microsoft.AspNetCore.Components.Web": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
             "Microsoft.AspNetCore.SignalR.Client": {
               "target": "Package",
               "version": "[8.0.10, )"
@@ -212,6 +221,11 @@
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
+        }
+      },
+      "runtimes": {
+        "win-arm64": {
+          "#import": []
         }
       }
     },
@@ -300,6 +314,11 @@
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
         }
+      },
+      "runtimes": {
+        "win-arm64": {
+          "#import": []
+        }
       }
     },
     "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Shared\\IIM.Shared.csproj": {
@@ -364,6 +383,11 @@
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
+        }
+      },
+      "runtimes": {
+        "win-arm64": {
+          "#import": []
         }
       }
     }

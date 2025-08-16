@@ -93,5 +93,14 @@ namespace IIM.Core.Models
         public bool SupportsDirectML { get; set; }
         public bool SupportsROCm { get; set; }
     }
+
+    public sealed class InferenceResult
+    {
+        public required string ModelId { get; init; }
+        public required object Output { get; init; }
+        public TimeSpan InferenceTime { get; init; }
+        public long TokensProcessed { get; init; }
+        public double TokensPerSecond { get; init; }
+    }
 }
 
