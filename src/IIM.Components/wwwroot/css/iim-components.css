@@ -1,0 +1,601 @@
+/* IIM Components - Custom Styles extending HUD Framework */
+
+:root {
+    /* IIM Brand Colors */
+    --iim-primary: #6366f1;
+    --iim-primary-dark: #4f46e5;
+    --iim-secondary: #8b5cf6;
+    --iim-tertiary: #14b8a6;
+    --iim-success: #10b981;
+    --iim-danger: #ef4444;
+    --iim-warning: #f59e0b;
+    --iim-info: #06b6d4;
+    --iim-dark: #0f172a;
+    --iim-darker: #020617;
+    --iim-light: #f8fafc;
+    --iim-lighter: #ffffff;
+    
+    /* Semantic Colors */
+    --iim-border: #e2e8f0;
+    --iim-text-primary: #1e293b;
+    --iim-text-secondary: #64748b;
+    --iim-text-muted: #94a3b8;
+    
+    /* Layout Variables */
+    --iim-sidebar-width: 280px;
+    --iim-header-height: 65px;
+    --iim-status-bar-height: 32px;
+    --iim-tool-ribbon-height: 48px;
+    
+    /* Gradients */
+    --iim-gradient-primary: linear-gradient(135deg, var(--iim-primary) 0%, var(--iim-secondary) 100%);
+    --iim-gradient-dark: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+    --iim-gradient-success: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    
+    /* Shadows */
+    --iim-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --iim-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --iim-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --iim-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.app {
+    background-color: transparent !important
+}
+
+
+/* Override HUD dark mode for IIM */
+[data-bs-theme="dark"] {
+    --bs-body-bg: var(--iim-darker);
+    --bs-body-color: var(--iim-light);
+    --bs-border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* IIM Layout Structure */
+.iim-app-wrapper {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+}
+
+/* Enhanced Header */
+.iim-header {
+    height: var(--iim-header-height);
+    background: var(--iim-gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    box-shadow: var(--iim-shadow-lg);
+    z-index: 1000;
+}
+
+.iim-header-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+}
+
+.iim-header-logo-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.iim-header-logo-text {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
+/* Sidebar */
+.iim-sidebar {
+    width: var(--iim-sidebar-width);
+
+    border-right: 1px solid var(--iim-border);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s;
+}
+
+.iim-sidebar.collapsed {
+    width: 80px;
+}
+
+.iim-sidebar-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--iim-border);
+}
+
+.iim-sidebar-tabs {
+    display: flex;
+    padding: 12px;
+    gap: 8px;
+    border-bottom: 1px solid var(--iim-border);
+}
+
+.iim-sidebar-tab {
+    flex: 1;
+    padding: 8px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--iim-text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+
+.iim-app-wrapper {
+
+    background-color:transparent !important
+
+}
+
+.iim-sidebar-tab:hover {
+    background: white;
+    color: var(--iim-primary);
+}
+
+.iim-sidebar-tab.active {
+    background: var(--iim-primary);
+    color: white;
+}
+
+.iim-sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+/* Investigation Session Items */
+.iim-session-item {
+    padding: 12px;
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+
+.iim-session-item:hover {
+    transform: translateX(4px);
+    box-shadow: var(--iim-shadow);
+}
+
+.iim-session-item.active {
+    border-color: var(--iim-primary);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+}
+
+.iim-session-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.iim-session-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--iim-gradient-primary);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+}
+
+.iim-session-title {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--iim-text-primary);
+}
+
+.iim-session-time {
+    font-size: 11px;
+    color: var(--iim-text-muted);
+}
+
+/* Main Content Area */
+.iim-main-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+.iim-workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+}
+
+/* Tool Ribbon */
+.iim-tool-ribbon {
+    height: var(--iim-tool-ribbon-height);
+    background: var(--iim-light);
+    border-bottom: 1px solid var(--iim-border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 16px;
+}
+
+.iim-tool-group {
+    display: flex;
+    gap: 8px;
+    padding: 0 8px;
+    border-right: 1px solid var(--iim-border);
+}
+
+.iim-tool-group:last-child {
+    border-right: none;
+}
+
+.iim-tool-button {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid var(--iim-border);
+    border-radius: 6px;
+    color: var(--iim-text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.iim-tool-button:hover {
+    background: var(--iim-primary);
+    color: white;
+    border-color: var(--iim-primary);
+}
+
+.iim-tool-button.active {
+    background: var(--iim-primary);
+    color: white;
+    border-color: var(--iim-primary);
+}
+
+/* Chat/Message Components */
+.iim-chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.iim-messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    background: linear-gradient(to bottom, var(--iim-light), white);
+}
+
+.iim-message {
+    display: flex;
+    margin-bottom: 24px;
+    animation: messageSlide 0.3s ease-out;
+}
+
+@keyframes messageSlide {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.iim-message.user {
+    flex-direction: row-reverse;
+}
+
+.iim-message-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 12px;
+}
+
+.iim-message.user .iim-message-avatar {
+    background: var(--iim-gradient-primary);
+    color: white;
+}
+
+.iim-message.assistant .iim-message-avatar {
+    background: var(--iim-gradient-success);
+    color: white;
+}
+
+.iim-message-content {
+    max-width: 70%;
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: var(--iim-shadow);
+}
+
+.iim-message.user .iim-message-content {
+    background: var(--iim-gradient-primary);
+    color: white;
+}
+
+/* Input Area */
+.iim-input-area {
+    padding: 16px;
+    background: white;
+    border-top: 1px solid var(--iim-border);
+}
+
+.iim-input-container {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.iim-input-wrapper {
+    flex: 1;
+    background: var(--iim-light);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.iim-input-field {
+    background: transparent;
+    border: none;
+    font-size: 15px;
+    resize: none;
+    outline: none;
+    min-height: 24px;
+    max-height: 120px;
+}
+
+.iim-input-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.iim-input-action {
+    padding: 8px;
+    background: transparent;
+    border: none;
+    color: var(--iim-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 6px;
+}
+
+.iim-input-action:hover {
+    background: white;
+    color: var(--iim-primary);
+}
+
+.iim-send-button {
+    padding: 12px 20px;
+    background: var(--iim-gradient-primary);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.iim-send-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--iim-shadow-lg);
+}
+
+.iim-send-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Model Cards */
+.iim-model-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.iim-model-card:hover {
+    border-color: var(--iim-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--iim-shadow-lg);
+}
+
+.iim-model-card.active {
+    border-color: var(--iim-primary);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+}
+
+.iim-model-header {
+    display: flex;
+    align-items: start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.iim-model-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--iim-gradient-primary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+}
+
+.iim-model-info {
+    flex: 1;
+}
+
+.iim-model-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--iim-text-primary);
+    margin-bottom: 4px;
+}
+
+.iim-model-type {
+    font-size: 12px;
+    color: var(--iim-text-secondary);
+}
+
+.iim-model-status {
+    padding: 4px 8px;
+    background: var(--iim-success);
+    color: white;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.iim-model-status.loading {
+    background: var(--iim-warning);
+}
+
+.iim-model-status.error {
+    background: var(--iim-danger);
+}
+
+/* Status Bar */
+.iim-status-bar {
+    height: var(--iim-status-bar-height);
+    background: var(--iim-dark);
+    color: var(--iim-light);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 12px;
+    gap: 24px;
+}
+
+.iim-status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.iim-status-indicator {
+    width: 8px;
+    height: 8px;
+    background: var(--iim-success);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.iim-status-indicator.warning {
+    background: var(--iim-warning);
+}
+
+.iim-status-indicator.error {
+    background: var(--iim-danger);
+}
+
+/* Utility Classes */
+.iim-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.iim-scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.iim-scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.iim-scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.iim-scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Loading States */
+.iim-skeleton {
+    background: linear-gradient(90deg, var(--iim-light) 25%, var(--iim-border) 50%, var(--iim-light) 75%);
+    background-size: 200% 100%;
+    animation: skeleton 1.5s infinite;
+}
+
+@keyframes skeleton {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .iim-sidebar {
+        position: fixed;
+        left: -100%;
+        height: 100vh;
+        z-index: 999;
+    }
+    
+    .iim-sidebar.open {
+        left: 0;
+    }
+    
+    .iim-message-content {
+        max-width: 85%;
+    }
+}

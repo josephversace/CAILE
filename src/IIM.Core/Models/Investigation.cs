@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace IIM.Core.Models
@@ -8,6 +8,7 @@ namespace IIM.Core.Models
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string CaseId { get; set; } = string.Empty;
         public string Title { get; set; } = "New Investigation";
+        public string Icon { get; set; } = "🕵️‍♂️";
         public InvestigationType Type { get; set; } = InvestigationType.GeneralInquiry;
         public List<InvestigationMessage> Messages { get; set; } = new();
         public List<string> EnabledTools { get; set; } = new();

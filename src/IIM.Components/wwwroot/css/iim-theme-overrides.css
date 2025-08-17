@@ -1,0 +1,47 @@
+/* IIM Theme Overrides - Fix paths for Razor Class Library */
+
+/* Logo Images */
+.brand-logo img[src*="logo.png"] {
+    content: url('images/logo.png');
+}
+
+.brand-logo img[src*="logo-dark.png"] {
+    content: url('images/logo-dark.png');
+}
+
+/* Pattern Backgrounds (used by HUD theme) */
+body {
+    background-image: url('images/pattern.png');
+}
+
+[data-bs-theme="dark"] body {
+    background-image: url('images/pattern-dark.png');
+}
+
+/* Background Cover Images - Full Size from img/cover/ */
+.bg-cover-1 { background-image: url('../img/cover/cover-1.jpg') !important; }
+.bg-cover-2 { background-image: url('../img/cover/cover-2.jpg') !important; }
+.bg-cover-3 { background-image: url('../img/cover/cover-3.jpg') !important; }
+.bg-cover-4 { background-image: url('../img/cover/cover-4.jpg') !important; }
+.bg-cover-5 { background-image: url('../img/cover/cover-5.jpg') !important; }
+.bg-cover-6 { background-image: url('../img/cover/cover-6.jpg') !important; }
+.bg-cover-7 { background-image: url('../img/cover/cover-7.jpg') !important; }
+.bg-cover-8 { background-image: url('../img/cover/cover-8.jpg') !important; }
+.bg-cover-9 { background-image: url('../img/cover/cover-9.jpg') !important; }
+
+/* Ensure covers apply properly to html element */
+html[class*="bg-cover-"] {
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+/* Theme Mode Preview Images */
+.app-theme-mode-link img[src*="/img/mode/dark.jpg"] {
+    content: url('../img/mode/dark.jpg');
+}
+
+.app-theme-mode-link img[src*="/img/mode/light.jpg"] {
+    content: url('../img/mode/light.jpg');
+}

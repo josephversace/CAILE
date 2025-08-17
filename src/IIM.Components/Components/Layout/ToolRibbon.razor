@@ -1,6 +1,3 @@
-// ============================================
-// File: src/IIM.App.Hybrid/Components/Layout/ToolRibbon.razor
-// ============================================
 @using IIM.Core.Models
 @inject NavigationManager Navigation
 
@@ -81,3 +78,25 @@
         public string Icon { get; set; } = "";
     }
 }
+
+    <style>
+    .tool-ribbon {
+        display: flex;
+        flex-wrap: wrap; /* allows wrapping to multiple rows if needed */
+        gap: 0.5rem 2rem; /* row gap, col gap between groups */
+        align-items: flex-start; /* aligns tool-groups at top if there's more than one row */
+        padding: 0.5rem 0;
+    }
+
+    .tool-group {
+        display: flex;
+        flex-wrap: wrap; /* if too many buttons in a group, they’ll wrap within the group */
+        gap: 0.5rem;
+    }
+
+        .tool-group > * {
+            /* Ensures buttons never squish smaller than their content */
+            min-width: 0;
+        }
+
+</style>

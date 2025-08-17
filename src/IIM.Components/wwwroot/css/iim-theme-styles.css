@@ -1,0 +1,309 @@
+/* IIM Theme System - Extensions to HUD Theme */
+
+/* Custom Background Upload Support */
+.app-theme-cover-link.custom-upload {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bs-gray-800);
+    border: 2px dashed var(--bs-gray-600);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.app-theme-cover-link.custom-upload:hover {
+    border-color: var(--bs-primary);
+    background: var(--bs-gray-700);
+}
+
+.app-theme-cover-link.custom-upload i {
+    font-size: 20px;
+    color: var(--bs-gray-400);
+}
+
+/* Compact Mode */
+.compact-mode .app-header {
+    height: 50px;
+}
+
+.compact-mode .app-sidebar {
+    width: 220px;
+}
+
+.compact-mode .app-content {
+    font-size: 13px;
+}
+
+.compact-mode .card {
+    padding: 0.75rem;
+}
+
+.compact-mode .btn {
+    padding: 0.25rem 0.75rem;
+    font-size: 12px;
+}
+
+/* High Contrast Mode */
+.high-contrast {
+    filter: contrast(1.2);
+}
+
+.high-contrast .text-muted {
+    color: var(--bs-gray-700) !important;
+}
+
+.high-contrast [data-bs-theme="dark"] .text-muted {
+    color: var(--bs-gray-400) !important;
+}
+
+.high-contrast .card {
+    border: 2px solid var(--bs-border-color);
+}
+
+/* No Animations Mode */
+.no-animations,
+.no-animations * {
+    animation: none !important;
+    transition: none !important;
+}
+
+/* IIM Custom Theme Colors */
+:root {
+    --iim-investigation: #6366f1;
+    --iim-evidence: #14b8a6;
+    --iim-alert: #ef4444;
+    --iim-success: #10b981;
+}
+
+/* Theme Color Overrides for IIM */
+.theme-investigation {
+    --bs-theme: var(--iim-investigation);
+    --bs-theme-rgb: 99, 102, 241;
+}
+
+.theme-evidence {
+    --bs-theme: var(--iim-evidence);
+    --bs-theme-rgb: 20, 184, 166;
+}
+
+/* Custom Background Covers */
+.bg-cover-custom {
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+/* Theme Panel Enhancements */
+.app-theme-panel {
+    z-index: 2000;
+}
+
+.app-theme-panel.active .app-theme-panel-container {
+    right: 0;
+}
+
+.app-theme-panel-container {
+    position: fixed;
+    top: 50%;
+    right: -280px;
+    transform: translateY(-50%);
+    width: 280px;
+    transition: right 0.3s;
+    z-index: 2000;
+}
+
+.app-theme-toggle-btn {
+    position: absolute;
+    left: -42px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    background: var(--bs-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px 0 0 6px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.app-theme-toggle-btn:hover {
+    background: var(--bs-primary-dark);
+    color: white;
+    width: 48px;
+    left: -48px;
+}
+
+.app-theme-panel-content {
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px 0 0 8px;
+    padding: 20px;
+    height: 500px;
+    overflow-y: auto;
+    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Scrollbar styling for theme panel */
+.app-theme-panel-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.app-theme-panel-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.app-theme-panel-content::-webkit-scrollbar-thumb {
+    background: var(--bs-gray-400);
+    border-radius: 3px;
+}
+
+.app-theme-panel-content::-webkit-scrollbar-thumb:hover {
+    background: var(--bs-gray-500);
+}
+
+/* Theme Mode Links */
+.app-theme-mode-link {
+    display: block;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--bs-body-color);
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.app-theme-mode-link:hover {
+    border-color: var(--bs-primary);
+    transform: translateY(-2px);
+}
+
+.app-theme-mode-link.active {
+    border-color: var(--bs-primary);
+    background: rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.app-theme-mode-link .img {
+    margin-bottom: 8px;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.app-theme-mode-link .text {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Theme List */
+.app-theme-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.app-theme-list-item {
+    width: 32px;
+    height: 32px;
+}
+
+.app-theme-list-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.app-theme-list-link:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.app-theme-list-link.active::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Theme Cover */
+.app-theme-cover {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.app-theme-cover-item {
+    aspect-ratio: 16/9;
+}
+
+.app-theme-cover-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.app-theme-cover-link:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.app-theme-cover-item.active .app-theme-cover-link {
+    border-color: var(--bs-primary);
+}
+
+.app-theme-cover-item.active .app-theme-cover-link::after {
+    content: '✓';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    background: var(--bs-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Investigation Settings */
+.form-check-input:checked {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .app-theme-panel-container {
+        width: 260px;
+        right: -260px;
+    }
+    
+    .app-theme-panel-content {
+        padding: 15px;
+    }
+    
+    .app-theme-cover {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

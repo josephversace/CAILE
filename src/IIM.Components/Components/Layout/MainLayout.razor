@@ -1,250 +1,373 @@
-﻿@* MainLayout.razor - Based on the actual prototype.html *@
-@inherits LayoutComponentBase
+﻿
+@namespace IIM.Components.Components.Layout
+@using IIM.Core.Models
 @using IIM.Core.Services
-@inject NavigationManager Navigation
+@inherits LayoutComponentBase
 
-<div class="app-wrapper">
+
+<div class="iim-app-wrapper" data-bs-theme="@(_isDarkMode ? "dark" : "light")">
     <!-- Header -->
-    <div class="app-header">
-        <div class="header-left">
-            <div class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <div class="logo-text">
-                    <h1>IIM Platform</h1>
-                    <span>Intelligent Investigation Machine</span>
-                </div>
-            </div>
-        </div>
+@*     <AppHeader OnThemeToggle="@ToggleTheme"
+               OnMenuToggle="@ToggleSidebar"
+               IsDarkMode="_isDarkMode" /> *@
 
-        <div class="header-center">
-            <div class="global-search">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search across all cases, evidence, and models..." @bind="searchQuery" @onkeyup="@(async (e) => { if (e.Key == "Enter") await PerformSearch(); })">
-            </div>
-        </div>
-
-        <div class="header-right">
-            <button class="header-button">
-                <i class="fas fa-plus"></i>
-            </button>
-            <button class="header-button">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge">3</span>
-            </button>
-            <button class="header-button">
-                <i class="fas fa-th"></i>
-            </button>
-            <button class="header-button">
-                <i class="fas fa-user"></i>
-            </button>
-        </div>
-    </div>
+    <button class="iim-header-menu-toggle" @onclick="@HandleSettingsClicked" title="Settings">
+        <i class="fas fa-bars"></i>
+    </button>
 
     <!-- Main Body -->
-    <div class="app-body">
-        @Body
+    <div class="app-body d-flex">
+        <!-- Sidebar -->
+        <AppSidebar IsCollapsed="_sidebarCollapsed"
+                    OnSessionSelected="@HandleSessionSelected"
+                    OnNewSession="@HandleNewSession" />
+
+        <!-- Content Area -->
+        <div class="app-content flex-fill d-flex flex-column">
+            <!-- Tool Ribbon -->
+            <ToolRibbon OnToolSelected="@HandleToolSelected" />
+
+            <!-- Main Content -->
+            <main class="app-main flex-fill">
+                <ErrorBoundary>
+                    <ChildContent>
+                        @Body
+                    </ChildContent>
+                    <ErrorContent Context="exception">
+                        <div class="alert alert-danger m-4" role="alert">
+                            <h4 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle me-2"></i>An error occurred
+                            </h4>
+                            <p>@exception.Message</p>
+                            <hr>
+                            <p class="mb-0">
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => RecoverFromError()">
+                                    <i class="fas fa-redo me-1"></i>Reload
+                                </button>
+                            </p>
+                        </div>
+                    </ErrorContent>
+                </ErrorBoundary>
+            </main>
+
+            <!-- Status Bar -->
+        @*     <StatusBar ConnectionStatus="_connectionStatus"
+                       ModelStatus="_modelStatus"
+                       GpuUsage="_gpuUsage"
+                       RamUsage="_ramUsage" /> *@
+        </div>
     </div>
 </div>
 
-<style>
-    :root {
-        --primary: #6366f1;
-        --primary-dark: #4f46e5;
-        --secondary: #8b5cf6;
-        --tertiary: #14b8a6;
-        --success: #10b981;
-        --danger: #ef4444;
-        --warning: #f59e0b;
-        --info: #06b6d4;
-        --dark: #0f172a;
-        --darker: #020617;
-        --light: #f8fafc;
-        --lighter: #ffffff;
-        --border: #e2e8f0;
-        --text-primary: #1e293b;
-        --text-secondary: #64748b;
-        --text-muted: #94a3b8;
-        --sidebar-width: 280px;
-        --header-height: 65px;
-        --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-        --gradient-dark: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
-        --gradient-success: linear-gradient(135deg, #059669 0%, #10b981 100%);
+<!-- Notification Container -->
+<div class="iim-notifications" id="notificationContainer">
+    @foreach (var notification in _notifications)
+    {
+        <div class="iim-notification @GetNotificationTypeClass(notification.Type) @GetPriorityClass(notification.Priority) show">
+            <i class="fas @GetNotificationIcon(notification) me-2"></i>
+            <div class="notification-content">
+                @if (!string.IsNullOrEmpty(notification.Title))
+                {
+                    <strong>@notification.Title</strong>
+                    <br />
+                }
+                @notification.Message
+            </div>
+        </div>
     }
+</div>
 
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
 
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
-        background: var(--darker);
-        color: var(--text-primary);
-        height: 100vh;
-        overflow: hidden;
-    }
 
-    .app-wrapper {
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        background: var(--lighter);
-    }
 
-    /* Enhanced Header */
-    .app-header {
-        height: var(--header-height);
-        background: var(--gradient-primary);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 24px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        z-index: 1000;
-    }
-
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 24px;
-    }
-
-    .logo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        color: white;
-    }
-
-    .logo-icon {
-        width: 40px;
-        height: 40px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-    }
-
-    .logo-text h1 {
-        font-size: 18px;
-        font-weight: 700;
-        margin: 0;
-        line-height: 1.2;
-    }
-
-    .logo-text span {
-        font-size: 11px;
-        opacity: 0.9;
-        font-weight: 500;
-    }
-
-    /* Global Search */
-    .header-center {
-        flex: 1;
-        max-width: 600px;
-        margin: 0 32px;
-    }
-
-    .global-search {
-        display: flex;
-        align-items: center;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        padding: 10px 16px;
-        transition: all 0.3s;
-    }
-
-        .global-search:hover,
-        .global-search:focus-within {
-            background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .global-search i {
-            color: rgba(255, 255, 255, 0.7);
-            margin-right: 12px;
-        }
-
-        .global-search input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 14px;
-            outline: none;
-        }
-
-            .global-search input::placeholder {
-                color: rgba(255, 255, 255, 0.6);
-            }
-
-    /* Header Actions */
-    .header-right {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .header-button {
-        width: 38px;
-        height: 38px;
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 10px;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        position: relative;
-    }
-
-        .header-button:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-2px);
-        }
-
-    .notification-badge {
-        position: absolute;
-        top: -4px;
-        right: -4px;
-        width: 18px;
-        height: 18px;
-        background: var(--danger);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 10px;
-        font-weight: 600;
-        border: 2px solid var(--primary);
-    }
-
-    /* Main Layout */
-    .app-body {
-        flex: 1;
-        display: flex;
-        overflow: hidden;
-    }
-</style>
 
 @code {
-    private string searchQuery = "";
+    private bool _isDarkMode = true;
+    private bool _sidebarCollapsed = false;
+    private string _currentTool = "investigation";
+    private string _connectionStatus = "connected";
+    private string _modelStatus = "ready";
+    private int _gpuUsage = 45;
+    private int _ramUsage = 62;
 
-    private async Task PerformSearch()
+    // Using existing models from IIM.Core and Models namespace
+    private List<Notification> _notifications = new();
+    private InvestigationSession? _currentSession;
+    private List<InvestigationSession> _sessions = new();
+    private GpuStats? _gpuStats;
+
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] private ILogger<MainLayout> Logger { get; set; } = default!;
+
+    // Optional service injections - check if available
+    [Inject] private IInvestigationService? InvestigationService { get; set; }
+    [Inject] private IModelManagementService? ModelService { get; set; }
+
+    protected override async Task OnInitializedAsync()
     {
-        if (!string.IsNullOrWhiteSpace(searchQuery))
+        // Load user preferences
+        _isDarkMode = await LoadPreference("darkMode", true);
+        _sidebarCollapsed = await LoadPreference("sidebarCollapsed", false);
+
+        // Load sessions if service available
+        if (InvestigationService != null)
         {
-            Navigation.NavigateTo($"/search?q={Uri.EscapeDataString(searchQuery)}");
+            try
+            {
+                //Todo: implement
+
+               // _sessions = await InvestigationService.GetSessionsAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to load investigation sessions");
+            }
         }
+
+        // Initialize monitoring
+        await StartSystemMonitoring();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Initialize HUD components after first render
+            await JSRuntime.InvokeVoidAsync("eval", @"
+                if (window.App && window.App.init) {
+                    window.App.init();
+                }
+                if (window.IIM && window.IIM.init) {
+                    window.IIM.init();
+                }
+            ");
+        }
+    }
+
+    private void ToggleTheme()
+    {
+        _isDarkMode = !_isDarkMode;
+        SavePreference("darkMode", _isDarkMode);
+        StateHasChanged();
+    }
+
+    private void ToggleSidebar()
+    {
+        _sidebarCollapsed = !_sidebarCollapsed;
+        SavePreference("sidebarCollapsed", _sidebarCollapsed);
+    }
+
+    private async Task HandleSessionSelected(string sessionId)
+    {
+        if (InvestigationService != null)
+        {
+            try
+            {
+                _currentSession = await InvestigationService.GetSessionAsync(sessionId);
+                ShowNotification($"Session loaded: {_currentSession.Title}", NotificationType.Success, "Session Loaded", NotificationCategory.Investigation);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to load session {SessionId}", sessionId);
+                ShowNotification("Failed to load session", NotificationType.Error, "Error", NotificationCategory.System);
+            }
+        }
+
+        // Navigate to investigation page with session
+        NavigationManager.NavigateTo($"/investigation/{sessionId}");
+    }
+
+    private async Task HandleNewSession()
+    {
+        if (InvestigationService != null)
+        {
+            try
+            {
+                var request = new CreateSessionRequest
+                {
+                    Title = "New Investigation",
+                    CaseId = "",
+                    InvestigationType = InvestigationType.GeneralInquiry.ToString()
+                };
+
+                var session = await InvestigationService.CreateSessionAsync(request);
+                _currentSession = session;
+                ShowNotification("New investigation session created", NotificationType.Success, "Session Created", NotificationCategory.Investigation);
+                NavigationManager.NavigateTo($"/investigation/{session.Id}");
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to create new session");
+                ShowNotification("Failed to create session", NotificationType.Error, "Error", NotificationCategory.System);
+            }
+        }
+        else
+        {
+            // Fallback if service not available
+            var sessionId = Guid.NewGuid().ToString();
+            ShowNotification("New investigation session created", NotificationType.Info, "Session Created", NotificationCategory.Investigation);
+            NavigationManager.NavigateTo($"/investigation/{sessionId}");
+        }
+    }
+
+    private void HandleSettingsClicked()
+    {
+        // Open settings panel
+        Logger.LogInformation("Settings clicked");
+        NavigationManager.NavigateTo($"/settings");
+    }
+
+    private void HandleToolSelected(string tool)
+    {
+        _currentTool = tool;
+        Logger.LogInformation("Tool selected: {Tool}", tool);
+        StateHasChanged();
+    }
+
+    private void RecoverFromError()
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+
+    private async Task StartSystemMonitoring()
+    {
+        // Monitor GPU and system resources
+        var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+
+        _ = Task.Run(async () =>
+        {
+            while (await timer.WaitForNextTickAsync())
+            {
+                try
+                {
+                    if (ModelService != null)
+                    {
+                        _gpuStats = await ModelService.GetGpuStatsAsync();
+                        if (_gpuStats != null)
+                        {
+                            _gpuUsage = (int)_gpuStats.UtilizationPercent;
+                            _ramUsage = (int)((double)_gpuStats.UsedMemory / _gpuStats.TotalMemory * 100);
+                        }
+                    }
+                    else
+                    {
+                        // Simulate if service not available
+                        _gpuUsage = Random.Shared.Next(40, 60);
+                        _ramUsage = Random.Shared.Next(55, 70);
+                    }
+
+                    await InvokeAsync(StateHasChanged);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Error monitoring system resources");
+                }
+            }
+        });
+    }
+
+    private void ShowNotification(string message, NotificationType type, string? title = null, NotificationCategory category = NotificationCategory.System)
+    {
+        var notification = new Notification
+        {
+            Id = Guid.NewGuid().ToString(),
+            Title = title ?? "",
+            Message = message,
+            Type = type,
+            Category = category,
+            Priority = type == NotificationType.Error ? NotificationPriority.High : NotificationPriority.Normal,
+            CreatedAt = DateTimeOffset.UtcNow,
+            IsRead = false
+        };
+
+        _notifications.Add(notification);
+        StateHasChanged();
+
+        // Remove after 3 seconds for non-critical notifications
+        if (notification.Priority != NotificationPriority.Critical)
+        {
+            Task.Delay(3000).ContinueWith(_ =>
+            {
+                _notifications.Remove(notification);
+                InvokeAsync(StateHasChanged);
+            });
+        }
+    }
+
+    private string GetNotificationTypeClass(NotificationType type) => type switch
+    {
+        NotificationType.Success => "success",
+        NotificationType.Error => "error",
+        NotificationType.Warning => "warning",
+        NotificationType.Critical => "critical",
+        _ => "info"
+    };
+
+    private string GetPriorityClass(NotificationPriority priority) => priority switch
+    {
+        NotificationPriority.Urgent or NotificationPriority.Critical => "priority-high",
+        NotificationPriority.Low => "priority-low",
+        _ => ""
+    };
+
+    private string GetNotificationIcon(Notification notification)
+    {
+        // First check category-specific icons
+        if (notification.Category == NotificationCategory.Model)
+            return "fa-robot";
+        if (notification.Category == NotificationCategory.Investigation)
+            return "fa-search";
+        if (notification.Category == NotificationCategory.Evidence)
+            return "fa-file-alt";
+        if (notification.Category == NotificationCategory.Security)
+            return "fa-shield-alt";
+
+        // Fall back to type-based icons
+        return notification.Type switch
+        {
+            NotificationType.Success => "fa-check-circle",
+            NotificationType.Error => "fa-exclamation-circle",
+            NotificationType.Warning => "fa-exclamation-triangle",
+            NotificationType.Critical => "fa-times-circle",
+            _ => "fa-info-circle"
+        };
+    }
+
+    private async Task<T> LoadPreference<T>(string key, T defaultValue)
+    {
+        try
+        {
+            var result = await JSRuntime.InvokeAsync<string>($"localStorage.getItem", $"iim_{key}");
+            if (result != null)
+            {
+                return System.Text.Json.JsonSerializer.Deserialize<T>(result) ?? defaultValue;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to load preference {Key}", key);
+        }
+        return defaultValue;
+    }
+
+    private async void SavePreference<T>(string key, T value)
+    {
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(value);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", $"iim_{key}", json);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to save preference {Key}", key);
+        }
+    }
+
+
+
+    public void Dispose()
+    {
+        // Cleanup if needed
     }
 }

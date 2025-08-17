@@ -1,117 +1,693 @@
-// ============================================
-// File: src/IIM.App.Hybrid/Components/Layout/AppHeader.razor
-// ============================================
+@namespace IIM.Components.Components.Layout
 @using IIM.Core.Models
-@using IIM.Components.Services
-@using IIM.Core.Services
+@using Models
 @inject NavigationManager Navigation
-@inject ICaseManager CaseManager
-@inject INotificationService NotificationService
+@inject IJSRuntime JSRuntime
 
-<div class="app-header">
-    <div class="header-left">
-        <div class="logo">
-            <div class="logo-icon">
-                <i class="fas fa-shield-alt"></i>
-            </div>
-            <div class="logo-text">IIM Platform</div>
-        </div>
-
-        @if (CurrentCase != null)
-        {
-            <div class="case-switcher" @onclick="ShowCaseSelector">
-                <i class="fas fa-folder"></i>
-                <span>@CurrentCase.Name</span>
-                <span class="case-badge @GetCaseStatusClass(CurrentCase.Status)">@CurrentCase.Status</span>
-                <i class="fas fa-chevron-down"></i>
-            </div>
-        }
-    </div>
-
-    <div class="header-center">
-        <div class="global-search">
-            <i class="fas fa-search"></i>
-            <input type="text" placeholder="Search across all cases, evidence, and models..." @bind="SearchQuery"
-                @onkeyup="@(async (e) => { if (e.Key == "Enter") await PerformSearch(); })">
-        </div>
-    </div>
-
-    <div class="header-right">
-        <button class="header-button" @onclick="CreateNewInvestigation" title="New Investigation">
-            <i class="fas fa-plus"></i>
+<header class="iim-header">
+    <!-- Left Section -->
+    <div class="iim-header-left">
+        <!-- Menu Toggle -->
+        <button class="iim-header-menu-toggle" @onclick="@ToggleMenu" title="Toggle Sidebar">
+            <i class="fas fa-bars"></i>
         </button>
 
-        <button class="header-button" @onclick="ShowNotifications" title="Notifications">
-            <i class="fas fa-bell"></i>
-            @if (UnreadNotificationCount > 0)
+        <!-- Logo -->
+        <div class="iim-header-logo" @onclick="@NavigateHome">
+            <div class="iim-header-logo-icon">
+                <i class="fas fa-fingerprint"></i>
+            </div>
+            <div class="iim-header-logo-text">IIM Platform</div>
+        </div>
+
+        <!-- Breadcrumb -->
+        <nav class="iim-breadcrumb d-none d-md-flex">
+            <span class="breadcrumb-item">
+                <i class="fas fa-home"></i>
+            </span>
+            @if (!string.IsNullOrEmpty(_currentPage))
             {
-                <span class="notification-badge">@UnreadNotificationCount</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item active">@_currentPage</span>
             }
-        </button>
-
-        <button class="header-button" @onclick="ShowAppGrid" title="Apps">
-            <i class="fas fa-th"></i>
-        </button>
-
-        <button class="header-button" @onclick="ShowUserMenu" title="User Menu">
-            <i class="fas fa-user"></i>
-        </button>
+        </nav>
     </div>
-</div>
+
+    <!-- Center Section - Search -->
+    <div class="iim-header-center d-none d-lg-flex">
+        <div class="iim-search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" 
+                   class="iim-search-input" 
+                   placeholder="Search cases, evidence, or commands (Ctrl+K)"
+                   @bind="_searchQuery"
+                   @onkeydown="@HandleSearchKeyDown" />
+            @if (!string.IsNullOrEmpty(_searchQuery))
+            {
+                <button class="search-clear" @onclick="@ClearSearch">
+                    <i class="fas fa-times"></i>
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Right Section -->
+    <div class="iim-header-right">
+        <!-- Quick Actions -->
+        <div class="iim-header-actions">
+            <!-- Model Selector -->
+            <div class="iim-model-selector">
+                <button class="model-selector-button" @onclick="@ToggleModelDropdown">
+                    <i class="fas fa-robot me-2"></i>
+                    <span class="d-none d-md-inline">@_selectedModel</span>
+                    <i class="fas fa-chevron-down ms-2"></i>
+                </button>
+                
+                @if (_showModelDropdown)
+                {
+                    <div class="model-dropdown">
+                        <div class="dropdown-header">
+                            <span>Active Models</span>
+                            <button class="btn-link" @onclick="@OpenModelLibrary">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                        </div>
+                        @foreach (var model in _availableModels)
+                        {
+                            <div class="model-option @(model.ModelId == _selectedModelId ? "active" : "")"
+                                 @onclick="@(() => SelectModel(model))">
+                                <div class="model-option-icon">
+                                    <i class="@GetModelIcon(model.Type)"></i>
+                                </div>
+                                <div class="model-option-info">
+                                    <div class="model-name">@model.Name</div>
+                                    <div class="model-meta">@model.Type • @GetModelSize(model)</div>
+                                </div>
+                                @if (model.Status == ModelStatus.Available)
+                                {
+                                    <span class="model-status loaded">
+                                        <i class="fas fa-check-circle"></i>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="model-status">
+                                        <i class="fas fa-download"></i>
+                                    </span>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Notifications -->
+            <button class="iim-header-button" @onclick="@ToggleNotifications" title="Notifications">
+                <i class="fas fa-bell"></i>
+                @if (_unreadNotifications > 0)
+                {
+                    <span class="notification-badge">@_unreadNotifications</span>
+                }
+            </button>
+
+            <!-- Help -->
+            <button class="iim-header-button d-none d-md-inline-flex" @onclick="@OpenHelp" title="Help & Documentation">
+                <i class="fas fa-question-circle"></i>
+            </button>
+
+            <!-- Theme Toggle -->
+            <button class="iim-header-button" @onclick="@ToggleTheme" title="Toggle Theme">
+                @if (IsDarkMode)
+                {
+                    <i class="fas fa-sun"></i>
+                }
+                else
+                {
+                    <i class="fas fa-moon"></i>
+                }
+            </button>
+
+            <!-- User Menu -->
+            <div class="iim-user-menu">
+                <button class="user-menu-button" @onclick="@ToggleUserMenu">
+                    <div class="user-avatar">
+                        @if (!string.IsNullOrEmpty(_userAvatar))
+                        {
+                            <img src="@_userAvatar" alt="User" />
+                        }
+                        else
+                        {
+                            <i class="fas fa-user"></i>
+                        }
+                    </div>
+                    <span class="user-name d-none d-md-inline">@_userName</span>
+                    <i class="fas fa-chevron-down ms-2 d-none d-md-inline"></i>
+                </button>
+
+                @if (_showUserMenu)
+                {
+                    <div class="user-dropdown">
+                        <div class="user-dropdown-header">
+                            <div class="user-info">
+                                <div class="user-fullname">@_userFullName</div>
+                                <div class="user-role">@_userRole</div>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        
+                        <a class="dropdown-item" @onclick="@OpenProfile">
+                            <i class="fas fa-user-circle"></i>
+                            <span>My Profile</span>
+                        </a>
+                        
+                        <a class="dropdown-item" @onclick="@OpenSettings">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                        
+                        <a class="dropdown-item" @onclick="@OpenAuditLog">
+                            <i class="fas fa-history"></i>
+                            <span>Audit Log</span>
+                        </a>
+                        
+                        <div class="dropdown-divider"></div>
+                        
+                        <a class="dropdown-item" @onclick="@OpenKeyboardShortcuts">
+                            <i class="fas fa-keyboard"></i>
+                            <span>Keyboard Shortcuts</span>
+                            <span class="ms-auto text-muted">Ctrl+?</span>
+                        </a>
+                        
+                        <a class="dropdown-item" @onclick="@OpenAbout">
+                            <i class="fas fa-info-circle"></i>
+                            <span>About IIM</span>
+                        </a>
+                        
+                        <div class="dropdown-divider"></div>
+                        
+                        <a class="dropdown-item text-danger" @onclick="@Logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sign Out</span>
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Notifications Panel -->
+@if (_showNotifications)
+{
+    <div class="iim-notifications-panel">
+        <div class="notifications-header">
+            <h5>Notifications</h5>
+            <button class="btn-link" @onclick="@MarkAllAsRead">Mark all as read</button>
+        </div>
+        <div class="notifications-list">
+            @if (_notifications.Any())
+            {
+                @foreach (var notification in _notifications)
+                {
+                    <div class="notification-item @(!notification.IsRead ? "unread" : "")"
+                         @onclick="@(() => OpenNotification(notification))">
+                        <div class="notification-icon">
+                            <i class="@GetNotificationIcon(notification)"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">@notification.Title</div>
+                            <div class="notification-message">@notification.Message</div>
+                            <div class="notification-time">@GetRelativeTime(notification.CreatedAt.DateTime)</div>
+                        </div>
+                        @if (notification.Priority == NotificationPriority.High || notification.Priority == NotificationPriority.Urgent)
+                        {
+                            <span class="badge bg-danger ms-2">!</span>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="fas fa-bell-slash fa-3x text-muted"></i>
+                    <p class="mt-3">No new notifications</p>
+                </div>
+            }
+        </div>
+    </div>
+}
 
 @code {
-    [Parameter] public Case? CurrentCase { get; set; }
-    [Parameter] public EventCallback<Case> OnCaseChanged { get; set; }
+    // Input Parameters
+    [Parameter] public bool IsDarkMode { get; set; }
+    
+    // EventCallback Parameters
+    [Parameter] public EventCallback OnThemeToggle { get; set; }
+    [Parameter] public EventCallback OnMenuToggle { get; set; }
+    [Parameter] public EventCallback<string> OnSearch { get; set; }
+    [Parameter] public EventCallback<string> OnModelSelected { get; set; }
 
-    private string SearchQuery = "";
-    private int UnreadNotificationCount = 0;
+    // State
+    private string _currentPage = "Investigation";
+    private string _searchQuery = "";
+    private bool _showModelDropdown = false;
+    private bool _showUserMenu = false;
+    private bool _showNotifications = false;
+    private int _unreadNotifications = 3;
+    
+    // User Info
+    private string _userName = "Agent Smith";
+    private string _userFullName = "John Smith";
+    private string _userRole = "Senior Investigator";
+    private string _userAvatar = "";
+    
+    // Model Info - using existing ModelConfiguration from IIM.Core.Models
+    private string _selectedModel = "IIM-Investigator-13B";
+    private string _selectedModelId = "investigator-13b";
+    private List<ModelConfiguration> _availableModels = new();
+    
+    // Notifications - using comprehensive Notification from Models namespace
+    private List<Notification> _notifications = new();
 
     protected override async Task OnInitializedAsync()
     {
-        UnreadNotificationCount = await NotificationService.GetUnreadCountAsync();
+        // Load user info
+        await LoadUserInfo();
+        
+        // Load available models
+        LoadAvailableModels();
+        
+        // Load notifications
+        LoadNotifications();
+        
+        // Listen for navigation changes
+        Navigation.LocationChanged += OnLocationChanged;
     }
 
-    private async Task ShowCaseSelector()
+    private async Task LoadUserInfo()
     {
-        // TODO: Show case selector modal
+        // TODO: Load from authentication service
+        // Simulated for now
+    }
+
+    private void LoadAvailableModels()
+    {
+        // Using existing ModelConfiguration from IIM.Core.Models
+        _availableModels = new List<ModelConfiguration>
+        {
+            new() { ModelId = "investigator-13b", Name = "IIM-Investigator-13B", Type = ModelType.LLM, Status = ModelStatus.Available },
+            new() { ModelId = "gpt4-turbo", Name = "GPT-4 Turbo", Type = ModelType.LLM, Status = ModelStatus.Available },
+            new() { ModelId = "llama3-70b", Name = "Llama 3 70B", Type = ModelType.LLM, Status = ModelStatus.Available },
+            new() { ModelId = "whisper-large", Name = "Whisper Large", Type = ModelType.Whisper, Status = ModelStatus.Available },
+            new() { ModelId = "clip-large", Name = "CLIP Large", Type = ModelType.CLIP, Status = ModelStatus.Available }
+        };
+    }
+
+    private void LoadNotifications()
+    {
+        _notifications = new List<Notification>
+        {
+            new() { 
+                Id = "1", 
+                Title = "Analysis Complete", 
+                Message = "Financial fraud pattern analysis has completed", 
+                Type = NotificationType.Success,
+                Category = NotificationCategory.Investigation,
+                Priority = NotificationPriority.Normal,
+                CreatedAt = DateTimeOffset.Now.AddMinutes(-5),
+                IsRead = false 
+            },
+            new() { 
+                Id = "2", 
+                Title = "New Evidence Added", 
+                Message = "3 new documents added to Case #2847",
+                Type = NotificationType.Info,
+                Category = NotificationCategory.Evidence,
+                Priority = NotificationPriority.Normal,
+                CreatedAt = DateTimeOffset.Now.AddMinutes(-30),
+                IsRead = false 
+            },
+            new() { 
+                Id = "3", 
+                Title = "Model Update Available", 
+                Message = "IIM-Investigator-13B v2.1 is available",
+                Type = NotificationType.Info,
+                Category = NotificationCategory.Model,
+                Priority = NotificationPriority.Low,
+                CreatedAt = DateTimeOffset.Now.AddHours(-2),
+                IsRead = true 
+            }
+        };
+        
+        _unreadNotifications = _notifications.Count(n => !n.IsRead);
+    }
+
+    private async Task ToggleMenu()
+    {
+        await OnMenuToggle.InvokeAsync();
+    }
+
+    private async Task ToggleTheme()
+    {
+        await OnThemeToggle.InvokeAsync();
+    }
+
+    private void NavigateHome()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private async Task HandleSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrEmpty(_searchQuery))
+        {
+            await PerformSearch();
+        }
     }
 
     private async Task PerformSearch()
     {
-        if (!string.IsNullOrWhiteSpace(SearchQuery))
+        if (!string.IsNullOrEmpty(_searchQuery))
         {
-            Navigation.NavigateTo($"/search?q={Uri.EscapeDataString(SearchQuery)}");
+            await OnSearch.InvokeAsync(_searchQuery);
+            // Navigate to search results
+            Navigation.NavigateTo($"/search?q={Uri.EscapeDataString(_searchQuery)}");
         }
     }
 
-    private void CreateNewInvestigation()
+    private void ClearSearch()
     {
-        Navigation.NavigateTo("/investigation/new");
+        _searchQuery = "";
     }
 
-    private async Task ShowNotifications()
+    private void ToggleModelDropdown()
     {
-        // TODO: Show notifications dropdown
+        _showModelDropdown = !_showModelDropdown;
+        _showUserMenu = false;
+        _showNotifications = false;
     }
 
-    private void ShowAppGrid()
+    private async Task SelectModel(ModelConfiguration model)
     {
-        // TODO: Show app grid dropdown
+        _selectedModel = model.Name;
+        _selectedModelId = model.ModelId;
+        _showModelDropdown = false;
+        
+        await OnModelSelected.InvokeAsync(model.ModelId);
+        
+        // Load model if not loaded
+        if (model.Status != ModelStatus.Available)
+        {
+            // TODO: Trigger model loading via IModelManagementService
+        }
     }
 
-    private void ShowUserMenu()
+    // Helper methods for ModelConfiguration
+    private string GetModelIcon(ModelType type) => type switch
     {
-        // TODO: Show user menu dropdown
-    }
-
-    private string GetCaseStatusClass(CaseStatus status) => status switch
-    {
-        CaseStatus.Active => "active",
-        CaseStatus.Pending => "pending",
-        CaseStatus.UnderReview => "review",
-        CaseStatus.Closed => "closed",
-        CaseStatus.Cold => "cold",
-        CaseStatus.Archived => "archived",
-        _ => ""
+        ModelType.LLM => "fas fa-brain",
+        ModelType.Whisper => "fas fa-microphone",
+        ModelType.CLIP => "fas fa-eye",
+        ModelType.Embedding => "fas fa-vector-square",
+        _ => "fas fa-cube"
     };
+
+    private string GetModelSize(ModelConfiguration model)
+    {
+        // Check if model has size in parameters
+        if (model.Parameters?.TryGetValue("size", out var size) == true)
+        {
+            return size.ToString() ?? "Unknown";
+        }
+        return model.Type == ModelType.LLM ? "Large" : "Standard";
+    }
+
+    private void OpenModelLibrary()
+    {
+        _showModelDropdown = false;
+        Navigation.NavigateTo("/models");
+    }
+
+    private void ToggleNotifications()
+    {
+        _showNotifications = !_showNotifications;
+        _showModelDropdown = false;
+        _showUserMenu = false;
+    }
+
+    private void ToggleUserMenu()
+    {
+        _showUserMenu = !_showUserMenu;
+        _showModelDropdown = false;
+        _showNotifications = false;
+    }
+
+    private void OpenNotification(Notification notification)
+    {
+        notification.IsRead = true;
+        notification.ReadAt = DateTimeOffset.UtcNow;
+        _unreadNotifications = _notifications.Count(n => !n.IsRead);
+        _showNotifications = false;
+        
+        // Handle primary action if present
+        if (notification.PrimaryAction != null)
+        {
+            ExecuteNotificationAction(notification.PrimaryAction);
+        }
+        else
+        {
+            // Navigate based on notification category
+            switch (notification.Category)
+            {
+                case NotificationCategory.Investigation:
+                    Navigation.NavigateTo($"/investigation/{notification.SourceId}");
+                    break;
+                case NotificationCategory.Case:
+                    Navigation.NavigateTo($"/cases/{notification.SourceId}");
+                    break;
+                case NotificationCategory.Evidence:
+                    Navigation.NavigateTo($"/evidence/{notification.SourceId}");
+                    break;
+                case NotificationCategory.Model:
+                    Navigation.NavigateTo("/models");
+                    break;
+                default:
+                    // No default navigation
+                    break;
+            }
+        }
+    }
+
+    private void ExecuteNotificationAction(NotificationAction action)
+    {
+        switch (action.ActionType)
+        {
+            case "navigate":
+                if (!string.IsNullOrEmpty(action.Target))
+                    Navigation.NavigateTo(action.Target);
+                break;
+            case "execute":
+                // TODO: Execute command based on target
+                break;
+            case "dismiss":
+                // Just close the notification panel
+                break;
+        }
+    }
+
+    private string GetNotificationIcon(Notification notification)
+    {
+        // Category-specific icons
+        return notification.Category switch
+        {
+            NotificationCategory.Model => "fas fa-robot",
+            NotificationCategory.Investigation => "fas fa-search",
+            NotificationCategory.Evidence => "fas fa-file-alt",
+            NotificationCategory.Security => "fas fa-shield-alt",
+            NotificationCategory.Case => "fas fa-folder",
+            NotificationCategory.Training => "fas fa-graduation-cap",
+            NotificationCategory.Export => "fas fa-download",
+            NotificationCategory.Import => "fas fa-upload",
+            NotificationCategory.Update => "fas fa-sync",
+            _ => notification.Type switch
+            {
+                NotificationType.Success => "fas fa-check-circle text-success",
+                NotificationType.Error => "fas fa-exclamation-circle text-danger",
+                NotificationType.Warning => "fas fa-exclamation-triangle text-warning",
+                NotificationType.Critical => "fas fa-times-circle text-danger",
+                _ => "fas fa-info-circle text-info"
+            }
+        };
+    }
+
+    private void MarkAllAsRead()
+    {
+        foreach (var notification in _notifications)
+        {
+            notification.IsRead = true;
+        }
+        _unreadNotifications = 0;
+    }
+
+    private void OpenProfile()
+    {
+        _showUserMenu = false;
+        Navigation.NavigateTo("/profile");
+    }
+
+    private void OpenSettings()
+    {
+        _showUserMenu = false;
+        Navigation.NavigateTo("/settings");
+    }
+
+    private void OpenAuditLog()
+    {
+        _showUserMenu = false;
+        Navigation.NavigateTo("/audit");
+    }
+
+    private async Task OpenKeyboardShortcuts()
+    {
+        _showUserMenu = false;
+        // Open keyboard shortcuts modal
+        await JSRuntime.InvokeVoidAsync("IIM.showKeyboardShortcuts");
+    }
+
+    private void OpenAbout()
+    {
+        _showUserMenu = false;
+        Navigation.NavigateTo("/about");
+    }
+
+    private void OpenHelp()
+    {
+        // Open help in new window
+        Navigation.NavigateTo("https://docs.iim-platform.local", true);
+    }
+
+    private async Task Logout()
+    {
+        _showUserMenu = false;
+        // TODO: Implement logout logic
+        await JSRuntime.InvokeVoidAsync("localStorage.clear");
+        Navigation.NavigateTo("/login");
+    }
+
+    private void OnLocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        // Update breadcrumb based on current route
+        var uri = new Uri(e.Location);
+        var path = uri.LocalPath.Trim('/');
+        
+        _currentPage = path switch
+        {
+            "" => "Dashboard",
+            "investigation" => "Investigation",
+            "models" => "Model Library",
+            "cases" => "Cases",
+            "tools" => "Tools",
+            "settings" => "Settings",
+            _ => path.Split('/')[0]
+        };
+        
+        StateHasChanged();
+    }
+
+    private string GetRelativeTime(DateTime time)
+    {
+        var diff = DateTime.Now - time;
+        
+        if (diff.TotalMinutes < 1)
+            return "Just now";
+        if (diff.TotalMinutes < 60)
+            return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24)
+            return $"{(int)diff.TotalHours}h ago";
+        if (diff.TotalDays < 7)
+            return $"{(int)diff.TotalDays}d ago";
+        
+        return time.ToString("MMM dd");
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
 }
+
+@* Component-specific styles *@
+<style>
+    .iim-header-menu-toggle {
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 20px;
+        padding: 8px 12px;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .iim-header-menu-toggle:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .iim-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+        margin-left: 24px;
+    }
+
+    .breadcrumb-separator {
+        opacity: 0.5;
+    }
+
+    .breadcrumb-item.active {
+        color: white;
+        font-weight: 500;
+    }
+
+    .iim-search-box {
+        position: relative;
+        width: 400px;
+    }
+
+    .iim-search-input {
+        width: 100%;
+        padding: 10px 40px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        color: white;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+
+    .iim-search-input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .iim-search-input:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        outline: none;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .search-clear {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+    }
+    </style>

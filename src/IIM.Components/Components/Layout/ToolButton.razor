@@ -1,7 +1,5 @@
-// ============================================
-// File: src/IIM.App.Hybrid/Components/Layout/ToolButton.razor
-// ============================================
-<button class="tool-button @(IsActive ? "active" : "")" @onclick="OnClick">
+
+<button type="button" class="btn btn-outline-default" @onclick="OnClick">
     <i class="fas @Icon"></i>
     <span>@Label</span>
 </button>
