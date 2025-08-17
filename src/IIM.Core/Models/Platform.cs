@@ -1,7 +1,9 @@
-
+﻿
 
 using System;
 using System.Collections.Generic;
+
+using IIM.Shared.Enums;
 
 namespace IIM.Core.Models;
 // WSL Management Models
@@ -75,30 +77,10 @@ public class ServiceConfig
     public Dictionary<string, string> Environment { get; set; } = new();
 }
 
-public enum ServiceState
-{
-    NotFound,
-    Stopped,
-    Starting,
-    Running,
-    Stopping,
-    Error,
-    Degraded
-}
 
-public enum ServiceType
-{
-    Docker,
-    Python,
-    Binary,
-    SystemService
-}
 
-public enum ServicePriority
-{
-    Critical,
-    High,
-    Normal,
-    Low
-}
+
+
+
+
 

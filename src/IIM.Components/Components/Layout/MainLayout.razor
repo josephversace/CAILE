@@ -2,14 +2,12 @@
 @namespace IIM.Components.Components.Layout
 @using IIM.Core.Models
 @using IIM.Core.Services
+@using IIM.Shared.Enums
 @inherits LayoutComponentBase
 
 
 <div class="iim-app-wrapper" data-bs-theme="@(_isDarkMode ? "dark" : "light")">
     <!-- Header -->
-@*     <AppHeader OnThemeToggle="@ToggleTheme"
-               OnMenuToggle="@ToggleSidebar"
-               IsDarkMode="_isDarkMode" /> *@
 
     <button class="iim-header-menu-toggle" @onclick="@HandleSettingsClicked" title="Settings">
         <i class="fas fa-bars"></i>
@@ -17,17 +15,281 @@
 
     <!-- Main Body -->
     <div class="app-body d-flex">
-        <!-- Sidebar -->
-        <AppSidebar IsCollapsed="_sidebarCollapsed"
-                    OnSessionSelected="@HandleSessionSelected"
-                    OnNewSession="@HandleNewSession" />
-
+       
         <!-- Content Area -->
         <div class="app-content flex-fill d-flex flex-column">
             <!-- Tool Ribbon -->
             <ToolRibbon OnToolSelected="@HandleToolSelected" />
 
-            <!-- Main Content -->
+
+            <div class="card h-100" style="z-index: 1020;">
+                <div class="d-flex h-100">
+                    <a class="d-lg-none btn btn-lg bg-inverse bg-opacity-15 bg-blur-2 text-body rounded-0 z-3 ms-1px mt-5 shadow-lg position-absolute top-0 start-0 " data-bs-toggle="offcanvas" href="#aiChatSidebar" role="button" aria-controls="offcanvasExample"><i class="fa fa-gear"></i></a>
+
+                    <div class="w-300px offcanvas offcanvas-start bg-none position-lg-relative transform-lg-none visibility-lg-initial z-lg-3" id="aiChatSidebar">
+                        <div class="d-lg-none bg-blur-3 d-block position-absolute top-0 end-0 w-100 h-100"></div>
+
+
+                        <div class="position-relative h-100 d-flex flex-column">
+                            <div class="p-3">
+                                <button type="button" class="btn btn-outline-theme w-100 rounded-3 py-2 d-flex align-items-center justify-content-center" data-toggle-ai-tab="aiChatIntro">
+                                    New Chat
+                                </button>
+                            </div>
+
+
+                            <hr class="m-0 opacity-20">
+
+
+                            <div class="flex-1 overflow-hidden text-body">
+                                <div data-scrollbar="true" class="p-3" data-height="100%">
+                                    <div class="fw-500 mb-1 d-flex align-items-center">
+                                        <iconify-icon icon="solar:calendar-bold-duotone" class="fs-16px me-8px mt-n1 text-theme"></iconify-icon>
+                                        Today
+                                    </div>
+                                    <div class="px-2">
+                                        <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
+                                            <div class="flex-1 text-body text-opacity-75">Plan My Dream Vacation</div>
+                                            <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
+                                            <div class="dropdown position-relative z-3">
+                                                <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
+                                                <div class="dropdown-menu">
+                                                    <a href="#" class="dropdown-item">Share Chat</a>
+                                                    <a href="#" class="dropdown-item">See Details</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a href="#" class="dropdown-item">Rename</a>
+                                                    <a href="#" class="dropdown-item">Archive</a>
+                                                    <a href="#" class="dropdown-item">Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
+                                            <div class="flex-1 text-body text-opacity-75">Craft a Winning Pitch</div>
+                                            <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
+                                            <div class="dropdown position-relative z-3">
+                                                <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
+                                                <div class="dropdown-menu">
+                                                    <a href="#" class="dropdown-item">Share Chat</a>
+                                                    <a href="#" class="dropdown-item">See Details</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a href="#" class="dropdown-item">Rename</a>
+                                                    <a href="#" class="dropdown-item">Archive</a>
+                                                    <a href="#" class="dropdown-item">Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
+                                            <div class="flex-1 text-body text-opacity-75">Organize My Day</div>
+                                            <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
+                                            <div class="dropdown position-relative z-3">
+                                                <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
+                                                <div class="dropdown-menu">
+                                                    <a href="#" class="dropdown-item">Share Chat</a>
+                                                    <a href="#" class="dropdown-item">See Details</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a href="#" class="dropdown-item">Rename</a>
+                                                    <a href="#" class="dropdown-item">Archive</a>
+                                                    <a href="#" class="dropdown-item">Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
+                                            <div class="flex-1 text-body text-opacity-75">Write Custom Code</div>
+                                            <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
+                                            <div class="dropdown position-relative z-3">
+                                                <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
+                                                <div class="dropdown-menu">
+                                                    <a href="#" class="dropdown-item">Share Chat</a>
+                                                    <a href="#" class="dropdown-item">See Details</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a href="#" class="dropdown-item">Rename</a>
+                                                    <a href="#" class="dropdown-item">Archive</a>
+                                                    <a href="#" class="dropdown-item">Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
+                                            <div class="flex-1 text-body text-opacity-75">Draft a Polished Email</div>
+                                            <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
+                                            <div class="dropdown position-relative z-3">
+                                                <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
+                                                <div class="dropdown-menu">
+                                                    <a href="#" class="dropdown-item">Share Chat</a>
+                                                    <a href="#" class="dropdown-item">See Details</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a href="#" class="dropdown-item">Rename</a>
+                                                    <a href="#" class="dropdown-item">Archive</a>
+                                                    <a href="#" class="dropdown-item">Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
+                                            <div class="flex-1 text-body text-opacity-75">Brainstorm Ideas</div>
+                                            <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
+                                            <div class="dropdown position-relative z-3">
+                                                <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
+                                                <div class="dropdown-menu">
+                                                    <a href="#" class="dropdown-item">Share Chat</a>
+                                                    <a href="#" class="dropdown-item">See Details</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a href="#" class="dropdown-item">Rename</a>
+                                                    <a href="#" class="dropdown-item">Archive</a>
+                                                    <a href="#" class="dropdown-item">Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="fw-500 mb-1 d-flex align-items-center mt-3">
+                                        <iconify-icon icon="solar:calendar-bold-duotone" class="fs-16px me-8px mt-n1 text-theme"></iconify-icon>
+                                        1 Week Ago
+                                    </div>
+                                    <div class="px-2">
+                                        <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
+                                            <div class="flex-1 text-body text-opacity-75">Summarize an Article</div><a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
+                                            <div class="dropdown position-relative z-3">
+                                                <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
+                                                <div class="dropdown-menu">
+                                                    <a href="#" class="dropdown-item">Share Chat</a>
+                                                    <a href="#" class="dropdown-item">See Details</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a href="#" class="dropdown-item">Rename</a>
+                                                    <a href="#" class="dropdown-item">Archive</a>
+                                                    <a href="#" class="dropdown-item">Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
+                                            <div class="flex-1 text-body text-opacity-75">Prepare for a Speech</div>
+                                            <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
+                                            <div class="dropdown position-relative z-3">
+                                                <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
+                                                <div class="dropdown-menu">
+                                                    <a href="#" class="dropdown-item">Share Chat</a>
+                                                    <a href="#" class="dropdown-item">See Details</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a href="#" class="dropdown-item">Rename</a>
+                                                    <a href="#" class="dropdown-item">Archive</a>
+                                                    <a href="#" class="dropdown-item">Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
+                                            <div class="flex-1 text-body text-opacity-75">Create a Business Proposal</div>
+                                            <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
+                                            <div class="dropdown position-relative z-3">
+                                                <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
+                                                <div class="dropdown-menu">
+                                                    <a href="#" class="dropdown-item">Share Chat</a>
+                                                    <a href="#" class="dropdown-item">See Details</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a href="#" class="dropdown-item">Rename</a>
+                                                    <a href="#" class="dropdown-item">Archive</a>
+                                                    <a href="#" class="dropdown-item">Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="fw-500 mb-1 d-flex align-items-center mt-3">
+                                        <iconify-icon icon="solar:calendar-bold-duotone" class="fs-16px me-8px mt-n1 text-theme"></iconify-icon>
+                                        2 Weeks Ago
+                                    </div>
+                                    <div class="px-2">
+                                        <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
+                                            <div class="flex-1 text-body text-opacity-75">Organize Project Tasks</div>
+                                            <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
+                                            <div class="dropdown position-relative z-3">
+                                                <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
+                                                <div class="dropdown-menu">
+                                                    <a href="#" class="dropdown-item">Share Chat</a>
+                                                    <a href="#" class="dropdown-item">See Details</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a href="#" class="dropdown-item">Rename</a>
+                                                    <a href="#" class="dropdown-item">Archive</a>
+                                                    <a href="#" class="dropdown-item">Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
+                                            <div class="flex-1 text-body text-opacity-75">Research Market Trends</div>
+                                            <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
+                                            <div class="dropdown position-relative z-3">
+                                                <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
+                                                <div class="dropdown-menu">
+                                                    <a href="#" class="dropdown-item">Share Chat</a>
+                                                    <a href="#" class="dropdown-item">See Details</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a href="#" class="dropdown-item">Rename</a>
+                                                    <a href="#" class="dropdown-item">Archive</a>
+                                                    <a href="#" class="dropdown-item">Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
+                                            <div class="flex-1 text-body text-opacity-75">Craft Social Media Posts</div>
+                                            <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
+                                            <div class="dropdown position-relative z-3">
+                                                <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
+                                                <div class="dropdown-menu">
+                                                    <a href="#" class="dropdown-item">Share Chat</a>
+                                                    <a href="#" class="dropdown-item">See Details</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a href="#" class="dropdown-item">Rename</a>
+                                                    <a href="#" class="dropdown-item">Archive</a>
+                                                    <a href="#" class="dropdown-item">Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <hr class="m-0 opacity-20">
+
+
+                            <div class="fs-6 p-2">
+                                <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
+                                    <i class="far fa-folder fa-lg fa-fw me-2 ms-n2"></i>
+                                    Explore Bots
+                                </div>
+                                <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
+                                    <i class="far fa-gem fa-lg fa-fw me-2 ms-n2"></i>
+                                    Go Pro
+                                </div>
+                            </div>
+
+
+                            <hr class="m-0 opacity-20">
+
+
+                            <div class="rounded-4 px-3 py-3 border-0">
+                                <div class="fw-500 flex-1 fs-13px text-body d-flex align-items-center">
+                                    <div class="w-30px h-30px fs-20px me-2 rounded-circle text-white bg-inverse bg-opacity-50 d-flex align-items-center justify-content-center">
+                                        S
+                                    </div>
+                                    support@seantheme.com
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                   @Body
+                </div>
+
+
+                <div class="card-arrow">
+                    <div class="card-arrow-top-left"></div>
+                    <div class="card-arrow-top-right"></div>
+                    <div class="card-arrow-bottom-left"></div>
+                    <div class="card-arrow-bottom-right"></div>
+                </div>
+            </div>
+
+
+@*             <!-- Main Content -->
             <main class="app-main flex-fill">
                 <ErrorBoundary>
                     <ChildContent>
@@ -48,7 +310,7 @@
                         </div>
                     </ErrorContent>
                 </ErrorBoundary>
-            </main>
+            </main> *@
 
             <!-- Status Bar -->
         @*     <StatusBar ConnectionStatus="_connectionStatus"

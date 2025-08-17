@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 
 namespace IIM.Core.RAG
 {
@@ -109,11 +110,6 @@ namespace IIM.Core.RAG
         public List<string>? Tags { get; set; }
     }
 
-    public class TimeRange
-    {
-        public DateTimeOffset? Start { get; set; }
-        public DateTimeOffset? End { get; set; }
-    }
 
     public class Cluster
     {

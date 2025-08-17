@@ -1,4 +1,4 @@
-// IMPORTANT: Use the correct namespace for IModelOrchestrator that has InferAsync
+﻿// IMPORTANT: Use the correct namespace for IModelOrchestrator that has InferAsync
 using IIM.Core.AI;
 using IIM.Core.Inference;  // NOT IIM.Core.AI
 using IIM.Core.Models;
@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using IIM.Shared.Enums;
 
 namespace IIM.Core.Inference
 {
@@ -399,12 +400,6 @@ namespace IIM.Core.Inference
     }
 
     // Supporting types
-    public enum Priority
-    {
-        Low = 0,
-        Normal = 1,
-        High = 2
-    }
 
     public sealed class QueuedRequest
     {

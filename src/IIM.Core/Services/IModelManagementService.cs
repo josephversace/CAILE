@@ -7,6 +7,7 @@ using IIM.Core.AI;
 using IIM.Core.Models;
 using IIM.Core.Inference;
 using Microsoft.Extensions.Logging;
+using IIM.Shared.Enums;
 
 namespace IIM.Core.Services
 {

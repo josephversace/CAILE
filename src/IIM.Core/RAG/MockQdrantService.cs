@@ -1,4 +1,5 @@
 ﻿
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Core.RAG

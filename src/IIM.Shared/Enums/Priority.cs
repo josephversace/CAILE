@@ -1,5 +1,4 @@
-
-namespace IIM.Core.Models;
+﻿namespace IIM.Shared.Enums;
 
 public enum Priority
 {

@@ -1,7 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+using IIM.Shared.Enums;
 
 namespace IIM.Core.Models;
 
@@ -33,30 +35,7 @@ public class Relationship
     public Dictionary<string, object> Properties { get; set; } = new();
 }
 
-public enum EntityType
-{
-    Person,
-    Organization,
-    Location,
-    Vehicle,
-    Device,
-    Account,
-    Document,
-    Event,
-    Asset,
-    Unknown
-}
 
-public enum RelationshipType
-{
-    Associate,
-    Family,
-    Business,
-    Financial,
-    Communication,
-    Location,
-    Ownership,
-    Membership,
-    Transaction,
-    Other
-}
+
+
+

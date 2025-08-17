@@ -1,6 +1,7 @@
 ﻿using IIM.Core.AI;
 using IIM.Core.Inference;
 using IIM.Core.Models;
+using IIM.Shared.Enums;
 using Microsoft.Extensions.Logging;
 
 public class MockModelOrchestrator : IModelOrchestrator
