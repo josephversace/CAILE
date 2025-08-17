@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.Http;
@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using IIM.Shared.Enums;
 using System.Collections.Generic;
 using System.Linq;
 using IIM.Core.Models;
@@ -725,18 +726,7 @@ public sealed class ServiceStatus
     public DateTimeOffset? LastHealthCheck { get; set; }
 }
 
-public enum ServiceType
-{
-    Docker,
-    Python,
-    Binary
-}
 
 
-public enum ServicePriority
-{
-    Low = 0,
-    Normal = 1,
-    High = 2,
-    Critical = 3
-}
+
+

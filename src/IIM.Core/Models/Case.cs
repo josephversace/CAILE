@@ -1,7 +1,11 @@
-using System;
+﻿using System;
+using IIM.Shared.Enums;
 using System.Collections.Generic;
+using IIM.Shared.Enums;
 using System.Linq;
+using IIM.Shared.Enums;
 using System.Threading.Tasks;
+using IIM.Shared.Enums;
 
 namespace IIM.Core.Models;
 
@@ -33,41 +37,10 @@ public class Case
     public List<string> AccessControlList { get; set; } = new();
 }
 
-public enum CasePriority
-{
-    Low = 0,
-    Medium = 1,
-    High = 2,
-    Critical = 3,
-    Emergency = 4
-}
 
-public enum CaseType
-{
-    DigitalForensics,
-    FinancialCrime,
-    Cybercrime,
-    OSINT,
-    CounterIntelligence,
-    MissingPerson,
-    Homicide,
-    Fraud,
-    Narcotics,
-    OrganizedCrime,
-    Terrorism,
-    Other
-}
 
-public enum CaseStatus
-{
-    Active,
-    Open,
-    InProgress,
-    AssignedTo,
-    Pending,
-    UnderReview,
-    Closed,
-    Cold,
-    Archived
-}
+
+
+
+
 

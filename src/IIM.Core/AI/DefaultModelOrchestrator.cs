@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using IIM.Core.Models;
+using IIM.Shared.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Core.AI

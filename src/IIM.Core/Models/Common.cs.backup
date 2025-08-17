@@ -1,10 +1,11 @@
-﻿using System;
+
+using System;
 using System.Collections.Generic;
-using IIM.Shared.Models; // Add reference to shared models
+using System.IO;
 
 namespace IIM.Core.Models;
 
-// Citation stays in Core because it has ID generation logic
+
 public class Citation
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
@@ -17,7 +18,25 @@ public class Citation
     public double Relevance { get; set; }
 }
 
-// AnalysisResult stays in Core - it has business logic
+public class GeoLocation
+{
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public double? Altitude { get; set; }
+    public double? Accuracy { get; set; }
+    public string? Address { get; set; }
+    public string? Description { get; set; }
+}
+
+public class TimeRange
+{
+    public DateTimeOffset Start { get; set; }
+    public DateTimeOffset End { get; set; }
+
+    public TimeSpan Duration => End - Start;
+    public bool Contains(DateTimeOffset timestamp) => timestamp >= Start && timestamp <= End;
+}
+
 public class AnalysisResult
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
@@ -28,5 +47,3 @@ public class AnalysisResult
     public double Confidence { get; set; }
     public List<string> Tags { get; set; } = new();
 }
-
-// GeoLocation and TimeRange are now in IIM.Shared.Models

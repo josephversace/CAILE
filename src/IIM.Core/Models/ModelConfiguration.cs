@@ -1,7 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+using IIM.Shared.Enums;
 
 namespace IIM.Core.Models;
 
@@ -57,28 +59,9 @@ public class ModelCapabilities
     public Dictionary<string, object> CustomCapabilities { get; set; } = new();
 }
 
-public enum ModelType
-{
-    LLM,
-    Embedding,
-    Whisper,
-    CLIP,
-    OCR,
-    ObjectDetection,
-    FaceRecognition,
-    Custom
-}
 
-public enum ModelStatus
-{
-    Available,
-    Downloading,
-    Loading,
-    Loaded,
-    Running,
-    Unloading,
-    Error
-}
+
+
 
 public enum ModalityType
 {
@@ -89,3 +72,4 @@ public enum ModalityType
     Document,
     Structured
 }
+

@@ -4,6 +4,7 @@
 // ============================================
 
 using IIM.Core.Models;
+using IIM.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

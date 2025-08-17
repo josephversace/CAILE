@@ -1,5 +1,6 @@
 
 @using IIM.Core.Models
+@using IIM.Shared.Enums
 
 <div class="model-card @(Model.Status == ModelStatus.Loaded ? "active" : "") @(IsSelected ? "selected" : "")"
      @onclick="OnClick">

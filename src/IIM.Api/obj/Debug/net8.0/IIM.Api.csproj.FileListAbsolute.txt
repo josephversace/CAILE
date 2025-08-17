@@ -56,3 +56,11 @@
 \\mac\Home\Projects\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.pdb
 \\mac\Home\Projects\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.genruntimeconfig.cache
 \\mac\Home\Projects\CAILE\src\IIM.Api\obj\Debug\net8.0\ref\IIM.Api.dll
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.csproj.AssemblyReference.cache
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.AssemblyInfoInputs.cache
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.AssemblyInfo.cs
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.csproj.CoreCompileInputs.cache
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.sourcelink.json
