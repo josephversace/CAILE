@@ -1,0 +1,28 @@
+﻿@namespace IIM.Components.Shared
+
+
+@code {
+    [CascadingParameter] public Tabs? Parent { get; set; }
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    private string Id { get; } = Guid.NewGuid().ToString("N");
+
+    protected override void OnInitialized()
+    {
+        Parent?.Register(new Tabs.TabItem
+        {
+            Id = Id,
+            Title = Title,
+            Icon = Icon,
+            Disabled = Disabled,
+            ChildContent = ChildContent
+        });
+    }
+
+    public void Dispose()
+    {
+        Parent?.Unregister(new Tabs.TabItem { Id = Id });
+    }
+}

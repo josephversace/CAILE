@@ -1,0 +1,33 @@
+﻿@using IIM.Components.Shared;
+@namespace IIM.Components.Settings
+@page "/settings"
+
+<h1>Settings</h1>
+
+<ThemePanel OnThemeChanged="@HandleThemeChanged" />
+<Tabs>
+ 
+    <Tab Title="Theme" Icon="bi bi-speedometer2">
+        <ThemePanel OnThemeChanged="@HandleThemeChanged"></ThemePanel>
+    </Tab>
+
+    <Tab Title="Details" Icon="bi bi-list-ul">
+        <p class="text-theme">Details content goes here…</p>
+    </Tab>
+
+    <Tab Title="Settings">
+        <p>Settings are disabled</p>
+    </Tab>
+</Tabs>
+
+@code {
+
+    private async Task HandleThemeChanged(ThemePanel.ThemeSettings settings)
+    {
+        // Logger.LogInformation("Theme changed: {Mode} {Theme}", settings.ThemeMode, settings.ThemeClass);
+        // _isDarkMode = settings.ThemeMode == "dark";
+
+        // Additional handling if needed
+        StateHasChanged();
+    }
+}

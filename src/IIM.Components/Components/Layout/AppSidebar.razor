@@ -1,209 +1,292 @@
-// ============================================
-// File: src/IIM.App.Hybrid/Components/Layout/AppSidebar.razor
-// ============================================
+@namespace IIM.Components.Components.Layout
 @using IIM.Core.Models
-@using IIM.Components.Services
-@using IIM.Core.Services
-@inject NavigationManager Navigation
-@inject IInvestigationService InvestigationService
 
-<div class="app-sidebar @(IsCollapsed ? "collapsed" : "")">
-    <div class="sidebar-tabs">
-        <button class="sidebar-tab @(ActiveTab == "chats" ? "active" : "")" @onclick="SetActiveTabChats">
-            <i class="fas fa-comments"></i>
-            @if (!IsCollapsed)
-            {
-                <span>Chats</span>
-            }
-        </button>
-        <button class="sidebar-tab @(ActiveTab == "cases" ? "active" : "")" @onclick="SetActiveTabCases">
+<div class="iim-sidebar @(IsCollapsed ? "collapsed" : "")" id="appSidebar">
+    <!-- Sidebar Tabs -->
+    <div class="iim-sidebar-tabs">
+        <button class="iim-sidebar-tab @(_activeTab == "sessions" ? "active" : "")"
+                @onclick="@(() => SetActiveTab("sessions"))">
             <i class="fas fa-folder"></i>
             @if (!IsCollapsed)
             {
-                <span>Cases</span>
+                <span>Sessions</span>
             }
         </button>
-        <button class="sidebar-tab @(ActiveTab == "history" ? "active" : "")" @onclick="SetActiveTabHistory">
-            <i class="fas fa-history"></i>
+        <button class="iim-sidebar-tab @(_activeTab == "tools" ? "active" : "")"
+                @onclick="@(() => SetActiveTab("tools"))">
+            <i class="fas fa-tools"></i>
             @if (!IsCollapsed)
             {
-                <span>History</span>
+                <span>Tools</span>
             }
         </button>
     </div>
 
-    <div class="sidebar-content">
-        @switch (ActiveTab)
+    <!-- Sidebar Content -->
+    <div class="iim-sidebar-content">
+        @if (_activeTab == "sessions")
         {
-            case "chats":
-                <div class="sidebar-section">
-                    <button class="new-chat-btn" @onclick="CreateNewSession">
-                        <i class="fas fa-plus"></i>
+            <!-- New Session Button -->
+            <button class="btn btn-primary w-100 mb-3" @onclick="@CreateNewSession">
+                <i class="fas fa-plus me-2"></i>
+                @if (!IsCollapsed)
+                {
+                    <span>New Investigation</span>
+                }
+            </button>
+
+            <!-- Session Groups -->
+            <div class="session-groups">
+                <!-- Today's Sessions -->
+                @if (_todaySessions.Any())
+                {
+                    <div class="session-group">
                         @if (!IsCollapsed)
                         {
-                            <span>New Investigation</span>
+                            <div class="session-group-title">TODAY</div>
                         }
-                    </button>
-                </div>
-
-                @if (Sessions != null)
-                {
-                    @foreach (var group in GroupedSessions)
-                    {
-                        <div class="session-group">
-                            @if (!IsCollapsed)
-                            {
-                                <div class="session-group-title">@group.Title</div>
-                            }
-                            @foreach (var session in group.Sessions)
-                            {
-                                <SessionItem Session="@session" IsActive="@(session.Id == ActiveSessionId)" IsCollapsed="@IsCollapsed"
-                                             OnClick="@(() => SelectSession(session))" />
-                            }
-                        </div>
-                    }
-                }
-                break;
-
-            case "cases":
-                @if (RecentCases != null)
-                {
-                    <div class="case-list">
-                        @foreach (var caseItem in RecentCases)
+                        @foreach (var session in _todaySessions)
                         {
-                            <div class="case-item @(caseItem.Id == CurrentCaseId ? "active" : "")"
-                                 @onclick="() => SelectCase(caseItem)">
-                                <div class="case-icon">
-                                    <i class="fas @GetCaseIcon(caseItem.Type)"></i>
-                                </div>
-                                @if (!IsCollapsed)
-                                {
-                                    <div class="case-info">
-                                        <div class="case-name">@caseItem.Name</div>
-                                        <div class="case-meta">@caseItem.CaseNumber</div>
-                                    </div>
-                                }
-                            </div>
+                            <SessionItem Session="@session"
+                                         IsActive="@(session.Id == _activeSessionId)"
+                                         IsCollapsed="@IsCollapsed"
+                                         OnClick="@(() => SelectSession(session.Id))" />
                         }
                     </div>
                 }
-                break;
 
-            case "history":
-                <div class="history-list">
-                    <!-- History items here -->
-                </div>
-                break;
+                <!-- Yesterday's Sessions -->
+                @if (_yesterdaySessions.Any())
+                {
+                    <div class="session-group">
+                        @if (!IsCollapsed)
+                        {
+                            <div class="session-group-title">YESTERDAY</div>
+                        }
+                        @foreach (var session in _yesterdaySessions)
+                        {
+                            <SessionItem Session="@session"
+                                         IsActive="@(session.Id == _activeSessionId)"
+                                         IsCollapsed="@IsCollapsed"
+                                         OnClick="@(() => SelectSession(session.Id))" />
+                        }
+                    </div>
+                }
+
+                <!-- Older Sessions -->
+                @if (_olderSessions.Any())
+                {
+                    <div class="session-group">
+                        @if (!IsCollapsed)
+                        {
+                            <div class="session-group-title">OLDER</div>
+                        }
+                        @foreach (var session in _olderSessions)
+                        {
+                            <SessionItem Session="@session"
+                                         IsActive="@(session.Id == _activeSessionId)"
+                                         IsCollapsed="@IsCollapsed"
+                                         OnClick="@(() => SelectSession(session.Id))" />
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else if (_activeTab == "tools")
+        {
+            <!-- Quick Tools -->
+            <div class="quick-tools">
+                @if (!IsCollapsed)
+                {
+                    <div class="session-group-title">QUICK TOOLS</div>
+                }
+
+                <button class="tool-button w-100 mb-2" @onclick="@OpenOCRTool">
+                    <i class="fas fa-file-image"></i>
+                    @if (!IsCollapsed)
+                    {
+                        <span>OCR Extraction</span>
+                    }
+                </button>
+
+                <button class="tool-button w-100 mb-2" @onclick="@OpenAudioTool">
+                    <i class="fas fa-microphone"></i>
+                    @if (!IsCollapsed)
+                    {
+                        <span>Audio Transcription</span>
+                    }
+                </button>
+
+                <button class="tool-button w-100 mb-2" @onclick="@OpenHashTool">
+                    <i class="fas fa-fingerprint"></i>
+                    @if (!IsCollapsed)
+                    {
+                        <span>Hash Calculator</span>
+                    }
+                </button>
+
+                <button class="tool-button w-100 mb-2" @onclick="@OpenMetadataTool">
+                    <i class="fas fa-info-circle"></i>
+                    @if (!IsCollapsed)
+                    {
+                        <span>Metadata Viewer</span>
+                    }
+                </button>
+            </div>
         }
     </div>
 
-    <div class="sidebar-footer">
-        <button class="collapse-toggle" @onclick="ToggleCollapse">
-            <i class="fas @(IsCollapsed ? "fa-chevron-right" : "fa-chevron-left")"></i>
-        </button>
-    </div>
+    <!-- Sidebar Footer -->
+    @if (!IsCollapsed)
+    {
+        <div class="iim-sidebar-footer">
+            <div class="storage-indicator">
+                <i class="fas fa-database me-2"></i>
+                <span>@_storageUsed GB / @_storageTotal GB</span>
+                <div class="progress mt-1">
+                    <div class="progress-bar" style="width: @(_storagePercent)%"></div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @code {
-    [Parameter] public string? CurrentCaseId { get; set; }
-    [Parameter] public string? ActiveSessionId { get; set; }
-    [Parameter] public EventCallback<InvestigationSession> OnSessionSelected { get; set; }
-    [Parameter] public EventCallback<Case> OnCaseSelected { get; set; }
+    // Input Parameters
+    [Parameter] public bool IsCollapsed { get; set; }
 
-    private bool IsCollapsed = false;
-    private string ActiveTab = "chats";
-    private List<InvestigationSession>? Sessions;
-    private List<Case>? RecentCases;
-    private List<SessionGroup> GroupedSessions = new();
+    // EventCallback Parameters (proper way to handle events)
+    [Parameter] public EventCallback<string> OnSessionSelected { get; set; }
+    [Parameter] public EventCallback OnNewSession { get; set; }
+    [Parameter] public EventCallback<string> OnToolSelected { get; set; }
+
+    // Internal state - using InvestigationSession from IIM.Core.Models
+    private string _activeTab = "sessions";
+    private string _activeSessionId = "";
+    private List<InvestigationSession> _todaySessions = new();
+    private List<InvestigationSession> _yesterdaySessions = new();
+    private List<InvestigationSession> _olderSessions = new();
+    private double _storageUsed = 12.4;
+    private double _storageTotal = 100;
+    private int _storagePercent => (int)((_storageUsed / _storageTotal) * 100);
 
     protected override async Task OnInitializedAsync()
     {
         await LoadSessions();
-        await LoadRecentCases();
     }
 
     private async Task LoadSessions()
     {
-        if (!string.IsNullOrEmpty(CurrentCaseId))
+        // TODO: Load from service
+        // Simulated data for now
+        _todaySessions = new List<InvestigationSession>
         {
-            Sessions = await InvestigationService.GetCaseSessionsAsync(CurrentCaseId);
-            GroupedSessions = GroupSessionsByDate(Sessions);
-        }
+            new() { Id = "1", Title = "Financial Fraud Case #2847", Icon = "fa-university", CreatedAt = DateTime.Now.AddHours(-1) },
+            new() { Id = "2", Title = "CSAM Investigation", Icon = "fa-shield-alt", CreatedAt = DateTime.Now.AddHours(-3) }
+        };
+
+        _yesterdaySessions = new List<InvestigationSession>
+        {
+            new() { Id = "3", Title = "Money Laundering Analysis", Icon = "fa-money-bill-wave", CreatedAt = DateTime.Now.AddDays(-1)}
+        };
+
+        _olderSessions = new List<InvestigationSession>
+        {
+            new() { Id = "4", Title = "Identity Theft Case", Icon = "fa-user-secret", CreatedAt = DateTime.Now.AddDays(-5) },
+            new() { Id = "5", Title = "Cyber Attack Evidence", Icon = "fa-bug", CreatedAt = DateTime.Now.AddDays(-7)}
+        };
     }
 
-    private async Task LoadRecentCases()
+    private void SetActiveTab(string tab)
     {
-        RecentCases = await InvestigationService.GetRecentCasesAsync(10);
+        _activeTab = tab;
     }
 
-    public void SetActiveTab(string tab)
+    private async Task CreateNewSession()
     {
-        ActiveTab = tab;
-        StateHasChanged();
+        // Invoke the EventCallback - this is the proper way
+        await OnNewSession.InvokeAsync();
     }
 
-    private void SetActiveTabChats() => SetActiveTab("chats");
-    private void SetActiveTabCases() => SetActiveTab("cases");
-    private void SetActiveTabHistory() => SetActiveTab("history");
-
-    private void CreateNewSession()
+    private async Task SelectSession(string sessionId)
     {
-        Navigation.NavigateTo("/investigation/new");
+        _activeSessionId = sessionId;
+        // Invoke the EventCallback with parameter
+        await OnSessionSelected.InvokeAsync(sessionId);
     }
 
-    private async Task SelectSession(InvestigationSession session)
+    private async Task OpenOCRTool()
     {
-        await OnSessionSelected.InvokeAsync(session);
+        await OnToolSelected.InvokeAsync("ocr");
     }
 
-    private async Task SelectCase(Case caseItem)
+    private async Task OpenAudioTool()
     {
-        await OnCaseSelected.InvokeAsync(caseItem);
+        await OnToolSelected.InvokeAsync("audio");
     }
 
-    private void ToggleCollapse()
+    private async Task OpenHashTool()
     {
-        IsCollapsed = !IsCollapsed;
+        await OnToolSelected.InvokeAsync("hash");
     }
 
-    private List<SessionGroup> GroupSessionsByDate(List<InvestigationSession> sessions)
+    private async Task OpenMetadataTool()
     {
-        var now = DateTimeOffset.UtcNow;
-        var groups = new List<SessionGroup>();
-
-        var today = sessions.Where(s => s.UpdatedAt.Date == now.Date).ToList();
-        if (today.Any())
-            groups.Add(new SessionGroup { Title = "Today", Sessions = today });
-
-        var yesterday = sessions.Where(s => s.UpdatedAt.Date == now.AddDays(-1).Date).ToList();
-        if (yesterday.Any())
-            groups.Add(new SessionGroup { Title = "Yesterday", Sessions = yesterday });
-
-        var thisWeek = sessions.Where(s => s.UpdatedAt.Date < now.AddDays(-1).Date &&
-            s.UpdatedAt.Date >= now.AddDays(-7).Date).ToList();
-        if (thisWeek.Any())
-            groups.Add(new SessionGroup { Title = "Previous 7 Days", Sessions = thisWeek });
-
-        var older = sessions.Where(s => s.UpdatedAt.Date < now.AddDays(-7).Date).ToList();
-        if (older.Any())
-            groups.Add(new SessionGroup { Title = "Older", Sessions = older });
-
-        return groups;
+        await OnToolSelected.InvokeAsync("metadata");
     }
 
-    private string GetCaseIcon(CaseType type) => type switch
-    {
-        CaseType.DigitalForensics => "fa-laptop",
-        CaseType.FinancialCrime => "fa-dollar-sign",
-        CaseType.Cybercrime => "fa-bug",
-        CaseType.OSINT => "fa-globe",
-        CaseType.MissingPerson => "fa-user-slash",
-        _ => "fa-folder"
-    };
-
-    private class SessionGroup
-    {
-        public string Title { get; set; } = "";
-        public List<InvestigationSession> Sessions { get; set; } = new();
-    }
+    // TODO: Add to IIM.Core.Models:
+    // - SessionModel (or use existing InvestigationSession if it exists)
+    // Properties needed: Id, Title, Icon, Time, MessageCount
+    //
+    // For now using temporary type - REPLACE with:
+    // using IIM.Core.Models;
 }
+
+@* Component-specific styles if needed *@
+<style>
+    .tool-button {
+        padding: 10px;
+        background: white;
+        border: 1px solid var(--iim-border);
+        border-radius: 8px;
+        color: var(--iim-text-primary);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .tool-button:hover {
+            background: var(--iim-primary);
+            color: white;
+            border-color: var(--iim-primary);
+        }
+
+    .iim-sidebar-footer {
+        padding: 16px;
+        border-top: 1px solid var(--iim-border);
+        margin-top: auto;
+    }
+
+    .storage-indicator {
+        font-size: 12px;
+        color: var(--iim-text-secondary);
+    }
+
+    .progress {
+        height: 4px;
+        background: var(--iim-border);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: var(--iim-primary);
+        transition: width 0.3s;
+    }
+</style>

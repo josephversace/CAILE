@@ -1,0 +1,456 @@
+﻿@namespace IIM.Components.Settings
+@inject IJSRuntime JSRuntime
+@inject ILogger<ThemePanel> Logger
+
+<!-- BEGIN theme-panel -->
+
+<IIM.Components.Components.Shared.HudCard>
+    <div class="small fw-bold text-inverse mb-1">Display Mode</div>
+    <div class="card mb-3">
+        <div class="card-body p-2">
+            <div class="row gx-2">
+                <div class="col-6">
+                    <a href="javascript:;" @onclick="@(() => SetThemeMode("dark"))"
+                       class="app-theme-mode-link @(_themeMode == "dark" ? "active" : "")">
+                        <div class="img">
+                            <img src="/img/mode/dark.jpg" class="object-fit-cover" height="76" width="76" alt="Dark Mode">
+                        </div>
+                        <div class="text">Dark</div>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="javascript:;" @onclick="@(() => SetThemeMode("light"))"
+                       class="app-theme-mode-link @(_themeMode == "light" ? "active" : "")">
+                        <div class="img">
+                            <img src="/img/mode/light.jpg" class="object-fit-cover" height="76" width="76" alt="Light Mode">
+                        </div>
+                        <div class="text">Light</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-arrow">
+            <div class="card-arrow-top-left"></div>
+            <div class="card-arrow-top-right"></div>
+            <div class="card-arrow-bottom-left"></div>
+            <div class="card-arrow-bottom-right"></div>
+        </div>
+    </div>
+
+    <!-- Direction Mode -->
+    <div class="small fw-bold text-inverse mb-1">Direction Mode</div>
+    <div class="card mb-3">
+        <div class="card-body p-2">
+            <div class="row gx-2">
+                <div class="col-6">
+                    <a href="#" @onclick="@(() => SetDirection("ltr"))" @onclick:preventDefault="true"
+                       class="btn @(_direction == "ltr" ? "active" : "") btn-sm btn-outline-light d-flex align-items-center justify-content-center gap-2 w-100 rounded-0 fw-bold fs-12px">
+                        <i class="bi bi-text-left fs-16px my-n1 ms-n2"></i> LTR
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="#" @onclick="@(() => SetDirection("rtl"))" @onclick:preventDefault="true"
+                       class="btn @(_direction == "rtl" ? "active" : "") btn-sm btn-outline-light d-flex align-items-center justify-content-center gap-2 w-100 rounded-0 fw-bold fs-12px">
+                        <i class="bi bi-text-right fs-16px my-n1 ms-n2"></i> RTL
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-arrow">
+            <div class="card-arrow-top-left"></div>
+            <div class="card-arrow-top-right"></div>
+            <div class="card-arrow-bottom-left"></div>
+            <div class="card-arrow-bottom-right"></div>
+        </div>
+    </div>
+
+    <!-- Theme Color -->
+    <div class="small fw-bold text-inverse mb-1">Theme Color</div>
+    <div class="card mb-3">
+        <div class="card-body p-2">
+            <div class="app-theme-list">
+                @foreach (var theme in _themeColors)
+                {
+                    <div class="app-theme-list-item">
+                        <a href="javascript:;" class="app-theme-list-link bg-@theme.ColorClass @(_selectedTheme == theme.Class ? "active" : "")"
+                           @onclick="@(() => SetThemeColor(theme.Class))"
+                           title="@theme.Name">&nbsp;</a>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="card-arrow">
+            <div class="card-arrow-top-left"></div>
+            <div class="card-arrow-top-right"></div>
+            <div class="card-arrow-bottom-left"></div>
+            <div class="card-arrow-bottom-right"></div>
+        </div>
+    </div>
+
+    <!-- Theme Cover -->
+    <div class="small fw-bold text-inverse mb-1">Theme Cover</div>
+    <div class="card mb-3">
+        <div class="card-body p-2">
+            <div class="app-theme-cover">
+                <!-- Predefined Covers -->
+                @for (int i = 1; i <= 9; i++)
+                {
+                    var coverClass = i == 1 ? "" : $"bg-cover-{i}";
+                    var isActive = _selectedCover == coverClass;
+                    <div class="app-theme-cover-item @(isActive ? "active" : "")">
+                        <a href="javascript:;" class="app-theme-cover-link"
+                           style="background-image: url(/img/cover/cover-thumb-@(i).jpg);"
+                           @onclick="@(() => SetThemeCover(coverClass))"
+                           title="Cover @i">&nbsp;</a>
+                    </div>
+                }
+
+                <!-- Custom Upload Option -->
+                <div class="app-theme-cover-item @(_selectedCover == "custom" ? "active" : "")">
+                    <a href="javascript:;" class="app-theme-cover-link custom-upload"
+                       @onclick="TriggerCustomUpload"
+                       title="Upload Custom">
+                        @if (!string.IsNullOrEmpty(_customImageUrl))
+                        {
+                            <div style="background-image: url(@_customImageUrl); width: 100%; height: 100%; background-size: cover;"></div>
+                        }
+                        else
+                        {
+                            <i class="bi bi-upload"></i>
+                        }
+                    </a>
+                </div>
+            </div>
+
+            <!-- Hidden file input for custom image -->
+            <InputFile @ref="fileInput" OnChange="HandleFileUpload" accept="image/*" style="display: none;" />
+        </div>
+        <div class="card-arrow">
+            <div class="card-arrow-top-left"></div>
+            <div class="card-arrow-top-right"></div>
+            <div class="card-arrow-bottom-left"></div>
+            <div class="card-arrow-bottom-right"></div>
+        </div>
+    </div>
+
+    <!-- IIM Specific Settings -->
+    <div class="small fw-bold text-inverse mb-1">Investigation Settings</div>
+    <div class="card mb-3">
+        <div class="card-body p-2">
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" id="compactMode" @bind="_compactMode" @onclick="ToggleCompactMode">
+                <label class="form-check-label" for="compactMode">
+                    Compact Mode
+                </label>
+            </div>
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" id="highContrast" @bind="_highContrast" @onclick="ToggleHighContrast">
+                <label class="form-check-label" for="highContrast">
+                    High Contrast
+                </label>
+            </div>
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" id="animations" @bind="_animationsEnabled" @onclick="ToggleAnimations">
+                <label class="form-check-label" for="animations">
+                    Enable Animations
+                </label>
+            </div>
+        </div>
+        <div class="card-arrow">
+            <div class="card-arrow-top-left"></div>
+            <div class="card-arrow-top-right"></div>
+            <div class="card-arrow-bottom-left"></div>
+            <div class="card-arrow-bottom-right"></div>
+        </div>
+    </div>
+
+    <!-- Reset Options -->
+    <div class="d-grid gap-2">
+        <button class="btn btn-outline-theme btn-sm" @onclick="ResetToDefaults">
+            <i class="bi bi-arrow-counterclockwise me-2"></i>Reset to Defaults
+        </button>
+        <button class="btn btn-outline-theme btn-sm" @onclick="ExportSettings">
+            <i class="bi bi-download me-2"></i>Export Settings
+        </button>
+    </div>
+
+</IIM.Components.Components.Shared.HudCard>
+
+      
+     
+
+<!-- END theme-panel -->
+
+@code {
+    [Parameter] public EventCallback<ThemeSettings> OnThemeChanged { get; set; }
+    
+    private bool _isExpanded = true;
+    private string _themeMode = "dark";
+    private string _direction = "ltr";
+    private string _selectedTheme = "";
+    private string _selectedCover = "";
+    private string _customImageUrl = "";
+    private bool _compactMode = false;
+    private bool _highContrast = false;
+    private bool _animationsEnabled = true;
+    
+    private InputFile? fileInput;
+    
+    private List<ThemeColor> _themeColors = new()
+    {
+        new() { Name = "Pink", ColorClass = "pink", Class = "theme-pink" },
+        new() { Name = "Red", ColorClass = "red", Class = "theme-red" },
+        new() { Name = "Orange", ColorClass = "warning", Class = "theme-warning" },
+        new() { Name = "Yellow", ColorClass = "yellow", Class = "theme-yellow" },
+        new() { Name = "Lime", ColorClass = "lime", Class = "theme-lime" },
+        new() { Name = "Green", ColorClass = "green", Class = "theme-green" },
+        new() { Name = "Default", ColorClass = "teal", Class = "" },
+        new() { Name = "Cyan", ColorClass = "info", Class = "theme-info" },
+        new() { Name = "Blue", ColorClass = "primary", Class = "theme-primary" },
+        new() { Name = "Purple", ColorClass = "purple", Class = "theme-purple" },
+        new() { Name = "Indigo", ColorClass = "indigo", Class = "theme-indigo" },
+        new() { Name = "Gray", ColorClass = "gray-100", Class = "theme-gray-200" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSavedSettings();
+    }
+
+    private async Task LoadSavedSettings()
+    {
+        try
+        {
+            // Load HUD settings
+            var hudSettings = await JSRuntime.InvokeAsync<HudThemeSettings>("IIMThemeIntegration.getCurrentSettings");
+            _themeMode = hudSettings.ThemeMode ?? "dark";
+            _selectedTheme = hudSettings.ThemeClass ?? "";
+            _selectedCover = hudSettings.ThemeCover ?? "";
+            _direction = hudSettings.ThemeDirection ?? "ltr";
+
+            // Load IIM-specific settings
+            var iimSettings = await JSRuntime.InvokeAsync<IimCustomSettings>("IIMThemeIntegration.loadIIMSettings");
+            _compactMode = iimSettings.CompactMode;
+            _highContrast = iimSettings.HighContrast;
+            _animationsEnabled = iimSettings.Animations;
+            _customImageUrl = iimSettings.CustomBackground ?? "";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load theme settings");
+        }
+    }
+
+    private void TogglePanel()
+    {
+        _isExpanded = !_isExpanded;
+        StateHasChanged();
+    }
+
+    private async Task TriggerCustomUpload()
+    {
+        if (fileInput != null)
+        {
+            await JSRuntime.InvokeAsync<bool>("IIMThemeIntegration.triggerFileInput", "input[type=file]");
+        }
+    }
+    private async Task SetThemeMode(string mode)
+    {
+        _themeMode = mode;
+        var success = await JSRuntime.InvokeAsync<bool>("IIMThemeIntegration.setThemeMode", mode);
+        if (success)
+        {
+            await NotifyThemeChanged();
+        }
+    }
+
+    private async Task SetDirection(string direction)
+    {
+        _direction = direction;
+        var success = await JSRuntime.InvokeAsync<bool>("IIMThemeIntegration.setDirection", direction);
+        if (success)
+        {
+            await NotifyThemeChanged();
+        }
+    }
+
+    private async Task SetThemeColor(string themeClass)
+    {
+        _selectedTheme = themeClass;
+        var success = await JSRuntime.InvokeAsync<bool>("IIMThemeIntegration.setThemeColor", themeClass);
+        if (success)
+        {
+            await NotifyThemeChanged();
+        }
+    }
+    private async Task SetThemeCover(string coverClass)
+    {
+        _selectedCover = coverClass;
+        var success = await JSRuntime.InvokeAsync<bool>("IIMThemeIntegration.setThemeCover", coverClass);
+
+        // Clear custom background if selecting a predefined cover
+        if (coverClass != "custom" && success)
+        {
+            await JSRuntime.InvokeVoidAsync("IIMThemeIntegration.setCustomBackground", "");
+            _customImageUrl = "";
+        }
+
+        if (success)
+        {
+            await NotifyThemeChanged();
+        }
+    }
+
+    private async Task HandleFileUpload(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var file = e.File;
+            if (file.Size > 5 * 1024 * 1024) // 5MB limit
+            {
+                Logger.LogWarning("File too large: {Size}", file.Size);
+                return;
+            }
+
+            // Convert to base64
+            using var stream = file.OpenReadStream(5 * 1024 * 1024);
+            var buffer = new byte[file.Size];
+            await stream.ReadAsync(buffer);
+            var base64 = Convert.ToBase64String(buffer);
+            var dataUrl = $"data:{file.ContentType};base64,{base64}";
+            
+            _customImageUrl = dataUrl;
+            _selectedCover = "custom";
+            
+  
+            // Apply custom background using the integration module
+            await JSRuntime.InvokeVoidAsync("IIMThemeIntegration.setCustomBackground", dataUrl);
+            
+            await NotifyThemeChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to upload custom background");
+        }
+    }
+
+    private async Task ToggleCompactMode()
+    {
+        _compactMode = !_compactMode;
+        await JSRuntime.InvokeVoidAsync("IIMThemeIntegration.setCompactMode", _compactMode);
+        
+        await NotifyThemeChanged();
+    }
+
+    private async Task ToggleHighContrast()
+    {
+        _highContrast = !_highContrast;
+
+
+        
+        await JSRuntime.InvokeVoidAsync("IIMThemeIntegration.setHighContrast", _highContrast);
+        
+        await NotifyThemeChanged();
+    }
+
+    private async Task ToggleAnimations()
+    {
+        _animationsEnabled = !_animationsEnabled;
+     
+        
+        await JSRuntime.InvokeVoidAsync("IIMThemeIntegration.setAnimations", _animationsEnabled);
+        
+        await NotifyThemeChanged();
+    }
+
+    private async Task ResetToDefaults()
+    {
+        _themeMode = "dark";
+        _direction = "ltr";
+        _selectedTheme = "";
+        _selectedCover = "";
+        _compactMode = false;
+        _highContrast = false;
+        _animationsEnabled = true;
+        _customImageUrl = "";
+        
+        // Click the default theme selectors using HUD's methods
+        // Reset all settings using the integration module
+        await JSRuntime.InvokeVoidAsync("IIMThemeIntegration.resetToDefaults");
+        
+        await NotifyThemeChanged();
+    }
+
+    private async Task ExportSettings()
+    {
+        var settings = new ThemeSettings
+        {
+            ThemeMode = _themeMode,
+            Direction = _direction,
+            ThemeClass = _selectedTheme,
+            CoverClass = _selectedCover,
+            CustomImageUrl = _customImageUrl,
+            CompactMode = _compactMode,
+            HighContrast = _highContrast,
+            AnimationsEnabled = _animationsEnabled
+        };
+        
+        var json = System.Text.Json.JsonSerializer.Serialize(settings, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        var base64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+        // Download the file using the helper function
+        await JSRuntime.InvokeVoidAsync("downloadFile", "iim-theme-settings.json", base64);
+    }
+
+    private async Task NotifyThemeChanged()
+    {
+        var settings = new ThemeSettings
+        {
+            ThemeMode = _themeMode,
+            Direction = _direction,
+            ThemeClass = _selectedTheme,
+            CoverClass = _selectedCover,
+            CustomImageUrl = _customImageUrl,
+            CompactMode = _compactMode,
+            HighContrast = _highContrast,
+            AnimationsEnabled = _animationsEnabled
+        };
+        
+        await OnThemeChanged.InvokeAsync(settings);
+    }
+
+    private class ThemeColor
+    {
+        public string Name { get; set; } = "";
+        public string ColorClass { get; set; } = "";
+        public string Class { get; set; } = "";
+    }
+
+    // Models for JavaScript interop
+    private class HudThemeSettings
+    {
+        public string? ThemeMode { get; set; }
+        public string? ThemeClass { get; set; }
+        public string? ThemeCover { get; set; }
+        public string? ThemeDirection { get; set; }
+    }
+
+    private class IimCustomSettings
+    {
+        public bool CompactMode { get; set; }
+        public bool HighContrast { get; set; }
+        public bool Animations { get; set; }
+        public string? CustomBackground { get; set; }
+    }
+
+    public class ThemeSettings
+    {
+        public string ThemeMode { get; set; } = "dark";
+        public string Direction { get; set; } = "ltr";
+        public string ThemeClass { get; set; } = "";
+        public string CoverClass { get; set; } = "";
+        public string CustomImageUrl { get; set; } = "";
+        public bool CompactMode { get; set; }
+        public bool HighContrast { get; set; }
+        public bool AnimationsEnabled { get; set; } = true;
+    }
+}
