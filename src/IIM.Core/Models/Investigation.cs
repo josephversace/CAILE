@@ -70,11 +70,18 @@ namespace IIM.Core.Models
 
     public class ResponseVisualization
     {
-        public string Type { get; set; } = string.Empty;
+        public VisualizationType Type { get; set; } = VisualizationType.Auto;
         public string? Title { get; set; }
         public string? Description { get; set; }
         public object Data { get; set; } = new { };
         public Dictionary<string, object>? Options { get; set; }
+
+
+        public string? ChartType { get; set; } // For Chart visualizations (bar, line, pie, etc.)
+        public List<string>? Columns { get; set; } // For Table visualizations
+        public string? GraphType { get; set; } // For Graph visualizations (network, tree, etc.)
+        public string? MapType { get; set; } // For Map visualizations (heat, markers, etc.)
+        public string? CustomTemplate { get; set; } // For Custom visualizations
     }
 
     public class CreateSessionRequest

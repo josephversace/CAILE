@@ -174,7 +174,7 @@
     {
         <div class="input-section">
             <MultiModalInput 
-                OnSendMessage="@SendMessage"
+                OnSendMessage="@SendQueryToBackend"
                 OnFileAttach="@AttachFiles"
                 OnVoiceInput="@ProcessVoiceInput"
                 OnToolSelect="@SelectTool"
@@ -538,10 +538,11 @@
     }
 
     
-    private async Task SendMessage(InvestigationQuery query)
-    {
-          var content = query.Text;
 
+
+    // Method 1: Public method for UI components (takes a string)
+    private async Task SendMessage(string content)
+    {
         if (string.IsNullOrWhiteSpace(content) || IsProcessing)
             return;
             
@@ -551,7 +552,7 @@
             ProcessingMessage = "Sending message...";
             ErrorMessage = null;
             
-            // Create user message
+            // Create user message for display
             var userMessage = new InvestigationMessage
             {
                 Id = Guid.NewGuid().ToString(),
@@ -560,7 +561,7 @@
                 Timestamp = DateTimeOffset.UtcNow
             };
             
-            // Add to messages immediately
+            // Add to messages immediately for UI feedback
             Messages.Add(userMessage);
             StateHasChanged();
             await ScrollToBottom();
@@ -571,10 +572,21 @@
                 ProcessingMessage = "Processing response...";
                 ShowTypingIndicator = true;
                 
-         
-                var response = await InvestigationService.SendQueryAsync(Session.Id, query);
+                // Create the query object from the string content
+                var query = new InvestigationQuery
+                {
+                    Text = content,
+                    EnabledTools = AvailableTools,
+                    Timestamp = DateTimeOffset.UtcNow,
+                    // Add any attachments if they were staged
+                    Attachments = _stagedAttachments ?? new List<Attachment>()
+                };
                 
-                // Response will come through SignalR
+                // Clear staged attachments after including them
+                _stagedAttachments?.Clear();
+                
+                // Send the query
+                await SendQueryToBackend(query);
             }
             
             await OnMessageSent.InvokeAsync(userMessage);
@@ -593,12 +605,38 @@
         }
     }
     
+    // Method 2: Private method for sending the actual query to backend
+    private async Task SendQueryToBackend(InvestigationQuery query)
+    {
+        try
+        {
+            var response = await InvestigationService.SendQueryAsync(Session!.Id, query);
+            // Response will come through SignalR
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to send query to backend");
+            throw; // Re-throw to be handled by caller
+        }
+    }
+    
+    // Add this field to stage attachments
+    private List<Attachment>? _stagedAttachments;
+    
+    // Update AttachFiles to stage attachments for next message
     private async Task AttachFiles(List<Attachment> attachments)
     {
         try
         {
-            // Handle file attachments
+            // Stage attachments to be included in next message
+            _stagedAttachments ??= new List<Attachment>();
+            _stagedAttachments.AddRange(attachments);
+            
+            // Also handle them immediately if needed
             await OnFilesAttached.InvokeAsync(attachments);
+            
+            // Optionally show a notification that files are attached
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -606,6 +644,92 @@
             ErrorMessage = "Failed to attach files. Please try again.";
         }
     }
+    
+    // Fix HandleQuickActionSelected - it should use string parameter
+    private async Task HandleQuickActionSelected(QuickActionResult result)
+    {
+        Logger.LogInformation("Quick action selected: {Command}", result.Command);
+        
+        // If the action has a prompt, send it as a message
+        if (!string.IsNullOrEmpty(result.Prompt))
+        {
+            await SendMessage(result.Prompt); // Pass string, not object
+        }
+        else
+        {
+            // Handle specific commands
+            switch (result.Command)
+            {
+                case "upload":
+                    // Trigger file upload
+                    // This would typically open a file picker
+                    break;
+                    
+                case "search":
+                    // Focus search input or show search modal
+                    break;
+                    
+                case "template":
+                    // Template selection is handled by QuickActions component
+                    break;
+                    
+                default:
+                    // Execute as a tool or send to OnQuickAction callback
+                    await OnQuickAction.InvokeAsync(result.Command);
+                    break;
+            }
+        }
+    }
+    
+    // Fix HandleQuickAction - simplified version
+    private async Task HandleQuickAction(QuickActionResult result)
+    {
+        Logger.LogInformation("Quick action triggered: {ActionId} - {Command}",
+            result.ActionId, result.Command);
+
+        // Handle the quick action based on command
+        switch (result.Command)
+        {
+            case "search":
+                // Trigger search functionality
+                break;
+
+            case "upload":
+                // Trigger file upload
+                break;
+
+            case "image":
+            case "image-analysis":
+                // Trigger image analysis
+                break;
+
+            case "audio":
+            case "transcribe":
+                // Trigger audio transcription
+                break;
+
+            case "apply-template":
+                // Apply investigation template
+                if (!string.IsNullOrEmpty(result.Prompt))
+                {
+                    await SendMessage(result.Prompt); // Just pass the string
+                }
+                break;
+
+            default:
+                // For other actions, use the prompt if provided
+                if (!string.IsNullOrEmpty(result.Prompt))
+                {
+                    await SendMessage(result.Prompt); // Just pass the string
+                }
+                break;
+        }
+
+        // Invoke the callback if provided
+        await OnQuickAction.InvokeAsync(result.Command);
+    }
+    
+ 
     
     private async Task ProcessVoiceInput(Stream audioStream)
     {
@@ -633,41 +757,7 @@
         Logger.LogInformation("Tool selected: {ToolId}", toolId);
         await Task.CompletedTask;
     }
-    
-    private async Task HandleQuickActionSelected(QuickActionResult result)
-    {
-        Logger.LogInformation("Quick action selected: {Command}", result.Command);
-        
-        // If the action has a prompt, send it as a message
-        if (!string.IsNullOrEmpty(result.Prompt))
-        {
-            await SendMessage(result.Prompt);
-        }
-        else
-        {
-            // Handle specific commands
-            switch (result.Command)
-            {
-                case "upload":
-                    // Trigger file upload
-                    // This would typically open a file picker
-                    break;
-                    
-                case "search":
-                    // Focus search input or show search modal
-                    break;
-                    
-                case "template":
-                    // Template selection is handled by QuickActions component
-                    break;
-                    
-                default:
-                    // Execute as a tool or send to OnQuickAction callback
-                    await OnQuickAction.InvokeAsync(result.Command);
-                    break;
-            }
-        }
-    }
+
     
     private async Task HandleToolExecute((string toolName, Dictionary<string, object> parameters) args)
     {
@@ -717,63 +807,7 @@
         await Task.CompletedTask;
     }
 
-    private async Task HandleQuickAction(QuickActionResult result)
-    {
-        Logger.LogInformation("Quick action triggered: {ActionId} - {Command}",
-            result.ActionId, result.Command);
 
-        // Handle the quick action based on command
-        switch (result.Command)
-        {
-            case "search":
-                // Trigger search functionality
-                break;
-
-            case "upload":
-                // Trigger file upload
-                break;
-
-            case "image":
-            case "image-analysis":
-                // Trigger image analysis
-                break;
-
-            case "audio":
-            case "transcribe":
-                // Trigger audio transcription
-                break;
-
-            case "apply-template":
-                // Apply investigation template
-                if (!string.IsNullOrEmpty(result.Prompt))
-                {
-                    // Send the template prompt as a message
-                    var message = new InvestigationMessage
-                    {
-                        Content = result.Prompt,
-                        Role = MessageRole.User
-                    };
-                    await SendMessage(message.Content);
-                }
-                break;
-
-            default:
-                // For other actions, use the prompt if provided
-                if (!string.IsNullOrEmpty(result.Prompt))
-                {
-                    var message = new InvestigationMessage
-                    {
-                        Content = result.Prompt,
-                        Role = MessageRole.User
-                    };
-                    await SendMessage(message.Content);
-                }
-                break;
-        }
-
-        // Invoke the callback if provided
-        await OnQuickAction.InvokeAsync(result.Command);
-    }
     
     private void ShowSessionInfo()
     {

@@ -94,14 +94,17 @@ public record InvestigationMessageDto(
 );
 
 public record TranscriptionResultDto(
-    string Id,
-    string EvidenceId,
-    string Text,
-    string Language,
-    double Confidence,
-    List<TranscriptionSegmentDto> Segments,
-    Dictionary<string, object>? Metadata
-);
+     string Id,
+     string EvidenceId,
+     string Text,
+     string Language,
+     double Confidence,
+     List<TranscriptionSegmentDto> Segments,
+     Dictionary<string, object>? Metadata,
+     // Add missing properties
+     TimeSpan? Duration = null,
+     int? AudioFileId = null
+ );
 
 public record TranscriptionSegmentDto(
     int Start,

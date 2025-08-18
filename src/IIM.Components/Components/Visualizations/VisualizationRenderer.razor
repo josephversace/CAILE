@@ -1,0 +1,203 @@
+﻿@namespace IIM.Components.Visualizations
+@using System.Text.Json
+@using System.Collections.Generic
+@using Microsoft.AspNetCore.Components
+@using IIM.Core.Models
+@using IIM.Shared.Enums
+@inject IJSRuntime JSRuntime
+
+<div class="visualization-renderer">
+    @if (Visualization is not null)
+    {
+        <div class="visualization-container">
+            @switch (Visualization.Type)
+            {
+                case VisualizationType.Chart:
+                    @ChartVisualization((Visualization.Data!, Visualization.Title ?? "", Visualization.ChartType))
+                    break;
+
+                case VisualizationType.Table:
+                    @TableVisualization((Visualization.Data!, Visualization.Title ?? "", Visualization.Columns))
+                    break;
+
+                case VisualizationType.Timeline:
+                    @TimelineVisualization((Visualization.Data!, Visualization.Title ?? ""))
+                    break;
+
+                case VisualizationType.Graph:
+                    @GraphVisualization((Visualization.Data!, Visualization.Title ?? "", Visualization.GraphType))
+                    break;
+
+                case VisualizationType.Map:
+                    @MapVisualization((Visualization.Data!, Visualization.Title ?? "", Visualization.MapType))
+                    break;
+
+                case VisualizationType.Custom:
+                    @CustomVisualization((Visualization.Data!, Visualization.Title ?? "", Visualization.CustomTemplate))
+                    break;
+
+                default:
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        Unsupported visualization type: @Visualization.Type
+                    </div>
+                    break;
+            }
+        </div>
+    }
+    else if (Data is not null)
+    {
+        @AutoVisualization((Data, Title))
+    }
+    else
+    {
+        <div class="text-muted text-center p-4">
+            <i class="fas fa-chart-bar fa-3x mb-2"></i>
+            <p>No visualization data available</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ResponseVisualization? Visualization { get; set; }
+    [Parameter] public object? Data { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    // ---------- Templates (RenderFragments) ----------
+
+    private RenderFragment<(object Data, string? Title)> AutoVisualization = context => @<div class="auto-viz">
+        @if (!string.IsNullOrEmpty(context.Title))
+        {
+            <h6 class="viz-title">@context.Title</h6>
+        }
+        <div class="auto-container">
+            <pre><code>@JsonSerializer.Serialize(context.Data, new JsonSerializerOptions { WriteIndented = true })</code></pre>
+        </div>
+    </div>;
+
+    private RenderFragment<(object Data, string Title, string? ChartType)> ChartVisualization = context => @<div class="chart-viz">
+        @if (!string.IsNullOrWhiteSpace(context.Title))
+        {
+            <h6 class="viz-title">@context.Title</h6>
+        }
+        <div class="chart-container" data-chart-type="@context.ChartType">
+            <canvas id="@($"chart-{Guid.NewGuid():N}")" width="400" height="200"></canvas>
+        </div>
+    </div>;
+
+    private RenderFragment<(object Data, string Title, string? Template)> CustomVisualization = context => @<div class="custom-viz">
+        @if (!string.IsNullOrWhiteSpace(context.Title))
+        {
+            <h6 class="viz-title">@context.Title</h6>
+        }
+        <div class="custom-container">
+            @((MarkupString)(context.Template ?? "<p>Custom visualization</p>"))
+        </div>
+    </div>;
+
+    private RenderFragment<(object Data, string Title, string? GraphType)> GraphVisualization = context => @<div class="graph-viz">
+        @if (!string.IsNullOrWhiteSpace(context.Title))
+        {
+            <h6 class="viz-title">@context.Title</h6>
+        }
+        <div class="graph-container" id="@($"graph-{Guid.NewGuid():N}")">
+            <!-- D3/graph render target -->
+        </div>
+    </div>;
+
+    private RenderFragment<(object Data, string Title, string? MapType)> MapVisualization = context => @<div class="map-viz">
+        @if (!string.IsNullOrWhiteSpace(context.Title))
+        {
+            <h6 class="viz-title">@context.Title</h6>
+        }
+        <div class="map-container" id="@($"map-{Guid.NewGuid():N}")" style="height:400px;">
+            <!-- Leaflet/Map render target -->
+        </div>
+    </div>;
+
+    private RenderFragment<(object Data, string Title, List<string>? Columns)> TableVisualization = context => @<div class="table-viz">
+        @if (!string.IsNullOrWhiteSpace(context.Title))
+        {
+            <h6 class="viz-title">@context.Title</h6>
+        }
+        <div class="table-responsive">
+            @{
+                var jsonData = JsonSerializer.Serialize(context.Data);
+                var items = JsonSerializer.Deserialize<List<Dictionary<string, object?>>>(jsonData);
+
+                if (items?.Any() == true)
+                {
+                    // Decide column order
+                    var cols = context.Columns?.Any() == true
+                        ? context.Columns
+                        : items.First().Keys.ToList();
+
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                @foreach (var col in cols)
+                                {
+                                    <th>@col</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in items.Take(100))  // cap for perf
+                            {
+                                <tr>
+                                    @foreach (var col in cols)
+                                    {
+                                        item.TryGetValue(col, out var value);
+                                        <td>@(value?.ToString())</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="text-muted">No rows to display.</div>
+                }
+            }
+        </div>
+    </div>;
+
+    private RenderFragment<(object Data, string Title)> TimelineVisualization = context => @<div class="timeline-viz">
+        @if (!string.IsNullOrWhiteSpace(context.Title))
+        {
+            <h6 class="viz-title">@context.Title</h6>
+        }
+        <div class="timeline-container">
+            <div class="timeline-line"></div>
+            @{
+                var jsonData = JsonSerializer.Serialize(context.Data);
+                var events = JsonSerializer.Deserialize<List<TimelineEvent>>(jsonData);
+                if (events?.Any() == true)
+                {
+                    @foreach (var evt in events.OrderBy(e => e.Timestamp))
+                    {
+                        <div class="timeline-event">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <small class="text-muted">@evt.Timestamp.ToString("g")</small>
+                                <div>@evt.Description</div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-muted">No timeline events.</div>
+                }
+            }
+        </div>
+    </div>;
+
+    private sealed class TimelineEvent
+    {
+        public DateTime Timestamp { get; set; }
+        public string Description { get; set; } = "";
+    }
+}
