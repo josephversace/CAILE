@@ -13,7 +13,9 @@
     <div class="tool-group">
         <ToolButton Icon="fa-cube" Label="Models" OnClick="@ShowModelLibrary" />
 
-        <ToolButton Icon="fa-sliders-h" Label="Fine-tune" OnClick="@ShowFineTuning" />
+        <ToolButton Icon="fa-globe" Label="Evidence"
+                    IsActive="@(ActiveTool == "evidence")"
+                    OnClick="@GoToEvidence" />
     </div>
 
     <div class="tool-group">
@@ -36,6 +38,14 @@
 
         <ToolButton Icon="fa-chart-bar" Label="Report" IsActive="@(ActiveTool == "report")"
             OnClick="@(() => SelectTool("report"))" />
+    </div>
+
+    <div class="tool-group">
+        <ToolButton Icon="fa-globe" Label="Settings"
+                    IsActive="@(ActiveTool == "settings")"
+                    OnClick="@GoToSettings" />
+
+ 
     </div>
 
     @if (CustomTools != null && CustomTools.Any())
@@ -69,6 +79,17 @@
     private void ShowFineTuning()
     {
         Navigation.NavigateTo("/fine-tuning");
+    }
+
+
+    private void GoToSettings()
+    {
+        Navigation.NavigateTo("/settings");
+    }
+   
+    private void GoToEvidence()
+    {
+        Navigation.NavigateTo("/evidence");
     }
 
     public class CustomTool

@@ -1,0 +1,592 @@
+﻿@namespace IIM.Components.Messages
+@using IIM.Core.Models
+@using IIM.Shared.Enums
+@using IIM.Shared.Models
+
+<div class="message-actions-container">
+    @if (ShowInline)
+    {
+        <!-- Inline Actions (shown on hover) -->
+        <div class="message-actions-inline">
+            @foreach (var action in GetAvailableActions())
+            {
+                <button class="action-btn"
+                        @onclick="() => HandleAction(action)"
+                        title="@action.Tooltip"
+                        disabled="@(!action.IsEnabled)">
+                    <i class="fas @action.Icon"></i>
+                    @if (!CompactMode)
+                    {
+                        <span class="action-label">@action.Label</span>
+                    }
+                </button>
+            }
+
+            @if (HasMoreActions())
+            {
+                <div class="dropdown d-inline-block">
+                    <button class="action-btn"
+                            data-bs-toggle="dropdown"
+                            title="More actions">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        @foreach (var action in GetOverflowActions())
+                        {
+                            <li>
+                                <a class="dropdown-item @(!action.IsEnabled ? "disabled" : "")"
+                                   @onclick="() => HandleAction(action)"
+                                   @onclick:preventDefault="true">
+                                    <i class="fas @action.Icon me-2"></i>
+                                    @action.Label
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- Toolbar Actions (always visible) -->
+        <div class="message-actions-toolbar">
+            <div class="btn-group btn-group-sm" role="group">
+                @foreach (var action in GetAvailableActions())
+                {
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            @onclick="() => HandleAction(action)"
+                            title="@action.Tooltip"
+                            disabled="@(!action.IsEnabled)">
+                        <i class="fas @action.Icon"></i>
+                        @if (!CompactMode)
+                        {
+                            <span class="ms-1">@action.Label</span>
+                        }
+                    </button>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modals -->
+@if (_showEditModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Message</h5>
+                    <button type="button" class="btn-close" @onclick="CloseEditModal"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea class="form-control" rows="5" @bind="_editContent"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseEditModal">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveEdit">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_showShareModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Share Message</h5>
+                    <button type="button" class="btn-close" @onclick="() => _showShareModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Share via:</label>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary" @onclick="() => ShareVia(" link")">
+                                <i class="fas fa-link me-2"></i> Copy Link
+                            </button>
+                            <button class="btn btn-outline-primary" @onclick="() => ShareVia(" email")">
+                                <i class="fas fa-envelope me-2"></i> Email
+                            </button>
+                            <button class="btn btn-outline-primary" @onclick="() => ShareVia(" export")">
+                                <i class="fas fa-file-export me-2"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(_shareLink))
+                    {
+                        <div class="alert alert-success">
+                            <small>Link copied to clipboard!</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .message-actions-inline {
+        display: flex;
+        gap: 0.25rem;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .message-wrapper:hover .message-actions-inline {
+        opacity: 1;
+    }
+
+    .action-btn {
+        background: none;
+        border: none;
+        color: var(--bs-gray-600);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+        .action-btn:hover:not(:disabled) {
+            background: var(--bs-gray-200);
+            color: var(--bs-dark);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+    .action-label {
+        font-size: 0.875rem;
+        margin-left: 0.25rem;
+    }
+
+    .message-actions-toolbar {
+        padding: 0.5rem 0;
+        border-top: 1px solid var(--bs-gray-200);
+        margin-top: 0.5rem;
+    }
+</style>
+
+@code {
+    [Parameter] public InvestigationMessage Message { get; set; } = new();
+    [Parameter] public bool ShowInline { get; set; } = true;
+    [Parameter] public bool CompactMode { get; set; } = false;
+    [Parameter] public List<MessageActionType>? AllowedActions { get; set; }
+
+    // Event Callbacks
+    [Parameter] public EventCallback<MessageActionRequest> OnAction { get; set; }
+    [Parameter] public EventCallback<InvestigationMessage> OnEdit { get; set; }
+    [Parameter] public EventCallback<InvestigationMessage> OnRegenerate { get; set; }
+    [Parameter] public EventCallback<InvestigationMessage> OnDelete { get; set; }
+
+    // Services
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] private ILogger<MessageActions> Logger { get; set; } = default!;
+
+    // State
+    private bool _showEditModal = false;
+    private bool _showShareModal = false;
+    private string _editContent = "";
+    private string? _shareLink;
+
+    private List<MessageAction> GetAvailableActions()
+    {
+        var actions = new List<MessageAction>();
+
+        // Copy is always available
+        actions.Add(new MessageAction
+        {
+            Type = MessageActionType.Copy,
+            Label = "Copy",
+            Icon = "fa-copy",
+            Tooltip = "Copy to clipboard",
+            IsEnabled = true,
+            IsPrimary = true
+        });
+
+        // Details toggle
+        actions.Add(new MessageAction
+        {
+            Type = MessageActionType.Details,
+            Label = "Details",
+            Icon = "fa-info-circle",
+            Tooltip = "Show message details",
+            IsEnabled = true,
+            IsPrimary = true
+        });
+
+        // Role-specific actions
+        switch (Message.Role)
+        {
+            case MessageRole.User:
+                actions.Add(new MessageAction
+                {
+                    Type = MessageActionType.Edit,
+                    Label = "Edit",
+                    Icon = "fa-edit",
+                    Tooltip = "Edit message",
+                    IsEnabled = true,
+                    IsPrimary = true
+                });
+                break;
+
+            case MessageRole.Assistant:
+                actions.Add(new MessageAction
+                {
+                    Type = MessageActionType.Regenerate,
+                    Label = "Regenerate",
+                    Icon = "fa-redo",
+                    Tooltip = "Regenerate response",
+                    IsEnabled = true,
+                    IsPrimary = true
+                });
+
+                if (HasExportableContent())
+                {
+                    actions.Add(new MessageAction
+                    {
+                        Type = MessageActionType.Export,
+                        Label = "Export",
+                        Icon = "fa-download",
+                        Tooltip = "Export content",
+                        IsEnabled = true,
+                        IsPrimary = false
+                    });
+                }
+                break;
+
+            case MessageRole.Tool:
+                actions.Add(new MessageAction
+                {
+                    Type = MessageActionType.Rerun,
+                    Label = "Re-run",
+                    Icon = "fa-play",
+                    Tooltip = "Re-run tool",
+                    IsEnabled = true,
+                    IsPrimary = true
+                });
+                break;
+        }
+
+        // Filter by allowed actions if specified
+        if (AllowedActions != null)
+        {
+            actions = actions.Where(a => AllowedActions.Contains(a.Type)).ToList();
+        }
+
+        return actions.Where(a => a.IsPrimary).Take(3).ToList();
+    }
+
+    private List<MessageAction> GetOverflowActions()
+    {
+        var allActions = new List<MessageAction>
+        {
+            new MessageAction
+            {
+                Type = MessageActionType.Share,
+                Label = "Share",
+                Icon = "fa-share-alt",
+                Tooltip = "Share message",
+                IsEnabled = true
+            },
+            new MessageAction
+            {
+                Type = MessageActionType.Pin,
+                Label = Message.Metadata?.ContainsKey("pinned") == true ? "Unpin" : "Pin",
+                Icon = Message.Metadata?.ContainsKey("pinned") == true ? "fa-thumbtack" : "fa-thumbtack",
+                Tooltip = Message.Metadata?.ContainsKey("pinned") == true ? "Unpin message" : "Pin message",
+                IsEnabled = true
+            },
+            new MessageAction
+            {
+                Type = MessageActionType.Flag,
+                Label = "Flag",
+                Icon = "fa-flag",
+                Tooltip = "Flag for review",
+                IsEnabled = true
+            },
+            new MessageAction
+            {
+                Type = MessageActionType.Annotate,
+                Label = "Add Note",
+                Icon = "fa-sticky-note",
+                Tooltip = "Add annotation",
+                IsEnabled = true
+            }
+        };
+
+        // Add delete for non-system messages
+        if (Message.Role != MessageRole.System)
+        {
+            allActions.Add(new MessageAction
+            {
+                Type = MessageActionType.Delete,
+                Label = "Delete",
+                Icon = "fa-trash",
+                Tooltip = "Delete message",
+                IsEnabled = true,
+                IsDangerous = true
+            });
+        }
+
+        // Filter by allowed actions if specified
+        if (AllowedActions != null)
+        {
+            allActions = allActions.Where(a => AllowedActions.Contains(a.Type)).ToList();
+        }
+
+        return allActions;
+    }
+
+    private bool HasMoreActions()
+    {
+        return GetOverflowActions().Any();
+    }
+
+    private bool HasExportableContent()
+    {
+        return Message.ToolResults?.Any() == true ||
+               Message.Attachments?.Any() == true ||
+               Message.Citations?.Any() == true;
+    }
+
+    private async Task HandleAction(MessageAction action)
+    {
+        Logger.LogInformation("Message action triggered: {Action} for message {MessageId}",
+            action.Type, Message.Id);
+
+        switch (action.Type)
+        {
+            case MessageActionType.Copy:
+                await CopyMessage();
+                break;
+
+            case MessageActionType.Edit:
+                ShowEditModal();
+                break;
+
+            case MessageActionType.Regenerate:
+                await OnRegenerate.InvokeAsync(Message);
+                break;
+
+            case MessageActionType.Delete:
+                if (await ConfirmDelete())
+                {
+                    await OnDelete.InvokeAsync(Message);
+                }
+                break;
+
+            case MessageActionType.Share:
+                ShowShareModal();
+                break;
+
+            case MessageActionType.Export:
+                await ExportMessage();
+                break;
+
+            case MessageActionType.Rerun:
+                await RerunTool();
+                break;
+
+            case MessageActionType.Pin:
+                await TogglePin();
+                break;
+
+            case MessageActionType.Flag:
+                await FlagMessage();
+                break;
+
+            case MessageActionType.Annotate:
+                await AnnotateMessage();
+                break;
+
+            case MessageActionType.Details:
+                // Just notify parent, don't handle internally
+                break;
+        }
+
+        // Notify parent
+        await OnAction.InvokeAsync(new MessageActionRequest
+        {
+            MessageId = Message.Id,
+            Action = action.Type,
+            Data = action.Data
+        });
+    }
+
+    private async Task CopyMessage()
+    {
+        var content = GetCopyContent();
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", content);
+    }
+
+    private string GetCopyContent()
+    {
+        var content = Message.Content;
+
+        // Add citations if present
+        if (Message.Citations?.Any() == true)
+        {
+            content += "\n\nSources:\n";
+            foreach (var citation in Message.Citations)
+            {
+                content += $"- {citation.Source}\n";
+            }
+        }
+
+        return content;
+    }
+
+    private void ShowEditModal()
+    {
+        _editContent = Message.Content;
+        _showEditModal = true;
+    }
+
+    private void CloseEditModal()
+    {
+        _showEditModal = false;
+        _editContent = "";
+    }
+
+    private async Task SaveEdit()
+    {
+        Message.Content = _editContent;
+        Message.Metadata ??= new();
+        Message.Metadata["edited"] = true;
+        Message.Metadata["editedAt"] = DateTimeOffset.UtcNow.ToString();
+
+        await OnEdit.InvokeAsync(Message);
+        CloseEditModal();
+    }
+
+    private void ShowShareModal()
+    {
+        _showShareModal = true;
+    }
+
+    private async Task ShareVia(string method)
+    {
+        switch (method)
+        {
+            case "link":
+                _shareLink = $"https://iim.local/share/{Message.Id}";
+                await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _shareLink);
+                break;
+
+            case "email":
+                var mailto = $"mailto:?subject=IIM Message&body={Uri.EscapeDataString(Message.Content)}";
+                await JSRuntime.InvokeVoidAsync("window.open", mailto);
+                break;
+
+            case "export":
+                await ExportMessage();
+                _showShareModal = false;
+                break;
+        }
+    }
+
+    private async Task ExportMessage()
+    {
+        var request = new MessageActionRequest
+        {
+            MessageId = Message.Id,
+            Action = MessageActionType.Export,
+            Data = new Dictionary<string, object>
+            {
+                ["format"] = "json",
+                ["includeAttachments"] = true,
+                ["includeCitations"] = true
+            }
+        };
+
+        await OnAction.InvokeAsync(request);
+    }
+
+    private async Task RerunTool()
+    {
+        if (Message.ToolResults?.Any() == true)
+        {
+            var toolResult = Message.ToolResults.First();
+            var request = new MessageActionRequest
+            {
+                MessageId = Message.Id,
+                Action = MessageActionType.Rerun,
+                Data = new Dictionary<string, object>
+                {
+                    ["toolName"] = toolResult.ToolName,
+                    ["parameters"] = toolResult.Metadata ?? new()
+                }
+            };
+
+            await OnAction.InvokeAsync(request);
+        }
+    }
+
+    private async Task TogglePin()
+    {
+        Message.Metadata ??= new();
+
+        if (Message.Metadata.ContainsKey("pinned"))
+        {
+            Message.Metadata.Remove("pinned");
+        }
+        else
+        {
+            Message.Metadata["pinned"] = true;
+            Message.Metadata["pinnedAt"] = DateTimeOffset.UtcNow.ToString();
+        }
+
+        await OnAction.InvokeAsync(new MessageActionRequest
+        {
+            MessageId = Message.Id,
+            Action = MessageActionType.Pin
+        });
+    }
+
+    private async Task FlagMessage()
+    {
+        Message.Metadata ??= new();
+        Message.Metadata["flagged"] = true;
+        Message.Metadata["flaggedAt"] = DateTimeOffset.UtcNow.ToString();
+
+        await OnAction.InvokeAsync(new MessageActionRequest
+        {
+            MessageId = Message.Id,
+            Action = MessageActionType.Flag
+        });
+    }
+
+    private async Task AnnotateMessage()
+    {
+        await OnAction.InvokeAsync(new MessageActionRequest
+        {
+            MessageId = Message.Id,
+            Action = MessageActionType.Annotate
+        });
+    }
+
+    private async Task<bool> ConfirmDelete()
+    {
+        // Use JS confirm for now, could be replaced with a better modal
+        return await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this message?");
+    }
+
+    private class MessageAction
+    {
+        public MessageActionType Type { get; set; }
+        public string Label { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public string Tooltip { get; set; } = "";
+        public bool IsEnabled { get; set; } = true;
+        public bool IsPrimary { get; set; } = false;
+        public bool IsDangerous { get; set; } = false;
+        public Dictionary<string, object>? Data { get; set; }
+    }
+}

@@ -1,0 +1,658 @@
+﻿@namespace IIM.Components.Visualizations
+@using IIM.Core.Models
+@using System.Text.Json
+@using System.Collections
+@using Microsoft.AspNetCore.Components.Rendering
+
+<div class="structured-data-display">
+    @if (Response?.Visualization?.Data != null || Response?.Metadata?.Any() == true)
+    {
+        <!-- Display Controls -->
+        <div class="display-controls mb-3 d-flex justify-content-between align-items-center">
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn @GetViewButtonClass("tree")"
+                        @onclick='() => SetView("tree")'>
+                    <i class="fas fa-sitemap"></i> Tree
+                </button>
+                <button type="button" class="btn @GetViewButtonClass("json")"
+                        @onclick='() => SetView("json")'>
+                    <i class="fas fa-code"></i> JSON
+                </button>
+                <button type="button" class="btn @GetViewButtonClass("properties")"
+                        @onclick='() => SetView("properties")'>
+                    <i class="fas fa-list"></i> Properties
+                </button>
+                <button type="button" class="btn @GetViewButtonClass("yaml")"
+                        @onclick='() => SetView("yaml")'>
+                    <i class="fas fa-file-code"></i> YAML
+                </button>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        @onclick="ToggleExpand"
+                        title="@(_allExpanded ? "Collapse All" : "Expand All")">
+                    <i class="fas @(_allExpanded ? "fa-compress" : "fa-expand")"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        @onclick="CopyData"
+                        title="Copy to Clipboard">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        @onclick="DownloadData"
+                        title="Download">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar mb-3">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control"
+                       placeholder="Search keys or values..."
+                       @bind="_searchTerm"
+                       @bind:event="oninput" />
+                @if (!string.IsNullOrEmpty(_searchTerm))
+                {
+                    <button class="btn btn-outline-secondary" type="button"
+                            @onclick="() => _searchTerm = string.Empty">
+                        <i class="fas fa-times"></i>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Data Display -->
+        <div class="data-container @($"view-{_currentView}")">
+            @switch (_currentView)
+            {
+                case "tree":
+                    @RenderTreeView()
+                    break;
+                case "json":
+                    @RenderJsonView()
+                    break;
+                case "properties":
+                    @RenderPropertiesView()
+                    break;
+                case "yaml":
+                    @RenderYamlView()
+                    break;
+            }
+        </div>
+
+        <!-- Path Navigator -->
+        @if (_currentPath.Any())
+        {
+            <div class="path-navigator mt-3 p-2 bg-light rounded">
+                <small class="text-muted">
+                    Path:
+                    <code>
+                        @string.Join(" > ", _currentPath)
+                    </code>
+                </small>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No structured data available
+        </div>
+    }
+</div>
+
+<style>
+    .structured-data-display {
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    }
+
+    .tree-node {
+        margin-left: 20px;
+        border-left: 1px dotted var(--bs-gray-400);
+        padding-left: 10px;
+    }
+
+    .tree-node-header {
+        cursor: pointer;
+        user-select: none;
+        padding: 2px 5px;
+        border-radius: 3px;
+    }
+
+        .tree-node-header:hover {
+            background-color: var(--bs-gray-100);
+        }
+
+    .tree-node-key {
+        font-weight: 600;
+        color: var(--bs-primary);
+    }
+
+    .tree-node-value {
+        color: var(--bs-success);
+    }
+
+    .tree-node-type {
+        font-size: 0.75rem;
+        color: var(--bs-gray-600);
+        font-style: italic;
+    }
+
+    .json-view, .yaml-view {
+        background-color: var(--bs-gray-100);
+        border-radius: 8px;
+        padding: 15px;
+        overflow-x: auto;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .property-row {
+        border-bottom: 1px solid var(--bs-gray-200);
+        padding: 10px 0;
+    }
+
+        .property-row:last-child {
+            border-bottom: none;
+        }
+
+    .property-key {
+        font-weight: 600;
+        color: var(--bs-dark);
+    }
+
+    .property-value {
+        color: var(--bs-secondary);
+    }
+
+    .highlight {
+        background-color: yellow;
+        padding: 2px;
+        border-radius: 2px;
+    }
+
+    .data-stats {
+        background-color: var(--bs-light);
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+</style>
+
+@code {
+    [Parameter] public InvestigationResponse Response { get; set; } = new();
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+
+    private Dictionary<string, object> _structuredData = new();
+    private string _currentView = "tree";
+    private bool _allExpanded = false;
+    private string _searchTerm = "";
+    private List<string> _currentPath = new();
+    private HashSet<string> _expandedNodes = new();
+
+    protected override void OnInitialized()
+    {
+        LoadStructuredData();
+    }
+
+    private void LoadStructuredData()
+    {
+        try
+        {
+            // Load from Visualization.Data first
+            if (Response?.Visualization?.Data != null)
+            {
+                if (Response.Visualization.Data is JsonElement jsonElement)
+                {
+                    _structuredData = JsonSerializer.Deserialize<Dictionary<string, object>>(
+                        jsonElement.GetRawText()) ?? new();
+                }
+                else if (Response.Visualization.Data is Dictionary<string, object> dict)
+                {
+                    _structuredData = dict;
+                }
+                else
+                {
+                    _structuredData = new Dictionary<string, object>
+                    {
+                        ["data"] = Response.Visualization.Data
+                    };
+                }
+            }
+
+            // Merge with Metadata
+            if (Response?.Metadata?.Any() == true)
+            {
+                foreach (var kvp in Response.Metadata)
+                {
+                    _structuredData[$"metadata.{kvp.Key}"] = kvp.Value;
+                }
+            }
+
+            // Add response properties
+            if (Response != null)
+            {
+                _structuredData["_response"] = new Dictionary<string, object>
+                {
+                    ["id"] = Response.Id,
+                    ["createdAt"] = Response.CreatedAt,
+                    ["displayType"] = Response.DisplayType.ToString(),
+                    ["confidence"] = Response.Confidence ?? 0
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading structured data: {ex.Message}");
+        }
+    }
+
+    private void SetView(string view)
+    {
+        _currentView = view;
+    }
+
+    private string GetViewButtonClass(string view)
+    {
+        return _currentView == view ? "btn-primary" : "btn-outline-secondary";
+    }
+
+    private void ToggleExpand()
+    {
+        _allExpanded = !_allExpanded;
+        if (_allExpanded)
+        {
+            // Expand all nodes
+            ExpandAllNodes(_structuredData, "");
+        }
+        else
+        {
+            _expandedNodes.Clear();
+        }
+    }
+
+    private void ExpandAllNodes(object data, string path)
+    {
+        if (data is IDictionary dict)
+        {
+            foreach (DictionaryEntry entry in dict)
+            {
+                var nodePath = string.IsNullOrEmpty(path) ? entry.Key.ToString() : $"{path}.{entry.Key}";
+                _expandedNodes.Add(nodePath!);
+                ExpandAllNodes(entry.Value!, nodePath);
+            }
+        }
+        else if (data is IEnumerable enumerable && !(data is string))
+        {
+            int index = 0;
+            foreach (var item in enumerable)
+            {
+                var nodePath = $"{path}[{index}]";
+                _expandedNodes.Add(nodePath);
+                ExpandAllNodes(item!, nodePath);
+                index++;
+            }
+        }
+    }
+
+    private async Task CopyData()
+    {
+        var data = _currentView switch
+        {
+            "json" => GetJsonString(),
+            "yaml" => GetYamlString(),
+            _ => GetJsonString()
+        };
+
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", data);
+    }
+
+    private async Task DownloadData()
+    {
+        var data = _currentView switch
+        {
+            "json" => GetJsonString(),
+            "yaml" => GetYamlString(),
+            _ => GetJsonString()
+        };
+
+        var filename = $"data_{DateTime.Now:yyyyMMddHHmmss}.{(_currentView == "yaml" ? "yaml" : "json")}";
+
+        // Use JS interop to trigger download
+        await JSRuntime.InvokeVoidAsync("downloadFile", filename, data);
+    }
+
+    private string GetJsonString()
+    {
+        return JsonSerializer.Serialize(_structuredData, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+    }
+
+    private string GetYamlString()
+    {
+        // Simple YAML conversion (in production, use a proper YAML library)
+        var yaml = new System.Text.StringBuilder();
+        ConvertToYaml(_structuredData, yaml, 0);
+        return yaml.ToString();
+    }
+
+    private void ConvertToYaml(object data, System.Text.StringBuilder yaml, int indent)
+    {
+        var indentStr = new string(' ', indent);
+
+        if (data is IDictionary dict)
+        {
+            foreach (DictionaryEntry entry in dict)
+            {
+                yaml.AppendLine($"{indentStr}{entry.Key}:");
+                ConvertToYaml(entry.Value!, yaml, indent + 2);
+            }
+        }
+        else if (data is IEnumerable enumerable && !(data is string))
+        {
+            foreach (var item in enumerable)
+            {
+                yaml.AppendLine($"{indentStr}- ");
+                ConvertToYaml(item!, yaml, indent + 2);
+            }
+        }
+        else
+        {
+            yaml.AppendLine($"{indentStr}{data}");
+        }
+    }
+
+    private RenderFragment RenderTreeView() => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "tree-view");
+
+        RenderTreeNode(builder, _structuredData, "", 0);
+
+        builder.CloseElement();
+    };
+
+    private void RenderTreeNode(RenderTreeBuilder builder, object data, string path, int depth)
+    {
+        if (data == null)
+        {
+            builder.OpenElement(0, "span");
+            builder.AddAttribute(1, "class", "tree-node-value text-muted");
+            builder.AddContent(2, "null");
+            builder.CloseElement();
+            return;
+        }
+
+        if (data is IDictionary dict)
+        {
+            foreach (DictionaryEntry entry in dict)
+            {
+                var nodePath = string.IsNullOrEmpty(path) ? entry.Key.ToString() : $"{path}.{entry.Key}";
+                var isExpanded = _expandedNodes.Contains(nodePath!);
+
+                builder.OpenElement(3, "div");
+                builder.AddAttribute(4, "class", depth > 0 ? "tree-node" : "");
+
+                builder.OpenElement(5, "div");
+                builder.AddAttribute(6, "class", "tree-node-header");
+                builder.AddAttribute(7, "onclick", EventCallback.Factory.Create(this, () => ToggleNode(nodePath!)));
+
+                // Expand/collapse icon
+                if (IsExpandable(entry.Value))
+                {
+                    builder.OpenElement(8, "i");
+                    builder.AddAttribute(9, "class", $"fas fa-{(isExpanded ? "minus" : "plus")}-square me-2");
+                    builder.CloseElement();
+                }
+
+                // Key
+                builder.OpenElement(10, "span");
+                builder.AddAttribute(11, "class", "tree-node-key");
+                builder.AddContent(12, HighlightMatch(entry.Key.ToString()!));
+                builder.CloseElement();
+
+                // Type indicator
+                builder.OpenElement(13, "span");
+                builder.AddAttribute(14, "class", "tree-node-type ms-2");
+                builder.AddContent(15, $" ({GetDataType(entry.Value)})");
+                builder.CloseElement();
+
+                // Simple value
+                if (!IsExpandable(entry.Value))
+                {
+                    builder.AddContent(16, ": ");
+                    builder.OpenElement(17, "span");
+                    builder.AddAttribute(18, "class", "tree-node-value");
+                    builder.AddContent(19, HighlightMatch(FormatValue(entry.Value)));
+                    builder.CloseElement();
+                }
+
+                builder.CloseElement(); // tree-node-header
+
+                // Children
+                if (isExpanded && IsExpandable(entry.Value))
+                {
+                    builder.OpenElement(20, "div");
+                    builder.AddAttribute(21, "class", "tree-node-children");
+                    RenderTreeNode(builder, entry.Value!, nodePath, depth + 1);
+                    builder.CloseElement();
+                }
+
+                builder.CloseElement(); // tree-node
+            }
+        }
+        else if (data is IEnumerable enumerable && !(data is string))
+        {
+            int index = 0;
+            foreach (var item in enumerable)
+            {
+                var nodePath = $"{path}[{index}]";
+                var isExpanded = _expandedNodes.Contains(nodePath);
+
+                builder.OpenElement(22, "div");
+                builder.AddAttribute(23, "class", "tree-node");
+
+                builder.OpenElement(24, "div");
+                builder.AddAttribute(25, "class", "tree-node-header");
+                builder.AddAttribute(26, "onclick", EventCallback.Factory.Create(this, () => ToggleNode(nodePath)));
+
+                builder.OpenElement(27, "span");
+                builder.AddAttribute(28, "class", "tree-node-key");
+                builder.AddContent(29, $"[{index}]");
+                builder.CloseElement();
+
+                if (!IsExpandable(item))
+                {
+                    builder.AddContent(30, ": ");
+                    builder.OpenElement(31, "span");
+                    builder.AddAttribute(32, "class", "tree-node-value");
+                    builder.AddContent(33, HighlightMatch(FormatValue(item)));
+                    builder.CloseElement();
+                }
+
+                builder.CloseElement(); // tree-node-header
+
+                if (isExpanded && IsExpandable(item))
+                {
+                    RenderTreeNode(builder, item!, nodePath, depth + 1);
+                }
+
+                builder.CloseElement(); // tree-node
+                index++;
+            }
+        }
+        else
+        {
+            builder.OpenElement(34, "span");
+            builder.AddAttribute(35, "class", "tree-node-value");
+            builder.AddContent(36, HighlightMatch(FormatValue(data)));
+            builder.CloseElement();
+        }
+    }
+
+    private RenderFragment RenderJsonView() => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "json-view");
+
+        builder.OpenElement(2, "pre");
+        builder.AddAttribute(3, "class", "mb-0");
+        builder.OpenElement(4, "code");
+        builder.AddContent(5, GetJsonString());
+        builder.CloseElement();
+        builder.CloseElement();
+
+        builder.CloseElement();
+    };
+
+    private RenderFragment RenderPropertiesView() => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "properties-view");
+
+        var flatProperties = FlattenData(_structuredData);
+
+        foreach (var prop in flatProperties)
+        {
+            builder.OpenElement(2, "div");
+            builder.AddAttribute(3, "class", "property-row");
+
+            builder.OpenElement(4, "div");
+            builder.AddAttribute(5, "class", "row");
+
+            builder.OpenElement(6, "div");
+            builder.AddAttribute(7, "class", "col-md-4");
+            builder.OpenElement(8, "span");
+            builder.AddAttribute(9, "class", "property-key");
+            builder.AddContent(10, HighlightMatch(prop.Key));
+            builder.CloseElement();
+            builder.CloseElement();
+
+            builder.OpenElement(11, "div");
+            builder.AddAttribute(12, "class", "col-md-8");
+            builder.OpenElement(13, "span");
+            builder.AddAttribute(14, "class", "property-value");
+            builder.AddContent(15, HighlightMatch(FormatValue(prop.Value)));
+            builder.CloseElement();
+            builder.CloseElement();
+
+            builder.CloseElement(); // row
+            builder.CloseElement(); // property-row
+        }
+
+        builder.CloseElement();
+    };
+
+    private RenderFragment RenderYamlView() => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "yaml-view");
+
+        builder.OpenElement(2, "pre");
+        builder.AddAttribute(3, "class", "mb-0");
+        builder.OpenElement(4, "code");
+        builder.AddContent(5, GetYamlString());
+        builder.CloseElement();
+        builder.CloseElement();
+
+        builder.CloseElement();
+    };
+
+    private Dictionary<string, object> FlattenData(object data, string prefix = "")
+    {
+        var result = new Dictionary<string, object>();
+
+        if (data is IDictionary dict)
+        {
+            foreach (DictionaryEntry entry in dict)
+            {
+                var key = string.IsNullOrEmpty(prefix) ? entry.Key.ToString() : $"{prefix}.{entry.Key}";
+                if (IsExpandable(entry.Value))
+                {
+                    var nested = FlattenData(entry.Value!, key!);
+                    foreach (var kvp in nested)
+                    {
+                        result[kvp.Key] = kvp.Value;
+                    }
+                }
+                else
+                {
+                    result[key!] = entry.Value!;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private void ToggleNode(string path)
+    {
+        if (_expandedNodes.Contains(path))
+        {
+            _expandedNodes.Remove(path);
+        }
+        else
+        {
+            _expandedNodes.Add(path);
+        }
+    }
+
+    private bool IsExpandable(object? value)
+    {
+        return value != null &&
+               (value is IDictionary ||
+                (value is IEnumerable && !(value is string)));
+    }
+
+    private string GetDataType(object? value)
+    {
+        return value switch
+        {
+            null => "null",
+            string => "string",
+            int or long => "number",
+            float or double or decimal => "decimal",
+            bool => "boolean",
+            DateTime or DateTimeOffset => "datetime",
+            IDictionary => "object",
+            IEnumerable => "array",
+            _ => value.GetType().Name.ToLower()
+        };
+    }
+
+    private string FormatValue(object? value)
+    {
+        return value switch
+        {
+            null => "null",
+            string s => $"\"{s}\"",
+            bool b => b.ToString().ToLower(),
+            DateTime dt => dt.ToString("yyyy-MM-dd HH:mm:ss"),
+            DateTimeOffset dto => dto.ToString("yyyy-MM-dd HH:mm:ss zzz"),
+            _ => value.ToString() ?? ""
+        };
+    }
+
+    private MarkupString HighlightMatch(string text)
+    {
+        if (string.IsNullOrWhiteSpace(_searchTerm))
+            return new MarkupString(text);
+
+        var highlighted = System.Text.RegularExpressions.Regex.Replace(
+            text,
+            _searchTerm,
+            $"<span class='highlight'>$&</span>",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
+
+        return new MarkupString(highlighted);
+    }
+}

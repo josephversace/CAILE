@@ -1,0 +1,555 @@
+﻿@namespace IIM.Components.Messages
+@using IIM.Core.Models
+@using IIM.Shared.Enums
+@using IIM.Shared.Models
+@using IIM.Components.Shared
+@using IIM.Components.Visualizations
+
+<div class="unified-message @GetMessageClass()" data-message-id="@Message.Id">
+    <!-- Message Header Row -->
+    <div class="message-header-row">
+        <!-- Avatar -->
+        <div class="message-avatar">
+            @if (Message.Role == MessageRole.User)
+            {
+                <span class="avatar-user">@GetUserInitials()</span>
+            }
+            else if (Message.Role == MessageRole.Assistant)
+            {
+                <i class="fas fa-robot"></i>
+            }
+            else if (Message.Role == MessageRole.Tool)
+            {
+                <i class="fas fa-tools"></i>
+            }
+            else if (Message.Role == MessageRole.System)
+            {
+                <i class="fas fa-cog"></i>
+            }
+        </div>
+        
+        <!-- Message Content Area -->
+        <div class="message-content-area">
+            <!-- Meta Information -->
+            <div class="message-meta">
+                <span class="message-author">@GetAuthorName()</span>
+                @if (!string.IsNullOrEmpty(Message.ModelUsed))
+                {
+                    <span class="model-badge badge bg-secondary">@Message.ModelUsed</span>
+                }
+                <span class="message-timestamp">@Message.Timestamp.ToString("HH:mm")</span>
+                @if (ShowConfidence && GetConfidence() > 0)
+                {
+                    <ConfidenceIndicator Confidence="@GetConfidence()" ShowIcon="false" />
+                }
+            </div>
+            
+            <!-- Main Content -->
+            <div class="message-body">
+                @if (!string.IsNullOrWhiteSpace(Message.Content))
+                {
+                    <div class="message-text">
+                        @((MarkupString)RenderContent(Message.Content))
+                    </div>
+                }
+                
+                <!-- Attachments Section -->
+                @if (Message.Attachments?.Any() == true)
+                {
+                    <div class="attachments-section mt-3">
+                        <div class="attachments-grid">
+                            @foreach (var attachment in Message.Attachments)
+                            {
+                                <AttachmentCard 
+                                    Attachment="@attachment" 
+                                    OnClick="@(() => HandleAttachmentClick(attachment))"
+                                    Compact="@CompactMode" />
+                            }
+                        </div>
+                    </div>
+                }
+                
+                <!-- Tool Results with Smart Display -->
+                @if (Message.ToolResults?.Any() == true)
+                {
+                    <div class="tool-results-section mt-3">
+                        @foreach (var result in Message.ToolResults)
+                        {
+                            @if (ShouldUseAdvancedDisplay(result))
+                            {
+                                <!-- Use specialized displays for complex data -->
+                                <div class="advanced-result-display">
+                                    @RenderAdvancedDisplay(result)
+                                </div>
+                            }
+                            else
+                            {
+                                <!-- Standard tool result display -->
+                                <ToolResult 
+                                    Result="@result" 
+                                    OnExecute="@((parameters) => HandleToolExecute(result.ToolName, parameters))" />
+                            }
+                        }
+                    </div>
+                }
+                
+                <!-- Citations -->
+                @if (Message.Citations?.Any() == true)
+                {
+                    <div class="citations-section mt-3">
+                        <div class="citations-header">
+                            <i class="fas fa-quote-right text-muted"></i>
+                            <span class="text-muted small">Sources</span>
+                        </div>
+                        <div class="citations-list">
+                            @{
+                                var citationsToShow = CollapsedCitations ? Message.Citations.Take(3) : Message.Citations;
+                            }
+                            @foreach (var citation in citationsToShow)
+                            {
+                                <CitationCard 
+                                    Citation="@citation"
+                                    Index="@(Message.Citations.IndexOf(citation) + 1)"
+                                    OnClick="@(() => OnCitationClick.InvokeAsync(citation))" />
+                            }
+                            @if (Message.Citations.Count > 3 && CollapsedCitations)
+                            {
+                                <button class="btn btn-link btn-sm" @onclick="() => CollapsedCitations = false">
+                                    Show @(Message.Citations.Count - 3) more sources
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            <!-- Message Actions -->
+            @if (ShowActions)
+            {
+                <MessageActions 
+                    Message="@Message"
+                    ShowInline="true"
+                    CompactMode="@CompactMode"
+                    OnAction="@HandleMessageActionRequest"
+                    OnEdit="@(() => OnMessageAction.InvokeAsync(Message))"
+                    OnRegenerate="@(() => OnMessageAction.InvokeAsync(Message))"
+                    OnDelete="@(() => OnMessageAction.InvokeAsync(Message))" />
+            }
+        </div>
+    </div>
+    
+    <!-- Expandable Details Panel -->
+    @if (ShowDetails)
+    {
+        <div class="message-details-panel">
+            <div class="details-content">
+                <dl class="row small">
+                    <dt class="col-sm-3">Message ID</dt>
+                    <dd class="col-sm-9"><code>@Message.Id</code></dd>
+                    
+                    <dt class="col-sm-3">Timestamp</dt>
+                    <dd class="col-sm-9">@Message.Timestamp.ToString("F")</dd>
+                    
+                    @if (Message.Metadata?.Any() == true)
+                    {
+                        <dt class="col-sm-3">Metadata</dt>
+                        <dd class="col-sm-9">
+                            @foreach (var meta in Message.Metadata)
+                            {
+                                <div><strong>@meta.Key:</strong> @meta.Value</div>
+                            }
+                        </dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .unified-message {
+        display: flex;
+        margin-bottom: 1.5rem;
+    }
+    
+    .message-header-row {
+        display: flex;
+        gap: 1rem;
+        width: 100%;
+    }
+    
+    .message-avatar {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bs-gray-200);
+        color: var(--bs-gray-700);
+    }
+    
+    .avatar-user {
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .user-message .message-avatar {
+        background: var(--bs-primary);
+        color: white;
+    }
+    
+    .assistant-message .message-avatar {
+        background: var(--bs-success);
+        color: white;
+    }
+    
+    .tool-message .message-avatar {
+        background: var(--bs-info);
+        color: white;
+    }
+    
+    .message-content-area {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .message-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .message-author {
+        font-weight: 600;
+    }
+    
+    .message-timestamp {
+        color: var(--bs-gray-600);
+    }
+    
+    .message-body {
+        background: var(--bs-gray-100);
+        border-radius: 12px;
+        padding: 1rem;
+        position: relative;
+    }
+    
+    .user-message .message-body {
+        background: var(--bs-primary-bg-subtle);
+        margin-left: auto;
+        max-width: 80%;
+    }
+    
+    .message-text {
+        line-height: 1.6;
+    }
+    
+    .message-text code {
+        background: rgba(0,0,0,0.05);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.875em;
+    }
+    
+    .message-text pre {
+        background: var(--bs-dark);
+        color: var(--bs-light);
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 1rem 0;
+    }
+    
+    .attachments-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+    
+    .citations-section {
+        border-top: 1px solid var(--bs-gray-300);
+        padding-top: 0.75rem;
+    }
+    
+    .citations-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .message-details-panel {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: var(--bs-gray-100);
+        border-radius: 8px;
+        margin-left: 56px;
+    }
+    
+    .advanced-result-display {
+        margin-top: 1rem;
+        border: 1px solid var(--bs-gray-300);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+</style>
+
+@code {
+    [Parameter] public InvestigationMessage Message { get; set; } = new();
+    [Parameter] public bool ShowActions { get; set; } = true;
+    [Parameter] public bool ShowConfidence { get; set; } = false;
+    [Parameter] public bool CompactMode { get; set; } = false;
+
+    // Event Callbacks
+    [Parameter] public EventCallback<(string toolName, Dictionary<string, object> parameters)> OnToolExecute { get; set; }
+    [Parameter] public EventCallback<Attachment> OnAttachmentClick { get; set; }
+    [Parameter] public EventCallback<Citation> OnCitationClick { get; set; }
+    [Parameter] public EventCallback<InvestigationMessage> OnMessageAction { get; set; }
+
+    // Services
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] private ILogger<UnifiedMessage> Logger { get; set; } = default!;
+
+    // State
+    private bool CollapsedCitations = true;
+    private bool ShowDetails = false;
+
+    private string GetMessageClass()
+    {
+        var classes = new List<string> { "unified-message" };
+
+        classes.Add(Message.Role switch
+        {
+            MessageRole.User => "user-message",
+            MessageRole.Assistant => "assistant-message",
+            MessageRole.Tool => "tool-message",
+            MessageRole.System => "system-message",
+            _ => "default-message"
+        });
+
+        if (CompactMode)
+            classes.Add("compact");
+
+        return string.Join(" ", classes);
+    }
+
+    private string GetAuthorName() => Message.Role switch
+    {
+        MessageRole.User => "You",
+        MessageRole.Assistant => "Assistant",
+        MessageRole.System => "System",
+        MessageRole.Tool => GetToolName(),
+        _ => "Unknown"
+    };
+
+    private string GetToolName()
+    {
+        if (Message.Metadata?.TryGetValue("toolName", out var toolName) == true)
+            return $"Tool: {toolName}";
+        return "Tool";
+    }
+
+    private string GetUserInitials()
+    {
+        // TODO: Get from user service/context
+        return "U";
+    }
+
+    private double GetConfidence()
+    {
+        // Check metadata for confidence score
+        if (Message.Metadata?.TryGetValue("confidence", out var confidence) == true)
+        {
+            if (double.TryParse(confidence.ToString(), out var conf))
+                return conf;
+        }
+
+        // Check tool results for average confidence
+        if (Message.ToolResults?.Any() == true)
+        {
+            var confidences = Message.ToolResults
+                .Where(r => r.Metadata?.ContainsKey("confidence") == true)
+                .Select(r => double.TryParse(r.Metadata["confidence"].ToString(), out var c) ? c : 0)
+                .Where(c => c > 0)
+                .ToList();
+
+            if (confidences.Any())
+                return confidences.Average();
+        }
+
+        return 0;
+    }
+
+    private string RenderContent(string content)
+    {
+        // Enhanced markdown rendering
+        content = System.Text.RegularExpressions.Regex.Replace(content, @"\*\*(.*?)\*\*", "<strong>$1</strong>");
+        content = System.Text.RegularExpressions.Regex.Replace(content, @"\*(.*?)\*", "<em>$1</em>");
+        content = System.Text.RegularExpressions.Regex.Replace(content, @"`(.*?)`", "<code>$1</code>");
+
+        // Code blocks
+        content = System.Text.RegularExpressions.Regex.Replace(
+            content, 
+            @"```(\w+)?\n(.*?)```", 
+            "<pre><code class='language-$1'>$2</code></pre>",
+            System.Text.RegularExpressions.RegexOptions.Singleline
+        );
+
+        // Links
+        content = System.Text.RegularExpressions.Regex.Replace(
+            content,
+            @"\[([^\]]+)\]\(([^\)]+)\)",
+            "<a href='$2' target='_blank'>$1</a>"
+        );
+
+        // Line breaks
+        content = content.Replace("\n", "<br>");
+
+        return content;
+    }
+
+    private bool ShouldUseAdvancedDisplay(Core.Models.ToolResult result)
+    {
+        // Determine if we should use specialized visualization
+        if (result.PreferredDisplayType.HasValue)
+            return result.PreferredDisplayType.Value != ResponseDisplayType.Text;
+
+        if (result.Visualizations?.Any() == true)
+            return true;
+
+        // Check data structure
+        if (result.Data is System.Text.Json.JsonElement json)
+        {
+            if (json.ValueKind == System.Text.Json.JsonValueKind.Array && json.GetArrayLength() > 5)
+                return true;
+        }
+
+        return false;
+    }
+
+    private RenderFragment RenderAdvancedDisplay(Core.Models.ToolResult result) => builder =>
+    {
+        var response = new InvestigationResponse
+        {
+            Id = Guid.NewGuid().ToString(),
+            Message = result.ToolName,
+            DisplayType = result.PreferredDisplayType ?? ResponseDisplayType.Auto,
+            Visualization = result.Visualizations?.FirstOrDefault() != null ? 
+                new ResponseVisualization
+                {
+                    Type = result.Visualizations.First().Type,
+                    Title = result.Visualizations.First().Title,
+                    Data = result.Visualizations.First().Data
+                } : null,
+            Metadata = result.Metadata
+        };
+
+        // Determine which display component to use
+        var displayType = result.PreferredDisplayType ?? DetermineDisplayType(result);
+
+        switch (displayType)
+        {
+            case ResponseDisplayType.Table:
+                builder.OpenComponent<TableResponseDisplay>(0);
+                builder.AddAttribute(1, "Response", response);
+                builder.CloseComponent();
+                break;
+
+            case ResponseDisplayType.Timeline:
+                builder.OpenComponent<TimelineResponseDisplay>(0);
+                builder.AddAttribute(1, "Response", response);
+                builder.CloseComponent();
+                break;
+
+            case ResponseDisplayType.Image:
+                builder.OpenComponent<ImageResponseDisplay>(0);
+                builder.AddAttribute(1, "Response", response);
+                builder.CloseComponent();
+                break;
+
+            default:
+                builder.OpenComponent<StructuredDataDisplay>(0);
+                builder.AddAttribute(1, "Response", response);
+                builder.CloseComponent();
+                break;
+        }
+    };
+
+    private ResponseDisplayType DetermineDisplayType(Core.Models.ToolResult result)
+    {
+        if (result.Visualizations?.Any() == true)
+        {
+            var vizType = result.Visualizations.First().Type.ToLower();
+            return vizType switch
+            {
+                "table" or "grid" => ResponseDisplayType.Table,
+                "timeline" or "gantt" => ResponseDisplayType.Timeline,
+                "image" or "photo" => ResponseDisplayType.Image,
+                _ => ResponseDisplayType.Structured
+            };
+        }
+        
+        return ResponseDisplayType.Text;
+    }
+    
+    private async Task HandleToolExecute(string toolName, Dictionary<string, object> parameters)
+    {
+        await OnToolExecute.InvokeAsync((toolName, parameters));
+    }
+    
+    private async Task HandleAttachmentClick(Attachment attachment)
+    {
+        await OnAttachmentClick.InvokeAsync(attachment);
+    }
+    
+    private bool HasExportableContent()
+    {
+        return Message.ToolResults?.Any() == true || 
+               Message.Attachments?.Any() == true ||
+               Message.Citations?.Any() == true;
+    }
+    
+    
+    private async Task HandleMessageActionRequest(MessageActionRequest request)
+    {
+        // Handle different action types
+        switch (request.Action)
+        {
+            case MessageActionType.Copy:
+                // Already handled internally by MessageActions
+                break;
+                
+            case MessageActionType.Details:
+                ToggleDetails();
+                break;
+                
+            case MessageActionType.Edit:
+            case MessageActionType.Regenerate:
+            case MessageActionType.Delete:
+            case MessageActionType.Export:
+                await OnMessageAction.InvokeAsync(Message);
+                break;
+                
+            case MessageActionType.Pin:
+            case MessageActionType.Flag:
+            case MessageActionType.Annotate:
+                // Update message metadata and notify parent
+                await OnMessageAction.InvokeAsync(Message);
+                break;
+                
+            default:
+                Logger.LogWarning("Unhandled message action: {Action}", request.Action);
+                break;
+        }
+    }
+    
+    private void ToggleDetails()
+    {
+        ShowDetails = !ShowDetails;
+    }
+}

@@ -1,28 +1,42 @@
-﻿@namespace IIM.Components.Shared
-
+﻿@using Microsoft.AspNetCore.Components
+@using IIM.Components.Shared
+@implements IDisposable
+@namespace IIM.Components.Shared
 
 @code {
     [CascadingParameter] public Tabs? Parent { get; set; }
+
     [Parameter] public string Title { get; set; } = "";
     [Parameter] public string? Icon { get; set; }
     [Parameter] public bool Disabled { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
-    private string Id { get; } = Guid.NewGuid().ToString("N");
+
+    private Tabs.TabItem? _self;
 
     protected override void OnInitialized()
     {
-        Parent?.Register(new Tabs.TabItem
+        if (Parent is null)
         {
-            Id = Id,
+            // Optional: throw or log if this component is not nested under <Tabs>
+            return;
+        }
+
+        _self = new Tabs.TabItem
+        {
             Title = Title,
             Icon = Icon,
             Disabled = Disabled,
             ChildContent = ChildContent
-        });
+        };
+
+        Parent.Register(_self);
     }
 
     public void Dispose()
     {
-        Parent?.Unregister(new Tabs.TabItem { Id = Id });
+        if (Parent is not null && _self is not null)
+        {
+            Parent.Unregister(_self);
+        }
     }
 }

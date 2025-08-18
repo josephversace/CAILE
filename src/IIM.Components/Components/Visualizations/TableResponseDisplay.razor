@@ -1,0 +1,481 @@
+﻿@namespace IIM.Components.Visualizations   
+@using IIM.Core.Models
+@using System.Text.Json
+@using System.Data
+
+<div class="table-response-display">
+    @if (Response?.Visualization?.Data != null)
+    {
+        <!-- Table Controls -->
+        <div class="table-controls mb-3 d-flex justify-content-between align-items-center">
+            <div class="d-flex gap-2">
+                <div class="input-group input-group-sm" style="width: 250px;">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" class="form-control" placeholder="Search table..." 
+                           @bind="_searchTerm" @bind:event="oninput" />
+                </div>
+                
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary" 
+                            @onclick="ToggleDenseMode"
+                            title="@(_isDense ? "Normal View" : "Dense View")">
+                        <i class="fas @(_isDense ? "fa-expand-alt" : "fa-compress-alt")"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" 
+                            @onclick="ToggleColumnSelector"
+                            title="Select Columns">
+                        <i class="fas fa-columns"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" 
+                            @onclick="ExportTable"
+                            title="Export Table">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-info text-muted small">
+                @if (_filteredData.Any())
+                {
+                    <span>Showing @_filteredData.Count() of @_allData.Count() rows</span>
+                }
+            </div>
+        </div>
+        
+        <!-- Column Selector -->
+        @if (_showColumnSelector)
+        {
+            <div class="column-selector card mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">Visible Columns</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var column in _columns)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" 
+                                       checked="@(_visibleColumns.Contains(column))"
+                                       @onchange="@((ChangeEventArgs e) => ToggleColumn(column, e.Value))"
+                                       id="@($"col-{column}")">
+                                <label class="form-check-label" for="@($"col-{column}")">
+                                    @column
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        
+        <!-- Table Container -->
+        <div class="table-container" style="@(_isDense ? "font-size: 0.875rem;" : "")">
+            <div class="table-responsive">
+                <table class="table table-hover @(_isDense ? "table-sm" : "") @GetTableClass()">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            @foreach (var column in _visibleColumns)
+                            {
+                                <th @onclick="() => SortBy(column)" 
+                                    class="sortable-header"
+                                    style="cursor: pointer; user-select: none;">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span>@column</span>
+                                        <span class="sort-indicator">
+                                            @if (_sortColumn == column)
+                                            {
+                                                <i class="fas fa-sort-@(_sortAscending ? "up" : "down") text-primary"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-sort text-muted opacity-25"></i>
+                                            }
+                                        </span>
+                                    </div>
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in GetPagedData())
+                        {
+                            <tr @onclick="() => SelectRow(row)" 
+                                class="@(IsRowSelected(row) ? "table-primary" : "")">
+                                @foreach (var column in _visibleColumns)
+                                {
+                                    <td>
+                                        @{
+                                            var value = GetCellValue(row, column);
+                                            if (IsNumeric(value))
+                                            {
+                                                <span class="text-end d-block">@FormatNumericValue(value)</span>
+                                            }
+                                            else if (IsDate(value))
+                                            {
+                                                <span>@FormatDateValue(value)</span>
+                                            }
+                                            else if (IsUrl(value?.ToString()))
+                                            {
+                                                <a href="@value" target="_blank" class="text-decoration-none">
+                                                    @value <i class="fas fa-external-link-alt ms-1 small"></i>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span>@HighlightSearchTerm(value?.ToString() ?? "")</span>
+                                            }
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        @if (_totalPages > 1)
+        {
+            <div class="pagination-controls mt-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <label class="form-label mb-0 me-2">Rows per page:</label>
+                    <select class="form-select form-select-sm" style="width: auto;" 
+                            @bind="_rowsPerPage" @bind:event="onchange">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                
+                <nav aria-label="Table pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(_currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" @onclick="() => GoToPage(1)">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item @(_currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" @onclick="() => GoToPage(_currentPage - 1)">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                        
+                        @foreach (var page in GetPageNumbers())
+                        {
+                            @if (page == -1)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item @(page == _currentPage ? "active" : "")">
+                                    <a class="page-link" @onclick="() => GoToPage(page)">_currentPage - 1</a>
+                                </li>
+                            }
+                        }
+                        
+                        <li class="page-item @(_currentPage == _totalPages ? "disabled" : "")">
+                            <a class="page-link" @onclick="() => GoToPage(_currentPage + 1)">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item @(_currentPage == _totalPages ? "disabled" : "")">
+                            <a class="page-link" @onclick="() => GoToPage(_totalPages)">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No table data available
+        </div>
+    }
+</div>
+
+<style>
+    .table-response-display {
+        position: relative;
+    }
+    
+    .sortable-header:hover {
+        background-color: rgba(0,0,0,0.02);
+    }
+    
+    .table-container {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .column-selector {
+        background-color: var(--bs-light);
+        border: 1px solid var(--bs-border-color);
+    }
+</style>
+
+@code {
+    [Parameter] public InvestigationResponse Response { get; set; } = new();
+    
+    private List<Dictionary<string, object>> _allData = new();
+    private List<Dictionary<string, object>> _filteredData = new();
+    private List<string> _columns = new();
+    private HashSet<string> _visibleColumns = new();
+    private HashSet<Dictionary<string, object>> _selectedRows = new();
+    
+    private string _searchTerm = "";
+    private string _sortColumn = "";
+    private bool _sortAscending = true;
+    private bool _isDense = false;
+    private bool _showColumnSelector = false;
+    
+    private int _currentPage = 1;
+    private int _rowsPerPage = 25;
+    private int _totalPages => (int)Math.Ceiling((double)_filteredData.Count / _rowsPerPage);
+    
+    protected override void OnInitialized()
+    {
+        LoadTableData();
+        ApplyFilters();
+    }
+    
+    private void LoadTableData()
+    {
+        if (Response?.Visualization?.Data == null)
+            return;
+            
+        try
+        {
+            // Handle different data formats
+            if (Response.Visualization.Data is JsonElement jsonElement)
+            {
+                if (jsonElement.ValueKind == JsonValueKind.Array)
+                {
+                    _allData = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(
+                        jsonElement.GetRawText()) ?? new();
+                }
+                else if (jsonElement.TryGetProperty("rows", out var rows))
+                {
+                    _allData = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(
+                        rows.GetRawText()) ?? new();
+                }
+            }
+            else if (Response.Visualization.Data is List<Dictionary<string, object>> dictList)
+            {
+                _allData = dictList;
+            }
+            
+            // Extract columns
+            if (_allData.Any())
+            {
+                _columns = _allData.SelectMany(r => r.Keys).Distinct().ToList();
+                _visibleColumns = new HashSet<string>(_columns);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading table data: {ex.Message}");
+        }
+    }
+    
+    private void ApplyFilters()
+    {
+        _filteredData = _allData;
+        
+        // Apply search filter
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            _filteredData = _filteredData.Where(row =>
+                row.Values.Any(v => v?.ToString()?.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)
+            ).ToList();
+        }
+        
+        // Apply sorting
+        if (!string.IsNullOrEmpty(_sortColumn) && _filteredData.Any())
+        {
+            _filteredData = _sortAscending ?
+                _filteredData.OrderBy(r => GetCellValue(r, _sortColumn)).ToList() :
+                _filteredData.OrderByDescending(r => GetCellValue(r, _sortColumn)).ToList();
+        }
+        
+        StateHasChanged();
+    }
+    
+    private IEnumerable<Dictionary<string, object>> GetPagedData()
+    {
+        var skip = (_currentPage - 1) * _rowsPerPage;
+        return _filteredData.Skip(skip).Take(_rowsPerPage);
+    }
+    
+    private object? GetCellValue(Dictionary<string, object> row, string column)
+    {
+        return row.TryGetValue(column, out var value) ? value : null;
+    }
+    
+    private void SortBy(string column)
+    {
+        if (_sortColumn == column)
+        {
+            _sortAscending = !_sortAscending;
+        }
+        else
+        {
+            _sortColumn = column;
+            _sortAscending = true;
+        }
+        
+        ApplyFilters();
+    }
+    
+    private void ToggleColumn(string column, object? isChecked)
+    {
+        if (isChecked is bool check && check)
+        {
+            _visibleColumns.Add(column);
+        }
+        else
+        {
+            _visibleColumns.Remove(column);
+        }
+    }
+    
+    private void ToggleDenseMode()
+    {
+        _isDense = !_isDense;
+    }
+    
+    private void ToggleColumnSelector()
+    {
+        _showColumnSelector = !_showColumnSelector;
+    }
+    
+    private void SelectRow(Dictionary<string, object> row)
+    {
+        if (_selectedRows.Contains(row))
+        {
+            _selectedRows.Remove(row);
+        }
+        else
+        {
+            _selectedRows.Add(row);
+        }
+    }
+    
+    private bool IsRowSelected(Dictionary<string, object> row)
+    {
+        return _selectedRows.Contains(row);
+    }
+    
+    private void GoToPage(int page)
+    {
+        if (page >= 1 && page <= _totalPages)
+        {
+            _currentPage = page;
+        }
+    }
+    
+    private List<int> GetPageNumbers()
+    {
+        var pages = new List<int>();
+        var maxButtons = 7;
+        
+        if (_totalPages <= maxButtons)
+        {
+            for (int i = 1; i <= _totalPages; i++)
+            {
+                pages.Add(i);
+            }
+        }
+        else
+        {
+            pages.Add(1);
+            
+            if (_currentPage > 3)
+                pages.Add(-1);
+                
+            for (int i = Math.Max(2, _currentPage - 1); i <= Math.Min(_totalPages - 1, _currentPage + 1); i++)
+            {
+                pages.Add(i);
+            }
+            
+            if (_currentPage < _totalPages - 2)
+                pages.Add(-1);
+                
+            pages.Add(_totalPages);
+        }
+        
+        return pages;
+    }
+    
+    private async Task ExportTable()
+    {
+        // Implement table export
+        await Task.CompletedTask;
+    }
+    
+    private string GetTableClass()
+    {
+        return Response?.Visualization?.Options?.ContainsKey("striped") == true &&
+               (bool)Response.Visualization.Options["striped"] ? "table-striped" : "";
+    }
+    
+    private bool IsNumeric(object? value)
+    {
+        return value is int or long or float or double or decimal;
+    }
+    
+    private bool IsDate(object? value)
+    {
+        return value is DateTime or DateTimeOffset or DateOnly;
+    }
+    
+    private bool IsUrl(string? value)
+    {
+        return !string.IsNullOrEmpty(value) && 
+               (value.StartsWith("http://") || value.StartsWith("https://"));
+    }
+    
+    private string FormatNumericValue(object? value)
+    {
+        return value switch
+        {
+            decimal d => d.ToString("N2"),
+            double d => d.ToString("N2"),
+            float f => f.ToString("N2"),
+            _ => value?.ToString() ?? ""
+        };
+    }
+    
+    private string FormatDateValue(object? value)
+    {
+        return value switch
+        {
+            DateTime dt => dt.ToString("yyyy-MM-dd HH:mm"),
+            DateTimeOffset dto => dto.ToString("yyyy-MM-dd HH:mm"),
+            DateOnly d => d.ToString("yyyy-MM-dd"),
+            _ => value?.ToString() ?? ""
+        };
+    }
+    
+    private MarkupString HighlightSearchTerm(string text)
+    {
+        if (string.IsNullOrWhiteSpace(_searchTerm))
+            return new MarkupString(text);
+            
+        var highlighted = System.Text.RegularExpressions.Regex.Replace(
+            text,
+            _searchTerm,
+            $"<mark>$&</mark>",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
+        
+        return new MarkupString(highlighted);
+    }
+}

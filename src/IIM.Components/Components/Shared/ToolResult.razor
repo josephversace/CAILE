@@ -1,6 +1,4 @@
-// ============================================
-// File: src/IIM.App.Hybrid/Components/Chat/ToolResult.razor
-// ============================================
+@namespace IIM.Components.Shared
 @using IIM.Core.Models
 
 <div class="tool-result-card @GetStatusClass()">
@@ -81,7 +79,7 @@
 
 @code {
     [Parameter] public Core.Models.ToolResult Result { get; set; } = new();
-    [Parameter] public EventCallback<Dictionary<string, object>> OnRerun { get; set; }
+    [Parameter] public EventCallback<Dictionary<string, object>> OnExecute { get; set; }
 
     private bool IsExpanded = true;
 
@@ -93,7 +91,7 @@
     private async Task Retry()
     {
         var parameters = Result.Metadata ?? new Dictionary<string, object>();
-        await OnRerun.InvokeAsync(parameters);
+        await OnExecute.InvokeAsync(parameters);
     }
 
     private string GetStatusClass() => Result.Status switch

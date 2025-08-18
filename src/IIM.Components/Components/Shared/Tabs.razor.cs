@@ -10,10 +10,12 @@ public partial class Tabs : ComponentBase
 
     [Parameter] public string? ActiveTabId { get; set; }
     [Parameter] public EventCallback<string?> ActiveTabIdChanged { get; set; }
-    [Parameter] public bool Lazy { get; set; } = true;
+
+    // Renamed from "Lazy" → "IsLazy" to avoid confusion with System.Lazy<T>
+    [Parameter] public bool IsLazy { get; set; } = true;
+
     [Parameter] public EventCallback<string?> OnTabChanged { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
-
 
     internal void Register(TabItem tab)
     {
@@ -40,7 +42,7 @@ public partial class Tabs : ComponentBase
         StateHasChanged();
     }
 
-   protected async Task Activate(string id)
+    protected async Task Activate(string id)
     {
         if (ActiveTabId == id) return;
         ActiveTabId = id;
@@ -55,7 +57,7 @@ public partial class Tabs : ComponentBase
         if (e.Key is not ("ArrowLeft" or "ArrowRight")) return;
 
         var index = _tabs.FindIndex(t => t.Id == currentId);
-        if (index < 0) return;
+        if (index < 0 || _tabs.Count == 0) return;
 
         var next = e.Key == "ArrowRight"
             ? (index + 1) % _tabs.Count
