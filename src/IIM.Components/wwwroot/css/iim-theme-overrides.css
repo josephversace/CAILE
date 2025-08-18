@@ -10,13 +10,7 @@
 }
 
 /* Pattern Backgrounds (used by HUD theme) */
-body {
-    background-image: url('images/pattern.png');
-}
 
-[data-bs-theme="dark"] body {
-    background-image: url('images/pattern-dark.png');
-}
 
 /* Background Cover Images - Full Size from img/cover/ */
 .bg-cover-1 { background-image: url('../img/cover/cover-1.jpg') !important; }

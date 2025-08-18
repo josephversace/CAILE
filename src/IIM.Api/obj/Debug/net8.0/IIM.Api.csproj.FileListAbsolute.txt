@@ -64,3 +64,6 @@ C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.csproj.Co
 C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.sourcelink.json
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.dll
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\refint\IIM.Api.dll
+C:\Users\josep\source\repos\CAILE\src\IIM.Api\obj\Debug\net8.0\IIM.Api.pdb

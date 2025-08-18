@@ -9,9 +9,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OpenAI.Interfaces;
 using System;
 using System.IO;
 using System.Windows.Forms;
+using IFileService = IIM.Core.Services.IFileService;
 
 namespace IIM.Desktop;
 
@@ -136,7 +138,7 @@ internal static class Program
                 // ============================================
 
                 // Investigation Services
-                services.AddSingleton<IInvestigationService, InvestigationService>();
+                services.AddScoped<IInvestigationService, InvestigationService>();
                 services.AddSingleton<ICaseManager, CaseManager>();
                 services.AddSingleton<IEvidenceManager, EvidenceManager>();
 
@@ -172,7 +174,7 @@ internal static class Program
                 });
 
                 // ============================================
-                // Register App.Hybrid UI Services (if any)
+                // Register Desktop UI Services (if any)
                 // ============================================
 
                 // Notification service, theme service, etc.
@@ -184,8 +186,21 @@ internal static class Program
                 services.AddSingleton<IInferenceService, InferenceService>();
                 services.AddSingleton<IModelManagementService, ModelManagementService>();
 
-                // App Services
-                services.AddSingleton<IimClient>();
+                // In your Program.cs or wherever you configure services
+
+               
+                // Add Export/Security/File Services
+             
+                services.AddExportServices("");
+
+                // Add Investigation Service - make sure this comes AFTER export services
+                services.AddScoped<IInvestigationService, InvestigationService>();
+
+                // Add any other missing services
+               services.AddScoped<IEvidenceManager, EvidenceManager>();
+                services.AddScoped<ICaseManager, CaseManager>();
+
+
 
                 // HTTP Clients
                 services.AddHttpClient<IimClient>(client =>
@@ -195,13 +210,6 @@ internal static class Program
                 });
 
              
-
-                // Add HttpClient for API calls
-                services.AddHttpClient("IIM.Api", client =>
-                {
-                    client.BaseAddress = new Uri("https://localhost:7001"); // Your API URL
-                    client.DefaultRequestHeaders.Add("Accept", "application/json");
-                });
 
 
                 // Investigation Services

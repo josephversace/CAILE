@@ -1,0 +1,41 @@
+﻿@model IIM.Core.Models.InvestigationResponse
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Investigation Response - @Model.Id</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .header { border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .content { margin-top: 20px; }
+        .metadata { background-color: #f5f5f5; padding: 10px; margin-top: 20px; }
+        .footer { margin-top: 40px; text-align: center; font-size: 10pt; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Investigation Response</h1>
+        <p>ID: @Model.Id</p>
+        <p>Generated: @DateTime.UtcNow.ToString("g")</p>
+    </div>
+    
+    <div class="content">
+        <h2>Content</h2>
+        <p>@Model.Content</p>
+        
+        @if (Model.Confidence.HasValue)
+        {
+            <p><strong>Confidence:</strong> @Model.Confidence.Value.ToString("P0")</p>
+        }
+    </div>
+    
+    <div class="metadata">
+        <h3>Metadata</h3>
+        <p>Created: @Model.CreatedAt.ToString("g")</p>
+        <p>Type: @Model.DisplayType</p>
+    </div>
+    
+    <div class="footer">
+        <p>CONFIDENTIAL - LAW ENFORCEMENT ONLY</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,70 @@
+﻿@namespace IIM.Components.Components.Response
+@using IIM.Core.Models
+@using IIM.Shared.DTOs
+
+<div class="text-response-display">
+    @if (Message != null)
+    {
+        <!-- Use existing InvestigationMessage content -->
+        <div class="message-content">
+            @((MarkupString)FormatContent(Message.Content))
+        </div>
+        
+        <!-- Handle TranscriptionResultDto if present -->
+        @if (TranscriptionResults?.Any() == true)
+        {
+            <div class="transcription-results mt-3">
+                <h6 class="text-muted">
+                    <i class="fas fa-microphone"></i> Transcriptions
+                </h6>
+                @foreach (var transcription in TranscriptionResults)
+                {
+                    <TranscriptionDisplay Result="@transcription" />
+                }
+            </div>
+        }
+    }
+    else if (Response != null && !string.IsNullOrEmpty(Response.Content))
+    {
+        <div class="response-text">
+            @((MarkupString)FormatContent(Response.Content))
+        </div>
+    }
+    
+    <!-- Entity detection from existing DTOs -->
+    @if (Entities?.Any() == true)
+    {
+        <div class="entity-summary mt-4 pt-4 border-top">
+            <h6 class="text-muted mb-3">
+                <i class="fas fa-tags"></i> Detected Entities
+            </h6>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var entityGroup in Entities.GroupBy(e => e.Type))
+                {
+                    <div class="entity-group">
+                        <span class="badge bg-secondary">
+                            @entityGroup.Key (@entityGroup.Count())
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IIM.Core.Models.InvestigationMessage? Message { get; set; }
+    [Parameter] public InvestigationResponse? Response { get; set; }
+    [Parameter] public List<TranscriptionResultDto>? TranscriptionResults { get; set; }
+    [Parameter] public List<Entity>? Entities { get; set; }
+    
+    private string FormatContent(string content)
+    {
+        // Use existing formatting logic from InvestigationMessage.razor
+        content = System.Text.RegularExpressions.Regex.Replace(content, @"\*\*(.*?)\*\*", "<strong>$1</strong>");
+        content = System.Text.RegularExpressions.Regex.Replace(content, @"\*(.*?)\*", "<em>$1</em>");
+        content = System.Text.RegularExpressions.Regex.Replace(content, @"`(.*?)`", "<code>$1</code>");
+        content = content.Replace("\n", "<br>");
+        return content;
+    }
+}
