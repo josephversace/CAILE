@@ -1,0 +1,555 @@
+﻿@namespace IIM.Components.Input
+@using IIM.Core.Models
+@using IIM.Shared.Enums
+@using IIM.Shared.Models
+
+<div class="quick-actions-container @GetDisplayClass()">
+    @if (DisplayMode == QuickActionDisplayMode.Grid)
+    {
+        <!-- Grid Layout (for welcome screens) -->
+        <div class="quick-actions-grid">
+            @foreach (var action in Actions)
+            {
+                <button class="quick-action-card"
+                        @onclick="() => HandleAction(action)"
+                        disabled="@(!action.IsEnabled)">
+                    <div class="action-icon">
+                        <i class="fas @action.Icon fa-2x"></i>
+                    </div>
+                    <div class="action-content">
+                        <div class="action-title">@action.Title</div>
+                        @if (!string.IsNullOrEmpty(action.Description))
+                        {
+                            <div class="action-description">@action.Description</div>
+                        }
+                    </div>
+                    @if (action.Badge != null)
+                    {
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            @action.Badge
+                        </span>
+                    }
+                </button>
+            }
+        </div>
+    }
+    else if (DisplayMode == QuickActionDisplayMode.Chips)
+    {
+        <!-- Chips Layout (above input) -->
+        <div class="quick-actions-chips">
+            <div class="chips-scroll">
+                @foreach (var action in Actions)
+                {
+                    <button class="action-chip"
+                            @onclick="() => HandleAction(action)"
+                            disabled="@(!action.IsEnabled)">
+                        <i class="fas @action.Icon"></i>
+                        <span>@action.Title</span>
+                    </button>
+                }
+            </div>
+        </div>
+    }
+    else if (DisplayMode == QuickActionDisplayMode.List)
+    {
+        <!-- List Layout (in sidebar/dropdown) -->
+        <div class="quick-actions-list">
+            @foreach (var category in Actions.GroupBy(a => a.Category))
+            {
+                @if (!string.IsNullOrEmpty(category.Key))
+                {
+                    <div class="action-category-header">@category.Key</div>
+                }
+                <div class="action-category-items">
+                    @foreach (var action in category)
+                    {
+                        <button class="action-list-item"
+                                @onclick="() => HandleAction(action)"
+                                disabled="@(!action.IsEnabled)">
+                            <i class="fas @action.Icon action-list-icon"></i>
+                            <div class="action-list-content">
+                                <div class="action-list-title">@action.Title</div>
+                                @if (!string.IsNullOrEmpty(action.Description))
+                                {
+                                    <div class="action-list-description">@action.Description</div>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(action.Shortcut))
+                            {
+                                <kbd class="action-shortcut">@action.Shortcut</kbd>
+                            }
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else if (DisplayMode == QuickActionDisplayMode.Compact)
+    {
+        <!-- Compact Icons Only -->
+        <div class="quick-actions-compact">
+            @foreach (var action in Actions)
+            {
+                <button class="action-compact-btn"
+                        @onclick="() => HandleAction(action)"
+                        disabled="@(!action.IsEnabled)"
+                        title="@action.Title">
+                    <i class="fas @action.Icon"></i>
+                </button>
+            }
+        </div>
+    }
+</div>
+
+<!-- Template Selector Modal -->
+@if (_showTemplateSelector)
+{
+    <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Choose a Template</h5>
+                    <button type="button" class="btn-close" @onclick="CloseTemplateSelector"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="template-categories">
+                        @foreach (var category in _templates.GroupBy(t => t.Category))
+                        {
+                            <div class="template-category mb-4">
+                                <h6 class="text-muted mb-3">@category.Key</h6>
+                                <div class="row g-3">
+                                    @foreach (var template in category)
+                                    {
+                                        <div class="col-md-6">
+                                            <div class="template-card" @onclick="() => SelectTemplate(template)">
+                                                <div class="template-icon">
+                                                    <i class="fas @template.Icon"></i>
+                                                </div>
+                                                <div class="template-content">
+                                                    <h6>@template.Name</h6>
+                                                    <small class="text-muted">@template.Description</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    /* Grid Layout Styles */
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .quick-action-card {
+        position: relative;
+        padding: 1.5rem 1rem;
+        border: 1px solid var(--bs-gray-300);
+        border-radius: 8px;
+        background: white;
+        text-align: center;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+        .quick-action-card:hover:not(:disabled) {
+            border-color: var(--bs-primary);
+            background: var(--bs-primary-bg-subtle);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .quick-action-card:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+    .action-icon {
+        color: var(--bs-primary);
+        margin-bottom: 0.75rem;
+    }
+
+    .action-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .action-description {
+        font-size: 0.875rem;
+        color: var(--bs-gray-600);
+    }
+
+    /* Chips Layout Styles */
+    .quick-actions-chips {
+        overflow-x: auto;
+        margin-bottom: 1rem;
+    }
+
+    .chips-scroll {
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+    }
+
+    .action-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--bs-gray-300);
+        border-radius: 20px;
+        background: white;
+        white-space: nowrap;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+        .action-chip:hover:not(:disabled) {
+            border-color: var(--bs-primary);
+            background: var(--bs-primary-bg-subtle);
+        }
+
+    /* List Layout Styles */
+    .quick-actions-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .action-category-header {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--bs-gray-600);
+        padding: 0.5rem 1rem;
+        background: var(--bs-gray-100);
+    }
+
+    .action-list-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: none;
+        background: none;
+        text-align: left;
+        transition: background 0.2s;
+        cursor: pointer;
+    }
+
+        .action-list-item:hover:not(:disabled) {
+            background: var(--bs-gray-100);
+        }
+
+    .action-list-icon {
+        flex-shrink: 0;
+        width: 20px;
+        text-align: center;
+        color: var(--bs-gray-600);
+    }
+
+    .action-list-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .action-list-title {
+        font-weight: 500;
+    }
+
+    .action-list-description {
+        font-size: 0.875rem;
+        color: var(--bs-gray-600);
+    }
+
+    .action-shortcut {
+        margin-left: auto;
+        font-size: 0.75rem;
+    }
+
+    /* Compact Layout Styles */
+    .quick-actions-compact {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .action-compact-btn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--bs-gray-300);
+        border-radius: 4px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+        .action-compact-btn:hover:not(:disabled) {
+            border-color: var(--bs-primary);
+            background: var(--bs-primary-bg-subtle);
+        }
+
+    /* Template Selector Styles */
+    .template-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border: 1px solid var(--bs-gray-300);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .template-card:hover {
+            border-color: var(--bs-primary);
+            background: var(--bs-primary-bg-subtle);
+        }
+
+    .template-icon {
+        font-size: 1.5rem;
+        color: var(--bs-primary);
+    }
+</style>
+
+@code {
+    [Parameter] public List<QuickAction> Actions { get; set; } = new();
+    [Parameter] public QuickActionDisplayMode DisplayMode { get; set; } = QuickActionDisplayMode.Grid;
+    [Parameter] public EventCallback<QuickActionResult> OnActionSelected { get; set; }
+    [Parameter] public bool ShowTemplates { get; set; } = true;
+
+    [Inject] private ILogger<QuickActions> Logger { get; set; } = default!;
+
+    private bool _showTemplateSelector = false;
+    private List<ActionTemplate> _templates = new();
+
+    protected override void OnInitialized()
+    {
+        if (!Actions.Any())
+        {
+            LoadDefaultActions();
+        }
+
+        LoadTemplates();
+    }
+
+    private void LoadDefaultActions()
+    {
+        Actions = new List<QuickAction>
+        {
+            // Investigation Actions
+            new QuickAction
+            {
+                Id = "search-evidence",
+                Title = "Search Evidence",
+                Description = "Search through collected evidence",
+                Icon = "fa-search",
+                Category = "Investigation",
+                Command = "search",
+                IsEnabled = true
+            },
+            new QuickAction
+            {
+                Id = "upload-files",
+                Title = "Upload Files",
+                Description = "Add documents, images, or media",
+                Icon = "fa-upload",
+                Category = "Investigation",
+                Command = "upload",
+                IsEnabled = true
+            },
+            new QuickAction
+            {
+                Id = "analyze-image",
+                Title = "Analyze Image",
+                Description = "Extract text and objects from images",
+                Icon = "fa-image",
+                Category = "Analysis",
+                Command = "image-analysis",
+                IsEnabled = true
+            },
+            new QuickAction
+            {
+                Id = "transcribe-audio",
+                Title = "Transcribe Audio",
+                Description = "Convert speech to text",
+                Icon = "fa-microphone",
+                Category = "Analysis",
+                Command = "transcribe",
+                IsEnabled = true
+            },
+
+            // OSINT Actions
+            new QuickAction
+            {
+                Id = "osint-search",
+                Title = "OSINT Search",
+                Description = "Search open sources",
+                Icon = "fa-globe",
+                Category = "OSINT",
+                Command = "osint",
+                IsEnabled = true
+            },
+            new QuickAction
+            {
+                Id = "social-media",
+                Title = "Social Media",
+                Description = "Analyze social profiles",
+                Icon = "fa-hashtag",
+                Category = "OSINT",
+                Command = "social",
+                IsEnabled = true
+            },
+
+            // Forensics Actions
+            new QuickAction
+            {
+                Id = "timeline",
+                Title = "Build Timeline",
+                Description = "Create event timeline",
+                Icon = "fa-clock",
+                Category = "Forensics",
+                Command = "timeline",
+                IsEnabled = true
+            },
+            new QuickAction
+            {
+                Id = "extract-metadata",
+                Title = "Extract Metadata",
+                Description = "Get file metadata",
+                Icon = "fa-database",
+                Category = "Forensics",
+                Command = "metadata",
+                IsEnabled = true
+            },
+
+            // Templates
+            new QuickAction
+            {
+                Id = "use-template",
+                Title = "Use Template",
+                Description = "Start from a template",
+                Icon = "fa-file-alt",
+                Category = "Templates",
+                Command = "template",
+                IsEnabled = true,
+                Badge = "New"
+            }
+        };
+    }
+
+    private void LoadTemplates()
+    {
+        _templates = new List<ActionTemplate>
+        {
+            new ActionTemplate
+            {
+                Id = "csam-triage",
+                Name = "CSAM Triage",
+                Description = "Triage suspected CSAM material",
+                Icon = "fa-shield-alt",
+                Category = "Law Enforcement",
+                Prompt = "I need to triage potential CSAM material. Please guide me through the proper procedures."
+            },
+            new ActionTemplate
+            {
+                Id = "fraud-investigation",
+                Name = "Fraud Investigation",
+                Description = "Investigate financial fraud",
+                Icon = "fa-dollar-sign",
+                Category = "Financial Crimes",
+                Prompt = "I'm investigating a potential fraud case. Help me analyze the evidence."
+            },
+            new ActionTemplate
+            {
+                Id = "person-search",
+                Name = "Person Search",
+                Description = "Find information about a person",
+                Icon = "fa-user-search",
+                Category = "OSINT",
+                Prompt = "I need to gather information about a person of interest."
+            },
+            new ActionTemplate
+            {
+                Id = "incident-response",
+                Name = "Incident Response",
+                Description = "Respond to security incident",
+                Icon = "fa-exclamation-triangle",
+                Category = "Cybersecurity",
+                Prompt = "Help me respond to a security incident."
+            }
+        };
+    }
+
+    private async Task HandleAction(QuickAction action)
+    {
+        Logger.LogInformation("Quick action selected: {ActionId} - {Title}", action.Id, action.Title);
+
+        if (action.Command == "template" && ShowTemplates)
+        {
+            ShowTemplateSelector();
+            return;
+        }
+
+        var result = new QuickActionResult
+        {
+            ActionId = action.Id,
+            Command = action.Command,
+            Data = action.Data,
+            Prompt = action.Prompt
+        };
+
+        await OnActionSelected.InvokeAsync(result);
+    }
+
+    private void ShowTemplateSelector()
+    {
+        _showTemplateSelector = true;
+    }
+
+    private void CloseTemplateSelector()
+    {
+        _showTemplateSelector = false;
+    }
+
+    private async Task SelectTemplate(ActionTemplate template)
+    {
+        var result = new QuickActionResult
+        {
+            ActionId = template.Id,
+            Command = "apply-template",
+            Prompt = template.Prompt,
+            Data = new Dictionary<string, object>
+            {
+                ["templateId"] = template.Id,
+                ["templateName"] = template.Name
+            }
+        };
+
+        _showTemplateSelector = false;
+        await OnActionSelected.InvokeAsync(result);
+    }
+
+    private string GetDisplayClass()
+    {
+        return DisplayMode switch
+        {
+            QuickActionDisplayMode.Grid => "actions-grid",
+            QuickActionDisplayMode.Chips => "actions-chips",
+            QuickActionDisplayMode.List => "actions-list",
+            QuickActionDisplayMode.Compact => "actions-compact",
+            _ => ""
+        };
+    }
+}

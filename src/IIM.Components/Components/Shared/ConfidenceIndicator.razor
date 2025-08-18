@@ -1,0 +1,89 @@
+﻿@namespace IIM.Components.Shared
+@using IIM.Core.Models
+
+<div class="confidence-indicator d-inline-flex align-items-center gap-2"
+     title="Confidence: @($"{Confidence:P0}")">
+    <span class="confidence-label text-muted small">Confidence:</span>
+
+    <div class="confidence-bar" style="width: 100px; height: 20px; position: relative;">
+        <div class="progress" style="height: 100%;">
+            <div class="progress-bar @GetConfidenceClass()"
+                 role="progressbar"
+                 style="width: @($"{Confidence * 100}%")"
+                 aria-valuenow="@(Confidence * 100)"
+                 aria-valuemin="0"
+                 aria-valuemax="100">
+            </div>
+        </div>
+        <span class="confidence-value position-absolute top-50 start-50 translate-middle small fw-bold">
+            @($"{Confidence:P0}")
+        </span>
+    </div>
+
+    @if (ShowIcon)
+    {
+        <i class="fas @GetConfidenceIcon() @GetConfidenceIconClass()"></i>
+    }
+</div>
+
+<style>
+    .confidence-indicator {
+        user-select: none;
+    }
+
+    .confidence-bar {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .confidence-value {
+        font-size: 0.75rem;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        z-index: 10;
+        color: var(--bs-dark);
+    }
+
+    .progress {
+        background-color: rgba(0,0,0,0.05);
+    }
+</style>
+
+@code {
+    [Parameter] public double Confidence { get; set; }
+    [Parameter] public bool ShowIcon { get; set; } = true;
+    [Parameter] public string? CustomTooltip { get; set; }
+
+    private string GetConfidenceClass()
+    {
+        return Confidence switch
+        {
+            >= 0.9 => "bg-success",
+            >= 0.7 => "bg-info",
+            >= 0.5 => "bg-warning",
+            _ => "bg-danger"
+        };
+    }
+
+    private string GetConfidenceIcon()
+    {
+        return Confidence switch
+        {
+            >= 0.9 => "fa-check-circle",
+            >= 0.7 => "fa-info-circle",
+            >= 0.5 => "fa-exclamation-triangle",
+            _ => "fa-times-circle"
+        };
+    }
+
+    private string GetConfidenceIconClass()
+    {
+        return Confidence switch
+        {
+            >= 0.9 => "text-success",
+            >= 0.7 => "text-info",
+            >= 0.5 => "text-warning",
+            _ => "text-danger"
+        };
+    }
+}

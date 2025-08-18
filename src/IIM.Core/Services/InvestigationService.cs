@@ -539,24 +539,7 @@ namespace IIM.Core.Services
             return response;
         }
 
-        public async Task<byte[]> ExportResponseAsync(
-         string responseId,
-         ExportFormat format,
-         ExportOptions? options = null)
-        {
-            var response = await GetResponseAsync(responseId);
 
-            // Use the export service directly
-            var result = await _exportService.ExportResponseAsync(response, format, options);
-
-            if (result.Success && result.Data != null)
-            {
-                return result.Data;
-            }
-
-            throw new Exception($"Export failed: {result.ErrorMessage}");
-        }
-        // Add these methods to your InvestigationService class:
 
         private async Task<ResponseDisplayType> DetermineOptimalDisplayTypeAsync(
             InvestigationResponse response,
@@ -653,7 +636,6 @@ namespace IIM.Core.Services
 
             return await Task.FromResult(response);
         }
-
         public Task<Case> GetCaseAsync(string caseId, CancellationToken cancellationToken = default)
         {
             if (_cases.TryGetValue(caseId, out var caseEntity))
@@ -664,9 +646,34 @@ namespace IIM.Core.Services
             throw new KeyNotFoundException($"Case {caseId} not found");
         }
 
-        public Task<byte[]> ExportResponseAsync(string responseId, ExportFormat format, System.Runtime.Serialization.ExportOptions? options = null)
+        public async Task<byte[]> ExportResponseAsync(
+            string responseId,
+            ExportFormat format,
+            ExportOptions? options = null)
         {
-            throw new NotImplementedException();
+            var response = await GetResponseAsync(responseId);
+
+            // Use the export service directly
+            var result = await _exportService.ExportResponseAsync(response, format, options);
+
+            if (result.Success && result.Data != null)
+            {
+                return result.Data;
+            }
+
+            throw new Exception($"Export failed: {result.ErrorMessage}");
+        }
+
+        /// <summary>
+        /// Send a query to the investigation service (UI compatibility alias for ProcessQueryAsync)
+        /// </summary>
+        public Task<InvestigationResponse> SendQueryAsync(
+            string sessionId,
+            InvestigationQuery query,
+            CancellationToken cancellationToken = default)
+        {
+            // Simply delegate to the existing ProcessQueryAsync method
+            return ProcessQueryAsync(sessionId, query, cancellationToken);
         }
     }
 }

@@ -1,0 +1,767 @@
+﻿@namespace IIM.Components.Containers
+@using IIM.Core.Models
+@using IIM.Core.Services
+@using IIM.Shared.Enums
+@using IIM.Shared.Models
+@using IIM.Components.Messages
+@using IIM.Components.Input
+@using Microsoft.AspNetCore.SignalR.Client
+@implements IAsyncDisposable
+
+<div class="investigation-container @GetContainerClass()">
+    <!-- Header Section -->
+    @if (ShowHeader)
+    {
+        <div class="container-header">
+            <div class="header-content">
+                <div class="header-title">
+                    @if (Session != null)
+                    {
+                        <h4 class="mb-0">
+                            <span class="session-icon">@Session.Icon</span>
+                            @Session.Title
+                        </h4>
+                        <div class="session-badges">
+                            <span class="badge @GetTypeBadgeClass(Session.Type)">
+                                @Session.Type
+                            </span>
+                            @if (Session.Status != InvestigationStatus.Active)
+                            {
+                                <span class="badge bg-secondary">@Session.Status</span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <h4 class="mb-0">Investigation</h4>
+                    }
+                </div>
+                
+                <div class="header-actions">
+                    @if (Session != null)
+                    {
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="ShowSessionInfo">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="ExportSession">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="ShareSession">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    }
+                </div>
+            </div>
+            
+            @if (Session != null)
+            {
+                <div class="header-meta text-muted small">
+                    <span>Started: @Session.CreatedAt.ToString("MMM dd, HH:mm")</span>
+                    <span class="mx-2">•</span>
+                    <span>Last activity: @Session.UpdatedAt.ToString("HH:mm")</span>
+                    <span class="mx-2">•</span>
+                    <span>@Messages.Count messages</span>
+                </div>
+            }
+        </div>
+    }
+    
+    <!-- Messages Area -->
+    <div class="messages-container" @ref="messagesElement">
+        <div class="messages-scroll-area">
+            @if (!Messages.Any() && ShowWelcome)
+            {
+                <!-- Welcome Screen -->
+                <div class="welcome-screen">
+                    <div class="welcome-content">
+                        <div class="welcome-icon">
+                            <i class="fas fa-shield-alt fa-4x text-primary"></i>
+                        </div>
+                        <h3>@WelcomeTitle</h3>
+                        <p class="text-muted">@WelcomeMessage</p>
+                        
+                        @if (QuickActions?.Any() == true)
+                        {
+                            <div class="quick-actions">
+                                <h6 class="text-muted mb-3">Quick Actions</h6>
+                                <div class="action-grid">
+                                    @foreach (var action in QuickActions)
+                                    {
+                                        <button class="quick-action-btn" @onclick="() => HandleQuickAction(action)">
+                                            <i class="fas @action.Icon fa-2x mb-2"></i>
+                                            <div>@action.Label</div>
+                                            @if (!string.IsNullOrEmpty(action.Description))
+                                            {
+                                                <small class="text-muted">@action.Description</small>
+                                            }
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Messages List -->
+                <div class="messages-list">
+                    @foreach (var message in Messages)
+                    {
+                        <UnifiedMessage 
+                            Message="@message"
+                            ShowActions="@(!IsProcessing)"
+                            ShowConfidence="@(message.Role == MessageRole.Assistant)"
+                            CompactMode="@CompactMode"
+                            OnToolExecute="@HandleToolExecute"
+                            OnAttachmentClick="@HandleAttachmentClick"
+                            OnCitationClick="@HandleCitationClick"
+                            OnMessageAction="@HandleMessageAction" />
+                    }
+                </div>
+            }
+            
+            <!-- Processing Indicator -->
+            @if (IsProcessing)
+            {
+                <div class="processing-indicator">
+                    <div class="processing-content">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Processing...</span>
+                        </div>
+                        <span class="processing-text">@ProcessingMessage</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(ProcessingDetails))
+                    {
+                        <div class="processing-details text-muted small">
+                            @ProcessingDetails
+                        </div>
+                    }
+                </div>
+            }
+            
+            <!-- Typing Indicator -->
+            @if (ShowTypingIndicator)
+            {
+                <div class="typing-indicator">
+                    <div class="typing-bubble">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span class="typing-text small text-muted">Assistant is typing...</span>
+                </div>
+            }
+            
+            <!-- Error Display -->
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    @ErrorMessage
+                    <button type="button" class="btn-close" @onclick="() => ErrorMessage = null"></button>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <!-- Input Section -->
+    @if (ShowInput)
+    {
+        <div class="input-section">
+            <MultiModalInput 
+                OnSendMessage="@SendMessage"
+                OnFileAttach="@AttachFiles"
+                OnVoiceInput="@ProcessVoiceInput"
+                OnToolSelect="@SelectTool"
+                AvailableTools="@AvailableTools"
+                ActiveModels="@ActiveModels"
+                IsEnabled="@(!IsProcessing)"
+                Placeholder="@InputPlaceholder" />
+        </div>
+    }
+</div>
+
+<!-- Session Info Modal -->
+@if (_showSessionInfo && Session != null)
+{
+    <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Session Information</h5>
+                    <button type="button" class="btn-close" @onclick="() => _showSessionInfo = false"></button>
+                </div>
+                <div class="modal-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Session ID</dt>
+                        <dd class="col-sm-9"><code>@Session.Id</code></dd>
+                        
+                        <dt class="col-sm-3">Case ID</dt>
+                        <dd class="col-sm-9"><code>@Session.CaseId</code></dd>
+                        
+                        <dt class="col-sm-3">Type</dt>
+                        <dd class="col-sm-9">@Session.Type</dd>
+                        
+                        <dt class="col-sm-3">Status</dt>
+                        <dd class="col-sm-9">@Session.Status</dd>
+                        
+                        <dt class="col-sm-3">Created</dt>
+                        <dd class="col-sm-9">@Session.CreatedAt.ToString("F")</dd>
+                        
+                        <dt class="col-sm-3">Last Updated</dt>
+                        <dd class="col-sm-9">@Session.UpdatedAt.ToString("F")</dd>
+                        
+                        <dt class="col-sm-3">Created By</dt>
+                        <dd class="col-sm-9">@Session.CreatedBy</dd>
+                        
+                        @if (Session.EnabledTools?.Any() == true)
+                        {
+                            <dt class="col-sm-3">Enabled Tools</dt>
+                            <dd class="col-sm-9">
+                                @string.Join(", ", Session.EnabledTools)
+                            </dd>
+                        }
+                        
+                        @if (Session.Findings?.Any() == true)
+                        {
+                            <dt class="col-sm-3">Findings</dt>
+                            <dd class="col-sm-9">
+                                @Session.Findings.Count findings recorded
+                            </dd>
+                        }
+                    </dl>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => _showSessionInfo = false">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .investigation-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: var(--bs-body-bg);
+    }
+    
+    .container-header {
+        background: white;
+        border-bottom: 1px solid var(--bs-gray-300);
+        padding: 1rem;
+    }
+    
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .session-icon {
+        font-size: 1.5rem;
+    }
+    
+    .session-badges {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .header-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .messages-container {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 1rem;
+    }
+    
+    .messages-scroll-area {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .welcome-screen {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+        padding: 2rem;
+    }
+    
+    .welcome-content {
+        text-align: center;
+        max-width: 600px;
+    }
+    
+    .welcome-icon {
+        margin-bottom: 2rem;
+    }
+    
+    .quick-actions {
+        margin-top: 2rem;
+    }
+    
+    .messages-list {
+        padding: 1rem 0;
+    }
+    
+    .processing-indicator {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem;
+        color: var(--bs-gray-700);
+    }
+    
+    .processing-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .typing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+    }
+    
+    .typing-bubble {
+        display: flex;
+        gap: 4px;
+        padding: 8px 12px;
+        background: var(--bs-gray-200);
+        border-radius: 18px;
+    }
+    
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--bs-gray-600);
+    }
+    
+    .input-section {
+        background: white;
+        border-top: 1px solid var(--bs-gray-300);
+        padding: 1rem;
+    }
+    
+    .investigation-container.compact .messages-container {
+        padding: 0.5rem;
+    }
+    
+    .investigation-container.dark {
+        background: var(--bs-dark);
+        color: var(--bs-light);
+    }
+</style>
+
+@code {
+    // Parameters
+    [Parameter] public string? SessionId { get; set; }
+    [Parameter] public string? CaseId { get; set; }
+    [Parameter] public InvestigationSession? Session { get; set; }
+    [Parameter] public List<InvestigationMessage> Messages { get; set; } = new();
+    
+    // UI Configuration
+    [Parameter] public bool ShowHeader { get; set; } = true;
+    [Parameter] public bool ShowInput { get; set; } = true;
+    [Parameter] public bool ShowWelcome { get; set; } = true;
+    [Parameter] public bool CompactMode { get; set; } = false;
+    [Parameter] public string WelcomeTitle { get; set; } = "Welcome to IIM Investigation Platform";
+    [Parameter] public string WelcomeMessage { get; set; } = "Start your investigation by asking a question or uploading evidence.";
+    [Parameter] public string InputPlaceholder { get; set; } = "Type your message or drag files here...";
+    
+    // Quick Actions
+    [Parameter] public List<QuickAction> QuickActions { get; set; } = new()
+    {
+        new() { Icon = "fa-search", Title = "Search Evidence", Command = "search" },
+        new() { Icon = "fa-upload", Title = "Upload Files", Command = "upload" },
+        new() { Icon = "fa-camera", Title = "Analyze Image", Command = "image" },
+        new() { Icon = "fa-microphone", Title = "Transcribe Audio", Command = "audio" },
+    };
+    
+    // Event Callbacks
+    [Parameter] public EventCallback<InvestigationMessage> OnMessageSent { get; set; }
+    [Parameter] public EventCallback<List<Attachment>> OnFilesAttached { get; set; }
+    [Parameter] public EventCallback<string> OnQuickAction { get; set; }
+    
+    // Services
+    [Inject] private IInvestigationService InvestigationService { get; set; } = default!;
+    [Inject] private IHubConnectionService HubService { get; set; } = default!;
+    [Inject] private ILogger<InvestigationContainer> Logger { get; set; } = default!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    
+    // State
+    private ElementReference messagesElement;
+    private HubConnection? _hubConnection;
+    private bool IsProcessing = false;
+    private bool ShowTypingIndicator = false;
+    private string? ProcessingMessage = "Processing...";
+    private string? ProcessingDetails;
+    private string? ErrorMessage;
+    private bool _showSessionInfo = false;
+    
+    // Available tools and models
+    private List<string> AvailableTools = new();
+    private Dictionary<string, ModelConfiguration> ActiveModels = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Load or create session
+            if (!string.IsNullOrEmpty(SessionId))
+            {
+                await LoadSession(SessionId);
+            }
+            else if (!string.IsNullOrEmpty(CaseId))
+            {
+                await CreateNewSession();
+            }
+            else if (Session != null)
+            {
+                // Session provided as parameter
+                Messages = Session.Messages;
+                AvailableTools = Session.EnabledTools;
+                ActiveModels = Session.Models;
+            }
+            
+            // Connect to SignalR hub
+            await ConnectToHub();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to initialize investigation container");
+            ErrorMessage = "Failed to initialize session. Please try again.";
+        }
+    }
+    
+    private async Task LoadSession(string sessionId)
+    {
+        try
+        {
+            Session = await InvestigationService.GetSessionAsync(sessionId);
+            if (Session != null)
+            {
+                Messages = Session.Messages;
+                AvailableTools = Session.EnabledTools;
+                ActiveModels = Session.Models;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load session {SessionId}", sessionId);
+            ErrorMessage = $"Failed to load session: {ex.Message}";
+        }
+    }
+    
+    private async Task CreateNewSession()
+    {
+        try
+        {
+            var request = new CreateSessionRequest(
+                CaseId!,
+                "New Investigation",
+                InvestigationType.GeneralInquiry.ToString()
+            );
+            
+            Session = await InvestigationService.CreateSessionAsync(request);
+            SessionId = Session.Id;
+            Messages = Session.Messages;
+            AvailableTools = Session.EnabledTools;
+            ActiveModels = Session.Models;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to create new session");
+            ErrorMessage = $"Failed to create session: {ex.Message}";
+        }
+    }
+    
+    private async Task ConnectToHub()
+    {
+        try
+        {
+            _hubConnection = await HubService.ConnectAsync("investigationHub");
+            
+            // Set up event handlers
+            _hubConnection.On<InvestigationMessage>("ReceiveMessage", async (message) =>
+            {
+                Messages.Add(message);
+                ShowTypingIndicator = false;
+                await InvokeAsync(StateHasChanged);
+                await ScrollToBottom();
+            });
+            
+            _hubConnection.On<string>("ProcessingUpdate", (update) =>
+            {
+                ProcessingDetails = update;
+                InvokeAsync(StateHasChanged);
+            });
+            
+            _hubConnection.On("TypingIndicator", () =>
+            {
+                ShowTypingIndicator = true;
+                InvokeAsync(StateHasChanged);
+            });
+            
+            // Join session room
+            if (!string.IsNullOrEmpty(SessionId))
+            {
+                await _hubConnection.SendAsync("JoinSession", SessionId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to connect to hub");
+            // Continue without real-time updates
+        }
+    }
+    
+    private async Task SendMessage(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content) || IsProcessing)
+            return;
+            
+        try
+        {
+            IsProcessing = true;
+            ProcessingMessage = "Sending message...";
+            ErrorMessage = null;
+            
+            // Create user message
+            var userMessage = new InvestigationMessage
+            {
+                Id = Guid.NewGuid().ToString(),
+                Role = MessageRole.User,
+                Content = content,
+                Timestamp = DateTimeOffset.UtcNow
+            };
+            
+            // Add to messages immediately
+            Messages.Add(userMessage);
+            StateHasChanged();
+            await ScrollToBottom();
+            
+            // Send to backend
+            if (Session != null)
+            {
+                ProcessingMessage = "Processing response...";
+                ShowTypingIndicator = true;
+                
+                var query = new InvestigationQuery
+                {
+                    Text = content,
+                    EnabledTools = AvailableTools,
+                    Timestamp = DateTimeOffset.UtcNow
+                };
+                
+                var response = await InvestigationService.SendQueryAsync(Session.Id, query);
+                
+                // Response will come through SignalR
+            }
+            
+            await OnMessageSent.InvokeAsync(userMessage);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to send message");
+            ErrorMessage = $"Failed to send message: {ex.Message}";
+        }
+        finally
+        {
+            IsProcessing = false;
+            ProcessingMessage = null;
+            ShowTypingIndicator = false;
+            StateHasChanged();
+        }
+    }
+    
+    private async Task AttachFiles(List<Attachment> attachments)
+    {
+        try
+        {
+            // Handle file attachments
+            await OnFilesAttached.InvokeAsync(attachments);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to attach files");
+            ErrorMessage = "Failed to attach files. Please try again.";
+        }
+    }
+    
+    private async Task ProcessVoiceInput(Stream audioStream)
+    {
+        try
+        {
+            IsProcessing = true;
+            ProcessingMessage = "Transcribing audio...";
+            
+            // Process voice input
+            await Task.Delay(1000); // Placeholder
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to process voice input");
+            ErrorMessage = "Failed to process voice input.";
+        }
+        finally
+        {
+            IsProcessing = false;
+        }
+    }
+    
+    private async Task SelectTool(string toolId)
+    {
+        Logger.LogInformation("Tool selected: {ToolId}", toolId);
+        await Task.CompletedTask;
+    }
+    
+    private async Task HandleQuickActionSelected(QuickActionResult result)
+    {
+        Logger.LogInformation("Quick action selected: {Command}", result.Command);
+        
+        // If the action has a prompt, send it as a message
+        if (!string.IsNullOrEmpty(result.Prompt))
+        {
+            await SendMessage(result.Prompt);
+        }
+        else
+        {
+            // Handle specific commands
+            switch (result.Command)
+            {
+                case "upload":
+                    // Trigger file upload
+                    // This would typically open a file picker
+                    break;
+                    
+                case "search":
+                    // Focus search input or show search modal
+                    break;
+                    
+                case "template":
+                    // Template selection is handled by QuickActions component
+                    break;
+                    
+                default:
+                    // Execute as a tool or send to OnQuickAction callback
+                    await OnQuickAction.InvokeAsync(result.Command);
+                    break;
+            }
+        }
+    }
+    
+    private async Task HandleToolExecute((string toolName, Dictionary<string, object> parameters) args)
+    {
+        try
+        {
+            IsProcessing = true;
+            ProcessingMessage = $"Executing {args.toolName}...";
+            
+            // Execute tool
+            var execution = await InvestigationService.ExecuteToolAsync(
+                Session?.Id ?? "",
+                args.toolName,
+                args.parameters
+            );
+            
+            // Result will come through SignalR
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to execute tool {ToolName}", args.toolName);
+            ErrorMessage = $"Failed to execute {args.toolName}";
+        }
+        finally
+        {
+            IsProcessing = false;
+        }
+    }
+    
+    private async Task HandleAttachmentClick(Attachment attachment)
+    {
+        // Handle attachment click (view, download, etc.)
+        Logger.LogInformation("Attachment clicked: {FileName}", attachment.FileName);
+        await Task.CompletedTask;
+    }
+    
+    private async Task HandleCitationClick(Citation citation)
+    {
+        // Handle citation click (show source, etc.)
+        Logger.LogInformation("Citation clicked: {Source}", citation.Source);
+        await Task.CompletedTask;
+    }
+    
+    private async Task HandleMessageAction(InvestigationMessage message)
+    {
+        // Handle message actions (edit, regenerate, export)
+        Logger.LogInformation("Message action for: {MessageId}", message.Id);
+        await Task.CompletedTask;
+    }
+    
+    private void ShowSessionInfo()
+    {
+        _showSessionInfo = true;
+    }
+    
+    private async Task ExportSession()
+    {
+        // Export session
+        await Task.CompletedTask;
+    }
+    
+    private async Task ShareSession()
+    {
+        // Share session
+        await Task.CompletedTask;
+    }
+    
+    private async Task ScrollToBottom()
+    {
+        await JSRuntime.InvokeVoidAsync("scrollToBottom", messagesElement);
+    }
+    
+    private string GetContainerClass()
+    {
+        var classes = new List<string> { "investigation-container" };
+        
+        if (CompactMode)
+            classes.Add("compact");
+            
+        return string.Join(" ", classes);
+    }
+    
+    private string GetTypeBadgeClass(InvestigationType type) => type switch
+    {
+        InvestigationType.EvidenceAnalysis => "bg-primary",
+        InvestigationType.OSINTResearch => "bg-info",
+        InvestigationType.ForensicAnalysis => "bg-danger",
+        InvestigationType.ThreatAssessment => "bg-warning",
+        _ => "bg-secondary"
+    };
+    
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection != null)
+        {
+            await _hubConnection.DisposeAsync();
+        }
+    }
+}

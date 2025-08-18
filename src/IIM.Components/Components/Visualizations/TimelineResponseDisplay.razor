@@ -1,0 +1,493 @@
+﻿@namespace IIM.Components.Visualizations
+@using IIM.Core.Models
+@using System.Text.Json
+
+<div class="timeline-response-display">
+    @if (_timelineEvents.Any())
+    {
+        <!-- Timeline Controls -->
+        <div class="timeline-controls mb-3 d-flex justify-content-between">
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn @GetViewButtonClass("vertical")"
+                        @onclick="() => SetView(" vertical")">
+                    <i class="fas fa-stream"></i> Vertical
+                </button>
+                <button type="button" class="btn @GetViewButtonClass("horizontal")"
+                        @onclick="() => SetView(" horizontal")">
+                    <i class="fas fa-grip-lines"></i> Horizontal
+                </button>
+                <button type="button" class="btn @GetViewButtonClass("calendar")"
+                        @onclick="() => SetView(" calendar")">
+                    <i class="fas fa-calendar-alt"></i> Calendar
+                </button>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        @onclick="ZoomIn" disabled="@(!CanZoomIn())">
+                    <i class="fas fa-search-plus"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        @onclick="ZoomOut" disabled="@(!CanZoomOut())">
+                    <i class="fas fa-search-minus"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        @onclick="ResetZoom">
+                    <i class="fas fa-compress"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        @if (_eventCategories.Any())
+        {
+            <div class="filter-bar mb-3">
+                <span class="me-2 text-muted">Filter:</span>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button"
+                            class="btn @(_selectedCategory == null ? "btn-primary" : "btn-outline-secondary")"
+                            @onclick="() => FilterByCategory(null)">
+                        All (@_timelineEvents.Count)
+                    </button>
+                    @foreach (var category in _eventCategories)
+                    {
+                        <button type="button"
+                                class="btn @(_selectedCategory == category ? "btn-primary" : "btn-outline-secondary")"
+                                @onclick="() => FilterByCategory(category)">
+                            @category (@GetCategoryCount(category))
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Timeline Display -->
+        <div class="timeline-container @($"timeline-{_currentView}")">
+            @switch (_currentView)
+            {
+                case "vertical":
+                    @RenderVerticalTimeline()
+                    break;
+                case "horizontal":
+                    @RenderHorizontalTimeline()
+                    break;
+                case "calendar":
+                    @RenderCalendarView()
+                    break;
+            }
+        </div>
+
+        <!-- Event Details Modal -->
+        @if (_selectedEvent != null)
+        {
+            <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="@GetEventIcon(_selectedEvent)"></i>
+                                @_selectedEvent.Title
+                            </h5>
+                            <button type="button" class="btn-close" @onclick="() => _selectedEvent = null"></button>
+                        </div>
+                        <div class="modal-body">
+                            <dl class="row">
+                                <dt class="col-sm-3">Date/Time</dt>
+                                <dd class="col-sm-9">@_selectedEvent.Timestamp.ToString("F")</dd>
+
+                                @if (!string.IsNullOrEmpty(_selectedEvent.Category))
+                                {
+                                    <dt class="col-sm-3">Category</dt>
+                                    <dd class="col-sm-9">
+                                        <span class="badge @GetCategoryBadgeClass(_selectedEvent.Category)">
+                                            @_selectedEvent.Category
+                                        </span>
+                                    </dd>
+                                }
+
+                                @if (!string.IsNullOrEmpty(_selectedEvent.Description))
+                                {
+                                    <dt class="col-sm-3">Description</dt>
+                                    <dd class="col-sm-9">@_selectedEvent.Description</dd>
+                                }
+
+                                @if (_selectedEvent.Metadata?.Any() == true)
+                                {
+                                    <dt class="col-sm-3">Additional Info</dt>
+                                    <dd class="col-sm-9">
+                                        @foreach (var meta in _selectedEvent.Metadata)
+                                        {
+                                            <div><strong>@meta.Key:</strong> @meta.Value</div>
+                                        }
+                                    </dd>
+                                }
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No timeline data available
+        </div>
+    }
+</div>
+
+<style>
+    .timeline-vertical {
+        position: relative;
+        padding-left: 40px;
+    }
+
+        .timeline-vertical::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--bs-gray-300);
+        }
+
+    .timeline-event {
+        position: relative;
+        margin-bottom: 30px;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+        .timeline-event:hover {
+            transform: translateX(5px);
+        }
+
+    .timeline-event-marker {
+        position: absolute;
+        left: -30px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--bs-primary);
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px var(--bs-gray-300);
+    }
+
+    .timeline-horizontal {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding: 20px 0;
+    }
+
+    .timeline-calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+    }
+
+    .calendar-day {
+        border: 1px solid var(--bs-gray-300);
+        border-radius: 4px;
+        padding: 10px;
+        min-height: 100px;
+    }
+
+    .calendar-day-header {
+        font-weight: bold;
+        margin-bottom: 5px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid var(--bs-gray-200);
+    }
+</style>
+
+@code {
+    [Parameter] public InvestigationResponse Response { get; set; } = new();
+
+    private List<TimelineEvent> _timelineEvents = new();
+    private List<TimelineEvent> _filteredEvents = new();
+    private HashSet<string> _eventCategories = new();
+    private string? _selectedCategory = null;
+    private TimelineEvent? _selectedEvent = null;
+    private string _currentView = "vertical";
+    private double _zoomLevel = 1.0;
+
+    protected override void OnInitialized()
+    {
+        LoadTimelineData();
+        ApplyFilters();
+    }
+
+    private void LoadTimelineData()
+    {
+        if (Response?.Visualization?.Data == null)
+            return;
+
+        try
+        {
+            if (Response.Visualization.Data is JsonElement jsonElement)
+            {
+                if (jsonElement.ValueKind == JsonValueKind.Array)
+                {
+                    _timelineEvents = JsonSerializer.Deserialize<List<TimelineEvent>>(
+                        jsonElement.GetRawText()) ?? new();
+                }
+                else if (jsonElement.TryGetProperty("events", out var events))
+                {
+                    _timelineEvents = JsonSerializer.Deserialize<List<TimelineEvent>>(
+                        events.GetRawText()) ?? new();
+                }
+            }
+            else if (Response.Visualization.Data is List<TimelineEvent> events)
+            {
+                _timelineEvents = events;
+            }
+
+            // Sort by timestamp
+            _timelineEvents = _timelineEvents.OrderBy(e => e.Timestamp).ToList();
+
+            // Extract categories
+            _eventCategories = _timelineEvents
+                .Where(e => !string.IsNullOrEmpty(e.Category))
+                .Select(e => e.Category!)
+                .Distinct()
+                .ToHashSet();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading timeline data: {ex.Message}");
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        _filteredEvents = _timelineEvents;
+
+        if (!string.IsNullOrEmpty(_selectedCategory))
+        {
+            _filteredEvents = _filteredEvents
+                .Where(e => e.Category == _selectedCategory)
+                .ToList();
+        }
+    }
+
+    private void FilterByCategory(string? category)
+    {
+        _selectedCategory = category;
+        ApplyFilters();
+    }
+
+    private int GetCategoryCount(string category)
+    {
+        return _timelineEvents.Count(e => e.Category == category);
+    }
+
+    private void SetView(string view)
+    {
+        _currentView = view;
+    }
+
+    private string GetViewButtonClass(string view)
+    {
+        return _currentView == view ? "btn-primary" : "btn-outline-secondary";
+    }
+
+    private RenderFragment RenderVerticalTimeline() => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "timeline-vertical");
+
+        foreach (var evt in _filteredEvents)
+        {
+            builder.OpenElement(2, "div");
+            builder.AddAttribute(3, "class", "timeline-event");
+            builder.AddAttribute(4, "onclick", EventCallback.Factory.Create(this, () => ShowEventDetails(evt)));
+
+            // Marker
+            builder.OpenElement(5, "div");
+            builder.AddAttribute(6, "class", "timeline-event-marker");
+            builder.AddAttribute(7, "style", $"background-color: {GetEventColor(evt)};");
+            builder.CloseElement();
+
+            // Content card
+            builder.OpenElement(8, "div");
+            builder.AddAttribute(9, "class", "card");
+
+            builder.OpenElement(10, "div");
+            builder.AddAttribute(11, "class", "card-body");
+
+            // Time
+            builder.OpenElement(12, "div");
+            builder.AddAttribute(13, "class", "text-muted small mb-1");
+            builder.AddContent(14, evt.Timestamp.ToString("g"));
+            builder.CloseElement();
+
+            // Title
+            builder.OpenElement(15, "h6");
+            builder.AddAttribute(16, "class", "card-title mb-1");
+            builder.OpenElement(17, "i");
+            builder.AddAttribute(18, "class", GetEventIcon(evt));
+            builder.CloseElement();
+            builder.AddContent(19, " " + evt.Title);
+            builder.CloseElement();
+
+            // Description
+            if (!string.IsNullOrEmpty(evt.Description))
+            {
+                builder.OpenElement(20, "p");
+                builder.AddAttribute(21, "class", "card-text small");
+                builder.AddContent(22, evt.Description);
+                builder.CloseElement();
+            }
+
+            // Category badge
+            if (!string.IsNullOrEmpty(evt.Category))
+            {
+                builder.OpenElement(23, "span");
+                builder.AddAttribute(24, "class", $"badge {GetCategoryBadgeClass(evt.Category)}");
+                builder.AddContent(25, evt.Category);
+                builder.CloseElement();
+            }
+
+            builder.CloseElement(); // card-body
+            builder.CloseElement(); // card
+            builder.CloseElement(); // timeline-event
+        }
+
+        builder.CloseElement(); // timeline-vertical
+    };
+
+    private RenderFragment RenderHorizontalTimeline() => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "timeline-horizontal d-flex");
+
+        foreach (var evt in _filteredEvents)
+        {
+            builder.OpenElement(2, "div");
+            builder.AddAttribute(3, "class", "timeline-event-horizontal mx-2");
+            builder.AddAttribute(4, "style", "min-width: 200px;");
+            builder.AddAttribute(5, "onclick", EventCallback.Factory.Create(this, () => ShowEventDetails(evt)));
+
+            // Similar content as vertical but arranged horizontally
+            builder.OpenElement(6, "div");
+            builder.AddAttribute(7, "class", "card h-100");
+
+            builder.OpenElement(8, "div");
+            builder.AddAttribute(9, "class", "card-body");
+
+            builder.OpenElement(10, "h6");
+            builder.AddContent(11, evt.Title);
+            builder.CloseElement();
+
+            builder.OpenElement(12, "div");
+            builder.AddAttribute(13, "class", "text-muted small");
+            builder.AddContent(14, evt.Timestamp.ToString("g"));
+            builder.CloseElement();
+
+            builder.CloseElement(); // card-body
+            builder.CloseElement(); // card
+            builder.CloseElement(); // timeline-event-horizontal
+        }
+
+        builder.CloseElement(); // timeline-horizontal
+    };
+
+    private RenderFragment RenderCalendarView() => builder =>
+    {
+        // Group events by date
+        var eventsByDate = _filteredEvents.GroupBy(e => e.Timestamp.Date);
+
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "timeline-calendar");
+
+        foreach (var dateGroup in eventsByDate)
+        {
+            builder.OpenElement(2, "div");
+            builder.AddAttribute(3, "class", "calendar-day");
+
+            builder.OpenElement(4, "div");
+            builder.AddAttribute(5, "class", "calendar-day-header");
+            builder.AddContent(6, dateGroup.Key.ToString("MMM d"));
+            builder.CloseElement();
+
+            foreach (var evt in dateGroup)
+            {
+                builder.OpenElement(7, "div");
+                builder.AddAttribute(8, "class", "calendar-event small");
+                builder.AddAttribute(9, "onclick", EventCallback.Factory.Create(this, () => ShowEventDetails(evt)));
+                builder.AddContent(10, $"{evt.Timestamp:HH:mm} - {evt.Title}");
+                builder.CloseElement();
+            }
+
+            builder.CloseElement(); // calendar-day
+        }
+
+        builder.CloseElement(); // timeline-calendar
+    };
+
+    private void ShowEventDetails(TimelineEvent evt)
+    {
+        _selectedEvent = evt;
+    }
+
+    private void ZoomIn()
+    {
+        _zoomLevel = Math.Min(_zoomLevel * 1.2, 3.0);
+    }
+
+    private void ZoomOut()
+    {
+        _zoomLevel = Math.Max(_zoomLevel / 1.2, 0.5);
+    }
+
+    private void ResetZoom()
+    {
+        _zoomLevel = 1.0;
+    }
+
+    private bool CanZoomIn() => _zoomLevel < 3.0;
+    private bool CanZoomOut() => _zoomLevel > 0.5;
+
+    private string GetEventIcon(TimelineEvent evt)
+    {
+        return evt.Type switch
+        {
+            "file" => "fas fa-file",
+            "message" => "fas fa-comment",
+            "action" => "fas fa-bolt",
+            "system" => "fas fa-cog",
+            _ => "fas fa-circle"
+        };
+    }
+
+    private string GetEventColor(TimelineEvent evt)
+    {
+        return evt.Type switch
+        {
+            "critical" => "var(--bs-danger)",
+            "warning" => "var(--bs-warning)",
+            "info" => "var(--bs-info)",
+            "success" => "var(--bs-success)",
+            _ => "var(--bs-primary)"
+        };
+    }
+
+    private string GetCategoryBadgeClass(string category)
+    {
+        var hash = category.GetHashCode();
+        var classes = new[] { "bg-primary", "bg-success", "bg-info", "bg-warning", "bg-secondary" };
+        return classes[Math.Abs(hash) % classes.Length];
+    }
+
+    public class TimelineEvent
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public DateTime Timestamp { get; set; }
+        public string? Category { get; set; }
+        public string? Type { get; set; }
+        public Dictionary<string, object>? Metadata { get; set; }
+    }
+}
