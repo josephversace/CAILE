@@ -87,9 +87,13 @@
                                 <div class="action-grid">
                                     @foreach (var action in QuickActions)
                                     {
-                                        <button class="quick-action-btn" @onclick="() => HandleQuickAction(action)">
+                                        <button class="quick-action-btn" @onclick="() => HandleQuickAction(new QuickActionResult { 
+    ActionId = action.Id, 
+    Command = action.Command, 
+    Prompt = action.Prompt 
+})">
                                             <i class="fas @action.Icon fa-2x mb-2"></i>
-                                            <div>@action.Label</div>
+                                            <div>@action.Title</div>
                                             @if (!string.IsNullOrEmpty(action.Description))
                                             {
                                                 <small class="text-muted">@action.Description</small>
@@ -532,9 +536,12 @@
             // Continue without real-time updates
         }
     }
+
     
-    private async Task SendMessage(string content)
+    private async Task SendMessage(InvestigationQuery query)
     {
+          var content = query.Text;
+
         if (string.IsNullOrWhiteSpace(content) || IsProcessing)
             return;
             
@@ -564,13 +571,7 @@
                 ProcessingMessage = "Processing response...";
                 ShowTypingIndicator = true;
                 
-                var query = new InvestigationQuery
-                {
-                    Text = content,
-                    EnabledTools = AvailableTools,
-                    Timestamp = DateTimeOffset.UtcNow
-                };
-                
+         
                 var response = await InvestigationService.SendQueryAsync(Session.Id, query);
                 
                 // Response will come through SignalR
@@ -714,6 +715,64 @@
         // Handle message actions (edit, regenerate, export)
         Logger.LogInformation("Message action for: {MessageId}", message.Id);
         await Task.CompletedTask;
+    }
+
+    private async Task HandleQuickAction(QuickActionResult result)
+    {
+        Logger.LogInformation("Quick action triggered: {ActionId} - {Command}",
+            result.ActionId, result.Command);
+
+        // Handle the quick action based on command
+        switch (result.Command)
+        {
+            case "search":
+                // Trigger search functionality
+                break;
+
+            case "upload":
+                // Trigger file upload
+                break;
+
+            case "image":
+            case "image-analysis":
+                // Trigger image analysis
+                break;
+
+            case "audio":
+            case "transcribe":
+                // Trigger audio transcription
+                break;
+
+            case "apply-template":
+                // Apply investigation template
+                if (!string.IsNullOrEmpty(result.Prompt))
+                {
+                    // Send the template prompt as a message
+                    var message = new InvestigationMessage
+                    {
+                        Content = result.Prompt,
+                        Role = MessageRole.User
+                    };
+                    await SendMessage(message.Content);
+                }
+                break;
+
+            default:
+                // For other actions, use the prompt if provided
+                if (!string.IsNullOrEmpty(result.Prompt))
+                {
+                    var message = new InvestigationMessage
+                    {
+                        Content = result.Prompt,
+                        Role = MessageRole.User
+                    };
+                    await SendMessage(message.Content);
+                }
+                break;
+        }
+
+        // Invoke the callback if provided
+        await OnQuickAction.InvokeAsync(result.Command);
     }
     
     private void ShowSessionInfo()

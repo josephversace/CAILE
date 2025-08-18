@@ -9,23 +9,16 @@
         <div class="timeline-controls mb-3 d-flex justify-content-between">
             <div class="btn-group btn-group-sm" role="group">
                 <button type="button" class="btn @GetViewButtonClass("vertical")"
-                        @onclick="() => SetView(" vertical")">
+                        @onclick='() => SetView("vertical")'>
                     <i class="fas fa-stream"></i> Vertical
                 </button>
                 <button type="button" class="btn @GetViewButtonClass("horizontal")"
-                        @onclick="() => SetView(" horizontal")">
+                        @onclick='() => SetView("horizontal")'>
                     <i class="fas fa-grip-lines"></i> Horizontal
                 </button>
                 <button type="button" class="btn @GetViewButtonClass("calendar")"
-                        @onclick="() => SetView(" calendar")">
+                        @onclick='() => SetView("calendar")'>
                     <i class="fas fa-calendar-alt"></i> Calendar
-                </button>
-            </div>
-
-            <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary"
-                        @onclick="ZoomIn" disabled="@(!CanZoomIn())">
-                    <i class="fas fa-search-plus"></i>
                 </button>
                 <button type="button" class="btn btn-sm btn-outline-secondary"
                         @onclick="ZoomOut" disabled="@(!CanZoomOut())">

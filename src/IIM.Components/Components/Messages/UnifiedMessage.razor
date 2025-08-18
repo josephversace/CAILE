@@ -110,7 +110,7 @@
                                 <CitationCard 
                                     Citation="@citation"
                                     Index="@(Message.Citations.IndexOf(citation) + 1)"
-                                    OnClick="@(() => OnCitationClick.InvokeAsync(citation))" />
+                                    OnViewSource="@(() => OnCitationClick.InvokeAsync(citation))" />
                             }
                             @if (Message.Citations.Count > 3 && CollapsedCitations)
                             {
