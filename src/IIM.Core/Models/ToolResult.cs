@@ -1,3 +1,4 @@
+using IIM.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +39,7 @@ public class ToolExecution
 public class Visualization
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
-    public string Type { get; set; } = string.Empty; // chart, graph, timeline, map, table, etc.
+    public VisualizationType Type { get; set; } = VisualizationType.Auto;
     public string? Title { get; set; }
     public string? Description { get; set; }
     public object Data { get; set; } = new { };

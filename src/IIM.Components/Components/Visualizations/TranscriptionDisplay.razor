@@ -1,0 +1,90 @@
+﻿
+@namespace IIM.Components.Visualizations
+@using IIM.Shared.DTOs
+
+<div class="transcription-display">
+    <div class="transcription-header d-flex justify-content-between align-items-center mb-2">
+        <div>
+            <span class="badge bg-primary">@Result.Language</span>
+            <span class="badge bg-secondary">Confidence: @Result.Confidence.ToString("P0")</span>
+            @if (Result.Duration.HasValue)
+            {
+                <span class="badge bg-info">Duration: @FormatDuration(Result.Duration.Value)</span>
+            }
+        </div>
+        @if (Result.AudioFileId.HasValue)
+        {
+            <button class="btn btn-sm btn-outline-primary" @onclick="PlayAudio">
+                <i class="fas fa-play"></i> Play
+            </button>
+        }
+    </div>
+    
+    <div class="transcription-content">
+        @if (ShowSegments && Result.Segments?.Any() == true)
+        {
+            <div class="segments">
+                @foreach (var segment in Result.Segments)
+                {
+                    <div class="segment mb-2 p-2 border-start border-3">
+                        <div class="segment-time text-muted small">
+                            @FormatTime(segment.Start) - @FormatTime(segment.End)
+                            @if (!string.IsNullOrEmpty(segment.Speaker))
+                            {
+                                <span class="ms-2 badge bg-light text-dark">@segment.Speaker</span>
+                            }
+                        </div>
+                        <div class="segment-text">
+                            @segment.Text
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="full-text p-3 bg-light rounded">
+                @Result.Text
+            </div>
+        }
+    </div>
+    
+    @if (Result.Metadata?.Any() == true)
+    {
+        <div class="transcription-metadata mt-2">
+            <details>
+                <summary class="text-muted small">Metadata</summary>
+                <pre class="small">@System.Text.Json.JsonSerializer.Serialize(Result.Metadata, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+            </details>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public TranscriptionResultDto Result { get; set; } = null!;
+    [Parameter] public bool ShowSegments { get; set; } = true;
+    [Parameter] public EventCallback<int> OnPlayAudio { get; set; }
+    
+    private async Task PlayAudio()
+    {
+        if (Result.AudioFileId.HasValue)
+        {
+            await OnPlayAudio.InvokeAsync(Result.AudioFileId.Value);
+        }
+    }
+    
+    private string FormatTime(int milliseconds)
+    {
+        var ts = TimeSpan.FromMilliseconds(milliseconds);
+        return ts.TotalHours >= 1 
+            ? ts.ToString(@"hh\:mm\:ss") 
+            : ts.ToString(@"mm\:ss");
+    }
+    
+    private string FormatDuration(TimeSpan duration)
+    {
+        return duration.TotalHours >= 1
+            ? duration.ToString(@"hh\:mm\:ss")
+            : duration.ToString(@"mm\:ss");
+    }
+}

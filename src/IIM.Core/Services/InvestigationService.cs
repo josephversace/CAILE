@@ -170,7 +170,7 @@ namespace IIM.Core.Services
             {
                 result.Visualizations.Add(new Visualization
                 {
-                    Type = "chart",
+                    Type = VisualizationType.Graph,
                     Title = "Image Analysis Results",
                     Description = "Object detection and classification results",
                     Data = new
@@ -185,7 +185,7 @@ namespace IIM.Core.Services
             {
                 result.Visualizations.Add(new Visualization
                 {
-                    Type = "graph",
+                    Type = VisualizationType.Graph,
                     Title = "Entity Relationship Graph",
                     Description = "Connections between identified entities",
                     Data = new
