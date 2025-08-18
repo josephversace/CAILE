@@ -1,0 +1,110 @@
+﻿@namespace IIM.Components.Components.Response
+@using IIM.Core.Models
+@using IIM.Shared.DTOs
+
+
+<div class="image-response-display">
+    @if (ImageAnalysisResults?.Any() == true)
+    {
+        @foreach (var analysis in ImageAnalysisResults)
+        {
+            <div class="image-analysis-container mb-3">
+                <!-- Use existing ImageAnalysisResultDto structure -->
+                <div class="position-relative">
+                    <img src="@GetImageSource(analysis.EvidenceId)" 
+                         class="img-fluid rounded" 
+                         alt="Evidence Image" />
+                    
+                    <!-- Object detections -->
+                    @if (analysis.Objects?.Any() == true)
+                    {
+                        <svg class="detection-overlay position-absolute top-0 start-0 w-100 h-100">
+                            @foreach (var obj in analysis.Objects)
+                            {
+                                <g>
+                                    <rect x="@obj.BoundingBox.X"
+                                          y="@obj.BoundingBox.Y"
+                                          width="@obj.BoundingBox.Width"
+                                          height="@obj.BoundingBox.Height"
+                                          class="detection-box"
+                                          stroke="var(--bs-primary)"
+                                          stroke-width="2"
+                                          fill="none" />
+                                </g>
+                            }
+                        </svg>
+                        <!-- Labels as HTML overlays -->
+                        <div class="position-absolute top-0 start-0 w-100 h-100">
+                            @foreach (var obj in analysis.Objects)
+                            {
+                                <div class="position-absolute detection-label"
+                                     style="left: @(obj.BoundingBox.X)px; top: @(obj.BoundingBox.Y - 25)px;">
+                                    @obj.Label (@((obj.Confidence * 100).ToString("F0"))%)
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+                
+                <!-- Analysis details -->
+                <div class="row mt-3">
+                    @if (analysis.Faces?.Any() == true)
+                    {
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-user-circle"></i> Faces Detected
+                                    </h6>
+                                    <ul class="list-unstyled mb-0">
+                                        @foreach (var face in analysis.Faces)
+                                        {
+                                            <li>
+                                                Face @face.Id
+                                                @if (face.Age.HasValue)
+                                                {
+                                                    <span class="text-muted">Age: ~@face.Age</span>
+                                                }
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    
+                    @if (analysis.Tags?.Any() == true)
+                    {
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-tags"></i> Tags
+                                    </h6>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach (var tag in analysis.Tags)
+                                        {
+                                            <span class="badge bg-info">@tag</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public List<ImageAnalysisResultDto>? ImageAnalysisResults { get; set; }
+    [Parameter] public InvestigationResponse? Response { get; set; }
+    [Inject] public IEvidenceManager EvidenceManager { get; set; } = null!;
+    
+    private string GetImageSource(string evidenceId)
+    {
+        // Use existing evidence manager to get image source
+        return $"/api/evidence/{evidenceId}/preview";
+    }
+}

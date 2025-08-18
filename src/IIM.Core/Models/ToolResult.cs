@@ -18,6 +18,9 @@ public class ToolResult
     public DateTimeOffset ExecutedAt { get; set; } = DateTimeOffset.UtcNow;
     public TimeSpan ExecutionTime { get; set; }
     public string? ErrorMessage { get; set; }
+
+    public List<Visualization>? Visualization { get; set; }
+    public ResponseDisplayType? PreferredDisplayType { get; set; }
 }
 
 public class ToolExecution

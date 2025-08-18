@@ -77,13 +77,33 @@
               "target": "Package",
               "version": "[8.3.0, )"
             },
+            "ClosedXML": {
+              "target": "Package",
+              "version": "[0.102.1, )"
+            },
             "DocumentFormat.OpenXml": {
               "target": "Package",
-              "version": "[3.3.0, )"
+              "version": "[3.0.0, )"
+            },
+            "EPPlus": {
+              "target": "Package",
+              "version": "[7.0.0, )"
             },
             "FluentValidation": {
               "target": "Package",
               "version": "[11.11.0, )"
+            },
+            "HtmlAgilityPack": {
+              "target": "Package",
+              "version": "[1.11.54, )"
+            },
+            "HtmlToOpenXml.dll": {
+              "target": "Package",
+              "version": "[2.4.1, )"
+            },
+            "Markdig": {
+              "target": "Package",
+              "version": "[0.34.0, )"
             },
             "MediatR": {
               "target": "Package",
@@ -163,6 +183,10 @@
               "target": "Package",
               "version": "[2.2.1, )"
             },
+            "NPOI": {
+              "target": "Package",
+              "version": "[2.7.0, )"
+            },
             "NWaves": {
               "target": "Package",
               "version": "[0.9.6, )"
@@ -179,9 +203,17 @@
               "target": "Package",
               "version": "[8.5.0, )"
             },
+            "PuppeteerSharp": {
+              "target": "Package",
+              "version": "[13.0.0, )"
+            },
             "Qdrant.Client": {
               "target": "Package",
               "version": "[1.12.0, )"
+            },
+            "RazorLight": {
+              "target": "Package",
+              "version": "[2.3.1, )"
             },
             "System.Security.Cryptography.Algorithms": {
               "target": "Package",
@@ -194,6 +226,10 @@
             "Tesseract": {
               "target": "Package",
               "version": "[5.2.0, )"
+            },
+            "iTextSharp.LGPLv2.Core": {
+              "target": "Package",
+              "version": "[3.4.20, )"
             }
           },
           "imports": [

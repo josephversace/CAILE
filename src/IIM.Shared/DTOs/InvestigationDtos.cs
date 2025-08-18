@@ -1,4 +1,8 @@
-namespace IIM.Api.DTOs;
+
+using System;
+using System.Collections.Generic;
+
+namespace IIM.Shared.DTOs;
 
 // Request DTOs
 public record CreateSessionRequest(

@@ -1,4 +1,5 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -17,7 +18,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.Shared", "src\IIM.Shared\IIM.Shared.csproj", "{9BFF9D32-A474-0871-2E9B-A923D4F72570}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
-EndProject
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IIM.Components", "src\IIM.Components\IIM.Components.csproj", "{BC84E1EE-6E9F-3117-C496-680CDDEEBDE2}"
 EndProject
@@ -88,14 +88,6 @@ Global
 		{9BFF9D32-A474-0871-2E9B-A923D4F72570}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9BFF9D32-A474-0871-2E9B-A923D4F72570}.Release|ARM64.ActiveCfg = Release|Any CPU
 		{9BFF9D32-A474-0871-2E9B-A923D4F72570}.Release|ARM64.Build.0 = Release|Any CPU
-		{10C0102B-68F2-4105-9812-5C025EC5FBE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{10C0102B-68F2-4105-9812-5C025EC5FBE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{10C0102B-68F2-4105-9812-5C025EC5FBE4}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{10C0102B-68F2-4105-9812-5C025EC5FBE4}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{10C0102B-68F2-4105-9812-5C025EC5FBE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{10C0102B-68F2-4105-9812-5C025EC5FBE4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{10C0102B-68F2-4105-9812-5C025EC5FBE4}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{10C0102B-68F2-4105-9812-5C025EC5FBE4}.Release|ARM64.Build.0 = Release|Any CPU
 		{BC84E1EE-6E9F-3117-C496-680CDDEEBDE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BC84E1EE-6E9F-3117-C496-680CDDEEBDE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC84E1EE-6E9F-3117-C496-680CDDEEBDE2}.Debug|ARM64.ActiveCfg = Debug|Any CPU
@@ -120,4 +112,3 @@ Global
 		SolutionGuid = {7E477EA1-DE14-49E6-BD37-140B8A949EA1}
 	EndGlobalSection
 EndGlobal
-

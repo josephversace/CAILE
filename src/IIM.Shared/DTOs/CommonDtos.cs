@@ -1,4 +1,9 @@
-namespace IIM.Api.DTOs;
+
+using IIM.Shared.Enums;
+using System;
+using System.Collections.Generic;
+
+namespace IIM.Shared.DTOs;
 
 // Common DTOs
 public record TimeRangeDto(
@@ -145,3 +150,43 @@ public record AuditLogResponse(
     int PageSize,
     TimeRangeDto? TimeRange
 );
+
+#region Exports
+
+public record ExportOptions(
+    bool IncludeMetadata = true,
+    bool IncludeChainOfCustody = true,
+    bool IncludeHeaders = true,
+    bool IncludeFooters = true,
+    bool IncludeWatermark = true,
+    bool IncludeCaseInfo = false,
+    bool IncludeTimestamp = true,
+    bool IncludeSignature = true,
+    Dictionary<string, object>? CustomOptions = null
+);
+
+public record ExportResponseRequest(
+    string ResponseId,
+    ExportFormat Format,
+    ExportOptions? Options = null,
+    string? OutputPath = null
+);
+
+// Add if not already present
+public record BatchExportRequest(
+    List<string> ResponseIds,
+    ExportFormat Format,
+    ExportOptions? Options = null,
+    bool CreateArchive = true
+);
+
+public record ExportResult(
+    bool Success,
+    string? FilePath,
+    byte[]? Data,
+    long FileSize,
+    string? ErrorMessage,
+    Dictionary<string, object>? Metadata
+);
+
+#endregion

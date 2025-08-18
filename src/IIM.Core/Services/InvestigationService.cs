@@ -1,11 +1,12 @@
+using IIM.Core.Models;
+using IIM.Shared.DTOs;
+using IIM.Shared.Enums;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using IIM.Core.Models;
-using IIM.Shared.Enums;
-using Microsoft.Extensions.Logging;
 
 namespace IIM.Core.Services
 {
@@ -14,14 +15,29 @@ namespace IIM.Core.Services
         private readonly ILogger<InvestigationService> _logger;
         private readonly Dictionary<string, InvestigationSession> _sessions = new();
         private readonly Dictionary<string, Case> _cases = new();
+        private readonly IExportService _exportService;
+        private readonly IPdfService _pdfService;
+        private readonly IWordService _wordService;
+        private readonly IExcelService _excelService;
 
-        public InvestigationService(ILogger<InvestigationService> logger)
+        public InvestigationService(
+            ILogger<InvestigationService> logger,
+            IExportService exportService,
+            IPdfService pdfService,
+            IWordService wordService,
+            IExcelService excelService)
         {
             _logger = logger;
+            _exportService = exportService;
+            _pdfService = pdfService;
+            _wordService = wordService;
+            _excelService = excelService;
+
+            // Initialize with some sample data
             InitializeSampleData();
         }
 
-        public Task<InvestigationSession> CreateSessionAsync(CreateSessionRequest request, CancellationToken cancellationToken = default)
+        public Task<InvestigationSession> CreateSessionAsync(Models.CreateSessionRequest request, CancellationToken cancellationToken = default)
         {
             var session = new InvestigationSession
             {
@@ -502,6 +518,155 @@ namespace IIM.Core.Services
                 UpdatedAt = DateTimeOffset.UtcNow.AddDays(-1),
                 LeadInvestigator = Environment.UserName
             };
+        }
+
+        public async Task<InvestigationResponse> EnrichResponseForDisplayAsync(
+       InvestigationResponse response,
+       InvestigationMessage? message = null)
+        {
+            // Determine display type based on content
+            if (response.DisplayType == ResponseDisplayType.Auto)
+            {
+                response.DisplayType = await DetermineOptimalDisplayTypeAsync(response, message);
+            }
+
+            // Add visualization data if needed
+            if (response.Visualization == null && message?.ToolResults?.Any() == true)
+            {
+                response.Visualization = await BuildVisualizationFromToolResultsAsync(message.ToolResults);
+            }
+
+            return response;
+        }
+
+        public async Task<byte[]> ExportResponseAsync(
+         string responseId,
+         ExportFormat format,
+         ExportOptions? options = null)
+        {
+            var response = await GetResponseAsync(responseId);
+
+            // Use the export service directly
+            var result = await _exportService.ExportResponseAsync(response, format, options);
+
+            if (result.Success && result.Data != null)
+            {
+                return result.Data;
+            }
+
+            throw new Exception($"Export failed: {result.ErrorMessage}");
+        }
+        // Add these methods to your InvestigationService class:
+
+        private async Task<ResponseDisplayType> DetermineOptimalDisplayTypeAsync(
+            InvestigationResponse response,
+            InvestigationMessage? message)
+        {
+            // Determine display type based on content
+            if (message?.ToolResults?.Any() == true)
+            {
+                var firstTool = message.ToolResults.First();
+
+                // Check tool name for hints
+                if (firstTool.ToolName.Contains("table", StringComparison.OrdinalIgnoreCase))
+                    return ResponseDisplayType.Table;
+                if (firstTool.ToolName.Contains("image", StringComparison.OrdinalIgnoreCase))
+                    return ResponseDisplayType.Image;
+                if (firstTool.ToolName.Contains("timeline", StringComparison.OrdinalIgnoreCase))
+                    return ResponseDisplayType.Timeline;
+
+                // Check visualizations
+                if (firstTool.Visualizations?.Any() == true)
+                {
+                    var vizType = firstTool.Visualizations.First().Type.ToLower();
+                    return vizType switch
+                    {
+                        "table" => ResponseDisplayType.Table,
+                        "chart" => ResponseDisplayType.Table,
+                        "graph" => ResponseDisplayType.Table,
+                        "timeline" => ResponseDisplayType.Timeline,
+                        "map" => ResponseDisplayType.Geospatial,
+                        _ => ResponseDisplayType.Structured
+                    };
+                }
+            }
+
+            // Check response metadata
+            if (response.Metadata?.ContainsKey("displayType") == true)
+            {
+                if (Enum.TryParse<ResponseDisplayType>(response.Metadata["displayType"].ToString(), out var type))
+                    return type;
+            }
+
+            return ResponseDisplayType.Text;
+        }
+
+        private async Task<ResponseVisualization?> BuildVisualizationFromToolResultsAsync(
+            List<ToolResult> toolResults)
+        {
+            var firstVisualization = toolResults
+                .Where(tr => tr.Visualizations?.Any() == true)
+                .SelectMany(tr => tr.Visualizations)
+                .FirstOrDefault();
+
+            if (firstVisualization != null)
+            {
+                return new ResponseVisualization
+                {
+                    Type = firstVisualization.Type,
+                    Title = firstVisualization.Title,
+                    Description = firstVisualization.Description,
+                    Data = firstVisualization.Data,
+                    Options = firstVisualization.Options
+                };
+            }
+
+            return null;
+        }
+
+        public async Task<InvestigationResponse> GetResponseAsync(string responseId)
+        {
+            // For now, create a mock response since you don't have a database yet
+            // In production, this would fetch from your data store
+
+            _logger.LogInformation("Getting response {ResponseId}", responseId);
+
+            // Mock implementation - replace with actual data retrieval
+            var response = new InvestigationResponse
+            {
+                Id = responseId,
+                Message = "Mock response for testing",
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = Environment.UserName,
+                DisplayType = ResponseDisplayType.Text,
+                Confidence = 0.95
+            };
+
+            // Generate hash if not present
+            if (string.IsNullOrEmpty(response.Hash))
+            {
+                using var sha256 = System.Security.Cryptography.SHA256.Create();
+                var bytes = System.Text.Encoding.UTF8.GetBytes(response.Message);
+                var hash = sha256.ComputeHash(bytes);
+                response.Hash = Convert.ToBase64String(hash);
+            }
+
+            return await Task.FromResult(response);
+        }
+
+        public Task<Case> GetCaseAsync(string caseId, CancellationToken cancellationToken = default)
+        {
+            if (_cases.TryGetValue(caseId, out var caseEntity))
+            {
+                return Task.FromResult(caseEntity);
+            }
+
+            throw new KeyNotFoundException($"Case {caseId} not found");
+        }
+
+        public Task<byte[]> ExportResponseAsync(string responseId, ExportFormat format, System.Runtime.Serialization.ExportOptions? options = null)
+        {
+            throw new NotImplementedException();
         }
     }
 }
