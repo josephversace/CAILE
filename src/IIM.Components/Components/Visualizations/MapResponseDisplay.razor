@@ -1,0 +1,454 @@
+﻿@namespace IIM.Components.Visualizations
+@using IIM.Core.Models
+@using System.Text.Json
+@using IIM.Components.Services
+@inject IJSRuntime JSRuntime
+@inject DataFormattingService Formatter
+
+<div class="map-response-display">
+    @if (Response?.Visualization?.Data != null)
+    {
+        <!-- Map Controls -->
+        <div class="map-controls mb-3">
+            <div class="btn-toolbar justify-content-between" role="toolbar">
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn @(_mapType == "street" ? "btn-primary" : "btn-outline-primary")"
+                            @onclick='() => SetMapType("street")'>
+                        <i class="fas fa-road"></i> Street
+                    </button>
+
+                    <button type="button" class="btn @(_mapType == "satellite" ? "btn-primary" : "btn-outline-primary")"
+                            @onclick='() => SetMapType("satellite")'>
+                        <i class="fas fa-satellite"></i> Satellite
+                    </button>
+
+                    <button type="button" class="btn @(_mapType == "terrain" ? "btn-primary" : "btn-outline-primary")"
+                            @onclick='() => SetMapType("terrain")'>
+                        <i class="fas fa-mountain"></i> Terrain
+                    </button>
+                </div>
+
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary" @onclick="ResetView">
+                        <i class="fas fa-compress-arrows-alt"></i> Reset View
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" @onclick="ToggleFullscreen">
+                        <i class="fas @(_isFullscreen ? "fa-compress" : "fa-expand")"></i>
+                        @(_isFullscreen ? "Exit Fullscreen" : "Fullscreen")
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Simplified Map Display (without external dependencies) -->
+        <div class="map-container-wrapper @(_isFullscreen ? "fullscreen" : "")">
+            <div class="map-static-display">
+                @if (_locations.Any())
+                {
+                    <!-- Static Map Visualization using SVG -->
+                    <svg class="map-svg" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="800" height="600" fill="#e8f4f8" />
+
+                        <!-- Grid lines for reference -->
+                        @for (int i = 0; i <= 8; i++)
+                        {
+                            <line x1="@(i * 100)" y1="0" x2="@(i * 100)" y2="600"
+                                  stroke="#ccc" stroke-width="0.5" stroke-dasharray="2,2" />
+                        }
+                        @for (int i = 0; i <= 6; i++)
+                        {
+                            <line x1="0" y1="@(i * 100)" x2="800" y2="@(i * 100)"
+                                  stroke="#ccc" stroke-width="0.5" stroke-dasharray="2,2" />
+                        }
+
+                        <!-- Plot locations as circles -->
+                        @foreach (var location in _locations)
+                        {
+                            var point = ProjectToMap(location.Latitude, location.Longitude);
+                            var color = GetCategoryColor(location.Category ?? "default");
+
+                            <g class="map-marker" @onclick="() => SelectLocation(location.Id)">
+                                <circle cx="@point.X" cy="@point.Y" r="8"
+                                        fill="@color" fill-opacity="0.8"
+                                        stroke="white" stroke-width="2" />
+
+                                @if (_selectedLocation?.Id == location.Id)
+                                {
+                                    <!-- Highlight selected location -->
+                                    <circle cx="@point.X" cy="@point.Y" r="12"
+                                            fill="none" stroke="@color" stroke-width="3"
+                                            class="pulse-animation" />
+                                }
+
+                                <!-- Label -->
+                                <text x="@point.X" y="@(point.Y - 12)"
+                                      text-anchor="middle" font-size="10"
+                                      fill="#333" font-weight="bold">
+                                    @location.Name
+                                </text>
+                            </g>
+                        }
+
+                        <!-- Connection lines for related locations -->
+                        @foreach (var location in _locations.Where(l => l.RelatedLocations?.Any() == true))
+                        {
+                            var fromPoint = ProjectToMap(location.Latitude, location.Longitude);
+                            foreach (var relatedId in location.RelatedLocations!)
+                            {
+                                var related = _locations.FirstOrDefault(l => l.Id == relatedId);
+                                if (related != null)
+                                {
+                                    var toPoint = ProjectToMap(related.Latitude, related.Longitude);
+                                    <line x1="@fromPoint.X" y1="@fromPoint.Y"
+                                          x2="@toPoint.X" y2="@toPoint.Y"
+                                          stroke="#999" stroke-width="1"
+                                          stroke-dasharray="4,2" opacity="0.5" />
+                                }
+                            }
+                        }
+                    </svg>
+
+                    <!-- Coordinate Info -->
+                    <div class="map-coordinates">
+                        <small class="text-muted">
+                            Bounds: [@_minLat.ToString("F2"), @_minLng.ToString("F2")] to
+                            [@_maxLat.ToString("F2"), @_maxLng.ToString("F2")]
+                        </small>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center p-5 text-muted">
+                        <i class="fas fa-map-marked-alt fa-3x mb-3"></i>
+                        <p>No location data to display</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Location List (Alternative View) -->
+            @if (_showList)
+            {
+                <div class="location-list">
+                    <div class="list-group">
+                        @foreach (var location in _locations.OrderBy(l => l.Name))
+                        {
+                            <a href="#" class="list-group-item list-group-item-action @(_selectedLocation?.Id == location.Id ? "active" : "")"
+                               @onclick="() => SelectLocation(location.Id)" @onclick:preventDefault="true">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">
+                                        <span class="badge" style="background-color: @GetCategoryColor(location.Category ?? "default")">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </span>
+                                        @location.Name
+                                    </h6>
+                                    @if (location.Timestamp.HasValue)
+                                    {
+                                        <small>@Formatter.GetRelativeTime(location.Timestamp.Value)</small>
+                                    }
+                                </div>
+                                <p class="mb-1 small">
+                                    @($"Lat: {location.Latitude:F4}, Lng: {location.Longitude:F4}")
+                                </p>
+                                @if (!string.IsNullOrEmpty(location.Description))
+                                {
+                                    <small class="text-muted">@location.Description</small>
+                                }
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Toggle View Button -->
+        <div class="mt-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ToggleView">
+                <i class="fas @(_showList ? "fa-map" : "fa-list")"></i>
+                @(_showList ? "Show Map" : "Show List")
+            </button>
+        </div>
+
+        <!-- Selected Location Details -->
+        @if (_selectedLocation != null)
+        {
+            <div class="selected-location-details mt-3">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="fas fa-map-marker-alt"></i> @_selectedLocation.Name
+                        </h6>
+                        <button type="button" class="btn-close btn-sm" @onclick="ClearSelection"></button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                @if (!string.IsNullOrEmpty(_selectedLocation.Description))
+                                {
+                                    <p>@_selectedLocation.Description</p>
+                                }
+
+                                <dl class="row small">
+                                    <dt class="col-5">Coordinates:</dt>
+                                    <dd class="col-7">@($"{_selectedLocation.Latitude:F6}, {_selectedLocation.Longitude:F6}")</dd>
+
+                                    @if (!string.IsNullOrEmpty(_selectedLocation.Category))
+                                    {
+                                        <dt class="col-5">Category:</dt>
+                                        <dd class="col-7">
+                                            <span class="badge" style="background-color: @GetCategoryColor(_selectedLocation.Category)">
+                                                @_selectedLocation.Category
+                                            </span>
+                                        </dd>
+                                    }
+
+                                    @if (_selectedLocation.Timestamp.HasValue)
+                                    {
+                                        <dt class="col-5">Time:</dt>
+                                        <dd class="col-7">
+                                            @_selectedLocation.Timestamp.Value.ToString("g")<br />
+                                            <small class="text-muted">@Formatter.GetRelativeTime(_selectedLocation.Timestamp.Value)</small>
+                                        </dd>
+                                    }
+                                </dl>
+                            </div>
+
+                            <div class="col-md-6">
+                                @if (_selectedLocation.Metadata?.Any() == true)
+                                {
+                                    <h6>Additional Information</h6>
+                                    <dl class="row small">
+                                        @foreach (var meta in _selectedLocation.Metadata)
+                                        {
+                                            <dt class="col-5">@meta.Key:</dt>
+                                            <dd class="col-7">@Formatter.FormatValue(meta.Value)</dd>
+                                        }
+                                    </dl>
+                                }
+
+                                @if (_selectedLocation.RelatedLocations?.Any() == true)
+                                {
+                                    <h6>Related Locations</h6>
+                                    <ul class="list-unstyled small">
+                                        @foreach (var relatedId in _selectedLocation.RelatedLocations)
+                                        {
+                                            var related = _locations.FirstOrDefault(l => l.Id == relatedId);
+                                            if (related != null)
+                                            {
+                                                <li>
+                                                    <a href="#" @onclick="() => SelectLocation(relatedId)" @onclick:preventDefault="true">
+                                                        <i class="fas fa-link"></i> @related.Name
+                                                    </a>
+                                                </li>
+                                            }
+                                        }
+                                    </ul>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Legend -->
+        @if (_categories.Any())
+        {
+            <div class="map-legend mt-3">
+                <div class="card">
+                    <div class="card-body p-2">
+                        <h6 class="card-title mb-2">Legend</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var category in _categories)
+                            {
+                                <div class="legend-item">
+                                    <span class="legend-marker" style="background-color: @GetCategoryColor(category);"></span>
+                                    <span class="legend-label">@category (@GetCategoryCount(category))</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-map-marked-alt"></i> No geospatial data available
+        </div>
+    }
+</div>
+
+
+@code {
+    [Parameter] public InvestigationResponse Response { get; set; } = new();
+
+    private string _mapType = "street";
+    private bool _isFullscreen = false;
+    private bool _showList = false;
+
+    private List<MapLocation> _locations = new();
+    private MapLocation? _selectedLocation;
+    private HashSet<string> _categories = new();
+
+    // Bounds for map projection
+    private double _minLat = -90;
+    private double _maxLat = 90;
+    private double _minLng = -180;
+    private double _maxLng = 180;
+
+    protected override void OnInitialized()
+    {
+        LoadMapData();
+        CalculateBounds();
+    }
+
+    private void LoadMapData()
+    {
+        if (Response?.Visualization?.Data == null)
+            return;
+
+        try
+        {
+            // Parse location data from various formats
+            if (Response.Visualization.Data is JsonElement jsonElement)
+            {
+                if (jsonElement.ValueKind == JsonValueKind.Array)
+                {
+                    _locations = JsonSerializer.Deserialize<List<MapLocation>>(
+                        jsonElement.GetRawText(),
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+                }
+                else if (jsonElement.TryGetProperty("locations", out var locations))
+                {
+                    _locations = JsonSerializer.Deserialize<List<MapLocation>>(
+                        locations.GetRawText(),
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+                }
+                else if (jsonElement.TryGetProperty("markers", out var markers))
+                {
+                    _locations = JsonSerializer.Deserialize<List<MapLocation>>(
+                        markers.GetRawText(),
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+                }
+            }
+            else if (Response.Visualization.Data is List<MapLocation> locations)
+            {
+                _locations = locations;
+            }
+            else if (Response.Visualization.Data is IEnumerable<object> enumerable)
+            {
+                // Try to convert generic objects to MapLocation
+                var json = JsonSerializer.Serialize(enumerable);
+                _locations = JsonSerializer.Deserialize<List<MapLocation>>(json,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+            }
+
+            // Ensure each location has an ID
+            foreach (var location in _locations.Where(l => string.IsNullOrEmpty(l.Id)))
+            {
+                location.Id = Guid.NewGuid().ToString();
+            }
+
+            // Extract categories
+            _categories = _locations
+                .Where(l => !string.IsNullOrEmpty(l.Category))
+                .Select(l => l.Category!)
+                .Distinct()
+                .ToHashSet();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading map data: {ex.Message}");
+        }
+    }
+
+    private void CalculateBounds()
+    {
+        if (!_locations.Any()) return;
+
+        _minLat = _locations.Min(l => l.Latitude);
+        _maxLat = _locations.Max(l => l.Latitude);
+        _minLng = _locations.Min(l => l.Longitude);
+        _maxLng = _locations.Max(l => l.Longitude);
+
+        // Add padding
+        var latPadding = (_maxLat - _minLat) * 0.1;
+        var lngPadding = (_maxLng - _minLng) * 0.1;
+
+        _minLat -= latPadding;
+        _maxLat += latPadding;
+        _minLng -= lngPadding;
+        _maxLng += lngPadding;
+    }
+
+    private (double X, double Y) ProjectToMap(double lat, double lng)
+    {
+        // Simple projection to SVG coordinates
+        var x = 800 * (lng - _minLng) / (_maxLng - _minLng);
+        var y = 600 * (1 - (lat - _minLat) / (_maxLat - _minLat));
+        return (x, y);
+    }
+
+    private void SetMapType(string type)
+    {
+        _mapType = type;
+    }
+
+    private void ToggleFullscreen()
+    {
+        _isFullscreen = !_isFullscreen;
+    }
+
+    private void ToggleView()
+    {
+        _showList = !_showList;
+    }
+
+    private void SelectLocation(string locationId)
+    {
+        _selectedLocation = _locations.FirstOrDefault(l => l.Id == locationId);
+    }
+
+    private void ClearSelection()
+    {
+        _selectedLocation = null;
+    }
+
+    private void ResetView()
+    {
+        _selectedLocation = null;
+        CalculateBounds();
+    }
+
+    private string GetCategoryColor(string category) => category?.ToLowerInvariant() switch
+    {
+        "evidence" => "#dc3545",
+        "witness" => "#0d6efd",
+        "incident" => "#ffc107",
+        "location" => "#198754",
+        "suspect" => "#6f42c1",
+        "victim" => "#20c997",
+        _ => "#6c757d"
+    };
+
+    private int GetCategoryCount(string category)
+    {
+        return _locations.Count(l => l.Category == category);
+    }
+
+    // Data model for map locations
+    private class MapLocation
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string? Description { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public string? Category { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public Dictionary<string, object>? Metadata { get; set; }
+        public List<string>? RelatedLocations { get; set; }
+    }
+}

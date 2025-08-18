@@ -429,7 +429,8 @@ namespace IIM.Core.AI
         public Task<long> GetModelSizeAsync(string modelId, CancellationToken cancellationToken = default)
         {
             // Estimate based on model ID
-            var size = modelId.ToLowerInvariant() switch
+            var lowerModelId = modelId.ToLowerInvariant();
+            var size = lowerModelId switch
             {
                 var m when m.Contains("tiny") => 100L * 1024 * 1024,
                 var m when m.Contains("small") => 500L * 1024 * 1024,

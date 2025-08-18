@@ -460,7 +460,8 @@ ColorClass = "info"
 
     private string GetModelIcon(string type)
     {
-        return type?.ToLower() switch
+        var lowerType = type?.ToLowerInvariant() ?? "";
+        return lowerType switch
         {
             "llm" => "brain",
             "whisper" => "mic",
