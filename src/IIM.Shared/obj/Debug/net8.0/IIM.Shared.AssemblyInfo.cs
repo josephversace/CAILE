@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("IIM.Shared")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1a6a286c100e68116497556a3c1626141144edca")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9d87aca482b8f42d2c15070b228a6d291b00e22d")]
 [assembly: System.Reflection.AssemblyProductAttribute("IIM.Shared")]
 [assembly: System.Reflection.AssemblyTitleAttribute("IIM.Shared")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

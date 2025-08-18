@@ -20,7 +20,7 @@ public class ToolResult
     public TimeSpan ExecutionTime { get; set; }
     public string? ErrorMessage { get; set; }
 
-    public List<Visualization>? Visualization { get; set; }
+  
     public ResponseDisplayType? PreferredDisplayType { get; set; }
 }
 

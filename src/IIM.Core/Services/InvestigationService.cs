@@ -1,12 +1,16 @@
+using IIM.Core.Services;
 using IIM.Core.Models;
 using IIM.Shared.DTOs;
 using IIM.Shared.Enums;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+
 
 namespace IIM.Core.Services
 {
@@ -19,13 +23,15 @@ namespace IIM.Core.Services
         private readonly IPdfService _pdfService;
         private readonly IWordService _wordService;
         private readonly IExcelService _excelService;
+        private readonly IVisualizationService _visualizationService;
 
         public InvestigationService(
             ILogger<InvestigationService> logger,
             IExportService exportService,
             IPdfService pdfService,
             IWordService wordService,
-            IExcelService excelService)
+            IExcelService excelService,
+            IVisualizationService visualizationService)
         {
             _logger = logger;
             _exportService = exportService;
@@ -35,6 +41,7 @@ namespace IIM.Core.Services
 
             // Initialize with some sample data
             InitializeSampleData();
+            _visualizationService = visualizationService;
         }
 
         public Task<InvestigationSession> CreateSessionAsync(Models.CreateSessionRequest request, CancellationToken cancellationToken = default)
@@ -539,7 +546,94 @@ namespace IIM.Core.Services
             return response;
         }
 
+        private async Task<ResponseVisualization?> BuildVisualizationFromToolResultsAsync(
+        List<ToolResult> toolResults)
+        {
+            // Find the first tool result with visualizations
+            var firstVisualization = toolResults
+                .Where(tr => tr.Visualizations?.Any() == true)
+                .SelectMany(tr => tr.Visualizations)
+                .FirstOrDefault();
 
+            if (firstVisualization != null)
+            {
+                // Use the visualization service to infer additional properties if needed
+                var inferredType = firstVisualization.Type == VisualizationType.Auto
+                    ? _visualizationService.InferVisualizationType(firstVisualization.Data)
+                    : firstVisualization.Type;
+
+                var responseViz = new ResponseVisualization
+                {
+                    Type = inferredType,
+                    Title = firstVisualization.Title,
+                    Description = firstVisualization.Description,
+                    Data = firstVisualization.Data,
+                    Options = firstVisualization.Options
+                };
+
+                // Set specific properties based on type
+                switch (inferredType)
+                {
+                    case VisualizationType.Chart:
+                        responseViz.ChartType = firstVisualization.Options?.ContainsKey("chartType") == true
+                            ? firstVisualization.Options["chartType"]?.ToString()
+                            : "bar";
+                        break;
+
+                    case VisualizationType.Table:
+                        if (firstVisualization.Options?.ContainsKey("columns") == true &&
+                            firstVisualization.Options["columns"] is List<string> cols)
+                        {
+                            responseViz.Columns = cols;
+                        }
+                        break;
+
+                    case VisualizationType.Graph:
+                        responseViz.GraphType = firstVisualization.Options?.ContainsKey("graphType") == true
+                            ? firstVisualization.Options["graphType"]?.ToString()
+                            : "network";
+                        break;
+
+                    case VisualizationType.Map:
+                        responseViz.MapType = firstVisualization.Options?.ContainsKey("mapType") == true
+                            ? firstVisualization.Options["mapType"]?.ToString()
+                            : "markers";
+                        break;
+
+                    case VisualizationType.Custom:
+                        responseViz.CustomTemplate = firstVisualization.Options?.ContainsKey("template") == true
+                            ? firstVisualization.Options["template"]?.ToString()
+                            : null;
+                        break;
+                }
+
+                return responseViz;
+            }
+
+            // If no explicit visualizations, try to infer from data
+            var aggregatedData = toolResults
+                .Where(tr => tr.Data != null)
+                .Select(tr => tr.Data)
+                .ToList();
+
+            if (aggregatedData.Any())
+            {
+                // Use visualization service to infer type from data
+                var inferredType = _visualizationService.InferVisualizationType(aggregatedData.First());
+
+                if (inferredType != VisualizationType.Auto)
+                {
+                    return new ResponseVisualization
+                    {
+                        Type = inferredType,
+                        Title = "Analysis Results",
+                        Data = aggregatedData.Count == 1 ? aggregatedData[0] : aggregatedData
+                    };
+                }
+            }
+
+            return await Task.FromResult<ResponseVisualization?>(null);
+        }
 
         private async Task<ResponseDisplayType> DetermineOptimalDisplayTypeAsync(
             InvestigationResponse response,
@@ -558,53 +652,26 @@ namespace IIM.Core.Services
                 if (firstTool.ToolName.Contains("timeline", StringComparison.OrdinalIgnoreCase))
                     return ResponseDisplayType.Timeline;
 
-                // Check visualizations
+                // Fix: Use enum directly in switch
                 if (firstTool.Visualizations?.Any() == true)
                 {
-                    var vizType = firstTool.Visualizations.First().Type.ToLower();
+                    var vizType = firstTool.Visualizations.First().Type;
                     return vizType switch
                     {
-                        "table" => ResponseDisplayType.Table,
-                        "chart" => ResponseDisplayType.Table,
-                        "graph" => ResponseDisplayType.Table,
-                        "timeline" => ResponseDisplayType.Timeline,
-                        "map" => ResponseDisplayType.Geospatial,
+                        VisualizationType.Table => ResponseDisplayType.Table,
+                        VisualizationType.Chart => ResponseDisplayType.Structured,
+                        VisualizationType.Graph => ResponseDisplayType.Structured,
+                        VisualizationType.Timeline => ResponseDisplayType.Timeline,
+                        VisualizationType.Map => ResponseDisplayType.Geospatial,
+                        VisualizationType.Custom => ResponseDisplayType.Structured,
+                        VisualizationType.Auto => ResponseDisplayType.Auto,
                         _ => ResponseDisplayType.Structured
                     };
                 }
             }
 
-            // Check response metadata
-            if (response.Metadata?.ContainsKey("displayType") == true)
-            {
-                if (Enum.TryParse<ResponseDisplayType>(response.Metadata["displayType"].ToString(), out var type))
-                    return type;
-            }
-
+            // Default based on content analysis
             return ResponseDisplayType.Text;
-        }
-
-        private async Task<ResponseVisualization?> BuildVisualizationFromToolResultsAsync(
-            List<ToolResult> toolResults)
-        {
-            var firstVisualization = toolResults
-                .Where(tr => tr.Visualizations?.Any() == true)
-                .SelectMany(tr => tr.Visualizations)
-                .FirstOrDefault();
-
-            if (firstVisualization != null)
-            {
-                return new ResponseVisualization
-                {
-                    Type = firstVisualization.Type,
-                    Title = firstVisualization.Title,
-                    Description = firstVisualization.Description,
-                    Data = firstVisualization.Data,
-                    Options = firstVisualization.Options
-                };
-            }
-
-            return null;
         }
 
         public async Task<InvestigationResponse> GetResponseAsync(string responseId)

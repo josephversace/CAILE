@@ -4,6 +4,10 @@
 @using IIM.Shared.Models
 @using IIM.Components.Shared
 @using IIM.Components.Visualizations
+@using IIM.Components.Services
+
+@inject IVisualizationService VisualizationService
+@inject DataFormattingService Formatter
 
 <div class="unified-message @GetMessageClass()" data-message-id="@Message.Id">
     <!-- Message Header Row -->
@@ -27,7 +31,7 @@
                 <i class="fas fa-cog"></i>
             }
         </div>
-        
+
         <!-- Message Content Area -->
         <div class="message-content-area">
             <!-- Meta Information -->
@@ -37,13 +41,13 @@
                 {
                     <span class="model-badge badge bg-secondary">@Message.ModelUsed</span>
                 }
-                <span class="message-timestamp">@Message.Timestamp.ToString("HH:mm")</span>
+                <span class="message-timestamp">@Formatter.GetRelativeTime(Message.Timestamp)</span>
                 @if (ShowConfidence && GetConfidence() > 0)
                 {
                     <ConfidenceIndicator Confidence="@GetConfidence()" ShowIcon="false" />
                 }
             </div>
-            
+
             <!-- Main Content -->
             <div class="message-body">
                 @if (!string.IsNullOrWhiteSpace(Message.Content))
@@ -52,7 +56,7 @@
                         @((MarkupString)RenderContent(Message.Content))
                     </div>
                 }
-                
+
                 <!-- Attachments Section -->
                 @if (Message.Attachments?.Any() == true)
                 {
@@ -60,22 +64,21 @@
                         <div class="attachments-grid">
                             @foreach (var attachment in Message.Attachments)
                             {
-                                <AttachmentCard 
-                                    Attachment="@attachment" 
-                                    OnClick="@(() => HandleAttachmentClick(attachment))"
-                                    Compact="@CompactMode" />
+                                <AttachmentCard Attachment="@attachment"
+                                                OnClick="@(() => HandleAttachmentClick(attachment))"
+                                                Compact="@CompactMode" />
                             }
                         </div>
                     </div>
                 }
-                
+
                 <!-- Tool Results with Smart Display -->
                 @if (Message.ToolResults?.Any() == true)
                 {
                     <div class="tool-results-section mt-3">
                         @foreach (var result in Message.ToolResults)
                         {
-                            @if (ShouldUseAdvancedDisplay(result))
+                            @if (VisualizationService.ShouldUseAdvancedDisplay(result))
                             {
                                 <!-- Use specialized displays for complex data -->
                                 <div class="advanced-result-display">
@@ -85,14 +88,13 @@
                             else
                             {
                                 <!-- Standard tool result display -->
-                                <ToolResult 
-                                    Result="@result" 
-                                    OnExecute="@((parameters) => HandleToolExecute(result.ToolName, parameters))" />
+                                <ToolResult Result="@result"
+                                            OnExecute="@((parameters) => HandleToolExecute(result.ToolName, parameters))" />
                             }
                         }
                     </div>
                 }
-                
+
                 <!-- Citations -->
                 @if (Message.Citations?.Any() == true)
                 {
@@ -107,10 +109,9 @@
                             }
                             @foreach (var citation in citationsToShow)
                             {
-                                <CitationCard 
-                                    Citation="@citation"
-                                    Index="@(Message.Citations.IndexOf(citation) + 1)"
-                                    OnViewSource="@(() => OnCitationClick.InvokeAsync(citation))" />
+                                <CitationCard Citation="@citation"
+                                              Index="@(Message.Citations.IndexOf(citation) + 1)"
+                                              OnViewSource="@(() => OnCitationClick.InvokeAsync(citation))" />
                             }
                             @if (Message.Citations.Count > 3 && CollapsedCitations)
                             {
@@ -122,22 +123,21 @@
                     </div>
                 }
             </div>
-            
+
             <!-- Message Actions -->
             @if (ShowActions)
             {
-                <MessageActions 
-                    Message="@Message"
-                    ShowInline="true"
-                    CompactMode="@CompactMode"
-                    OnAction="@HandleMessageActionRequest"
-                    OnEdit="@(() => OnMessageAction.InvokeAsync(Message))"
-                    OnRegenerate="@(() => OnMessageAction.InvokeAsync(Message))"
-                    OnDelete="@(() => OnMessageAction.InvokeAsync(Message))" />
+                <MessageActions Message="@Message"
+                                ShowInline="true"
+                                CompactMode="@CompactMode"
+                                OnAction="@HandleMessageActionRequest"
+                                OnEdit="@(() => OnMessageAction.InvokeAsync(Message))"
+                                OnRegenerate="@(() => OnMessageAction.InvokeAsync(Message))"
+                                OnDelete="@(() => OnMessageAction.InvokeAsync(Message))" />
             }
         </div>
     </div>
-    
+
     <!-- Expandable Details Panel -->
     @if (ShowDetails)
     {
@@ -146,17 +146,44 @@
                 <dl class="row small">
                     <dt class="col-sm-3">Message ID</dt>
                     <dd class="col-sm-9"><code>@Message.Id</code></dd>
-                    
+
                     <dt class="col-sm-3">Timestamp</dt>
                     <dd class="col-sm-9">@Message.Timestamp.ToString("F")</dd>
-                    
+
                     @if (Message.Metadata?.Any() == true)
                     {
                         <dt class="col-sm-3">Metadata</dt>
                         <dd class="col-sm-9">
-                            @foreach (var meta in Message.Metadata)
+                            <table class="table table-sm">
+                                @foreach (var meta in Message.Metadata)
+                                {
+                                    <tr>
+                                        <td><strong>@meta.Key</strong></td>
+                                        <td>
+                                            <span class="data-type-@Formatter.GetDataType(meta.Value)">
+                                                @Formatter.FormatValue(meta.Value)
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </table>
+                        </dd>
+                    }
+
+                    @if (Message.ToolResults?.Any() == true)
+                    {
+                        <dt class="col-sm-3">Tool Results</dt>
+                        <dd class="col-sm-9">
+                            @foreach (var result in Message.ToolResults)
                             {
-                                <div><strong>@meta.Key:</strong> @meta.Value</div>
+                                <div class="mb-2">
+                                    <strong>@result.ToolName</strong>
+                                    <span class="badge bg-@GetStatusBadgeClass(result.Status)">@result.Status</span>
+                                    @if (result.ExecutionTime.TotalMilliseconds > 0)
+                                    {
+                                        <span class="text-muted small">(@($"{result.ExecutionTime.TotalMilliseconds:F0}ms"))</span>
+                                    }
+                                </div>
                             }
                         </dd>
                     }
@@ -171,13 +198,13 @@
         display: flex;
         margin-bottom: 1.5rem;
     }
-    
+
     .message-header-row {
         display: flex;
         gap: 1rem;
         width: 100%;
     }
-    
+
     .message-avatar {
         flex-shrink: 0;
         width: 40px;
@@ -189,32 +216,32 @@
         background: var(--bs-gray-200);
         color: var(--bs-gray-700);
     }
-    
+
     .avatar-user {
         font-weight: 600;
         font-size: 0.875rem;
     }
-    
+
     .user-message .message-avatar {
         background: var(--bs-primary);
         color: white;
     }
-    
+
     .assistant-message .message-avatar {
         background: var(--bs-success);
         color: white;
     }
-    
+
     .tool-message .message-avatar {
         background: var(--bs-info);
         color: white;
     }
-    
+
     .message-content-area {
         flex: 1;
         min-width: 0;
     }
-    
+
     .message-meta {
         display: flex;
         align-items: center;
@@ -222,67 +249,67 @@
         margin-bottom: 0.5rem;
         font-size: 0.875rem;
     }
-    
+
     .message-author {
         font-weight: 600;
     }
-    
+
     .message-timestamp {
         color: var(--bs-gray-600);
     }
-    
+
     .message-body {
         background: var(--bs-gray-100);
         border-radius: 12px;
         padding: 1rem;
         position: relative;
     }
-    
+
     .user-message .message-body {
         background: var(--bs-primary-bg-subtle);
         margin-left: auto;
         max-width: 80%;
     }
-    
+
     .message-text {
         line-height: 1.6;
     }
-    
-    .message-text code {
-        background: rgba(0,0,0,0.05);
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 0.875em;
-    }
-    
-    .message-text pre {
-        background: var(--bs-dark);
-        color: var(--bs-light);
-        padding: 1rem;
-        border-radius: 8px;
-        overflow-x: auto;
-        margin: 1rem 0;
-    }
-    
+
+        .message-text code {
+            background: rgba(0,0,0,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.875em;
+        }
+
+        .message-text pre {
+            background: var(--bs-dark);
+            color: var(--bs-light);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
     .attachments-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 0.5rem;
         margin-top: 0.75rem;
     }
-    
+
     .citations-section {
         border-top: 1px solid var(--bs-gray-300);
         padding-top: 0.75rem;
     }
-    
+
     .citations-header {
         display: flex;
         align-items: center;
         gap: 0.5rem;
         margin-bottom: 0.5rem;
     }
-    
+
     .message-details-panel {
         margin-top: 1rem;
         padding: 1rem;
@@ -290,12 +317,38 @@
         border-radius: 8px;
         margin-left: 56px;
     }
-    
+
     .advanced-result-display {
         margin-top: 1rem;
         border: 1px solid var(--bs-gray-300);
         border-radius: 8px;
         overflow: hidden;
+    }
+
+    /* Data type styling */
+    .data-type-string {
+        color: var(--bs-success);
+    }
+
+    .data-type-number {
+        color: var(--bs-info);
+    }
+
+    .data-type-boolean {
+        color: var(--bs-warning);
+    }
+
+    .data-type-null {
+        color: var(--bs-gray-500);
+        font-style: italic;
+    }
+
+    .data-type-object {
+        color: var(--bs-purple);
+    }
+
+    .data-type-array {
+        color: var(--bs-indigo);
     }
 </style>
 
@@ -394,8 +447,8 @@
 
         // Code blocks
         content = System.Text.RegularExpressions.Regex.Replace(
-            content, 
-            @"```(\w+)?\n(.*?)```", 
+            content,
+            @"```(\w+)?\n(.*?)```",
             "<pre><code class='language-$1'>$2</code></pre>",
             System.Text.RegularExpressions.RegexOptions.Singleline
         );
@@ -413,25 +466,6 @@
         return content;
     }
 
-    private bool ShouldUseAdvancedDisplay(Core.Models.ToolResult result)
-    {
-        // Determine if we should use specialized visualization
-        if (result.PreferredDisplayType.HasValue)
-            return result.PreferredDisplayType.Value != ResponseDisplayType.Text;
-
-        if (result.Visualizations?.Any() == true)
-            return true;
-
-        // Check data structure
-        if (result.Data is System.Text.Json.JsonElement json)
-        {
-            if (json.ValueKind == System.Text.Json.JsonValueKind.Array && json.GetArrayLength() > 5)
-                return true;
-        }
-
-        return false;
-    }
-
     private RenderFragment RenderAdvancedDisplay(Core.Models.ToolResult result) => builder =>
     {
         var response = new InvestigationResponse
@@ -439,18 +473,19 @@
             Id = Guid.NewGuid().ToString(),
             Message = result.ToolName,
             DisplayType = result.PreferredDisplayType ?? ResponseDisplayType.Auto,
-            Visualization = result.Visualizations?.FirstOrDefault() != null ? 
+            Visualization = result.Visualizations?.FirstOrDefault() != null ?
                 new ResponseVisualization
                 {
                     Type = result.Visualizations.First().Type,
                     Title = result.Visualizations.First().Title,
-                    Data = result.Visualizations.First().Data
+                    Data = result.Visualizations.First().Data,
+                    Options = result.Visualizations.First().Options
                 } : null,
             Metadata = result.Metadata
         };
 
-        // Determine which display component to use
-        var displayType = result.PreferredDisplayType ?? DetermineDisplayType(result);
+        // Use the service to determine display type
+        var displayType = VisualizationService.DetermineDisplayTypeFromToolResult(result);
 
         switch (displayType)
         {
@@ -472,6 +507,18 @@
                 builder.CloseComponent();
                 break;
 
+            case ResponseDisplayType.Geospatial:
+                builder.OpenComponent<MapResponseDisplay>(0);
+                builder.AddAttribute(1, "Response", response);
+                builder.CloseComponent();
+                break;
+
+            case ResponseDisplayType.MultiModal:
+                builder.OpenComponent<MultiModalResponseDisplay>(0);
+                builder.AddAttribute(1, "Response", response);
+                builder.CloseComponent();
+                break;
+
             default:
                 builder.OpenComponent<StructuredDataDisplay>(0);
                 builder.AddAttribute(1, "Response", response);
@@ -480,41 +527,34 @@
         }
     };
 
-    private ResponseDisplayType DetermineDisplayType(Core.Models.ToolResult result)
+    private string GetStatusBadgeClass(ToolStatus status) => status switch
     {
-        if (result.Visualizations?.Any() == true)
-        {
-            var vizType = result.Visualizations.First().Type.ToLower();
-            return vizType switch
-            {
-                "table" or "grid" => ResponseDisplayType.Table,
-                "timeline" or "gantt" => ResponseDisplayType.Timeline,
-                "image" or "photo" => ResponseDisplayType.Image,
-                _ => ResponseDisplayType.Structured
-            };
-        }
-        
-        return ResponseDisplayType.Text;
-    }
-    
+        ToolStatus.Success => "success",
+        ToolStatus.PartialSuccess => "warning",
+        ToolStatus.Failed => "danger",
+        ToolStatus.Running => "info",
+        ToolStatus.Pending => "secondary",
+        ToolStatus.Cancelled => "dark",
+        _ => "secondary"
+    };
+
     private async Task HandleToolExecute(string toolName, Dictionary<string, object> parameters)
     {
         await OnToolExecute.InvokeAsync((toolName, parameters));
     }
-    
+
     private async Task HandleAttachmentClick(Attachment attachment)
     {
         await OnAttachmentClick.InvokeAsync(attachment);
     }
-    
+
     private bool HasExportableContent()
     {
-        return Message.ToolResults?.Any() == true || 
+        return Message.ToolResults?.Any() == true ||
                Message.Attachments?.Any() == true ||
                Message.Citations?.Any() == true;
     }
-    
-    
+
     private async Task HandleMessageActionRequest(MessageActionRequest request)
     {
         // Handle different action types
@@ -523,31 +563,31 @@
             case MessageActionType.Copy:
                 // Already handled internally by MessageActions
                 break;
-                
+
             case MessageActionType.Details:
                 ToggleDetails();
                 break;
-                
+
             case MessageActionType.Edit:
             case MessageActionType.Regenerate:
             case MessageActionType.Delete:
             case MessageActionType.Export:
                 await OnMessageAction.InvokeAsync(Message);
                 break;
-                
+
             case MessageActionType.Pin:
             case MessageActionType.Flag:
             case MessageActionType.Annotate:
                 // Update message metadata and notify parent
                 await OnMessageAction.InvokeAsync(Message);
                 break;
-                
+
             default:
                 Logger.LogWarning("Unhandled message action: {Action}", request.Action);
                 break;
         }
     }
-    
+
     private void ToggleDetails()
     {
         ShowDetails = !ShowDetails;

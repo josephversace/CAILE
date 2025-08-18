@@ -1,3 +1,4 @@
+using IIM.Components.Services;
 using IIM.Core.AI;
 using IIM.Core.Inference;
 using IIM.Core.Platform;
@@ -186,10 +187,6 @@ internal static class Program
                 services.AddSingleton<IInferenceService, InferenceService>();
                 services.AddSingleton<IModelManagementService, ModelManagementService>();
 
-                // In your Program.cs or wherever you configure services
-
-               
-                // Add Export/Security/File Services
              
                 services.AddExportServices("");
 
@@ -200,7 +197,9 @@ internal static class Program
                services.AddScoped<IEvidenceManager, EvidenceManager>();
                 services.AddScoped<ICaseManager, CaseManager>();
 
-
+                services.AddScoped<IVisualizationService, VisualizationService>();
+                services.AddScoped<DataFormattingService>();
+                services.AddScoped<ModelSizeCalculator>();
 
                 // HTTP Clients
                 services.AddHttpClient<IimClient>(client =>
