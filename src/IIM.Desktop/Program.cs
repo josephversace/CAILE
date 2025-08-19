@@ -8,6 +8,7 @@ using IIM.Core.Models;
 using IIM.Core.RAG;
 using IIM.Core.Security;
 using IIM.Core.Services;
+using IIM.Core.Services.Configuration;
 using IIM.Core.Storage;
 using IIM.Infrastructure.Platform;
 using IIM.Infrastructure.Storage;
@@ -210,7 +211,10 @@ internal static class Program
 
                 // Core investigation services
                 services.AddScoped<IInvestigationService, InvestigationService>();
-                services.AddScoped<ISessionProvider, InvestigationService>();  
+                services.AddScoped<ISessionService, SessionService>();  
+                
+                services.AddScoped<IModelConfigurationTemplateService , ModelConfigurationTemplateService>();
+
                 services.AddScoped<IEvidenceManager, EvidenceManager>();
                 services.AddScoped<ICaseManager, JsonCaseManager>();
 
