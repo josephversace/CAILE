@@ -1,5 +1,6 @@
 using IIM.Components.Services;
 using IIM.Core.AI;
+using IIM.Core.Configuration;
 using IIM.Core.Inference;
 using IIM.Core.Platform;
 using IIM.Core.RAG;
@@ -140,8 +141,7 @@ internal static class Program
 
                 // Investigation Services
                 services.AddScoped<IInvestigationService, InvestigationService>();
-                services.AddSingleton<ICaseManager, CaseManager>();
-                services.AddSingleton<IEvidenceManager, EvidenceManager>();
+    
 
                 // AI/ML Services - Register concrete implementations when ready
                 // For now, you can create mock implementations or throw NotImplementedException
@@ -160,13 +160,7 @@ internal static class Program
                 // Model Management Service (depends on IModelOrchestrator)
                 services.AddSingleton<IModelManagementService, ModelManagementService>();
 
-                // RAG Services
-                services.AddSingleton<IQdrantService>(sp =>
-                {
-                    var logger = sp.GetRequiredService<ILogger<MockQdrantService>>();
-                    return new MockQdrantService(logger);
-                });
-
+               
                 // Platform Services
                 services.AddSingleton<IWslManager>(sp =>
                 {
@@ -185,17 +179,16 @@ internal static class Program
                 services.AddSingleton<EvidenceConfiguration>();
 
                 services.AddSingleton<IInferenceService, InferenceService>();
-                services.AddSingleton<IModelManagementService, ModelManagementService>();
+      
 
              
                 services.AddExportServices("");
 
-                // Add Investigation Service - make sure this comes AFTER export services
-                services.AddScoped<IInvestigationService, InvestigationService>();
+          
 
                 // Add any other missing services
                services.AddScoped<IEvidenceManager, EvidenceManager>();
-                services.AddScoped<ICaseManager, CaseManager>();
+                services.AddScoped<ICaseManager, JsonCaseManager>();
 
                 services.AddScoped<IVisualizationService, VisualizationService>();
                 services.AddScoped<DataFormattingService>();
@@ -208,7 +201,29 @@ internal static class Program
                     client.DefaultRequestHeaders.Add("Accept", "application/json");
                 });
 
-             
+                // RAG Services
+                // Option 1: Create StorageConfiguration if it doesn't exist
+                services.AddSingleton<StorageConfiguration>(sp =>
+                {
+                    var config = new StorageConfiguration
+                    {
+                        BasePath = Path.Combine(
+                            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                            "IIM"
+                        )
+                    };
+                    config.EnsureDirectoriesExist();
+                    return config;
+                });
+
+         
+                services.AddSingleton<IQdrantService>(sp =>
+                {
+                    var logger = sp.GetRequiredService<ILogger<InMemoryQdrantService>>();
+                    var config = new StorageConfiguration();
+                    config.EnsureDirectoriesExist();
+                    return new InMemoryQdrantService(logger, config);
+                });
 
 
                 // Investigation Services

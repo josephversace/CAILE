@@ -54,8 +54,8 @@
     <PackageReference Include="System.Numerics.Tensors" Version="8.0.*" />
     
     <!-- Database and Storage -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.*" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.8" />
     <PackageReference Include="LiteDB" Version="5.0.*" />
     
     <!-- Additional UI Support -->
