@@ -218,6 +218,10 @@
               "target": "Package",
               "version": "[0.102.1, )"
             },
+            "Dapper": {
+              "target": "Package",
+              "version": "[2.1.66, )"
+            },
             "DocumentFormat.OpenXml": {
               "target": "Package",
               "version": "[3.0.0, )"
@@ -265,6 +269,10 @@
             "Microsoft.AspNetCore.SignalR.Client.Core": {
               "target": "Package",
               "version": "[8.0.10, )"
+            },
+            "Microsoft.Data.Sqlite": {
+              "target": "Package",
+              "version": "[9.0.8, )"
             },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
@@ -343,10 +351,6 @@
             "PuppeteerSharp": {
               "target": "Package",
               "version": "[13.0.0, )"
-            },
-            "Qdrant.Client": {
-              "target": "Package",
-              "version": "[1.12.0, )"
             },
             "RazorLight": {
               "target": "Package",
