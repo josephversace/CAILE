@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace IIM.Shared.DTOs;
 
 // Request DTOs
-public record CreateSessionRequest(
+public record CreateSessionRequestDto(
     string CaseId,
     string Title,
     string InvestigationType,

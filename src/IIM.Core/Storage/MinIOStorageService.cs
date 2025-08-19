@@ -1,5 +1,4 @@
-﻿using Configuration;
-using IIM.Core.Configuration.IIM.Core.Storage;
+﻿using IIM.Core.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;

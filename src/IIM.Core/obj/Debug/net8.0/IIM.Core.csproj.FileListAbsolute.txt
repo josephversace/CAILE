@@ -29,12 +29,6 @@
 \\mac\Home\Projects\CAILE\src\IIM.Core\obj\Debug\net8.0\refint\IIM.Core.dll
 \\mac\Home\Projects\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.pdb
 \\mac\Home\Projects\CAILE\src\IIM.Core\obj\Debug\net8.0\ref\IIM.Core.dll
-C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.csproj.AssemblyReference.cache
-C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.AssemblyInfoInputs.cache
-C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.AssemblyInfo.cs
-C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.csproj.CoreCompileInputs.cache
-C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.sourcelink.json
 C:\Users\josep\source\repos\CAILE\src\IIM.Core\bin\Debug\net8.0\x86\leptonica-1.82.0.dll
 C:\Users\josep\source\repos\CAILE\src\IIM.Core\bin\Debug\net8.0\x86\tesseract50.dll
 C:\Users\josep\source\repos\CAILE\src\IIM.Core\bin\Debug\net8.0\x64\leptonica-1.82.0.dll
@@ -47,6 +41,12 @@ C:\Users\josep\source\repos\CAILE\src\IIM.Core\bin\Debug\net8.0\IIM.Plugin.SDK.d
 C:\Users\josep\source\repos\CAILE\src\IIM.Core\bin\Debug\net8.0\IIM.Shared.dll
 C:\Users\josep\source\repos\CAILE\src\IIM.Core\bin\Debug\net8.0\IIM.Plugin.SDK.pdb
 C:\Users\josep\source\repos\CAILE\src\IIM.Core\bin\Debug\net8.0\IIM.Shared.pdb
+C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.csproj.AssemblyReference.cache
+C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.AssemblyInfoInputs.cache
+C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.AssemblyInfo.cs
+C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.csproj.CoreCompileInputs.cache
+C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.sourcelink.json
 C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.csproj.Up2Date
 C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\IIM.Core.dll
 C:\Users\josep\source\repos\CAILE\src\IIM.Core\obj\Debug\net8.0\refint\IIM.Core.dll
