@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Storage
+namespace IIM.Core.Storage
 {
     internal class StorageOrchestrator
     {

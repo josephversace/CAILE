@@ -52,12 +52,6 @@
 \\mac\Home\Projects\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.pdb
 \\mac\Home\Projects\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.genruntimeconfig.cache
 \\mac\Home\Projects\CAILE\tools\IIM.CLI\obj\Debug\net8.0\ref\IIM.CLI.dll
-C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.csproj.AssemblyReference.cache
-C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.AssemblyInfoInputs.cache
-C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.AssemblyInfo.cs
-C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.csproj.CoreCompileInputs.cache
-C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.sourcelink.json
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\x86\leptonica-1.82.0.dll
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\x86\tesseract50.dll
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\x64\leptonica-1.82.0.dll
@@ -113,6 +107,7 @@ C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\Microsoft.Entit
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Sqlite.dll
+C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\Microsoft.Extensions.Caching.Memory.dll
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\Microsoft.Extensions.Configuration.Binder.dll
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.dll
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
@@ -283,6 +278,12 @@ C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\IIM.Shared.dll
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\IIM.Core.pdb
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\IIM.Plugin.SDK.pdb
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\bin\Debug\net8.0\IIM.Shared.pdb
+C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.csproj.AssemblyReference.cache
+C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.AssemblyInfoInputs.cache
+C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.AssemblyInfo.cs
+C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.csproj.CoreCompileInputs.cache
+C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.sourcelink.json
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.csproj.Up2Date
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\IIM.CLI.dll
 C:\Users\josep\source\repos\CAILE\tools\IIM.CLI\obj\Debug\net8.0\refint\IIM.CLI.dll

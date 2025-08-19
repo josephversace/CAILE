@@ -1,0 +1,559 @@
+﻿
+@using IIM.Core.Configuration
+@using IIM.Core.Services.Configuration
+@using IIM.Core.Storage
+@using Microsoft.Extensions.Logging
+@using Microsoft.Extensions.Options
+@using Microsoft.Extensions.Configuration
+@using System.Text.Json
+@using Minio
+@inject IOptions<MinIOConfiguration> MinIOOptions
+@inject StorageConfiguration StorageConfig
+@inject IMinIOStorageService MinIOService
+@inject IConfiguration Configuration
+@inject ILogger<StorageSettings> Logger
+@inject IJSRuntime JS
+
+<div class="storage-settings">
+    <div class="card">
+        <div class="card-header">
+            <h4><i class="fas fa-database"></i> Storage Configuration</h4>
+        </div>
+        <div class="card-body">
+            <!-- Storage Backend Section -->
+            <div class="section mb-4">
+                <h5 class="border-bottom pb-2">Storage Backend</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Storage Mode</label>
+                            <select class="form-select" @bind="storageBackend">
+                                <option value="LocalOnly">Local Only</option>
+                                <option value="MinIOOnly">MinIO Only</option>
+                                <option value="Hybrid">Hybrid (Recommended)</option>
+                            </select>
+                            <small class="text-muted">Hybrid mode uses local storage for hot data and MinIO for cold storage</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Local Base Path</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" @bind="localBasePath" />
+                                <button class="btn btn-outline-secondary" @onclick="BrowseFolder">
+                                    <i class="fas fa-folder-open"></i> Browse
+                                </button>
+                            </div>
+                            <small class="text-muted">Current: @StorageConfig.BasePath</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MinIO Configuration Section -->
+            <div class="section mb-4">
+                <h5 class="border-bottom pb-2">MinIO Configuration</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Endpoint</label>
+                            <input type="text" class="form-control" @bind="minioEndpoint" placeholder="localhost:9000" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Access Key</label>
+                            <input type="text" class="form-control" @bind="minioAccessKey" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Secret Key</label>
+                            <div class="input-group">
+                                <input type="@(showSecretKey ? "text" : "password")" class="form-control" @bind="minioSecretKey" />
+                                <button class="btn btn-outline-secondary" @onclick="() => showSecretKey = !showSecretKey">
+                                    <i class="fas fa-@(showSecretKey ? "eye-slash" : "eye")"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Region</label>
+                            <input type="text" class="form-control" @bind="minioRegion" placeholder="us-east-1" />
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" @bind="minioUseSSL" id="useSSL">
+                                <label class="form-check-label" for="useSSL">
+                                    Use SSL/TLS Connection
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <button class="btn btn-primary" @onclick="TestConnection" disabled="@isTesting">
+                                @if (isTesting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                <i class="fas fa-plug"></i> Test Connection
+                            </button>
+                            @if (connectionTestResult != null)
+                            {
+                                <div class="mt-2">
+                                    @if (connectionTestResult.Success)
+                                    {
+                                        <div class="alert alert-success">
+                                            <i class="fas fa-check-circle"></i> Connection successful!
+                                            <br />Buckets found: @connectionTestResult.BucketCount
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-danger">
+                                            <i class="fas fa-times-circle"></i> Connection failed!
+                                            <br />@connectionTestResult.ErrorMessage
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deduplication Settings Section -->
+            <div class="section mb-4">
+                <h5 class="border-bottom pb-2">Deduplication Settings</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" @bind="enableDeduplication" id="enableDedup">
+                                <label class="form-check-label" for="enableDedup">
+                                    Enable Deduplication
+                                </label>
+                                <small class="d-block text-muted">Reduces storage usage by eliminating duplicate data chunks</small>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Chunk Size (MB)</label>
+                            <input type="number" class="form-control" @bind="chunkSizeMB" min="1" max="16" disabled="@(!enableDeduplication)" />
+                            <small class="text-muted">Larger chunks = less overhead, smaller chunks = better deduplication</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Deduplication Mode</label>
+                            <select class="form-select" @bind="deduplicationMode" disabled="@(!enableDeduplication)">
+                                <option value="FixedSize">Fixed Size Chunks</option>
+                                <option value="ContentAware">Content-Aware (Advanced)</option>
+                            </select>
+                            <small class="text-muted">Content-aware provides better ratios but uses more CPU</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Storage Tiers Section -->
+            <div class="section mb-4">
+                <h5 class="border-bottom pb-2">Storage Tiers</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Hot Tier Size (GB)</label>
+                            <input type="number" class="form-control" @bind="hotTierSizeGB" min="10" max="500" />
+                            <small class="text-muted">Frequently accessed data</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Warm Tier Size (GB)</label>
+                            <input type="number" class="form-control" @bind="warmTierSizeGB" min="50" max="2000" />
+                            <small class="text-muted">Occasionally accessed data</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" @bind="enableAutoTiering" id="autoTier">
+                                <label class="form-check-label" for="autoTier">
+                                    Enable Auto-Tiering
+                                </label>
+                                <small class="d-block text-muted">Automatically move data between tiers</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Storage Statistics -->
+            <div class="section mb-4">
+                <h5 class="border-bottom pb-2">Storage Statistics</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Local Storage</h6>
+                        <div class="progress mb-2">
+                            <div class="progress-bar" role="progressbar" style="width: @(localUsagePercent)%"
+                                 aria-valuenow="@localUsagePercent" aria-valuemin="0" aria-valuemax="100">
+                                @localUsagePercent%
+                            </div>
+                        </div>
+                        <small>@FormatBytes(localUsedBytes) of @FormatBytes(localTotalBytes) used</small>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>MinIO Storage</h6>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: @(minioUsagePercent)%"
+                                 aria-valuenow="@minioUsagePercent" aria-valuemin="0" aria-valuemax="100">
+                                @minioUsagePercent%
+                            </div>
+                        </div>
+                        <small>@FormatBytes(minioUsedBytes) of @FormatBytes(minioTotalBytes) used</small>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <button class="btn btn-sm btn-outline-primary" @onclick="RefreshStatistics">
+                            <i class="fas fa-sync"></i> Refresh Statistics
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between">
+                <div>
+                    <button class="btn btn-primary" @onclick="SaveSettings" disabled="@isSaving">
+                        @if (isSaving)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                    <button class="btn btn-secondary ms-2" @onclick="ResetToDefaults">
+                        <i class="fas fa-undo"></i> Reset to Defaults
+                    </button>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary" @onclick="ExportSettings">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                    <button class="btn btn-outline-primary ms-2" @onclick="ImportSettings">
+                        <i class="fas fa-upload"></i> Import
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div class="alert @(statusMessageType) alert-dismissible fade show mt-3" role="alert">
+            @statusMessage
+            <button type="button" class="btn-close" @onclick="() => statusMessage = string.Empty"></button>
+        </div>
+    }
+</div>
+
+@code {
+    // Configuration fields
+    private string storageBackend = "Hybrid";
+    private string localBasePath = "";
+    private string minioEndpoint = "localhost:9000";
+    private string minioAccessKey = "minioadmin";
+    private string minioSecretKey = "minioadmin123";
+    private string minioRegion = "us-east-1";
+    private bool minioUseSSL = false;
+    private bool enableDeduplication = true;
+    private int chunkSizeMB = 4;
+    private string deduplicationMode = "FixedSize";
+    private int hotTierSizeGB = 100;
+    private int warmTierSizeGB = 500;
+    private bool enableAutoTiering = true;
+
+    // UI state
+    private bool showSecretKey = false;
+    private bool isTesting = false;
+    private bool isSaving = false;
+    private string statusMessage = "";
+    private string statusMessageType = "alert-info";
+    private ConnectionTestResult? connectionTestResult;
+
+    // Statistics
+    private long localUsedBytes = 0;
+    private long localTotalBytes = 1;
+    private int localUsagePercent = 0;
+    private long minioUsedBytes = 0;
+    private long minioTotalBytes = 1;
+    private int minioUsagePercent = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadCurrentSettings();
+        await RefreshStatistics();
+    }
+
+    private void LoadCurrentSettings()
+    {
+        try
+        {
+            // Load from configuration
+            storageBackend = Configuration["Storage:Backend"] ?? "Hybrid";
+            localBasePath = Configuration["Storage:LocalBasePath"] ?? StorageConfig.BasePath;
+
+            // Load MinIO settings
+            var minioConfig = MinIOOptions.Value;
+            minioEndpoint = minioConfig.Endpoint;
+            minioAccessKey = minioConfig.AccessKey;
+            minioSecretKey = minioConfig.SecretKey;
+            minioRegion = minioConfig.Region;
+            minioUseSSL = minioConfig.UseSSL;
+            enableDeduplication = minioConfig.EnableDeduplication;
+            chunkSizeMB = minioConfig.ChunkSize / (1024 * 1024);
+
+            // Load tier settings
+            hotTierSizeGB = Configuration.GetValue<int>("Storage:Tiers:HotTierMaxSizeGB", 100);
+            warmTierSizeGB = Configuration.GetValue<int>("Storage:Tiers:WarmTierMaxSizeGB", 500);
+            enableAutoTiering = Configuration.GetValue<bool>("Storage:Tiers:AutoTieringEnabled", true);
+            deduplicationMode = Configuration["Storage:Deduplication:Mode"] ?? "FixedSize";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load settings");
+            ShowMessage("Failed to load current settings", "alert-warning");
+        }
+    }
+
+    private async Task SaveSettings()
+    {
+        isSaving = true;
+        try
+        {
+            // Create settings object
+            var settings = new Dictionary<string, object>
+            {
+                ["Storage:Backend"] = storageBackend,
+                ["Storage:LocalBasePath"] = localBasePath,
+                ["Storage:MinIO:Endpoint"] = minioEndpoint,
+                ["Storage:MinIO:AccessKey"] = minioAccessKey,
+                ["Storage:MinIO:SecretKey"] = minioSecretKey,
+                ["Storage:MinIO:Region"] = minioRegion,
+                ["Storage:MinIO:UseSSL"] = minioUseSSL,
+                ["Storage:MinIO:EnableDeduplication"] = enableDeduplication,
+                ["Storage:MinIO:ChunkSize"] = chunkSizeMB * 1024 * 1024,
+                ["Storage:Deduplication:Mode"] = deduplicationMode,
+                ["Storage:Tiers:HotTierMaxSizeGB"] = hotTierSizeGB,
+                ["Storage:Tiers:WarmTierMaxSizeGB"] = warmTierSizeGB,
+                ["Storage:Tiers:AutoTieringEnabled"] = enableAutoTiering
+            };
+
+            // Save to appsettings.json
+            var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
+            var settingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+
+            // Read existing settings
+            var existingJson = await File.ReadAllTextAsync(settingsPath);
+            var existingSettings = JsonSerializer.Deserialize<Dictionary<string, object>>(existingJson) ?? new();
+
+            // Merge settings
+            foreach (var kvp in settings)
+            {
+                SetNestedProperty(existingSettings, kvp.Key, kvp.Value);
+            }
+
+            // Write back
+            await File.WriteAllTextAsync(settingsPath, JsonSerializer.Serialize(existingSettings, new JsonSerializerOptions { WriteIndented = true }));
+
+            ShowMessage("Settings saved successfully. Restart the application for changes to take effect.", "alert-success");
+            Logger.LogInformation("Storage settings saved");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to save settings");
+            ShowMessage($"Failed to save settings: {ex.Message}", "alert-danger");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task TestConnection()
+    {
+        isTesting = true;
+        connectionTestResult = null;
+
+        try
+        {
+            // Test MinIO connection
+            var testClient = new MinioClient()
+                .WithEndpoint(minioEndpoint)
+                .WithCredentials(minioAccessKey, minioSecretKey)
+                .WithSSL(minioUseSSL)
+                .Build();
+
+            var buckets = await testClient.ListBucketsAsync();
+
+            connectionTestResult = new ConnectionTestResult
+            {
+                Success = true,
+                BucketCount = buckets.Buckets.Count,
+                ErrorMessage = null
+            };
+        }
+        catch (Exception ex)
+        {
+            connectionTestResult = new ConnectionTestResult
+            {
+                Success = false,
+                BucketCount = 0,
+                ErrorMessage = ex.Message
+            };
+        }
+        finally
+        {
+            isTesting = false;
+        }
+    }
+
+    private async Task RefreshStatistics()
+    {
+        try
+        {
+            // Get local storage stats
+            var driveInfo = new DriveInfo(Path.GetPathRoot(localBasePath) ?? "C:\\");
+            localTotalBytes = driveInfo.TotalSize;
+            localUsedBytes = driveInfo.TotalSize - driveInfo.AvailableFreeSpace;
+            localUsagePercent = (int)((localUsedBytes * 100) / localTotalBytes);
+
+            // Get MinIO stats (simplified - you'd need actual MinIO admin API)
+            // For now, just set some example values
+            minioTotalBytes = 1000L * 1024 * 1024 * 1024; // 1TB
+            minioUsedBytes = 250L * 1024 * 1024 * 1024; // 250GB
+            minioUsagePercent = (int)((minioUsedBytes * 100) / minioTotalBytes);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to refresh statistics");
+        }
+    }
+
+    private void ResetToDefaults()
+    {
+        storageBackend = "Hybrid";
+        localBasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IIM");
+        minioEndpoint = "localhost:9000";
+        minioAccessKey = "minioadmin";
+        minioSecretKey = "minioadmin123";
+        minioRegion = "us-east-1";
+        minioUseSSL = false;
+        enableDeduplication = true;
+        chunkSizeMB = 4;
+        deduplicationMode = "FixedSize";
+        hotTierSizeGB = 100;
+        warmTierSizeGB = 500;
+        enableAutoTiering = true;
+
+        ShowMessage("Settings reset to defaults", "alert-info");
+    }
+
+    private async Task ExportSettings()
+    {
+        try
+        {
+            var settings = new
+            {
+                Storage = new
+                {
+                    Backend = storageBackend,
+                    LocalBasePath = localBasePath,
+                    MinIO = new
+                    {
+                        Endpoint = minioEndpoint,
+                        AccessKey = minioAccessKey,
+                        SecretKey = "***REDACTED***",
+                        Region = minioRegion,
+                        UseSSL = minioUseSSL,
+                        EnableDeduplication = enableDeduplication,
+                        ChunkSize = chunkSizeMB * 1024 * 1024
+                    },
+                    Deduplication = new
+                    {
+                        Mode = deduplicationMode
+                    },
+                    Tiers = new
+                    {
+                        HotTierMaxSizeGB = hotTierSizeGB,
+                        WarmTierMaxSizeGB = warmTierSizeGB,
+                        AutoTieringEnabled = enableAutoTiering
+                    }
+                }
+            };
+
+            var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
+            var bytes = System.Text.Encoding.UTF8.GetBytes(json);
+            var base64 = Convert.ToBase64String(bytes);
+
+            await JS.InvokeVoidAsync("downloadFile", "storage-settings.json", base64);
+            ShowMessage("Settings exported successfully", "alert-success");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to export settings");
+            ShowMessage($"Failed to export settings: {ex.Message}", "alert-danger");
+        }
+    }
+
+    private async Task ImportSettings()
+    {
+        // This would typically use an InputFile component
+        ShowMessage("Import functionality requires file upload component", "alert-info");
+    }
+
+    private async Task BrowseFolder()
+    {
+        // This would use a folder browser dialog
+        // For now, just show a message
+        ShowMessage("Folder browser not implemented in Blazor. Please type the path manually.", "alert-info");
+    }
+
+    private void ShowMessage(string message, string type)
+    {
+        statusMessage = message;
+        statusMessageType = type;
+    }
+
+    private string FormatBytes(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        int order = 0;
+        double size = bytes;
+        while (size >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            size = size / 1024;
+        }
+        return $"{size:0.##} {sizes[order]}";
+    }
+
+    private void SetNestedProperty(Dictionary<string, object> dict, string path, object value)
+    {
+        var parts = path.Split(':');
+        var current = dict;
+
+        for (int i = 0; i < parts.Length - 1; i++)
+        {
+            if (!current.ContainsKey(parts[i]))
+            {
+                current[parts[i]] = new Dictionary<string, object>();
+            }
+            current = (Dictionary<string, object>)current[parts[i]];
+        }
+
+        current[parts[^1]] = value;
+    }
+
+    private class ConnectionTestResult
+    {
+        public bool Success { get; set; }
+        public int BucketCount { get; set; }
+        public string? ErrorMessage { get; set; }
+    }
+}
