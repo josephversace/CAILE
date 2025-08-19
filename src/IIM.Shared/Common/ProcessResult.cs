@@ -1,4 +1,4 @@
-﻿namespace IIM.Infrastructure.Platform.Models;
+﻿namespace IIM.Shared.Models;
 
 public class ProcessResult
 {

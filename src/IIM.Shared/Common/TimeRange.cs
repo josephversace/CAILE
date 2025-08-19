@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IIM.Shared.Common;
+namespace IIM.Shared.Models;
 
 /// <summary>
 /// Represents a time range with helper methods

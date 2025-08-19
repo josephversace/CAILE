@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -60,10 +60,10 @@
   <ItemGroup>
     <!-- Project References -->
     <ProjectReference Include="..\..\src\IIM.Core\IIM.Core.csproj" />
-    <ProjectReference Include="..\..\src\IIM.Core\IIM.Api.csproj" />
+    <ProjectReference Include="..\..\src\IIM.Api\IIM.Api.csproj" />
     <ProjectReference Include="..\..\src\IIM.Shared\IIM.Shared.csproj" />
-    <ProjectReference Include="..\..\src\IIM.Core\IIM.Desktop.csproj" />
-    <ProjectReference Include="..\..\src\IIM.Core\IIM.Components.csproj" />
+    <ProjectReference Include="..\..\src\IIM.Components\IIM.Components.csproj" />
+    <ProjectReference Include="..\..\src\IIM.Desktop\IIM.Desktop.csproj" />
   </ItemGroup>
 
   <ItemGroup>

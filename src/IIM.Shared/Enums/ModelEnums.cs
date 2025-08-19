@@ -44,3 +44,12 @@ public enum ModelQuantization
     F32        // 32-bit float (highest quality, largest)
 }
 
+public enum ModalityType
+{
+    Text,
+    Audio,
+    Image,
+    Video,
+    Document,
+    Structured
+}

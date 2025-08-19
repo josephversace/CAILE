@@ -47,12 +47,3 @@ public class Visualization
     public string? RenderFormat { get; set; } // html, svg, canvas, etc.
 }
 
-public enum ToolStatus
-{
-    Pending,
-    Running,
-    Success,
-    PartialSuccess,
-    Failed,
-    Cancelled
-}

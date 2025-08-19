@@ -5,6 +5,7 @@ using Moq;
 using Xunit;
 using FluentAssertions;
 using IIM.Shared.Enums;
+using IIM.Application.Services;
 
 namespace IIM.Core.Tests.Services;
 

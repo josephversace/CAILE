@@ -1,5 +1,5 @@
 @namespace IIM.Components.Shared
-@using IIM.Core.Models
+@using IIM.Shared.Models
 @using IIM.Shared.Enums
 
 <div class="attachment-card @GetAttachmentClass()" @onclick="OnClick">
@@ -57,11 +57,11 @@
 </div>
 
 @code {
-    [Parameter] public Core.Models.Attachment Attachment { get; set; } = new();
+    [Parameter] public IIM.Shared.Models.Attachment Attachment { get; set; } = new();
     [Parameter] public bool ShowPreview { get; set; } = false;
     [Parameter] public bool ShowRemove { get; set; } = false;
     [Parameter] public EventCallback OnClick { get; set; }
-    [Parameter] public EventCallback<Core.Models.Attachment> OnRemove { get; set; }
+    [Parameter] public EventCallback<IIM.Shared.Models.Attachment> OnRemove { get; set; }
 
     private bool _showPreview = false;
 

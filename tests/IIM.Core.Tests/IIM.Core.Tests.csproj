@@ -33,8 +33,7 @@
     <!-- File System Testing -->
     <PackageReference Include="System.IO.Abstractions.TestingHelpers" Version="21.1.7" />
     
-    <!-- Time Testing -->
-    <PackageReference Include="Microsoft.Extensions.Time.Testing" Version="8.11.0" />
+
     
     <!-- Logging for Tests -->
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
@@ -48,8 +47,7 @@
     <!-- Project References -->
     <ProjectReference Include="..\..\src\IIM.Core\IIM.Core.csproj" />
     <ProjectReference Include="..\..\src\IIM.Shared\IIM.Shared.csproj" />
-    <ProjectReference Include="..\..\src\IIM.Core\IIM.Desktop.csproj" />
-    <ProjectReference Include="..\..\src\IIM.Core\IIM.Components.csproj" />
+    <ProjectReference Include="..\..\src\IIM.Components\IIM.Components.csproj" />
     <ProjectReference Include="..\..\src\IIM.Plugin.SDK\IIM.Plugin.SDK.csproj" />
   </ItemGroup>
 

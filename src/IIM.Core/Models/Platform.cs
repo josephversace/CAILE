@@ -6,48 +6,9 @@ using System.Collections.Generic;
 using IIM.Shared.Enums;
 
 namespace IIM.Core.Models;
-// WSL Management Models
-public class WslStatus
-{
-    public bool IsInstalled { get; set; }
-    public bool IsWsl2 { get; set; }
-    public string? Version { get; set; }
-    public string? KernelVersion { get; set; }
-    public bool VirtualMachinePlatform { get; set; }
-    public bool HyperV { get; set; }
-    public bool HasIimDistro { get; set; }
-    public bool IsReady { get; set; }
-    public string Message { get; set; } = string.Empty;
-}
 
-public class WslDistro
-{
-    public string Name { get; set; } = string.Empty;
-    public int Version { get; set; }
-    public string State { get; set; } = string.Empty;
-    public string? DefaultUser { get; set; }
-    public string? BasePath { get; set; }
-}
 
-public class WslNetworkInfo
-{
-    public string DistroName { get; set; } = string.Empty;
-    public string? WslIpAddress { get; set; }
-    public string? WindowsHostIp { get; set; }
-    public bool IsConnected { get; set; }
-    public Dictionary<string, string> ServiceEndpoints { get; set; } = new();
-}
 
-public class WslHealthCheck
-{
-    public bool IsHealthy { get; set; }
-    public bool WslReady { get; set; }
-    public bool DistroRunning { get; set; }
-    public bool ServicesHealthy { get; set; }
-    public bool NetworkConnected { get; set; }
-    public List<string> Issues { get; set; } = new();
-    public DateTimeOffset CheckedAt { get; set; } = DateTimeOffset.UtcNow;
-}
 
 // Service Management
 public class ServiceStatus

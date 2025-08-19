@@ -1,4 +1,5 @@
 
+using IIM.Shared.Enums;
 using System;
 using System.Collections.Generic;
 
@@ -53,43 +54,4 @@ public class Recommendation
     public RecommendationPriority Priority { get; set; }
     public string Rationale { get; set; } = string.Empty;
     public List<string> RelatedFindingIds { get; set; } = new();
-}
-
-public enum ReportType
-{
-    Preliminary,
-    Progress,
-    Final,
-    Executive,
-    Technical,
-    Forensic,
-    Intelligence,
-    Incident,
-    Custom
-}
-
-public enum ReportStatus
-{
-    Draft,
-    Review,
-    Approved,
-    Submitted,
-    Archived
-}
-
-public enum FindingSeverity
-{
-    Info,
-    Low,
-    Medium,
-    High,
-    Critical
-}
-
-public enum RecommendationPriority
-{
-    Low,
-    Medium,
-    High,
-    Urgent
 }

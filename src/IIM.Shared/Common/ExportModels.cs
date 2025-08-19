@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IIM.Core.Services.Export.Models;
+namespace IIM.Shared.Models;
 
 
     /// <summary>

@@ -1,5 +1,5 @@
 
-@using IIM.Core.Models
+@using IIM.Shared.Models
 @using IIM.Shared.Enums
 
 <div class="model-card @(Model.Status == ModelStatus.Loaded ? "active" : "") @(IsSelected ? "selected" : "")"
@@ -144,7 +144,7 @@
 </div>
 
 @code {
-    [Parameter] public Core.Models.ModelConfiguration Model { get; set; } = new();
+    [Parameter] public ModelConfiguration Model { get; set; } = new();
     [Parameter] public string? Description { get; set; }
     [Parameter] public bool IsSelected { get; set; }
     [Parameter] public bool ShowCapabilities { get; set; } = true;
@@ -154,10 +154,10 @@
     [Parameter] public PerformanceMetrics? PerformanceMetrics { get; set; }  // ONLY REAL CHANGE - Added as parameter
 
     [Parameter] public EventCallback OnClick { get; set; }
-    [Parameter] public EventCallback<Core.Models.ModelConfiguration> OnLoad { get; set; }
-    [Parameter] public EventCallback<Core.Models.ModelConfiguration> OnUnload { get; set; }
-    [Parameter] public EventCallback<Core.Models.ModelConfiguration> OnConfigure { get; set; }
-    [Parameter] public EventCallback<Core.Models.ModelConfiguration> OnFineTune { get; set; }
+    [Parameter] public EventCallback<ModelConfiguration> OnLoad { get; set; }
+    [Parameter] public EventCallback<ModelConfiguration> OnUnload { get; set; }
+    [Parameter] public EventCallback<ModelConfiguration> OnConfigure { get; set; }
+    [Parameter] public EventCallback<ModelConfiguration> OnFineTune { get; set; }
 
     private async Task Load()
     {

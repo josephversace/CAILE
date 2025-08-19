@@ -1,4 +1,4 @@
-﻿namespace IIM.Shared.Common;
+﻿namespace IIM.Shared.Models;
 
 /// <summary>
 /// Represents a geographic location with optional metadata

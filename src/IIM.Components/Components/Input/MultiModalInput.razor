@@ -1,6 +1,7 @@
 
 @using IIM.Core.Models
 @using IIM.Shared.Enums
+@using IIM.Shared.Models
 @using Microsoft.AspNetCore.Components.Forms
 @namespace IIM.Components.Input
 
@@ -63,7 +64,7 @@
     [Parameter] public EventCallback<Stream> OnVoiceInput { get; set; }
     [Parameter] public EventCallback<string> OnToolSelect { get; set; }
     [Parameter] public List<string> AvailableTools { get; set; } = new();
-    [Parameter] public Dictionary<string, Core.Models.ModelConfiguration> ActiveModels { get; set; } = new();
+    [Parameter] public Dictionary<string, ModelConfiguration> ActiveModels { get; set; } = new();
     [Parameter] public bool IsEnabled { get; set; } = true;
 
     private InputFile? fileInput;

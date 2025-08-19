@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IIM.Core.Models;
+namespace IIM.Shared.Models;
 
 public class FileMetadata
 {

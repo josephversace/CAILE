@@ -1,4 +1,5 @@
-﻿namespace IIM.Core.Plugins.Models;
+﻿namespace IIM.Shared.Models;
+
 
 public class PluginInfo
 {

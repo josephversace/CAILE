@@ -2,6 +2,7 @@
 using IIM.Core.Configuration;
 using IIM.Infrastructure.Storage;
 using IIM.Infrastructure.VectorStore.Models;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
