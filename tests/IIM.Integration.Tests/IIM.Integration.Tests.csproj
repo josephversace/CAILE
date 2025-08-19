@@ -63,7 +63,7 @@
     <ProjectReference Include="..\..\src\IIM.Api\IIM.Api.csproj" />
     <ProjectReference Include="..\..\src\IIM.Shared\IIM.Shared.csproj" />
     <ProjectReference Include="..\..\src\IIM.Components\IIM.Components.csproj" />
-    <ProjectReference Include="..\..\src\IIM.Desktop\IIM.Desktop.csproj" />
+
   </ItemGroup>
 
   <ItemGroup>

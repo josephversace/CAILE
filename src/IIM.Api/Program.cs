@@ -6,7 +6,6 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using UglyToad.PdfPig;
 using IIM.Core.Inference;
-using IIM.Core.Platform;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using IIM.Core.Security;
@@ -84,6 +83,8 @@ builder.Services.AddSingleton<IEvidenceManager>(sp =>
 
 // Register the background service
 builder.Services.AddHostedService<EvidenceIntegrityMonitor>();
+
+builder.Services.AddSingleton<IModelOrchestrator, ModelOrchestrator>();
 
 var app = builder.Build();
 

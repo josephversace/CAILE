@@ -5,6 +5,8 @@ using IIM.Shared.Enums;
 using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 
+namespace IIM.Core.Tests.Mocks;
+
 public class MockModelOrchestrator : IModelOrchestrator
 {
     private readonly ILogger<MockModelOrchestrator> _logger;
