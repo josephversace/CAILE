@@ -1,4 +1,6 @@
 
+using IIM.Application.Interfaces;
+using IIM.Application.Services;
 using IIM.Components.Services;
 using IIM.Core.AI;
 using IIM.Core.Configuration;
@@ -9,6 +11,8 @@ using IIM.Core.Security;
 using IIM.Core.Services;
 using IIM.Core.Services.Configuration;
 using IIM.Core.Storage;
+using IIM.Infrastructure.Platform;
+using IIM.Infrastructure.Storage;
 using Microsoft.AspNetCore.Components.WebView.WindowsForms;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,10 +35,11 @@ internal static class Program
     static void Main()
     {
         // Configure Windows Forms for high DPI and modern rendering
-        Application.SetHighDpiMode(HighDpiMode.SystemAware);
-        Application.EnableVisualStyles();
-        Application.SetCompatibleTextRenderingDefault(false);
-        
+        System.Windows.Forms.Application.SetHighDpiMode(HighDpiMode.SystemAware);
+        System.Windows.Forms.Application.EnableVisualStyles();
+        System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
+
+
         // Build the host
         var host = CreateHostBuilder().Build();
         
@@ -45,7 +50,8 @@ internal static class Program
         try
         {
             var mainForm = ServiceProvider.GetRequiredService<MainForm>();
-            Application.Run(mainForm);
+            System.Windows.Forms.Application.Run(mainForm);
+
         }
         catch (Exception ex)
         {
@@ -168,7 +174,7 @@ internal static class Program
                 services.AddSingleton<IWslManager>(sp =>
                 {
                     var logger = sp.GetRequiredService<ILogger<MockWslManager>>();
-                    return new MockWslManager(logger);
+                    return new WslManager(logger);
                 });
 
                 // ============================================

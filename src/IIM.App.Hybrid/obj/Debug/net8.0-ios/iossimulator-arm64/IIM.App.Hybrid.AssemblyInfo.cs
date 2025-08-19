@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("IIM.App.Hybrid")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fc87a6254be22bc9e8c8af49180f451748b9aa27")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+312d32b4fbc031aae98c27187928ded7b576bf57")]
 [assembly: System.Reflection.AssemblyProductAttribute("IIM.App.Hybrid")]
 [assembly: System.Reflection.AssemblyTitleAttribute("IIM.App.Hybrid")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

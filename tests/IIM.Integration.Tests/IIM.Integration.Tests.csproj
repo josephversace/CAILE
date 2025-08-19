@@ -1,0 +1,78 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Test Frameworks -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="6.0.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    
+    <!-- Integration Testing -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.11" />
+    <PackageReference Include="Testcontainers" Version="3.10.0" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="3.10.0" />
+    <PackageReference Include="Testcontainers.Redis" Version="3.10.0" />
+    
+    <!-- Database Testing -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
+    <PackageReference Include="Respawn" Version="6.2.1" />
+    
+    <!-- HTTP & API Testing -->
+    <PackageReference Include="WireMock.Net" Version="1.6.10" />
+    <PackageReference Include="RestSharp" Version="112.1.0" />
+    <PackageReference Include="Polly" Version="8.5.0" />
+    
+    <!-- Assertions -->
+    <PackageReference Include="FluentAssertions" Version="6.12.2" />
+    <PackageReference Include="FluentAssertions.Web" Version="1.2.5" />
+    <PackageReference Include="Shouldly" Version="4.2.1" />
+    
+    <!-- WebDriver for E2E Testing -->
+    <PackageReference Include="Selenium.WebDriver" Version="4.27.0" />
+    <PackageReference Include="Selenium.Support" Version="4.27.0" />
+    
+    <!-- Performance Testing -->
+    <PackageReference Include="NBomber" Version="5.8.0" />
+    
+    <!-- SignalR Testing -->
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.11" />
+    
+    <!-- Logging -->
+    <PackageReference Include="Serilog.Sinks.XUnit" Version="3.0.5" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Project References -->
+    <ProjectReference Include="..\..\src\IIM.Core\IIM.Core.csproj" />
+    <ProjectReference Include="..\..\src\IIM.Core\IIM.Api.csproj" />
+    <ProjectReference Include="..\..\src\IIM.Shared\IIM.Shared.csproj" />
+    <ProjectReference Include="..\..\src\IIM.Core\IIM.Desktop.csproj" />
+    <ProjectReference Include="..\..\src\IIM.Core\IIM.Components.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Test Configuration Files -->
+    <None Update="appsettings.Test.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

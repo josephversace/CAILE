@@ -1,6 +1,7 @@
 ﻿// src/IIM.Core/RAG/InMemoryQdrantService.cs
 using IIM.Core.Configuration;
-using IIM.Shared.Models;
+using IIM.Infrastructure.Storage;
+using IIM.Infrastructure.VectorStore.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
