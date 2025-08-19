@@ -322,7 +322,7 @@
             },
             "Microsoft.Data.Sqlite": {
               "target": "Package",
-              "version": "[9.0.8, )"
+              "version": "[8.0.*, )"
             },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
@@ -330,7 +330,7 @@
             },
             "Microsoft.EntityFrameworkCore.Sqlite": {
               "target": "Package",
-              "version": "[8.0.11, )"
+              "version": "[8.0.*, )"
             },
             "Microsoft.EntityFrameworkCore.Tools": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",

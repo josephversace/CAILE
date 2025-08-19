@@ -6,6 +6,8 @@ public enum InvestigationType
     EvidenceAnalysis,
     OSINTResearch,
     ForensicAnalysis,
+    Cybercrime,
+    Financial,
     ThreatAssessment,
     IncidentResponse,
     TimelineConstruction,
