@@ -1,34 +1,50 @@
 using IIM.Core.Services;
 using IIM.Core.Models;
+using IIM.Core.AI;
 using IIM.Shared.DTOs;
 using IIM.Shared.Enums;
 using IIM.Shared.Models;
-using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using IIM.Application.Interfaces;
-
+using IIM.Core.Configuration;
+using IIM.Core.Services.Configuration;
 
 namespace IIM.Application.Services
 {
-    public class InvestigationService : IInvestigationService, ISessionProvider
+    /// <summary>
+    /// Investigation service that orchestrates all investigation operations
+    /// Now uses SessionService for session management (no circular dependency)
+    /// </summary>
+    public class InvestigationService : IInvestigationService
     {
         private readonly ILogger<InvestigationService> _logger;
-        private readonly Dictionary<string, InvestigationSession> _sessions = new();
-        private readonly Dictionary<string, Case> _cases = new();
+        private readonly ISessionService _sessionService;
+        private readonly IModelOrchestrator _modelOrchestrator;
+        private readonly IModelConfigurationTemplateService _templateService;
         private readonly IExportService _exportService;
         private readonly IPdfService _pdfService;
         private readonly IWordService _wordService;
         private readonly IExcelService _excelService;
         private readonly IVisualizationService _visualizationService;
 
+        // Track model sources for each session (template vs ad-hoc)
+        private readonly Dictionary<string, SessionModelTracking> _sessionModelTracking = new();
+        private readonly Dictionary<string, Case> _cases = new();
+        private readonly SemaphoreSlim _trackingLock = new(1, 1);
+
+        /// <summary>
+        /// Initializes the investigation service with all required dependencies
+        /// </summary>
         public InvestigationService(
             ILogger<InvestigationService> logger,
+            ISessionService sessionService,
+            IModelOrchestrator modelOrchestrator,
+            IModelConfigurationTemplateService templateService,
             IExportService exportService,
             IPdfService pdfService,
             IWordService wordService,
@@ -36,70 +52,382 @@ namespace IIM.Application.Services
             IVisualizationService visualizationService)
         {
             _logger = logger;
+            _sessionService = sessionService;
+            _modelOrchestrator = modelOrchestrator;
+            _templateService = templateService;
             _exportService = exportService;
             _pdfService = pdfService;
             _wordService = wordService;
             _excelService = excelService;
+            _visualizationService = visualizationService;
 
             // Initialize with some sample data
             InitializeSampleData();
-            _visualizationService = visualizationService;
         }
 
-        public Task<InvestigationSession> CreateSessionAsync(CreateSessionRequest request, CancellationToken cancellationToken = default)
+        #region Session Management (Delegated to SessionService)
+
+        /// <summary>
+        /// Creates a new investigation session
+        /// </summary>
+        public async Task<InvestigationSession> CreateSessionAsync(
+            CreateSessionRequest request,
+            CancellationToken cancellationToken = default)
         {
-            var session = new InvestigationSession
+            // Create session via SessionService
+            var session = await _sessionService.CreateSessionAsync(request, cancellationToken);
+
+            // Initialize model tracking for the session
+            await _trackingLock.WaitAsync(cancellationToken);
+            try
             {
-                Id = Guid.NewGuid().ToString(),
-                CaseId = request.CaseId,
-                Title = request.Title,
-                Type = Enum.Parse<InvestigationType>(request.InvestigationType),
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                Status = InvestigationStatus.Active,
-                EnabledTools = GetDefaultTools(),
-                Models = GetDefaultModels()
+                _sessionModelTracking[session.Id] = new SessionModelTracking
+                {
+                    SessionId = session.Id,
+                    Models = new Dictionary<string, ExtendedModelConfiguration>()
+                };
+            }
+            finally
+            {
+                _trackingLock.Release();
+            }
+
+            // Set default tools and models
+            session.EnabledTools = GetDefaultTools();
+            session.Models = GetDefaultModels();
+
+            _logger.LogInformation("Created investigation session {SessionId} for case {CaseId}",
+                session.Id, request.CaseId);
+
+            return session;
+        }
+
+        /// <summary>
+        /// Gets an existing session
+        /// </summary>
+        public Task<InvestigationSession> GetSessionAsync(
+            string sessionId,
+            CancellationToken cancellationToken = default)
+        {
+            return _sessionService.GetSessionAsync(sessionId, cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets all sessions for a case
+        /// </summary>
+        public Task<List<InvestigationSession>> GetSessionsByCaseAsync(
+            string caseId,
+            CancellationToken cancellationToken = default)
+        {
+            return _sessionService.GetSessionsByCaseAsync(caseId, cancellationToken);
+        }
+
+        /// <summary>
+        /// Deletes a session
+        /// </summary>
+        public async Task<bool> DeleteSessionAsync(
+            string sessionId,
+            CancellationToken cancellationToken = default)
+        {
+            // Remove model tracking
+            await _trackingLock.WaitAsync(cancellationToken);
+            try
+            {
+                _sessionModelTracking.Remove(sessionId);
+            }
+            finally
+            {
+                _trackingLock.Release();
+            }
+
+            // Delete via SessionService
+            return await _sessionService.DeleteSessionAsync(sessionId, cancellationToken);
+        }
+
+        #endregion
+
+        #region Model Management with Template/Ad-hoc Tracking
+
+        /// <summary>
+        /// Applies a template to a session and loads the template models
+        /// </summary>
+        public async Task<InvestigationSession> ApplyTemplateAsync(
+            string sessionId,
+            string templateId,
+            CancellationToken cancellationToken = default)
+        {
+            var session = await _sessionService.GetSessionAsync(sessionId, cancellationToken);
+            var template = await _templateService.GetTemplateAsync(templateId, cancellationToken);
+
+            if (template == null)
+            {
+                throw new KeyNotFoundException($"Template {templateId} not found");
+            }
+
+            await _trackingLock.WaitAsync(cancellationToken);
+            try
+            {
+                var tracking = _sessionModelTracking[sessionId];
+                tracking.TemplateId = templateId;
+                tracking.TemplateName = template.Name;
+
+                // Load template models
+                foreach (var (capability, config) in template.Models)
+                {
+                    var modelRequest = new ModelRequest
+                    {
+                        ModelId = config.ModelId,
+                        ModelType = DetermineModelType(config.ModelId),
+                        Provider = config.PreferredDevice
+                    };
+
+                    try
+                    {
+                        var handle = await _modelOrchestrator.LoadModelAsync(
+                            modelRequest, null, cancellationToken);
+
+                        // Track as template model
+                        tracking.Models[config.ModelId] = new ExtendedModelConfiguration
+                        {
+                            Configuration = new ModelConfiguration
+                            {
+                                ModelId = config.ModelId,
+                                Provider = handle.Provider,
+                                Type = handle.Type,
+                                Status = ModelStatus.Loaded,
+                                MemoryUsage = handle.MemoryUsage
+                            },
+                            IsFromTemplate = true,
+                            TemplateId = templateId,
+                            AddedAt = DateTimeOffset.UtcNow,
+                            LastUsedAt = DateTimeOffset.UtcNow
+                        };
+
+                        // Update session models
+                        session.Models[capability] = tracking.Models[config.ModelId].Configuration;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to load template model {ModelId}",
+                            config.ModelId);
+                    }
+                }
+
+                // Apply template tools
+                session.EnabledTools = template.Tools
+                    .Where(t => t.Value.Enabled)
+                    .Select(t => t.Key)
+                    .ToList();
+            }
+            finally
+            {
+                _trackingLock.Release();
+            }
+
+            _logger.LogInformation("Applied template {TemplateId} to session {SessionId}",
+                templateId, sessionId);
+
+            return session;
+        }
+
+        /// <summary>
+        /// Loads an additional model (ad-hoc) with memory pressure handling
+        /// </summary>
+        public async Task<MemoryPressureResponse> LoadAdHocModelAsync(
+            string sessionId,
+            string modelId,
+            CancellationToken cancellationToken = default)
+        {
+            var session = await _sessionService.GetSessionAsync(sessionId, cancellationToken);
+
+            // Estimate memory needed
+            var modelType = DetermineModelType(modelId);
+            var estimatedMemory = EstimateModelMemory(modelId, modelType);
+
+            // Check available memory
+            var stats = await _modelOrchestrator.GetStatsAsync();
+            var availableMemory = stats.AvailableMemory;
+
+            var response = new MemoryPressureResponse
+            {
+                CanLoad = availableMemory >= estimatedMemory,
+                AvailableMemory = availableMemory,
+                RequiredMemory = estimatedMemory
             };
 
-            _sessions[session.Id] = session;
-            _logger.LogInformation("Created investigation session {SessionId} for case {CaseId}", session.Id, request.CaseId);
-
-            return Task.FromResult(session);
-        }
-
-        public Task<InvestigationSession> GetSessionAsync(string sessionId, CancellationToken cancellationToken = default)
-        {
-            if (_sessions.TryGetValue(sessionId, out var session))
+            if (!response.CanLoad)
             {
-                return Task.FromResult(session);
+                // Suggest models to unload (prefer ad-hoc over template)
+                await _trackingLock.WaitAsync(cancellationToken);
+                try
+                {
+                    var tracking = _sessionModelTracking[sessionId];
+
+                    // Sort by priority (ad-hoc first, then by last used)
+                    var unloadCandidates = tracking.Models.Values
+                        .OrderBy(m => m.UnloadPriority)
+                        .ThenBy(m => m.LastUsedAt)
+                        .ToList();
+
+                    long memoryToFree = 0;
+                    foreach (var candidate in unloadCandidates)
+                    {
+                        if (memoryToFree >= response.MemoryDeficit)
+                            break;
+
+                        response.SuggestedUnloads.Add(new ModelUnloadSuggestion
+                        {
+                            ModelId = candidate.Configuration.ModelId,
+                            ModelName = candidate.Configuration.ModelId,
+                            MemoryToFree = candidate.Configuration.MemoryUsage,
+                            IsTemplateModel = candidate.IsFromTemplate,
+                            LastUsed = candidate.LastUsedAt,
+                            Reason = candidate.IsFromTemplate
+                                ? "Template model (higher priority)"
+                                : "Ad-hoc model (lower priority)"
+                        });
+
+                        memoryToFree += candidate.Configuration.MemoryUsage;
+                    }
+
+                    response.UserMessage = $"Not enough memory to load {modelId}. " +
+                        $"Need to free {FormatBytes(response.MemoryDeficit)}. " +
+                        $"Suggested models to unload: {string.Join(", ", response.SuggestedUnloads.Select(s => s.ModelName))}";
+                }
+                finally
+                {
+                    _trackingLock.Release();
+                }
+            }
+            else
+            {
+                // Load the model
+                var modelRequest = new ModelRequest
+                {
+                    ModelId = modelId,
+                    ModelType = modelType
+                };
+
+                try
+                {
+                    var handle = await _modelOrchestrator.LoadModelAsync(
+                        modelRequest, null, cancellationToken);
+
+                    await _trackingLock.WaitAsync(cancellationToken);
+                    try
+                    {
+                        var tracking = _sessionModelTracking[sessionId];
+
+                        // Track as ad-hoc model
+                        tracking.Models[modelId] = new ExtendedModelConfiguration
+                        {
+                            Configuration = new ModelConfiguration
+                            {
+                                ModelId = modelId,
+                                Provider = handle.Provider,
+                                Type = handle.Type,
+                                Status = ModelStatus.Loaded,
+                                MemoryUsage = handle.MemoryUsage
+                            },
+                            IsFromTemplate = false,
+                            AddedAt = DateTimeOffset.UtcNow,
+                            LastUsedAt = DateTimeOffset.UtcNow
+                        };
+
+                        // Add to session models (but not to template)
+                        session.Models[modelId] = tracking.Models[modelId].Configuration;
+                    }
+                    finally
+                    {
+                        _trackingLock.Release();
+                    }
+
+                    response.UserMessage = $"Successfully loaded {modelId}";
+                    _logger.LogInformation("Loaded ad-hoc model {ModelId} for session {SessionId}",
+                        modelId, sessionId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to load ad-hoc model {ModelId}", modelId);
+                    response.CanLoad = false;
+                    response.UserMessage = $"Failed to load {modelId}: {ex.Message}";
+                }
             }
 
-            throw new KeyNotFoundException($"Session {sessionId} not found");
+            return response;
         }
 
-        public Task<List<InvestigationSession>> GetSessionsByCaseAsync(string caseId, CancellationToken cancellationToken = default)
+        /// <summary>
+        /// Unloads models that user has agreed to remove
+        /// </summary>
+        public async Task<bool> UnloadModelsAsync(
+            string sessionId,
+            List<string> modelIds,
+            CancellationToken cancellationToken = default)
         {
-            var sessions = _sessions.Values
-                .Where(s => s.CaseId == caseId)
-                .OrderByDescending(s => s.UpdatedAt)
-                .ToList();
+            var session = await _sessionService.GetSessionAsync(sessionId, cancellationToken);
+            var allSuccess = true;
 
-            return Task.FromResult(sessions);
-        }
-
-        public Task<bool> DeleteSessionAsync(string sessionId, CancellationToken cancellationToken = default)
-        {
-            var removed = _sessions.Remove(sessionId);
-            if (removed)
+            foreach (var modelId in modelIds)
             {
-                _logger.LogInformation("Deleted investigation session {SessionId}", sessionId);
+                try
+                {
+                    var success = await _modelOrchestrator.UnloadModelAsync(modelId, cancellationToken);
+                    if (success)
+                    {
+                        await _trackingLock.WaitAsync(cancellationToken);
+                        try
+                        {
+                            var tracking = _sessionModelTracking[sessionId];
+                            tracking.Models.Remove(modelId);
+
+                            // Remove from session models
+                            var keyToRemove = session.Models
+                                .FirstOrDefault(kvp => kvp.Value.ModelId == modelId).Key;
+                            if (keyToRemove != null)
+                            {
+                                session.Models.Remove(keyToRemove);
+                            }
+                        }
+                        finally
+                        {
+                            _trackingLock.Release();
+                        }
+
+                        _logger.LogInformation("Unloaded model {ModelId} from session {SessionId}",
+                            modelId, sessionId);
+                    }
+                    else
+                    {
+                        allSuccess = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to unload model {ModelId}", modelId);
+                    allSuccess = false;
+                }
             }
-            return Task.FromResult(removed);
+
+            return allSuccess;
         }
 
-        public async Task<InvestigationResponse> ProcessQueryAsync(string sessionId, InvestigationQuery query, CancellationToken cancellationToken = default)
+        #endregion
+
+        #region Query Processing
+
+        /// <summary>
+        /// Processes a query in the investigation session
+        /// </summary>
+        public async Task<InvestigationResponse> ProcessQueryAsync(
+            string sessionId,
+            InvestigationQuery query,
+            CancellationToken cancellationToken = default)
         {
-            var session = await GetSessionAsync(sessionId, cancellationToken);
+            var session = await _sessionService.GetSessionAsync(sessionId, cancellationToken);
+
+            // Track model usage
+            await UpdateModelUsageAsync(sessionId, cancellationToken);
 
             // Add user message to session
             var userMessage = new InvestigationMessage
@@ -109,7 +437,8 @@ namespace IIM.Application.Services
                 Attachments = query.Attachments,
                 Timestamp = DateTimeOffset.UtcNow
             };
-            session.Messages.Add(userMessage);
+
+            await _sessionService.AddMessageAsync(sessionId, userMessage, cancellationToken);
 
             // Process the query (in production, this would call AI models)
             var response = new InvestigationResponse
@@ -122,7 +451,8 @@ namespace IIM.Application.Services
             {
                 foreach (var tool in query.EnabledTools)
                 {
-                    var toolResult = await ExecuteToolAsync(sessionId, tool, new Dictionary<string, object>(), cancellationToken);
+                    var toolResult = await ExecuteToolAsync(
+                        sessionId, tool, new Dictionary<string, object>(), cancellationToken);
                     response.ToolResults.Add(toolResult);
                 }
             }
@@ -137,15 +467,110 @@ namespace IIM.Application.Services
                 Timestamp = DateTimeOffset.UtcNow,
                 ModelUsed = session.Models.Values.FirstOrDefault()?.ModelId
             };
-            session.Messages.Add(assistantMessage);
 
-            // Update session timestamp
-            session.UpdatedAt = DateTimeOffset.UtcNow;
+            await _sessionService.AddMessageAsync(sessionId, assistantMessage, cancellationToken);
 
             _logger.LogInformation("Processed query for session {SessionId}", sessionId);
 
             return response;
         }
+
+        /// <summary>
+        /// Alias for ProcessQueryAsync for UI compatibility
+        /// </summary>
+        public Task<InvestigationResponse> SendQueryAsync(
+            string sessionId,
+            InvestigationQuery query,
+            CancellationToken cancellationToken = default)
+        {
+            return ProcessQueryAsync(sessionId, query, cancellationToken);
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        /// <summary>
+        /// Updates usage tracking for models in a session
+        /// </summary>
+        private async Task UpdateModelUsageAsync(string sessionId, CancellationToken cancellationToken)
+        {
+            await _trackingLock.WaitAsync(cancellationToken);
+            try
+            {
+                if (_sessionModelTracking.TryGetValue(sessionId, out var tracking))
+                {
+                    foreach (var model in tracking.Models.Values)
+                    {
+                        model.LastUsedAt = DateTimeOffset.UtcNow;
+                        model.UsageCount++;
+                    }
+                }
+            }
+            finally
+            {
+                _trackingLock.Release();
+            }
+        }
+
+        /// <summary>
+        /// Determines model type from model ID
+        /// </summary>
+        private ModelType DetermineModelType(string modelId)
+        {
+            var lower = modelId.ToLowerInvariant();
+
+            if (lower.Contains("whisper")) return ModelType.Whisper;
+            if (lower.Contains("clip") || lower.Contains("vision")) return ModelType.CLIP;
+            if (lower.Contains("embed")) return ModelType.Embedding;
+            if (lower.Contains("llama") || lower.Contains("mistral")) return ModelType.LLM;
+
+            return ModelType.LLM; // Default
+        }
+
+        /// <summary>
+        /// Estimates memory usage for a model
+        /// </summary>
+        private long EstimateModelMemory(string modelId, ModelType type)
+        {
+            // Parse model size from ID if present
+            var lower = modelId.ToLowerInvariant();
+
+            if (lower.Contains("70b")) return 70L * 1024 * 1024 * 1024;
+            if (lower.Contains("13b")) return 13L * 1024 * 1024 * 1024;
+            if (lower.Contains("7b")) return 7L * 1024 * 1024 * 1024;
+            if (lower.Contains("3b")) return 3L * 1024 * 1024 * 1024;
+
+            // Default by type
+            return type switch
+            {
+                ModelType.LLM => 4L * 1024 * 1024 * 1024,
+                ModelType.Embedding => 1L * 1024 * 1024 * 1024,
+                ModelType.Whisper => 2L * 1024 * 1024 * 1024,
+                ModelType.CLIP => 3L * 1024 * 1024 * 1024,
+                _ => 512L * 1024 * 1024
+            };
+        }
+
+        /// <summary>
+        /// Formats bytes to human readable string
+        /// </summary>
+        private string FormatBytes(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            int order = 0;
+            double size = bytes;
+
+            while (size >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                size /= 1024;
+            }
+
+            return $"{size:F1} {sizes[order]}";
+        }
+
+        #endregion
 
         public Task<ToolResult> ExecuteToolAsync(string sessionId, string toolName, Dictionary<string, object> parameters, CancellationToken cancellationToken = default)
         {

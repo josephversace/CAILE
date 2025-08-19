@@ -67,4 +67,8 @@
     <ProjectReference Include="..\IIM.Plugin.SDK\IIM.Plugin.SDK.csproj" />
     <ProjectReference Include="..\IIM.Shared\IIM.Shared.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Platform\" />
+  </ItemGroup>
 </Project>
