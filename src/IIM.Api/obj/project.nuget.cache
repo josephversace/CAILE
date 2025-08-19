@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "dgSpecHash": "4IPB55xBT6M=",
-  "success": false,
+  "dgSpecHash": "5X6ty8CMbQw=",
+  "success": true,
   "projectFilePath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Api\\IIM.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\josep\\.nuget\\packages\\aspnetcore.healthchecks.npgsql\\8.0.2\\aspnetcore.healthchecks.npgsql.8.0.2.nupkg.sha512",
@@ -16,6 +16,7 @@
     "C:\\Users\\josep\\.nuget\\packages\\betalgo.openai\\8.3.0\\betalgo.openai.8.3.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\bouncycastle.cryptography\\2.3.1\\bouncycastle.cryptography.2.3.1.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\closedxml\\0.102.1\\closedxml.0.102.1.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\communitytoolkit.highperformance\\8.2.2\\communitytoolkit.highperformance.8.2.2.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\dapper\\2.1.66\\dapper.2.1.66.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\documentformat.openxml\\3.3.0\\documentformat.openxml.3.3.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\documentformat.openxml.framework\\3.3.0\\documentformat.openxml.framework.3.3.0.nupkg.sha512",
@@ -88,9 +89,9 @@
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.codeanalysis.workspaces.common\\4.5.0\\microsoft.codeanalysis.workspaces.common.4.5.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.data.sqlite\\8.0.19\\microsoft.data.sqlite.8.0.19.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.data.sqlite.core\\8.0.19\\microsoft.data.sqlite.core.8.0.19.nupkg.sha512",
-    "C:\\Users\\josep\\.nuget\\packages\\microsoft.entityframeworkcore\\8.0.11\\microsoft.entityframeworkcore.8.0.11.nupkg.sha512",
-    "C:\\Users\\josep\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\8.0.11\\microsoft.entityframeworkcore.abstractions.8.0.11.nupkg.sha512",
-    "C:\\Users\\josep\\.nuget\\packages\\microsoft.entityframeworkcore.analyzers\\8.0.11\\microsoft.entityframeworkcore.analyzers.8.0.11.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\microsoft.entityframeworkcore\\8.0.19\\microsoft.entityframeworkcore.8.0.19.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\8.0.19\\microsoft.entityframeworkcore.abstractions.8.0.19.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\microsoft.entityframeworkcore.analyzers\\8.0.19\\microsoft.entityframeworkcore.analyzers.8.0.19.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.entityframeworkcore.design\\8.0.0\\microsoft.entityframeworkcore.design.8.0.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.entityframeworkcore.relational\\8.0.19\\microsoft.entityframeworkcore.relational.8.0.19.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.entityframeworkcore.sqlite\\8.0.19\\microsoft.entityframeworkcore.sqlite.8.0.19.nupkg.sha512",
@@ -146,6 +147,7 @@
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.win32.primitives\\4.3.0\\microsoft.win32.primitives.4.3.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.win32.registry\\4.7.0\\microsoft.win32.registry.4.7.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\microsoft.win32.systemevents\\7.0.0\\microsoft.win32.systemevents.7.0.0.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\minio\\6.0.1\\minio.6.0.1.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\mono.texttemplating\\2.2.1\\mono.texttemplating.2.2.1.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\naudio\\2.2.1\\naudio.2.2.1.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\naudio.asio\\2.2.1\\naudio.asio.2.2.1.nupkg.sha512",
@@ -230,6 +232,7 @@
     "C:\\Users\\josep\\.nuget\\packages\\system.io.compression.zipfile\\4.3.0\\system.io.compression.zipfile.4.3.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\system.io.filesystem\\4.3.0\\system.io.filesystem.4.3.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\system.io.filesystem.primitives\\4.3.0\\system.io.filesystem.primitives.4.3.0.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\system.io.hashing\\7.0.0\\system.io.hashing.7.0.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\system.io.packaging\\8.0.1\\system.io.packaging.8.0.1.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\system.io.pipelines\\8.0.0\\system.io.pipelines.8.0.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\system.linq\\4.3.0\\system.linq.4.3.0.nupkg.sha512",
@@ -243,6 +246,7 @@
     "C:\\Users\\josep\\.nuget\\packages\\system.numerics.tensors\\8.0.0\\system.numerics.tensors.8.0.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\system.numerics.vectors\\4.5.0\\system.numerics.vectors.4.5.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\system.objectmodel\\4.3.0\\system.objectmodel.4.3.0.nupkg.sha512",
+    "C:\\Users\\josep\\.nuget\\packages\\system.reactive\\6.0.0\\system.reactive.6.0.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\system.reflection\\4.3.0\\system.reflection.4.3.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\system.reflection.emit\\4.7.0\\system.reflection.emit.4.7.0.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\system.reflection.emit.ilgeneration\\4.3.0\\system.reflection.emit.ilgeneration.4.3.0.nupkg.sha512",
@@ -290,17 +294,5 @@
     "C:\\Users\\josep\\.nuget\\packages\\xlparser\\1.5.2\\xlparser.1.5.2.nupkg.sha512",
     "C:\\Users\\josep\\.nuget\\packages\\yamldotnet\\15.1.0\\yamldotnet.15.1.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1605",
-      "level": "Error",
-      "message": "Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 8.0.19 to 8.0.11. Reference the package directly from the project to select a different version. \r\n IIM.Api -> Microsoft.AspNetCore.Identity.EntityFrameworkCore 8.0.11 -> Microsoft.EntityFrameworkCore.Relational 8.0.19 -> Microsoft.EntityFrameworkCore (>= 8.0.19) \r\n IIM.Api -> IIM.Core -> Microsoft.EntityFrameworkCore (>= 8.0.11)",
-      "projectPath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Api\\IIM.Api.csproj",
-      "filePath": "C:\\Users\\josep\\source\\repos\\CAILE\\src\\IIM.Api\\IIM.Api.csproj",
-      "libraryId": "Microsoft.EntityFrameworkCore",
-      "targetGraphs": [
-        "net8.0"
-      ]
-    }
-  ]
+  "logs": []
 }

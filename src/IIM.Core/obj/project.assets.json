@@ -123,6 +123,19 @@
           }
         }
       },
+      "CommunityToolkit.HighPerformance/8.2.2": {
+        "type": "package",
+        "compile": {
+          "lib/net7.0/CommunityToolkit.HighPerformance.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net7.0/CommunityToolkit.HighPerformance.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
       "Dapper/2.1.66": {
         "type": "package",
         "compile": {
@@ -970,11 +983,11 @@
           }
         }
       },
-      "Microsoft.EntityFrameworkCore/8.0.11": {
+      "Microsoft.EntityFrameworkCore/8.0.19": {
         "type": "package",
         "dependencies": {
-          "Microsoft.EntityFrameworkCore.Abstractions": "8.0.11",
-          "Microsoft.EntityFrameworkCore.Analyzers": "8.0.11",
+          "Microsoft.EntityFrameworkCore.Abstractions": "8.0.19",
+          "Microsoft.EntityFrameworkCore.Analyzers": "8.0.19",
           "Microsoft.Extensions.Caching.Memory": "8.0.1",
           "Microsoft.Extensions.Logging": "8.0.1"
         },
@@ -992,7 +1005,7 @@
           "buildTransitive/net8.0/Microsoft.EntityFrameworkCore.props": {}
         }
       },
-      "Microsoft.EntityFrameworkCore.Abstractions/8.0.11": {
+      "Microsoft.EntityFrameworkCore.Abstractions/8.0.19": {
         "type": "package",
         "compile": {
           "lib/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll": {
@@ -1005,7 +1018,7 @@
           }
         }
       },
-      "Microsoft.EntityFrameworkCore.Analyzers/8.0.11": {
+      "Microsoft.EntityFrameworkCore.Analyzers/8.0.19": {
         "type": "package",
         "compile": {
           "lib/netstandard2.0/_._": {}
@@ -1968,6 +1981,26 @@
           "runtimes/win/lib/net7.0/Microsoft.Win32.SystemEvents.dll": {
             "assetType": "runtime",
             "rid": "win"
+          }
+        }
+      },
+      "Minio/6.0.1": {
+        "type": "package",
+        "dependencies": {
+          "CommunityToolkit.HighPerformance": "8.2.2",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "7.0.0",
+          "Microsoft.Extensions.Logging": "7.0.0",
+          "System.IO.Hashing": "7.0.0",
+          "System.Reactive": "6.0.0"
+        },
+        "compile": {
+          "lib/net7.0/Minio.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net7.0/Minio.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
@@ -3266,6 +3299,22 @@
           "lib/netstandard1.3/System.IO.FileSystem.Primitives.dll": {}
         }
       },
+      "System.IO.Hashing/7.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net7.0/System.IO.Hashing.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net7.0/System.IO.Hashing.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net6.0/_._": {}
+        }
+      },
       "System.IO.Packaging/8.0.0": {
         "type": "package",
         "compile": {
@@ -3487,6 +3536,22 @@
         },
         "runtime": {
           "lib/netstandard1.3/System.ObjectModel.dll": {}
+        }
+      },
+      "System.Reactive/6.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/System.Reactive.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/System.Reactive.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net6.0/_._": {}
         }
       },
       "System.Reflection/4.3.0": {
@@ -4531,6 +4596,32 @@
         "lib/netstandard2.1/ClosedXML.dll",
         "lib/netstandard2.1/ClosedXML.xml",
         "nuget-logo.png"
+      ]
+    },
+    "CommunityToolkit.HighPerformance/8.2.2": {
+      "sha512": "+zIp8d3sbtYaRbM6hqDs4Ui/z34j7DcUmleruZlYLE4CVxXq+MO8XJyIs42vzeTYFX+k0Iq1dEbBUnQ4z/Gnrw==",
+      "type": "package",
+      "path": "communitytoolkit.highperformance/8.2.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "License.md",
+        "ThirdPartyNotices.txt",
+        "communitytoolkit.highperformance.8.2.2.nupkg.sha512",
+        "communitytoolkit.highperformance.nuspec",
+        "lib/net6.0/CommunityToolkit.HighPerformance.dll",
+        "lib/net6.0/CommunityToolkit.HighPerformance.pdb",
+        "lib/net6.0/CommunityToolkit.HighPerformance.xml",
+        "lib/net7.0/CommunityToolkit.HighPerformance.dll",
+        "lib/net7.0/CommunityToolkit.HighPerformance.pdb",
+        "lib/net7.0/CommunityToolkit.HighPerformance.xml",
+        "lib/netstandard2.0/CommunityToolkit.HighPerformance.dll",
+        "lib/netstandard2.0/CommunityToolkit.HighPerformance.pdb",
+        "lib/netstandard2.0/CommunityToolkit.HighPerformance.xml",
+        "lib/netstandard2.1/CommunityToolkit.HighPerformance.dll",
+        "lib/netstandard2.1/CommunityToolkit.HighPerformance.pdb",
+        "lib/netstandard2.1/CommunityToolkit.HighPerformance.xml"
       ]
     },
     "Dapper/2.1.66": {
@@ -5821,10 +5912,10 @@
         "microsoft.data.sqlite.core.nuspec"
       ]
     },
-    "Microsoft.EntityFrameworkCore/8.0.11": {
-      "sha512": "stbjWBTtpQ1HtqXMFyKnXFTr76PvaOHI2b2h85JqBi3eZr00nspvR/a90Zwh8CQ4rVawqLiTG0+0yZQWaav+sQ==",
+    "Microsoft.EntityFrameworkCore/8.0.19": {
+      "sha512": "3SL+NNXRE/ucuVO1yKz5l3VY4x3k/ds9OK0rAE2W80V9Imvo3cXFGemYj5nAKnFOERxoRek/vwOPjSVTF4R52w==",
       "type": "package",
-      "path": "microsoft.entityframeworkcore/8.0.11",
+      "path": "microsoft.entityframeworkcore/8.0.19",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -5833,14 +5924,14 @@
         "buildTransitive/net8.0/Microsoft.EntityFrameworkCore.props",
         "lib/net8.0/Microsoft.EntityFrameworkCore.dll",
         "lib/net8.0/Microsoft.EntityFrameworkCore.xml",
-        "microsoft.entityframeworkcore.8.0.11.nupkg.sha512",
+        "microsoft.entityframeworkcore.8.0.19.nupkg.sha512",
         "microsoft.entityframeworkcore.nuspec"
       ]
     },
-    "Microsoft.EntityFrameworkCore.Abstractions/8.0.11": {
-      "sha512": "++zY0Ea724ku1jptWJmF7jm3I4IXTexfT4qi1ETcSFFF7qj+qm6rRgN7mTuKkwIETuXk0ikfzudryRjUGrrNKQ==",
+    "Microsoft.EntityFrameworkCore.Abstractions/8.0.19": {
+      "sha512": "3INN1Vti9EUVwb83o5uygUdjHgZCPLmQPpKptixh3hivggUCq1eZmU9QtyxwmK0HA6NXbZ5tyPIHSQNsMPS6aw==",
       "type": "package",
-      "path": "microsoft.entityframeworkcore.abstractions/8.0.11",
+      "path": "microsoft.entityframeworkcore.abstractions/8.0.19",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -5848,14 +5939,14 @@
         "PACKAGE.md",
         "lib/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll",
         "lib/net8.0/Microsoft.EntityFrameworkCore.Abstractions.xml",
-        "microsoft.entityframeworkcore.abstractions.8.0.11.nupkg.sha512",
+        "microsoft.entityframeworkcore.abstractions.8.0.19.nupkg.sha512",
         "microsoft.entityframeworkcore.abstractions.nuspec"
       ]
     },
-    "Microsoft.EntityFrameworkCore.Analyzers/8.0.11": {
-      "sha512": "NI/AJQjtC7qgWM8Nr85sRkwlog2AnFer5RKP8xTUH0RuPF3nN0tGXBEeYJOLZWp+/+M/C6O7MMDRhKRE8bZwIA==",
+    "Microsoft.EntityFrameworkCore.Analyzers/8.0.19": {
+      "sha512": "OdLnhf4Mjm6OkhraTKK2Ye/Ok6VVcb5p1wtWfZBKKC3lHwQAisnv0BokE6NrLiySdcseVTI/ZAcQ+fGZVAx5Kg==",
       "type": "package",
-      "path": "microsoft.entityframeworkcore.analyzers/8.0.11",
+      "path": "microsoft.entityframeworkcore.analyzers/8.0.19",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -5863,7 +5954,7 @@
         "analyzers/dotnet/cs/Microsoft.EntityFrameworkCore.Analyzers.dll",
         "docs/PACKAGE.md",
         "lib/netstandard2.0/_._",
-        "microsoft.entityframeworkcore.analyzers.8.0.11.nupkg.sha512",
+        "microsoft.entityframeworkcore.analyzers.8.0.19.nupkg.sha512",
         "microsoft.entityframeworkcore.analyzers.nuspec"
       ]
     },
@@ -7082,6 +7173,29 @@
         "runtimes/win/lib/net7.0/Microsoft.Win32.SystemEvents.dll",
         "runtimes/win/lib/net7.0/Microsoft.Win32.SystemEvents.xml",
         "useSharedDesignerContext.txt"
+      ]
+    },
+    "Minio/6.0.1": {
+      "sha512": "uavo/zTpUzHLqnB0nyAk6E/2THLRPvZ59Md7IkLKXkAFiX//K2knVK2+dSHDNN2uAUqCvLqO+cM+s9VGBWbIKQ==",
+      "type": "package",
+      "path": "minio/6.0.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "icon.png",
+        "lib/net6.0/Minio.dll",
+        "lib/net6.0/Minio.pdb",
+        "lib/net6.0/Minio.xml",
+        "lib/net7.0/Minio.dll",
+        "lib/net7.0/Minio.pdb",
+        "lib/net7.0/Minio.xml",
+        "lib/netstandard2.0/Minio.dll",
+        "lib/netstandard2.0/Minio.pdb",
+        "lib/netstandard2.0/Minio.xml",
+        "minio.6.0.1.nupkg.sha512",
+        "minio.nuspec",
+        "readme.md"
       ]
     },
     "Mono.TextTemplating/2.2.1": {
@@ -9267,6 +9381,33 @@
         "system.io.filesystem.primitives.nuspec"
       ]
     },
+    "System.IO.Hashing/7.0.0": {
+      "sha512": "sDnWM0N3AMCa86LrKTWeF3BZLD2sgWyYUc7HL6z4+xyDZNQRwzmxbo4qP2rX2MqC+Sy1/gOSRDah5ltxY5jPxw==",
+      "type": "package",
+      "path": "system.io.hashing/7.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/System.IO.Hashing.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net6.0/_._",
+        "buildTransitive/netcoreapp2.0/System.IO.Hashing.targets",
+        "lib/net462/System.IO.Hashing.dll",
+        "lib/net462/System.IO.Hashing.xml",
+        "lib/net6.0/System.IO.Hashing.dll",
+        "lib/net6.0/System.IO.Hashing.xml",
+        "lib/net7.0/System.IO.Hashing.dll",
+        "lib/net7.0/System.IO.Hashing.xml",
+        "lib/netstandard2.0/System.IO.Hashing.dll",
+        "lib/netstandard2.0/System.IO.Hashing.xml",
+        "system.io.hashing.7.0.0.nupkg.sha512",
+        "system.io.hashing.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
     "System.IO.Packaging/8.0.0": {
       "sha512": "8g1V4YRpdGAxFcK8v9OjuMdIOJSpF30Zb1JGicwVZhly3I994WFyBdV6mQEo8d3T+URQe55/M0U0eIH0Hts1bg==",
       "type": "package",
@@ -9826,6 +9967,34 @@
         "ref/xamarinwatchos10/_._",
         "system.objectmodel.4.3.0.nupkg.sha512",
         "system.objectmodel.nuspec"
+      ]
+    },
+    "System.Reactive/6.0.0": {
+      "sha512": "31kfaW4ZupZzPsI5PVe77VhnvFF55qgma7KZr/E0iFTs6fmdhhG8j0mgEx620iLTey1EynOkEfnyTjtNEpJzGw==",
+      "type": "package",
+      "path": "system.reactive/6.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "build/net6.0-windows10.0.19041/_._",
+        "build/net6.0/_._",
+        "buildTransitive/net6.0-windows10.0.19041/_._",
+        "buildTransitive/net6.0/_._",
+        "icon.png",
+        "lib/net472/System.Reactive.dll",
+        "lib/net472/System.Reactive.xml",
+        "lib/net6.0-windows10.0.19041/System.Reactive.dll",
+        "lib/net6.0-windows10.0.19041/System.Reactive.xml",
+        "lib/net6.0/System.Reactive.dll",
+        "lib/net6.0/System.Reactive.xml",
+        "lib/netstandard2.0/System.Reactive.dll",
+        "lib/netstandard2.0/System.Reactive.xml",
+        "lib/uap10.0.18362/System.Reactive.dll",
+        "lib/uap10.0.18362/System.Reactive.pri",
+        "lib/uap10.0.18362/System.Reactive.xml",
+        "readme.md",
+        "system.reactive.6.0.0.nupkg.sha512",
+        "system.reactive.nuspec"
       ]
     },
     "System.Reflection/4.3.0": {
@@ -12028,18 +12197,21 @@
       "Microsoft.AspNetCore.SignalR.Client >= 8.0.10",
       "Microsoft.AspNetCore.SignalR.Client.Core >= 8.0.10",
       "Microsoft.Data.Sqlite >= 8.0.*",
-      "Microsoft.EntityFrameworkCore >= 8.0.11",
+      "Microsoft.EntityFrameworkCore >= 8.0.19",
       "Microsoft.EntityFrameworkCore.Sqlite >= 8.0.*",
       "Microsoft.EntityFrameworkCore.Tools >= 8.0.11",
+      "Microsoft.Extensions.Caching.Memory >= 8.0.1",
       "Microsoft.Extensions.Configuration.Abstractions >= 8.0.0",
       "Microsoft.Extensions.DependencyInjection.Abstractions >= 8.0.2",
       "Microsoft.Extensions.Hosting.Abstractions >= 8.0.1",
       "Microsoft.Extensions.Http >= 8.0.1",
       "Microsoft.Extensions.Logging >= 8.0.1",
       "Microsoft.Extensions.Logging.Abstractions >= 8.0.2",
+      "Microsoft.Extensions.Options.ConfigurationExtensions >= 8.0.0",
       "Microsoft.ML >= 3.0.1",
       "Microsoft.ML.OnnxRuntime >= 1.19.2",
       "Microsoft.ML.OnnxRuntime.DirectML >= 1.19.2",
+      "Minio >= 6.0.1",
       "NAudio >= 2.2.1",
       "NPOI >= 2.7.0",
       "NWaves >= 0.9.6",
@@ -12193,7 +12365,7 @@
           },
           "Microsoft.EntityFrameworkCore": {
             "target": "Package",
-            "version": "[8.0.11, )"
+            "version": "[8.0.19, )"
           },
           "Microsoft.EntityFrameworkCore.Sqlite": {
             "target": "Package",
@@ -12204,6 +12376,10 @@
             "suppressParent": "All",
             "target": "Package",
             "version": "[8.0.11, )"
+          },
+          "Microsoft.Extensions.Caching.Memory": {
+            "target": "Package",
+            "version": "[8.0.1, )"
           },
           "Microsoft.Extensions.Configuration.Abstractions": {
             "target": "Package",
@@ -12229,6 +12405,10 @@
             "target": "Package",
             "version": "[8.0.2, )"
           },
+          "Microsoft.Extensions.Options.ConfigurationExtensions": {
+            "target": "Package",
+            "version": "[8.0.0, )"
+          },
           "Microsoft.ML": {
             "target": "Package",
             "version": "[3.0.1, )"
@@ -12240,6 +12420,10 @@
           "Microsoft.ML.OnnxRuntime.DirectML": {
             "target": "Package",
             "version": "[1.19.2, )"
+          },
+          "Minio": {
+            "target": "Package",
+            "version": "[6.0.1, )"
           },
           "NAudio": {
             "target": "Package",
