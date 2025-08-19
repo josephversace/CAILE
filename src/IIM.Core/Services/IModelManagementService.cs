@@ -8,6 +8,7 @@ using IIM.Core.Models;
 using IIM.Core.Inference;
 using Microsoft.Extensions.Logging;
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
 
 namespace IIM.Core.Services
 {

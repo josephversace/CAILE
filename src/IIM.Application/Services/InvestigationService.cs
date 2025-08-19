@@ -2,6 +2,7 @@ using IIM.Core.Services;
 using IIM.Core.Models;
 using IIM.Shared.DTOs;
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
 using System;
@@ -15,7 +16,7 @@ using IIM.Application.Interfaces;
 
 namespace IIM.Application.Services
 {
-    public class InvestigationService : IInvestigationService
+    public class InvestigationService : IInvestigationService, ISessionProvider
     {
         private readonly ILogger<InvestigationService> _logger;
         private readonly Dictionary<string, InvestigationSession> _sessions = new();
@@ -45,7 +46,7 @@ namespace IIM.Application.Services
             _visualizationService = visualizationService;
         }
 
-        public Task<InvestigationSession> CreateSessionAsync(Models.CreateSessionRequest request, CancellationToken cancellationToken = default)
+        public Task<InvestigationSession> CreateSessionAsync(CreateSessionRequest request, CancellationToken cancellationToken = default)
         {
             var session = new InvestigationSession
             {

@@ -3,6 +3,7 @@ using IIM.Core.Configuration;
 using IIM.Core.Models;
 using IIM.Infrastructure.Storage;
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
 
 namespace IIM.Core.Services.Configuration;
 
@@ -322,7 +324,7 @@ public class ModelConfigurationTemplateService : IModelConfigurationTemplateServ
     private readonly ILogger<ModelConfigurationTemplateService> _logger;
     private readonly StorageConfiguration _storageConfig;
     private readonly IModelOrchestrator _modelOrchestrator;
-    private readonly IInvestigationService _investigationService;
+    private readonly ISessionProvider _investigationService;
     private readonly string _templatesPath;
     private readonly Dictionary<string, ModelConfigurationTemplate> _templateCache = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
@@ -339,7 +341,7 @@ public class ModelConfigurationTemplateService : IModelConfigurationTemplateServ
         ILogger<ModelConfigurationTemplateService> logger,
         StorageConfiguration storageConfig,
         IModelOrchestrator modelOrchestrator,
-        IInvestigationService investigationService)
+        ISessionProvider investigationService)
     {
         _logger = logger;
         _storageConfig = storageConfig;

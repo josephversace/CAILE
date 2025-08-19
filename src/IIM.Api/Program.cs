@@ -15,6 +15,7 @@ using IIM.Core.Services;
 using IIM.Core.AI;
 using InsufficientMemoryException = IIM.Core.Models.InsufficientMemoryException;
 using IIM.Shared.Enums;
+using IIM.Infrastructure.Platform;
 
 
 var builder = WebApplication.CreateBuilder(args);

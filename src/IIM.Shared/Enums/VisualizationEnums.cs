@@ -16,4 +16,16 @@ namespace IIM.Shared.Enums
         Map,
         Custom
     }
+
+    public enum ResponseDisplayType
+    {
+        Auto,
+        Text,
+        Table,
+        Image,
+        Timeline,
+        Geospatial,
+        MultiModal,
+        Structured
+    }
 }

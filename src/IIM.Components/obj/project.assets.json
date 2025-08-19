@@ -4688,6 +4688,12 @@
       "IIM.Infrastructure/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "IIM.Shared": "1.0.0",
+          "Microsoft.Extensions.Hosting.Abstractions": "8.0.1",
+          "Microsoft.Extensions.Http": "8.0.1",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.2"
+        },
         "compile": {
           "bin/placeholder/IIM.Infrastructure.dll": {}
         },

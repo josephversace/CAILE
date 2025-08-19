@@ -1,4 +1,4 @@
-﻿// src/IIM.Shared/Models/QdrantModels.cs
+﻿using IIM.Shared.Models;
 using System;
 using System.Collections.Generic;
 

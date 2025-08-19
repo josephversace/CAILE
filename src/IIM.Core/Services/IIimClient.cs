@@ -1,4 +1,5 @@
 ﻿using IIM.Core.Models;
+using IIM.Infrastructure.Hardware;
 using IIM.Shared.Models;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Logging;

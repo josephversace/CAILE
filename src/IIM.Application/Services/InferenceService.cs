@@ -1,4 +1,9 @@
 ﻿using IIM.Application.Interfaces;
+using IIM.Core.AI;
+using IIM.Core.Inference;
+using IIM.Core.Models;
+using IIM.Shared.Enums;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;

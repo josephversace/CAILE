@@ -1,4 +1,5 @@
 ﻿// src/IIM.Core/RAG/InMemoryQdrantService.cs
+using IIM.Infrastructure.VectorStore.Models;
 using IIM.Shared.Models;
 
 

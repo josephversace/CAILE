@@ -1,3 +1,4 @@
+using IIM.Shared.Enums;
 using IIM.Shared.Models;
 using System;
 using System.Collections.Generic;
@@ -63,50 +64,3 @@ public class CriticalPeriod
     public List<string> EventIds { get; set; } = new();
 }
 
-public enum EventType
-{
-    Communication,
-    Transaction,
-    Movement,
-    Access,
-    Modification,
-    Creation,
-    Deletion,
-    Meeting,
-    Observation,
-    Other
-}
-
-public enum EventImportance
-{
-    Low,
-    Medium,
-    High,
-    Critical
-}
-
-public enum PatternType
-{
-    Temporal,
-    Behavioral,
-    Transactional,
-    Communication,
-    Geographic
-}
-
-public enum AnomalyType
-{
-    TimeGap,
-    UnusualActivity,
-    PatternBreak,
-    Outlier,
-    Suspicious
-}
-
-public enum CriticalityLevel
-{
-    Low,
-    Medium,
-    High,
-    Critical
-}

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
 
 namespace IIM.Core.Models
 {
@@ -100,28 +101,8 @@ namespace IIM.Core.Models
         }
     }
 
-    public class Attachment
-    {
-        public string Id { get; set; } = Guid.NewGuid().ToString("N");
-        public string FileName { get; set; } = string.Empty;
-        public string ContentType { get; set; } = string.Empty;
-        public long Size { get; set; }
-        public AttachmentType Type { get; set; }
-        public string? StoragePath { get; set; }
-        public Stream? Stream { get; set; }
-    }
 
-public enum ResponseDisplayType
-{
-    Auto,
-    Text,
-    Table,
-    Image,
-    Timeline,
-    Geospatial,
-    MultiModal,
-    Structured
-}
+
 
 
 }
