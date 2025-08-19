@@ -1,0 +1,95 @@
+﻿
+@using IIM.Components.Shared
+@using IIM.Components.Components.Layout
+
+
+<div class="dashboard">
+        <!-- Quick Start Card -->
+        <HudCard>
+            <h3><span class="card-icon">🚀</span> Quick Start</h3>
+            <div class="quick-actions">
+                <div class="action-btn">+ New Investigation</div>
+                <div class="action-btn">📁 Import Evidence</div>
+                <div class="action-btn">🔍 OSINT Search</div>
+                <div class="action-btn">📊 Generate Report</div>
+            </div>
+        </HudCard>
+        
+        <!-- Active Cases Card -->
+        <HudCard>
+            <h3><span class="card-icon">📋</span> Active Cases</h3>
+            <ul class="case-list">
+                <li class="case-item">
+                    Case #2024-117: Financial Fraud
+                    <span class="status-badge status-active">ACTIVE</span>
+                </li>
+                <li class="case-item">
+                    Case #2024-116: Digital Forensics
+                    <span class="status-badge status-active">ACTIVE</span>
+                </li>
+                <li class="case-item">
+                    Case #2024-115: OSINT Collection
+                    <span class="status-badge status-pending">REVIEW</span>
+                </li>
+            </ul>
+        </HudCard>
+        
+        <!-- AI Models Card -->
+        <HudCard>
+            <h3><span class="card-icon">🤖</span> AI Models</h3>
+            <div class="model-grid">
+                <div class="model-item">🧠 Llama 3.1 70B</div>
+                <div class="model-item">🔍 Forensics-BERT</div>
+                <div class="model-item">🎯 CLIP Vision</div>
+                <div class="model-item">🎤 Whisper Large</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 75%"></div>
+            </div>
+            <p style="font-size: 0.85em; color: #888; margin-top: 5px;">GPU Memory: 75% utilized</p>
+        </HudCard>
+        
+        <!-- RAG Collections Card -->
+        <HudCard>
+            <h3><span class="card-icon">📚</span> Knowledge Bases</h3>
+            <ul class="case-list">
+                <li class="case-item">Law Enforcement SOPs (2,847 docs)</li>
+                <li class="case-item">Legal Precedents (5,231 docs)</li>
+                <li class="case-item">Technical Manuals (1,392 docs)</li>
+            </ul>
+        </HudCard>
+        
+        <!-- Investigation Profiles Card -->
+        <HdCard>
+            <h3><span class="card-icon">🎭</span> Investigation Profiles</h3>
+            <div class="quick-actions">
+                <div class="action-btn">💰 Financial Crime</div>
+                <div class="action-btn">🔒 Cybercrime</div>
+                <div class="action-btn">👤 HUMINT</div>
+                <div class="action-btn">📱 Mobile Forensics</div>
+            </div>
+        </HdCard>
+        
+        <!-- System Status Card -->
+        <HudCard>
+            <h3><span class="card-icon">⚡</span> System Status</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">128</div>
+                    <div class="stat-label">GB RAM Available</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">24</div>
+                    <div class="stat-label">Active Threads</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">100%</div>
+                    <div class="stat-label">Offline Ready</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">AES-256</div>
+                    <div class="stat-label">Encryption</div>
+                </div>
+            </div>
+        </HudCard>
+    </div>

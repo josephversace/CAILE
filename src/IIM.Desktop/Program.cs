@@ -1,11 +1,15 @@
+using Configuration;
 using IIM.Components.Services;
 using IIM.Core.AI;
 using IIM.Core.Configuration;
+using IIM.Core.Configuration;
+using IIM.Core.Configuration.IIM.Core.Storage;
 using IIM.Core.Inference;
 using IIM.Core.Platform;
 using IIM.Core.RAG;
 using IIM.Core.Security;
 using IIM.Core.Services;
+using IIM.Core.Storage;
 using Microsoft.AspNetCore.Components.WebView.WindowsForms;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -201,28 +205,37 @@ internal static class Program
                     client.DefaultRequestHeaders.Add("Accept", "application/json");
                 });
 
-                // RAG Services
-                // Option 1: Create StorageConfiguration if it doesn't exist
+                // Configure MinIO settings
+                services.Configure<MinIOConfiguration>(
+                    configuration.GetSection("Storage:MinIO"));
+
+                // Add memory cache for deduplication
+                services.AddMemoryCache();
+
+                // Register deduplication service
+                services.AddSingleton<IDeduplicationService, FixedSizeDeduplicationService>();
+
+                // Register MinIO storage service
+                services.AddSingleton<IMinIOStorageService, MinIOStorageService>();
+
+                // Register storage configuration
                 services.AddSingleton<StorageConfiguration>(sp =>
                 {
                     var config = new StorageConfiguration
                     {
-                        BasePath = Path.Combine(
-                            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                            "IIM"
-                        )
+                        BasePath = configuration["Storage:LocalBasePath"] ??
+                            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IIM")
                     };
                     config.EnsureDirectoriesExist();
                     return config;
                 });
 
-         
+                // Register Qdrant service
                 services.AddSingleton<IQdrantService>(sp =>
                 {
                     var logger = sp.GetRequiredService<ILogger<InMemoryQdrantService>>();
-                    var config = new StorageConfiguration();
-                    config.EnsureDirectoriesExist();
-                    return new InMemoryQdrantService(logger, config);
+                    var storageConfig = sp.GetRequiredService<StorageConfiguration>();
+                    return new InMemoryQdrantService(logger, storageConfig);
                 });
 
 

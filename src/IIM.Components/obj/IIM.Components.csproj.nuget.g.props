@@ -25,7 +25,7 @@
   </ItemGroup>
   <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <Import Project="$(NuGetPackageRoot)sixlabors.imagesharp\3.1.5\build\SixLabors.ImageSharp.props" Condition="Exists('$(NuGetPackageRoot)sixlabors.imagesharp\3.1.5\build\SixLabors.ImageSharp.props')" />
-    <Import Project="$(NuGetPackageRoot)microsoft.entityframeworkcore\8.0.11\buildTransitive\net8.0\Microsoft.EntityFrameworkCore.props" Condition="Exists('$(NuGetPackageRoot)microsoft.entityframeworkcore\8.0.11\buildTransitive\net8.0\Microsoft.EntityFrameworkCore.props')" />
+    <Import Project="$(NuGetPackageRoot)microsoft.entityframeworkcore\8.0.19\buildTransitive\net8.0\Microsoft.EntityFrameworkCore.props" Condition="Exists('$(NuGetPackageRoot)microsoft.entityframeworkcore\8.0.19\buildTransitive\net8.0\Microsoft.EntityFrameworkCore.props')" />
     <Import Project="$(NuGetPackageRoot)microsoft.ai.directml\1.15.2\build\Microsoft.AI.DirectML.props" Condition="Exists('$(NuGetPackageRoot)microsoft.ai.directml\1.15.2\build\Microsoft.AI.DirectML.props')" />
     <Import Project="$(NuGetPackageRoot)microsoft.ml.onnxruntime.directml\1.19.2\build\netstandard2.1\Microsoft.ML.OnnxRuntime.DirectML.props" Condition="Exists('$(NuGetPackageRoot)microsoft.ml.onnxruntime.directml\1.19.2\build\netstandard2.1\Microsoft.ML.OnnxRuntime.DirectML.props')" />
     <Import Project="$(NuGetPackageRoot)microsoft.ml.onnxruntime\1.19.2\build\netstandard2.1\Microsoft.ML.OnnxRuntime.props" Condition="Exists('$(NuGetPackageRoot)microsoft.ml.onnxruntime\1.19.2\build\netstandard2.1\Microsoft.ML.OnnxRuntime.props')" />
