@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using IIM.Core.Models;
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Core.Services

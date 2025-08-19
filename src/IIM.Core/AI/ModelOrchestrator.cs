@@ -1,5 +1,6 @@
 ﻿using IIM.Core.AI;
 using IIM.Core.Models;
+using IIM.Infrastructure.Storage;
 using IIM.Shared.Enums;
 using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
@@ -21,6 +22,7 @@ namespace IIM.Core.AI
         private readonly ILogger<ModelOrchestrator> _logger;
         private readonly Dictionary<string, ModelHandle> _loadedModels = new();
         private readonly SemaphoreSlim _loadLock = new(1, 1);
+        private readonly string _modelsPath; // Add this field
 
         /// <summary>
         /// Initializes a new instance of the ModelOrchestrator
@@ -29,7 +31,23 @@ namespace IIM.Core.AI
         public ModelOrchestrator(ILogger<ModelOrchestrator> logger)
         {
             _logger = logger;
+            // Set default models path
+            _modelsPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "IIM",
+                "Models"
+            );
+            Directory.CreateDirectory(_modelsPath);
         }
+
+        // Alternative constructor if you want to inject StorageConfiguration
+        public ModelOrchestrator(ILogger<ModelOrchestrator> logger, StorageConfiguration storageConfig)
+        {
+            _logger = logger;
+            _modelsPath = storageConfig.ModelsPath;
+            Directory.CreateDirectory(_modelsPath);
+        }
+
 
         // Events
         public event EventHandler<ModelLoadedEventArgs>? ModelLoaded;
@@ -49,6 +67,8 @@ namespace IIM.Core.AI
             IProgress<float>? progress = null,
             CancellationToken ct = default)
         {
+      
+
             await _loadLock.WaitAsync(ct);
             try
             {
@@ -493,5 +513,12 @@ namespace IIM.Core.AI
                 _ => 512L * 1024 * 1024 // 512MB default
             };
         }
+
+        private string GetDefaultModelPath(string modelId)
+        {
+            // Return a default path based on model ID
+            return Path.Combine(_modelsPath, modelId);
+        }
+
     }
 }

@@ -324,7 +324,7 @@ public class ModelConfigurationTemplateService : IModelConfigurationTemplateServ
     private readonly ILogger<ModelConfigurationTemplateService> _logger;
     private readonly StorageConfiguration _storageConfig;
     private readonly IModelOrchestrator _modelOrchestrator;
-    private readonly ISessionProvider _investigationService;
+    private readonly ISessionService _sessionService;  // Changed from ISessionProvider
     private readonly string _templatesPath;
     private readonly Dictionary<string, ModelConfigurationTemplate> _templateCache = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
@@ -341,12 +341,12 @@ public class ModelConfigurationTemplateService : IModelConfigurationTemplateServ
         ILogger<ModelConfigurationTemplateService> logger,
         StorageConfiguration storageConfig,
         IModelOrchestrator modelOrchestrator,
-        ISessionProvider investigationService)
+        ISessionService sessionService)  // Changed from ISessionProvider
     {
         _logger = logger;
         _storageConfig = storageConfig;
         _modelOrchestrator = modelOrchestrator;
-        _investigationService = investigationService;
+        _sessionService = sessionService;  // Changed from _investigationService
 
         // Use centralized storage configuration
         _templatesPath = Path.Combine(_storageConfig.BasePath, "Templates");
@@ -365,7 +365,7 @@ public class ModelConfigurationTemplateService : IModelConfigurationTemplateServ
         string description,
         CancellationToken cancellationToken = default)
     {
-        var session = await _investigationService.GetSessionAsync(sessionId, cancellationToken);
+        var session = await _sessionService.GetSessionAsync(sessionId, cancellationToken);
 
         var template = new ModelConfigurationTemplate
         {
@@ -590,7 +590,7 @@ public class ModelConfigurationTemplateService : IModelConfigurationTemplateServ
             throw new KeyNotFoundException($"Template {templateId} not found");
         }
 
-        var session = await _investigationService.GetSessionAsync(sessionId, cancellationToken);
+        var session = await _sessionService.GetSessionAsync(sessionId, cancellationToken);
 
         // Clear existing models and apply template models
         session.Models.Clear();
