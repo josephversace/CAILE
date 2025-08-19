@@ -63,6 +63,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\IIM.Infrastructure\IIM.Infrastructure.csproj" />
     <ProjectReference Include="..\IIM.Plugin.SDK\IIM.Plugin.SDK.csproj" />
     <ProjectReference Include="..\IIM.Shared\IIM.Shared.csproj" />
   </ItemGroup>

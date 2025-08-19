@@ -66,10 +66,12 @@
 
   <ItemGroup>
     <!-- Reference to Razor Class Library -->
+    <ProjectReference Include="..\IIM.Application\IIM.Application.csproj" />
     <ProjectReference Include="..\IIM.Components\IIM.Components.csproj" />
     
     <!-- Reference to Core library if it exists -->
     <ProjectReference Include="..\IIM.Core\IIM.Core.csproj" Condition="Exists('..\IIM.Core\IIM.Core.csproj')" />
+    <ProjectReference Include="..\IIM.Infrastructure\IIM.Infrastructure.csproj" />
     
     <!-- Reference to Shared library if it exists -->
     <ProjectReference Include="..\IIM.Shared\IIM.Shared.csproj" Condition="Exists('..\IIM.Shared\IIM.Shared.csproj')" />

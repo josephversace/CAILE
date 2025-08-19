@@ -5442,6 +5442,7 @@
           "FluentValidation": "11.11.0",
           "HtmlAgilityPack": "1.11.54",
           "HtmlToOpenXml.dll": "2.4.1",
+          "IIM.Infrastructure": "1.0.0",
           "IIM.Plugin.SDK": "1.0.0",
           "IIM.Shared": "1.0.0",
           "Markdig": "0.34.0",
@@ -5484,6 +5485,16 @@
         },
         "runtime": {
           "bin/placeholder/IIM.Core.dll": {}
+        }
+      },
+      "IIM.Infrastructure/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "compile": {
+          "bin/placeholder/IIM.Infrastructure.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/IIM.Infrastructure.dll": {}
         }
       },
       "IIM.Plugin.SDK/1.0.0": {
@@ -14591,6 +14602,11 @@
       "type": "project",
       "path": "../IIM.Core/IIM.Core.csproj",
       "msbuildProject": "../IIM.Core/IIM.Core.csproj"
+    },
+    "IIM.Infrastructure/1.0.0": {
+      "type": "project",
+      "path": "../IIM.Infrastructure/IIM.Infrastructure.csproj",
+      "msbuildProject": "../IIM.Infrastructure/IIM.Infrastructure.csproj"
     },
     "IIM.Plugin.SDK/1.0.0": {
       "type": "project",

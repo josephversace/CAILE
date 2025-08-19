@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Test Frameworks -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="6.0.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    
+    <!-- Mocking & Assertions -->
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="FluentAssertions" Version="6.12.2" />
+    <PackageReference Include="NSubstitute" Version="5.1.0" />
+    
+    <!-- Testing Utilities -->
+    <PackageReference Include="AutoFixture" Version="4.18.1" />
+    <PackageReference Include="AutoFixture.Xunit2" Version="4.18.1" />
+    <PackageReference Include="Bogus" Version="35.6.1" />
+    
+    <!-- File System Testing -->
+    <PackageReference Include="System.IO.Abstractions.TestingHelpers" Version="21.1.7" />
+    
+    <!-- Time Testing -->
+    <PackageReference Include="Microsoft.Extensions.Time.Testing" Version="8.11.0" />
+    
+    <!-- Logging for Tests -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
+    <PackageReference Include="Serilog.Sinks.XUnit" Version="3.0.5" />
+    
+    <!-- Memory Testing -->
+    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Project References -->
+    <ProjectReference Include="..\..\src\IIM.Core\IIM.Core.csproj" />
+    <ProjectReference Include="..\..\src\IIM.Shared\IIM.Shared.csproj" />
+    <ProjectReference Include="..\..\src\IIM.Core\IIM.Desktop.csproj" />
+    <ProjectReference Include="..\..\src\IIM.Core\IIM.Components.csproj" />
+    <ProjectReference Include="..\..\src\IIM.Plugin.SDK\IIM.Plugin.SDK.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Test Data Files -->
+    <None Update="TestData\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestFiles\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

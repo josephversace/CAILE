@@ -45,7 +45,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\IIM.Application\IIM.Application.csproj" />
     <ProjectReference Include="..\IIM.Core\IIM.Core.csproj" />
+    <ProjectReference Include="..\IIM.Infrastructure\IIM.Infrastructure.csproj" />
+    <ProjectReference Include="..\IIM.Shared\IIM.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -208,6 +211,10 @@
     <Content Update="wwwroot\img\mode\light.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Components\Tools\" />
   </ItemGroup>
 
 </Project>
