@@ -1,470 +1,397 @@
-# **IIM Platform Feature Analysis & Implementation Plan**
+# IIM Platform Refactoring - Continuation Prompt (Updated Post-Mediator)
 
-Let me analyze the current state of these 8 critical features in your codebase:# **IIM Platform Feature Gap Analysis & Implementation Plan**
+## Project Overview
+You are working on the **Intelligent Investigation Machine (IIM)** - a Blazor Hybrid + WSL2 desktop application for law enforcement AI investigations. This is a premium training platform that runs entirely on-premises on Framework PCs with 128GB RAM and AMD GPUs.
 
-## **Current State Analysis of 8 Core Features**
+## Core Functionality
+- Local AI inference using multiple model formats (ONNX, Ollama, LlamaCpp) via plugin architecture
+- RAG (Retrieval-Augmented Generation) for evidence analysis  
+- Multi-modal support (text, image, audio, video)
+- Evidence management with chain of custody
+- WSL2 integration running Docker containers (PostgreSQL, Qdrant, Redis, MinIO)
+- Model Templates for different investigation types (Fast, Deep Analysis, Multi-Modal)
+- **NEW**: Mediator pattern for all operations with automatic logging, validation, caching, and audit trails
 
-### **1. ✅ WSL2 Management - PARTIALLY IMPLEMENTED (65%)**
-**Current State:**
-- ✅ `WslManager` exists with basic functionality
-- ✅ `WslServiceOrchestrator` manages Docker containers
-- ✅ Health checking implemented
-- ⚠️ **ISSUES:**
-  - Services configuration hardcoded in orchestrator
-  - No automatic recovery on failure
-  - Missing UI feedback for WSL status
-  - No progress indicators during setup
+## Technology Stack
+- .NET 8 with Blazor Hybrid (WebView2)
+- Windows Forms host application (net8.0-windows10.0.17763.0)
+- Minimal APIs for backend (no MVC Controllers)
+- WSL2 with Docker for services
+- ONNX Runtime with DirectML/ROCm/CUDA support
+- **NEW**: Custom Mediator implementation (no external dependencies)
+- **NEW**: Pipeline behaviors for cross-cutting concerns
 
-### **2. ❌ Model Management - WEAK IMPLEMENTATION (35%)**
-**Current State:**
-- ✅ `IModelOrchestrator` interface defined
-- ❌ Only `MockModelOrchestrator` implemented
-- ❌ No USB ingestion capability
-- ❌ No online repository integration
-- ⚠️ **StorageConfiguration** has paths but no actual implementation
-- ⚠️ Model loading scattered between multiple services
+## Current Solution Structure
+```
+/src
+├── IIM.Shared/          # DTOs, Enums, Common Models (no dependencies)
+│   ├── DTOs/           # API request/response contracts
+│   ├── Enums/          # Shared enumerations
+│   └── Models/         # Simple data structures (TimeRange, FileMetadata, etc.)
+│
+├── IIM.Infrastructure/  # External services, WSL, Storage (depends on Shared)
+│   ├── Platform/       # WSL management, Docker orchestration
+│   ├── Storage/        # File system, MinIO integration
+│   └── VectorStore/    # Qdrant models and services
+│
+├── IIM.Plugin.SDK/      # Plugin interfaces (depends on Shared)
+│
+├── IIM.Core/           # Domain models, business logic (depends on Infrastructure, Plugin.SDK, Shared)
+│   ├── Models/         # Domain entities (Case, Evidence, Investigation, etc.)
+│   ├── Services/       # Core business services
+│   ├── AI/            # AI/ML orchestration
+│   ├── Inference/     # Inference pipeline
+│   ├── RAG/           # RAG implementation
+│   └── Mediator/      # ✅ NEW: Custom mediator implementation
+│       ├── IMediator.cs
+│       ├── SimpleMediator.cs
+│       └── MediatorServiceExtensions.cs
+│
+├── IIM.Application/    # Application services (depends on Core, Shared)
+│   ├── Services/      # High-level orchestration services
+│   ├── Interfaces/    # Application-level interfaces
+│   ├── Commands/      # ✅ NEW: Command handlers with CQRS pattern
+│   │   ├── Wsl/
+│   │   │   ├── EnsureWslCommand.cs
+│   │   │   ├── EnsureWslCommandHandler.cs
+│   │   │   └── WslNotifications.cs
+│   │   ├── Models/
+│   │   │   ├── LoadModelCommand.cs
+│   │   │   ├── LoadModelCommandHandler.cs
+│   │   │   ├── UnloadModelCommand.cs
+│   │   │   ├── UnloadModelCommandHandler.cs
+│   │   │   └── ModelNotifications.cs
+│   │   └── Investigation/
+│   │       ├── ProcessInvestigationCommand.cs
+│   │       ├── ProcessInvestigationCommandHandler.cs
+│   │       ├── CreateSessionCommand.cs
+│   │       ├── CreateSessionCommandHandler.cs
+│   │       └── InvestigationNotifications.cs
+│   ├── Queries/       # ✅ NEW: Query handlers for read operations
+│   │   ├── SearchDocumentsQuery.cs
+│   │   └── SearchDocumentsQueryHandler.cs
+│   ├── Behaviors/     # ✅ NEW: Pipeline behaviors
+│   │   ├── LoggingBehavior.cs
+│   │   ├── ValidationBehavior.cs
+│   │   ├── PerformanceBehavior.cs
+│   │   ├── CachingBehavior.cs
+│   │   ├── RetryBehavior.cs
+│   │   ├── TransactionBehavior.cs
+│   │   └── AuditBehavior.cs
+│   └── Handlers/      # ✅ NEW: Notification handlers
+│       ├── NotificationHandlers.cs
+│       └── AdditionalNotificationHandlers.cs
+│
+├── IIM.Api/           # HTTP endpoints, Minimal APIs (depends on Core, Shared)
+│   ├── Program.cs     # All endpoints defined here (no Controllers)
+│   └── Endpoints/     # Organized endpoint groups
+│
+├── IIM.Components/    # Blazor UI components (depends on Application, Core, Infrastructure, Shared)
+│   └── [UI Components]
+│
+└── IIM.Desktop/       # Windows Forms host (depends on all)
+    └── Program.cs     # ✅ UPDATED: Mediator configuration added
 
-### **3. ⚠️ Model Mixing/Templates - PARTIALLY IMPLEMENTED (45%)**
-**Current State:**
-- ✅ `ModelConfigurationTemplate` class well-designed
-- ✅ `ModelConfigurationTemplateService` exists
-- ❌ Not integrated with UI
-- ❌ No template creation workflow
-- ❌ Templates not connected to investigation sessions
+/tests
+├── IIM.Core.Tests/
+├── IIM.Application.Tests/    # ✅ NEW: Tests for commands/queries
+├── IIM.Api.Tests/
+└── IIM.Integration.Tests/
+```
 
-### **4. ❌ Reasoning Model Orchestration - NOT IMPLEMENTED (0%)**
-**Current State:**
-- ❌ No reasoning model architecture
-- ❌ No task breakdown capability
-- ❌ No MCP server integration
-- ❌ `IInferencePipeline` exists but doesn't do reasoning
-- ⚠️ Current pipeline is linear, not orchestrated
+## ✅ Refactoring Completed
 
-### **5. ⚠️ Rich Visualizations - PARTIALLY IMPLEMENTED (40%)**
-**Current State:**
-- ✅ `ResponseVisualization` model exists
-- ✅ Basic visualization components created
-- ❌ Not connected to actual responses
-- ❌ Limited visualization types
-- ⚠️ `IVisualizationService` interface missing implementation
+### Phase 1-3: Foundation (COMPLETE)
+- ✅ Removed empty Controller classes - Using only Minimal APIs
+- ✅ Fixed circular dependencies - ISessionProvider removed, using ISessionService
+- ✅ Fixed namespace conflicts and model organization
+- ✅ All projects compile without errors
+- ✅ Mock implementations allow the app to start
 
-### **6. ⚠️ Audit Logging - WEAK IMPLEMENTATION (25%)**
-**Current State:**
-- ✅ Evidence logging exists (`EvidenceManager`)
-- ❌ No session interaction logging
-- ❌ No centralized audit service
-- ❌ Audit logs not persisted to database
-- ⚠️ Scattered logging without structure
+### Phase 4: Service Implementation (COMPLETE)
+- ✅ InvestigationService fully implemented with correct model properties
+- ✅ ModelOrchestrator has real implementation (needs actual model loading)
+- ✅ Export services properly wired with correct method signatures
+- ✅ All required service interfaces properly registered in DI
 
-### **7. ✅ Session-Case Management - MOSTLY IMPLEMENTED (75%)**
-**Current State:**
-- ✅ Sessions can be linked to cases
-- ✅ `InvestigationService` handles both
-- ⚠️ In-memory storage only (no persistence)
-- ⚠️ Missing `ICaseManager` implementation
+### Phase 5: Mediator Pattern (COMPLETE) 🎉
+- ✅ Custom mediator implementation without external dependencies
+- ✅ Command/Query handlers for all major operations
+- ✅ 7 Pipeline behaviors for cross-cutting concerns:
+  - Logging (all requests/responses logged)
+  - Validation (input validation)
+  - Performance monitoring (slow operation warnings)
+  - Caching (automatic query result caching)
+  - Retry (exponential backoff for transient failures)
+  - Transactions (commands wrapped in transactions)
+  - Audit (compliance logging)
+- ✅ Notification system for decoupled event handling
+- ✅ All handlers use correct model properties
+- ✅ Full integration with existing services
 
-### **8. ✅ Sessionless Mode - IMPLEMENTED (80%)**
-**Current State:**
-- ✅ Can create sessions without case ID
-- ✅ UI supports sessionless mode
-- ⚠️ Not clearly distinguished in UI
+## 🎯 Current State Assessment
 
----
+### What's Working:
+- ✅ All projects compile and build successfully
+- ✅ Mediator pattern fully integrated
+- ✅ Commands/Queries replace direct service calls
+- ✅ Automatic cross-cutting concerns via pipeline behaviors
+- ✅ Clean separation between read (Query) and write (Command) operations
+- ✅ Event-driven notifications for decoupled components
+- ✅ Mock implementations allow testing without WSL/Docker
 
-## **Priority Implementation Plan**
+### What's Ready for Implementation:
 
-### **PHASE 1: Fix Critical Infrastructure (Week 1)**
-
-#### **1.1 Complete WSL2 Management**
+#### Priority 1: WSL2 Integration (CRITICAL - Blocks Real Usage)
+**Status**: Command structure ready, needs actual implementation
 ```csharp
-// Create WslSetupService.cs
-public class WslSetupService : IWslSetupService
-{
-    public async Task<SetupProgress> SetupEnvironmentAsync(IProgress<SetupStatus> progress)
-    {
-        // 1. Check WSL2 installation
-        // 2. Install Ubuntu distro if needed
-        // 3. Setup Docker
-        // 4. Install Qdrant
-        // 5. Configure networking
-        // 6. Verify all services
-    }
-}
-
-// Add to UI: WslStatusComponent.razor
-<WslStatusIndicator>
-    @if (IsHealthy)
-    {
-        <span class="status-healthy">WSL Ready</span>
-    }
-    else
-    {
-        <button @onclick="AutoFixWSL">Fix WSL Issues</button>
-    }
-</WslStatusIndicator>
+// Command exists and compiles:
+await _mediator.Send(new EnsureWslCommand { AutoInstall = true });
+// TODO: Implement actual WSL detection/installation in WslManager
 ```
 
-#### **1.2 Implement Real Model Management**
+#### Priority 2: Model Loading (HIGH)
+**Status**: Command structure ready, needs actual ONNX/Ollama integration
 ```csharp
-// Replace MockModelOrchestrator with real implementation
-public class ModelOrchestrator : IModelOrchestrator
-{
-    private readonly IModelRepository _repository;
-    private readonly IUsbDetectionService _usbService;
-    private readonly IModelDownloader _downloader;
-    
-    public async Task<ModelHandle> LoadModelFromUsbAsync(string usbPath)
-    {
-        // Detect USB drives
-        // Scan for .gguf, .onnx files
-        // Copy to local storage
-        // Load into memory
-    }
-    
-    public async Task<ModelHandle> DownloadFromRepositoryAsync(string modelId)
-    {
-        // Connect to your model repository
-        // Download with progress
-        // Verify integrity
-        // Load model
-    }
-}
-
-// Create ModelRepositoryService.cs
-public class ModelRepositoryService
-{
-    private const string REPO_URL = "https://models.iim-platform.com";
-    
-    public async Task<List<AvailableModel>> GetAvailableModelsAsync()
-    {
-        // Fetch model catalog
-        // Return with metadata
-    }
-}
+// Command exists and compiles:
+await _mediator.Send(new LoadModelCommand { ModelId = "llama3.1" });
+// TODO: Implement actual model download and loading
 ```
 
-### **PHASE 2: Implement Reasoning Orchestration (Week 2)**
-
-#### **2.1 Create Reasoning Engine**
+#### Priority 3: RAG Pipeline (HIGH)
+**Status**: Query structure ready, needs actual vector store integration
 ```csharp
-// New: ReasoningOrchestrator.cs
-public class ReasoningOrchestrator : IReasoningOrchestrator
-{
-    private readonly IModelOrchestrator _models;
-    private readonly Dictionary<string, ISpecializedAgent> _agents;
-    
-    public async Task<ReasoningResponse> ProcessComplexQueryAsync(string query)
-    {
-        // 1. Analyze query intent
-        var intent = await AnalyzeIntent(query);
-        
-        // 2. Break down into subtasks
-        var tasks = await DecomposeIntoTasks(intent);
-        
-        // 3. Route to appropriate models/agents
-        var results = new List<TaskResult>();
-        foreach (var task in tasks)
-        {
-            var agent = SelectAgent(task.Type);
-            var result = await agent.ExecuteAsync(task);
-            results.Add(result);
-        }
-        
-        // 4. Synthesize results
-        return await SynthesizeResults(results);
-    }
-    
-    private ISpecializedAgent SelectAgent(TaskType type) => type switch
-    {
-        TaskType.TextAnalysis => _agents["llm"],
-        TaskType.ImageSearch => _agents["clip"],
-        TaskType.DataExtraction => _agents["rag"],
-        TaskType.Timeline => _agents["timeline"],
-        _ => _agents["general"]
-    };
-}
-
-// Create specialized agents
-public interface ISpecializedAgent
-{
-    Task<TaskResult> ExecuteAsync(InvestigationTask task);
-}
-
-public class RagAgent : ISpecializedAgent
-{
-    public async Task<TaskResult> ExecuteAsync(InvestigationTask task)
-    {
-        // Specialized RAG processing
-    }
-}
+// Query exists and compiles:
+await _mediator.Send(new SearchDocumentsQuery { Query = "evidence" });
+// TODO: Connect to real Qdrant instance
 ```
 
-#### **2.2 MCP Server Integration**
+## 📋 Next Implementation Priorities
+
+### Sprint 1: WSL2 & Docker (Week 1)
+**Goal**: Get WSL2 running with all required services
+
+1. **Implement `WslManager.IsWslEnabled()`**
+   - Check Windows features
+   - Verify WSL2 installation
+   - Return accurate status
+
+2. **Implement `WslManager.EnableWsl()`**
+   - Enable required Windows features
+   - Install WSL2 kernel update
+   - Set WSL2 as default
+
+3. **Implement Docker container management**
+   - Start Qdrant container
+   - Start embedding service
+   - Start Ollama service
+   - Verify health endpoints
+
+**Test Command**:
 ```csharp
-// McpServerManager.cs
-public class McpServerManager
-{
-    private readonly Dictionary<string, IMcpServer> _servers = new();
-    
-    public async Task RegisterServerAsync(string name, string endpoint)
-    {
-        var server = new McpServerClient(endpoint);
-        await server.ConnectAsync();
-        _servers[name] = server;
-    }
-    
-    public async Task<object> CallToolAsync(string server, string tool, object parameters)
-    {
-        return await _servers[server].InvokeToolAsync(tool, parameters);
-    }
-}
+var result = await _mediator.Send(new EnsureWslCommand());
+// Should return Unit.Value on success
 ```
 
-### **PHASE 3: Complete Audit & Visualization (Week 3)**
+### Sprint 2: Model Management (Week 2)
+**Goal**: Load and run actual AI models
 
-#### **3.1 Centralized Audit System**
+1. **Implement ONNX model loading**
+   - Download models from Hugging Face
+   - Load into ONNX Runtime
+   - Implement DirectML/ROCm execution
+
+2. **Implement Ollama integration**
+   - Connect to Ollama API
+   - Pull models (llama3.1, mistral, etc.)
+   - Implement streaming inference
+
+3. **Add model caching**
+   - Local model storage
+   - Version management
+   - Automatic updates
+
+**Test Command**:
 ```csharp
-// AuditService.cs
-public class AuditService : IAuditService
+var handle = await _mediator.Send(new LoadModelCommand 
 {
-    private readonly IDbContext _db;
-    
-    public async Task LogInteractionAsync(AuditEntry entry)
-    {
-        entry.Timestamp = DateTime.UtcNow;
-        entry.SessionId = GetCurrentSessionId();
-        entry.UserId = GetCurrentUserId();
-        entry.Hash = ComputeHash(entry);
-        
-        await _db.AuditLogs.AddAsync(entry);
-        await _db.SaveChangesAsync();
-    }
-    
-    public async Task<AuditTrail> GetAuditTrailAsync(string sessionId)
-    {
-        return await _db.AuditLogs
-            .Where(a => a.SessionId == sessionId)
-            .OrderBy(a => a.Timestamp)
-            .ToListAsync();
-    }
-}
-
-// Add audit interceptor to all services
-public class AuditInterceptor : IInterceptor
-{
-    public async Task<T> InterceptAsync<T>(Func<Task<T>> method, string action)
-    {
-        var entry = new AuditEntry { Action = action };
-        var result = await method();
-        entry.Result = JsonSerializer.Serialize(result);
-        await _auditService.LogInteractionAsync(entry);
-        return result;
-    }
-}
+    ModelId = "llama3.1:70b",
+    Provider = "Ollama"
+});
+// Should return ModelHandle with valid session
 ```
 
-#### **3.2 Rich Visualization Implementation**
+### Sprint 3: RAG Implementation (Week 3)
+**Goal**: Full document search with citations
+
+1. **Implement document ingestion**
+   - PDF/DOCX parsing
+   - Text chunking strategies
+   - Metadata extraction
+
+2. **Connect Qdrant vector store**
+   - Create collections
+   - Generate embeddings
+   - Store with metadata
+
+3. **Implement semantic search**
+   - Query embedding generation
+   - Vector similarity search
+   - Result reranking
+
+**Test Query**:
 ```csharp
-// VisualizationService.cs
-public class VisualizationService : IVisualizationService
+var results = await _mediator.Send(new SearchDocumentsQuery 
 {
-    public ResponseVisualization DetermineVisualization(object data)
-    {
-        return data switch
-        {
-            Timeline t => new ResponseVisualization 
-            { 
-                Type = VisualizationType.Timeline,
-                Data = t,
-                Options = new() { ["interactive"] = true }
-            },
-            
-            EntityGraph g => new ResponseVisualization
-            {
-                Type = VisualizationType.Graph,
-                Data = g,
-                GraphType = "force-directed"
-            },
-            
-            GeoData geo => new ResponseVisualization
-            {
-                Type = VisualizationType.Map,
-                Data = geo,
-                MapType = "heatmap"
-            },
-            
-            _ => new ResponseVisualization { Type = VisualizationType.Auto }
-        };
-    }
-}
+    Query = "financial transactions",
+    TopK = 10
+});
+// Should return relevant documents with citations
 ```
 
-### **PHASE 4: Template Integration (Week 4)**
+### Sprint 4: Multi-Modal Pipeline (Week 4)
+**Goal**: Audio/Image analysis working
 
-#### **4.1 Connect Templates to UI**
-```razor
-<!-- ModelTemplateSelector.razor -->
-<div class="template-selector">
-    <h3>Investigation Template</h3>
-    
-    @foreach (var template in Templates)
-    {
-        <TemplateCard Template="@template" 
-                     OnSelect="@(() => ApplyTemplate(template))" />
-    }
-    
-    <button @onclick="CreateCustomTemplate">
-        <i class="fas fa-plus"></i> Create Custom
-    </button>
-</div>
+1. **Whisper integration**
+   - Audio file processing
+   - Transcription with timestamps
+   - Language detection
 
-@code {
-    private async Task ApplyTemplate(ModelConfigurationTemplate template)
-    {
-        // Load all models from template
-        await ModelService.LoadModelsFromTemplateAsync(template.Id);
-        
-        // Configure pipeline
-        await ConfigurePipeline(template.Pipeline);
-        
-        // Enable tools
-        await EnableTools(template.Tools);
-    }
-}
-```
+2. **CLIP integration**
+   - Image embedding generation
+   - Visual similarity search
+   - Object detection
 
-#### **4.2 Template Builder UI**
-```razor
-<!-- TemplateBuilder.razor -->
-<div class="template-builder">
-    <div class="model-slots">
-        <ModelSlot Capability="Text" 
-                   @bind-Model="Template.Models["text"]" />
-        <ModelSlot Capability="Vision" 
-                   @bind-Model="Template.Models["vision"]" />
-        <ModelSlot Capability="Audio" 
-                   @bind-Model="Template.Models["audio"]" />
-        <ModelSlot Capability="Embedding" 
-                   @bind-Model="Template.Models["embedder"]" />
-    </div>
-    
-    <PipelineConfigurator @bind-Config="Template.Pipeline" />
-    
-    <button @onclick="SaveTemplate">Save Template</button>
-</div>
-```
+3. **Pipeline orchestration**
+   - Multi-modal queries
+   - Cross-modal search
+   - Result fusion
 
-### **PHASE 5: Database & Persistence (Week 5)**
+## 🧪 Testing Strategy
 
-#### **5.1 Implement Proper Data Layer**
+### Unit Tests (using Mediator)
 ```csharp
-// Add EF Core Context
-public class IIMDbContext : DbContext
+[Fact]
+public async Task Should_Load_Model_Successfully()
 {
-    public DbSet<Case> Cases { get; set; }
-    public DbSet<InvestigationSession> Sessions { get; set; }
-    public DbSet<InvestigationMessage> Messages { get; set; }
-    public DbSet<AuditLog> AuditLogs { get; set; }
-    public DbSet<ModelConfiguration> ModelConfigs { get; set; }
-    public DbSet<ModelConfigurationTemplate> Templates { get; set; }
-}
-
-// Migrate from in-memory to database
-public class InvestigationService : IInvestigationService
-{
-    private readonly IIMDbContext _db;
+    // Arrange
+    var mediator = new ServiceCollection()
+        .AddSimpleMediator()
+        .AddLogging()
+        .BuildServiceProvider()
+        .GetRequiredService<IMediator>();
     
-    public async Task<InvestigationSession> CreateSessionAsync(CreateSessionRequest request)
+    // Act
+    var result = await mediator.Send(new LoadModelCommand 
     {
-        var session = new InvestigationSession { /* ... */ };
-        _db.Sessions.Add(session);
-        await _db.SaveChangesAsync();
-        return session;
+        ModelId = "test-model"
+    });
+    
+    // Assert
+    result.Should().NotBeNull();
+    result.ModelId.Should().Be("test-model");
+}
+```
+
+### Integration Tests
+```csharp
+[Fact]
+[Trait("Category", "Integration")]
+public async Task Full_Investigation_Workflow()
+{
+    // Initialize system
+    await _mediator.Send(new EnsureWslCommand());
+    
+    // Load models
+    await _mediator.Send(new LoadModelCommand { ModelId = "llama3.1" });
+    
+    // Create session
+    var session = await _mediator.Send(new CreateSessionCommand 
+    {
+        CaseId = "test-case"
+    });
+    
+    // Process query
+    var response = await _mediator.Send(new ProcessInvestigationCommand 
+    {
+        SessionId = session.Id,
+        Query = "Analyze evidence"
+    });
+    
+    response.Should().NotBeNull();
+}
+```
+
+## 🔧 Development Workflow
+
+### Adding New Features (Post-Mediator)
+
+1. **Define Command/Query**
+```csharp
+public class YourCommand : IRequest<YourResponse>
+{
+    // Properties
+}
+```
+
+2. **Create Handler**
+```csharp
+public class YourCommandHandler : IRequestHandler<YourCommand, YourResponse>
+{
+    public async Task<YourResponse> Handle(YourCommand request, CancellationToken ct)
+    {
+        // Implementation
     }
 }
 ```
 
----
-
-## **Critical Path Actions (Immediate)**
-
-### **Week 1 Priority:**
-1. **Fix WSL Management**
-   - Add automatic setup wizard
-   - Implement health monitoring UI
-   - Add service auto-recovery
-
-2. **Replace Mock Services**
-   - Implement real `ModelOrchestrator`
-   - Create `ModelDownloader` service
-   - Add USB detection service
-
-### **Week 2 Priority:**
-3. **Build Reasoning Engine**
-   - Create task decomposition system
-   - Implement agent routing
-   - Add result synthesis
-
-4. **Complete Audit System**
-   - Create centralized `AuditService`
-   - Add database persistence
-   - Implement audit interceptors
-
-### **Week 3 Priority:**
-5. **Template Integration**
-   - Connect templates to UI
-   - Build template creation workflow
-   - Add template marketplace
-
-6. **Rich Visualizations**
-   - Implement all visualization types
-   - Create interactive components
-   - Add export capabilities
-
----
-
-## **Architecture Refactoring Required**
-
-### **Service Consolidation:**
+3. **Use via Mediator**
 ```csharp
-// Before: Scattered
-IInferenceService + IInferencePipeline + IModelOrchestrator
+var result = await _mediator.Send(new YourCommand());
+```
 
-// After: Unified
-IIntelligenceEngine
+## 🎯 Success Metrics
+
+The platform will be production-ready when:
+- ✅ Mediator pattern fully integrated (DONE)
+- ⏳ WSL2 and Docker containers auto-start
+- ⏳ At least 3 AI models load and run
+- ⏳ Document ingestion and RAG search functional
+- ⏳ Multi-modal analysis operational
+- ⏳ All mock implementations replaced with real ones
+- ⏳ Test coverage > 80% for critical paths
+- ⏳ Performance: <3s model load, <500ms inference
+
+## 💡 Key Architectural Decisions
+
+1. **Mediator Pattern**: Provides consistent handling of all operations with automatic logging, validation, and caching
+2. **CQRS Separation**: Commands modify state, Queries read state - clear separation of concerns
+3. **Pipeline Behaviors**: Cross-cutting concerns handled in one place
+4. **Event-Driven**: Notifications allow decoupled components to react to events
+
+## 🚀 Quick Start for New Developers
+
+```csharp
+// 1. Initialize the system
+await _mediator.Send(new EnsureWslCommand());
+
+// 2. Load a model
+await _mediator.Send(new LoadModelCommand 
+{ 
+    ModelId = "llama3.1:70b" 
+});
+
+// 3. Process a query
+var response = await _mediator.Send(new ProcessInvestigationCommand 
 {
-    IModelManager Models { get; }
-    IReasoningOrchestrator Reasoning { get; }
-    IRagPipeline Rag { get; }
-    IToolExecutor Tools { get; }
-}
+    SessionId = sessionId,
+    Query = "Your investigation query"
+});
 ```
 
-### **New Service Structure:**
-```
-IIM.Core/
-├── Intelligence/
-│   ├── IIntelligenceEngine.cs
-│   ├── ReasoningOrchestrator.cs
-│   ├── Agents/
-│   │   ├── LlmAgent.cs
-│   │   ├── RagAgent.cs
-│   │   ├── VisionAgent.cs
-│   │   └── AudioAgent.cs
-│   └── TaskDecomposer.cs
-├── Models/
-│   ├── ModelManager.cs (renamed from Orchestrator)
-│   ├── ModelRepository.cs
-│   ├── UsbModelLoader.cs
-│   └── ModelDownloader.cs
-├── Audit/
-│   ├── AuditService.cs
-│   ├── AuditInterceptor.cs
-│   └── ChainOfCustody.cs
-└── Visualization/
-    ├── VisualizationService.cs
-    ├── Renderers/
-    └── Exporters/
-```
+## 📝 Notes
 
-This plan addresses all 8 core features with clear implementation paths, prioritizes critical infrastructure first, and provides a realistic 5-week timeline to achieve full functionality.
+- All operations now go through the mediator for consistency
+- Pipeline behaviors ensure enterprise-grade features on every operation
+- Mock implementations remain for development without WSL/Docker
+- Focus is now on implementing the actual service logic behind the commands
