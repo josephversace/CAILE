@@ -38,7 +38,7 @@
     <PackageReference Include="Polly" Version="8.5.0" />
     
     <!-- Assertions -->
-    <PackageReference Include="FluentAssertions" Version="6.12.2" />
+    <PackageReference Include="FluentAssertions" Version="8.6.0" />
     <PackageReference Include="FluentAssertions.Web" Version="1.2.5" />
     <PackageReference Include="Shouldly" Version="4.2.1" />
     
@@ -63,6 +63,7 @@
     <ProjectReference Include="..\..\src\IIM.Api\IIM.Api.csproj" />
     <ProjectReference Include="..\..\src\IIM.Shared\IIM.Shared.csproj" />
     <ProjectReference Include="..\..\src\IIM.Components\IIM.Components.csproj" />
+    <ProjectReference Include="..\IIM.Core.Tests\IIM.Core.Tests.csproj" />
 
   </ItemGroup>
 
