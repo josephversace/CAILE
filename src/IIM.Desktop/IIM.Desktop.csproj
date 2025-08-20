@@ -62,6 +62,10 @@
     <!-- Additional UI Support -->
     <PackageReference Include="System.Drawing.Common" Version="8.0.*" />
     <PackageReference Include="System.Windows.Extensions" Version="8.0.*" />
+
+    <!-- Mediator Support -->
+    <PackageReference Include="Polly" Version="8.5.0" />
+
   </ItemGroup>
 
   <ItemGroup>
