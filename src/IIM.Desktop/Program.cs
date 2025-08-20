@@ -1,9 +1,17 @@
+using DocumentFormat.OpenXml.Drawing.Charts;
+using IIM.Application.Behaviors;
+using IIM.Application.Commands.Investigation;
+using IIM.Application.Commands.Models;
+using IIM.Application.Commands.Wsl;
+using IIM.Application.Handlers;
 using IIM.Application.Interfaces;
+using IIM.Application.Queries;
 using IIM.Application.Services;
 using IIM.Components.Services;
 using IIM.Core.AI;
 using IIM.Core.Configuration;
 using IIM.Core.Inference;
+using IIM.Core.Mediator;
 using IIM.Core.Models;
 using IIM.Core.RAG;
 using IIM.Core.Security;
@@ -14,6 +22,7 @@ using IIM.Infrastructure.Platform;
 using IIM.Infrastructure.Storage;
 using IIM.Shared.Models;
 using Microsoft.AspNetCore.Components.WebView.WindowsForms;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -21,6 +30,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Windows.Forms;
+
 
 namespace IIM.Desktop;
 
@@ -217,6 +227,55 @@ internal static class Program
 
                 services.AddScoped<IEvidenceManager, EvidenceManager>();
                 services.AddScoped<ICaseManager, JsonCaseManager>();
+
+
+                // ========================================
+                // Mediator Services
+                // ========================================
+
+            // Add the mediator with assembly scanning
+services.AddSimpleMediator(
+    typeof(Program).Assembly,                          // Desktop assembly
+    typeof(EnsureWslCommand).Assembly,                 // Application assembly (where commands are)
+    typeof(IInvestigationService).Assembly,            // Core assembly
+    typeof(IModelOrchestrator).Assembly                // Core assembly
+);
+
+                // Add memory cache for caching behavior (if not already added)
+                services.AddMemoryCache(options =>
+                {
+                    options.SizeLimit = 100_000_000; // 100MB cache limit
+                    options.CompactionPercentage = 0.25;
+                    options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
+                });
+
+                // Register ALL pipeline behaviors in order (they execute in registration order)
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));       // 1. Logging
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));    // 2. Validation
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));   // 3. Performance monitoring
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));       // 4. Caching for queries
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RetryBehavior<,>));         // 5. Retry logic
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));   // 6. Transactions
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));         // 7. Audit logging
+
+                // Register notification handlers for WSL events
+                services.AddTransient<INotificationHandler<WslSetupCompletedNotification>, WslSetupCompletedHandler>();
+                services.AddTransient<INotificationHandler<WslSetupFailedNotification>, WslSetupFailedHandler>();
+                services.AddTransient<INotificationHandler<WslFeatureEnabledNotification>, WslFeatureEnabledHandler>();
+                services.AddTransient<INotificationHandler<WslDistroInstalledNotification>, WslDistroInstalledHandler>();
+
+                // Register notification handlers for Model events
+                services.AddTransient<INotificationHandler<ModelLoadedNotification>, ModelLoadedNotificationHandler>();
+                services.AddTransient<INotificationHandler<ModelLoadedNotification>, ModelLoadedAuditHandler>(); // Same event, different handler
+                services.AddTransient<INotificationHandler<ModelLoadFailedNotification>, ModelLoadFailedHandler>();
+                services.AddTransient<INotificationHandler<ModelUnloadedNotification>, ModelUnloadedHandler>();
+
+                // Register notification handlers for Investigation events
+                services.AddTransient<INotificationHandler<InvestigationQueryStartedNotification>, InvestigationQueryStartedHandler>();
+                services.AddTransient<INotificationHandler<InvestigationQueryCompletedNotification>, InvestigationQueryCompletedHandler>();
+                services.AddTransient<INotificationHandler<InvestigationQueryFailedNotification>, InvestigationQueryFailedHandler>();
+                services.AddTransient<INotificationHandler<SessionCreatedNotification>, SessionCreatedHandler>();
+
 
                 // ========================================
                 // Storage Services

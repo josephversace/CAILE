@@ -17,7 +17,7 @@ namespace IIM.Core.AI
     /// Real implementation of IModelOrchestrator
     /// This is a minimal working implementation to replace the mock
     /// </summary>
-    public class ModelOrchestrator : IModelOrchestrator
+    public class ModelOrchestrator : IModelOrchestrator, IDisposable
     {
         private readonly ILogger<ModelOrchestrator> _logger;
         private readonly Dictionary<string, ModelHandle> _loadedModels = new();
@@ -519,6 +519,12 @@ namespace IIM.Core.AI
             // Return a default path based on model ID
             return Path.Combine(_modelsPath, modelId);
         }
+
+        public void Dispose()
+        {
+            _loadLock?.Dispose();
+        }
+
 
     }
 }

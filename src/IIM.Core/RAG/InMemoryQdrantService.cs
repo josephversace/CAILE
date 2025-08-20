@@ -19,7 +19,7 @@ namespace IIM.Core.RAG
     /// In-memory implementation of IQdrantService for development and testing
     /// Provides functional vector storage without external dependencies
     /// </summary>
-    public class InMemoryQdrantService : IQdrantService
+    public class InMemoryQdrantService : IQdrantService, IDisposable
     {
         private readonly ILogger<InMemoryQdrantService> _logger;
         private readonly StorageConfiguration _config;
@@ -498,5 +498,7 @@ namespace IIM.Core.RAG
                 }
             }
         }
+
+        public void Dispose() => _semaphore?.Dispose();
     }
 }
