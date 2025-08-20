@@ -1,0 +1,57 @@
+﻿@page "/proxy-setup"
+@using IIM.Application.Commands.Wsl
+@using IIM.Core.Mediator
+@inject IMediator Mediator
+
+<h4>Proxy & Tor Setup</h4>
+
+<!-- Proxy type select -->
+<select @bind="ProxyType" class="form-select">
+    <option value="socks5h">SOCKS5 (Tor, recommended)</option>
+    <option value="http">HTTP</option>
+</select>
+
+<!-- Proxy host input -->
+<input class="form-control mt-2" @bind="ProxyHost" />
+
+<!-- Proxy port input -->
+<input class="form-control mt-2" @bind="ProxyPort" />
+
+<!-- Trigger setup -->
+<button class="btn btn-primary mt-2" @onclick="ConfigureProxy">Apply</button>
+
+@if (!string.IsNullOrEmpty(StatusMessage))
+{
+    <div class="alert alert-info mt-2">@StatusMessage</div>
+}
+
+@code {
+    // Bound properties for user input
+    string ProxyType { get; set; } = "socks5h";
+    string ProxyHost { get; set; } = "127.0.0.1";
+    int ProxyPort { get; set; } = 9050;
+    string StatusMessage { get; set; }
+
+    /// <summary>
+    /// Called on Apply click. Sends proxy config command via Mediator.
+    /// </summary>
+    async Task ConfigureProxy()
+    {
+        var dto = new ProxyConfigDto
+        {
+            ProxyType = ProxyType,
+            Host = ProxyHost,
+            Port = ProxyPort
+        };
+        try
+        {
+            // Send command to backend
+            await Mediator.Send(new ConfigureProxyCommand(dto));
+            StatusMessage = "Proxy configured and Tor installation triggered.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Error: " + ex.Message;
+        }
+    }
+}
