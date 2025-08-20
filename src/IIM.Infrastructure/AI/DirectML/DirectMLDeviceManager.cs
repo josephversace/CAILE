@@ -5,16 +5,18 @@
 // Created: 2024
 // ============================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using IIM.Shared.Enums;  // Only use Shared - it has no dependencies
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Management;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using Vortice.DirectML;
 
 namespace IIM.Infrastructure.AI.DirectML
 {
@@ -223,6 +225,7 @@ namespace IIM.Infrastructure.AI.DirectML
         /// </summary>
         public async Task<DeviceCapabilities> GetCapabilitiesAsync(int deviceId)
         {
+            //Todo change for production
             return await Task.Run(() =>
             {
                 _logger.LogInformation("Getting capabilities for device {DeviceId}", deviceId);
@@ -374,6 +377,42 @@ namespace IIM.Infrastructure.AI.DirectML
                 ComputeUnits = 96,
                 DriverVersion = "23.11.1"
             };
+
+            //Todo change in production
+
+            //var query = "SELECT * FROM Win32_VideoController";
+            //using (var searcher = new ManagementObjectSearcher(query))
+            //{
+            //    int currentId = 0;
+            //    foreach (ManagementObject mo in searcher.Get())
+            //    {
+            //        if (currentId == deviceId)
+            //        {
+            //            string name = mo["Name"]?.ToString() ?? "Unknown";
+            //            string vendor = mo["AdapterCompatibility"]?.ToString() ?? "Unknown";
+            //            string driverVersion = mo["DriverVersion"]?.ToString() ?? "Unknown";
+            //            long? dedicatedMemory = mo["AdapterRAM"] as long?;
+            //            // Shared memory not always available from WMI; default to 0 or use another source if needed
+            //            long sharedMemory = 0;
+
+            //            return new DirectMLDevice
+            //            {
+            //                DeviceId = deviceId,
+            //                Name = name,
+            //                Vendor = vendor,
+            //                DedicatedMemory = dedicatedMemory ?? 0,
+            //                SharedMemory = sharedMemory,
+            //                IsDefault = deviceId == 0,
+            //                DeviceType = "GPU",
+            //                ComputeUnits = 0, // WMI does not provide this; you'd need DirectX for actual CU count
+            //                DriverVersion = driverVersion
+            //            };
+            //        }
+            //        currentId++;
+            //    }
+            //}
+            //throw new ArgumentOutOfRangeException(nameof(deviceId), $"GPU with id {deviceId} not found.");
+
         }
 
         private SessionOptions CreateSessionOptions(int deviceId)
@@ -439,6 +478,53 @@ namespace IIM.Infrastructure.AI.DirectML
             }
 
             return devices;
+
+            //Todo change in production
+            //var devices = new List<DirectMLDevice>();
+            //var query = "SELECT * FROM Win32_VideoController";
+
+            //try
+            //{
+            //    using (var searcher = new ManagementObjectSearcher(query))
+            //    {
+            //        int deviceIndex = 0;
+            //        foreach (ManagementObject mo in searcher.Get())
+            //        {
+            //            var vendor = mo["AdapterCompatibility"]?.ToString() ?? string.Empty;
+            //            // Filter for AMD only (case-insensitive, handles various naming)
+            //            if (!vendor.ToLower().Contains("amd") && !vendor.ToLower().Contains("advanced micro devices"))
+            //                continue;
+
+            //            var name = mo["Name"]?.ToString() ?? "Unknown";
+            //            var driverVersion = mo["DriverVersion"]?.ToString() ?? "Unknown";
+            //            long dedicatedMemory = mo["AdapterRAM"] as long? ?? 0;
+
+            //            devices.Add(new DirectMLDevice
+            //            {
+            //                DeviceId = deviceIndex,
+            //                Name = name,
+            //                Vendor = vendor,
+            //                DeviceType = "GPU",
+            //                DedicatedMemory = dedicatedMemory,
+            //                SharedMemory = 0, // Not easily available via WMI
+            //                ComputeUnits = 0, // Not available via WMI
+            //                IsDefault = deviceIndex == 0,
+            //                DriverVersion = driverVersion
+            //            });
+
+            //            deviceIndex++;
+            //        }
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    _logger?.LogError(ex, "Error while enumerating AMD GPU devices.");
+            //}
+
+            //if (devices.Count == 0)
+            //    _logger?.LogWarning("No AMD devices found!");
+
+            //return devices;
         }
 
         private List<DirectMLDevice> EnumerateOtherDevices()
@@ -466,16 +552,93 @@ namespace IIM.Infrastructure.AI.DirectML
             }
 
             return devices;
+
+            //Todo change in production
+            //var devices = new List<DirectMLDevice>();
+            //var query = "SELECT * FROM Win32_VideoController";
+
+            //try
+            //{
+            //    using (var searcher = new ManagementObjectSearcher(query))
+            //    {
+            //        int deviceIndex = 0;
+            //        foreach (ManagementObject mo in searcher.Get())
+            //        {
+            //            var vendor = mo["AdapterCompatibility"]?.ToString() ?? string.Empty;
+            //            // Filter for NON-AMD devices (e.g., Intel, NVIDIA, Microsoft Basic)
+            //            if (vendor.ToLower().Contains("amd") || vendor.ToLower().Contains("advanced micro devices"))
+            //                continue;
+
+            //            var name = mo["Name"]?.ToString() ?? "Unknown";
+            //            var driverVersion = mo["DriverVersion"]?.ToString() ?? "Unknown";
+            //            long dedicatedMemory = mo["AdapterRAM"] as long? ?? 0;
+
+            //            devices.Add(new DirectMLDevice
+            //            {
+            //                DeviceId = deviceIndex,
+            //                Name = name,
+            //                Vendor = vendor,
+            //                DeviceType = "GPU", // WMI cannot reliably tell integrated vs discrete, but you can parse 'Name' if needed
+            //                DedicatedMemory = dedicatedMemory,
+            //                SharedMemory = 0, // Not available via WMI
+            //                ComputeUnits = 0, // Not available via WMI
+            //                DriverVersion = driverVersion,
+            //                IsDefault = deviceIndex == 0
+            //            });
+
+            //            deviceIndex++;
+            //        }
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    _logger?.LogError(ex, "Error while enumerating non-AMD GPU devices.");
+            //}
+
+            //if (devices.Count == 0)
+            //    _logger?.LogWarning("No non-AMD GPU devices found!");
+
+            //return devices;
         }
 
-        private DirectMLFeatureLevel GetFeatureLevel()
-        {
-            // Check DirectML version and return appropriate feature level
-            // For Windows 11, typically 4.1 or 5.0
-            return DirectMLFeatureLevel.Level_4_1;
-        }
 
-        private List<string> GetSupportedOperators()
+
+private DirectMLFeatureLevel GetFeatureLevel()
+    {
+    //    // Try highest to lowest
+    //    var levels = new[]
+    //    {
+    //    DirectMLFeatureLevel.Level_5_0,
+    //    DirectMLFeatureLevel.Level_4_1,
+    //    DirectMLFeatureLevel.Level_4_0,
+    //    DirectMLFeatureLevel.Level_3_0
+    //};
+
+    //    foreach (var level in levels)
+    //    {
+    //        try
+    //        {
+    //            using var device = DML.DMLCreateDevice(
+    //                d3d12Device: null,
+    //                CreateDeviceFlags.None,
+    //                minimumFeatureLevel: level
+    //            );
+    //            if (device != null)
+    //                return level;
+    //        }
+    //        catch
+    //        {
+    //            // Ignore and try lower level
+    //        }
+    //    }
+
+       throw new InvalidOperationException("No supported DirectML feature level found.");
+    }
+
+
+
+
+    private List<string> GetSupportedOperators()
         {
             // Return list of ONNX operators supported by DirectML
             return new List<string>

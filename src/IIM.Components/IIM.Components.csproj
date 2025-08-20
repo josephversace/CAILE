@@ -36,7 +36,7 @@
     <PackageReference Include="Microsoft.JSInterop" Version="8.0.*" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.19.2" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.19.2" />
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.9.*" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.63.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="PdfPig" Version="0.1.9" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
