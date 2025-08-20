@@ -62,7 +62,12 @@ public class BatchResult<T>
     public List<T> Results { get; set; } = new();
     public List<int> FailedIndices { get; set; } = new();
     public TimeSpan TotalTime { get; set; }
-    public Dictionary<int, string> Errors { get; set; } = new();
+    public Dictionary<int, Exception> Errors { get; set; } = new();
+
+    // ADD THESE PROPERTIES
+    public int TotalRequests { get; set; }
+    public int SuccessCount { get; set; }
+    public int FailureCount { get; set; }
 }
 
 public class OrchestratorStats

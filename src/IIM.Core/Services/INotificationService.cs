@@ -36,6 +36,9 @@ namespace IIM.Core.Services
         Task UnsubscribeFromTopicAsync(string topic, CancellationToken cancellationToken = default);
         Task<List<string>> GetSubscribedTopicsAsync(CancellationToken cancellationToken = default);
 
+        Task SendNotificationAsync(string title, string message, NotificationType type, CancellationToken cancellationToken = default);
+
+
         // Events
         event EventHandler<NotificationReceivedEventArgs>? NotificationReceived;
         event EventHandler<NotificationReadEventArgs>? NotificationRead;
