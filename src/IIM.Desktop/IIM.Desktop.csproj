@@ -50,9 +50,12 @@
     <!-- AI/ML Packages -->
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.19.2" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.19.2" />
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.9.*" />
+  
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2849.39" />
-    <PackageReference Include="System.Numerics.Tensors" Version="8.0.*" />
+    <!-- Update these lines -->
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.63.0" />
+    <PackageReference Include="System.Numerics.Tensors" Version="9.0.8" />
+    <!-- Instead of lower versions -->
     
     <!-- Database and Storage -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.*" />

@@ -10,6 +10,7 @@ using IIM.Application.Services;
 using IIM.Components.Services;
 using IIM.Core.AI;
 using IIM.Core.Configuration;
+using IIM.Core.Extensions; // ADD THIS for SK extensions
 using IIM.Core.Inference;
 using IIM.Core.Mediator;
 using IIM.Core.Models;
@@ -27,10 +28,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.SemanticKernel; // ADD THIS
 using System;
 using System.IO;
 using System.Windows.Forms;
-
 
 namespace IIM.Desktop;
 
@@ -179,7 +180,7 @@ internal static class Program
                 // Platform Services (WSL, Docker, etc.)
                 // ========================================
 
-                // WSL Manager - Fixed with IHttpClientFactory
+                // WSL Manager - KEEP AS-IS
                 services.AddSingleton<IWslManager>(sp =>
                 {
                     var logger = sp.GetRequiredService<ILogger<WslManager>>();
@@ -188,23 +189,46 @@ internal static class Program
                 });
 
                 // ========================================
-                // AI/ML Services
+                // AI/ML Services - UPDATED WITH SEMANTIC KERNEL
                 // ========================================
 
-                // Model Orchestrator - TODO: Replace with real implementation
+                // OPTION 1: Use Semantic Kernel as primary orchestrator
+                // Uncomment this block to use SK:
+                /*
+                services.AddSemanticKernelOrchestration();
+                services.AddInvestigationPlugins();
+                */
+
+                // OPTION 2: Keep existing orchestrator for now
+                // Comment this out when switching to SK:
                 services.AddSingleton<IModelOrchestrator, ModelOrchestrator>();
 
-                // Inference Pipeline
+                // These services work with either orchestrator:
                 services.AddSingleton<IInferencePipeline, InferencePipeline>();
-
-                // Model Management Service
                 services.AddSingleton<IModelManagementService, ModelManagementService>();
-
-                // Inference Service
                 services.AddSingleton<IInferenceService, InferenceService>();
 
                 // ========================================
-                // RAG & Vector Services
+                // Template Service - Required for SK
+                // ========================================
+
+                // Register template service (works with both orchestrators)
+                services.AddSingleton<IModelConfigurationTemplateService>(sp =>
+                {
+                    var logger = sp.GetRequiredService<ILogger<ModelConfigurationTemplateService>>();
+                    var storageConfig = sp.GetRequiredService<StorageConfiguration>();
+                    var orchestrator = sp.GetRequiredService<IModelOrchestrator>();
+                    var sessionService = sp.GetRequiredService<ISessionService>();
+
+                    return new ModelConfigurationTemplateService(
+                        logger,
+                        storageConfig,
+                        orchestrator,
+                        sessionService);
+                });
+
+                // ========================================
+                // RAG & Vector Services - UNCHANGED
                 // ========================================
 
                 // Qdrant service (in-memory for now, replace with real implementation)
@@ -216,30 +240,36 @@ internal static class Program
                 });
 
                 // ========================================
-                // Investigation Services
+                // Investigation Services - UNCHANGED
                 // ========================================
 
                 // Core investigation services
                 services.AddScoped<IInvestigationService, InvestigationService>();
-                services.AddScoped<ISessionService, SessionService>();  
-                
-                services.AddScoped<IModelConfigurationTemplateService , ModelConfigurationTemplateService>();
-
+                services.AddScoped<ISessionService, SessionService>();
                 services.AddScoped<IEvidenceManager, EvidenceManager>();
                 services.AddScoped<ICaseManager, JsonCaseManager>();
 
+                // ========================================
+                // Export Services - Added FileService
+                // ========================================
+
+                // Add FileService (needed by plugins)
+                services.AddSingleton<IFileService, FileService>();
+
+                // Register export services with base path
+                services.AddExportServices(GetDataDirectory());
 
                 // ========================================
-                // Mediator Services
+                // Mediator Services - UNCHANGED
                 // ========================================
 
-            // Add the mediator with assembly scanning
-services.AddSimpleMediator(
-    typeof(Program).Assembly,                          // Desktop assembly
-    typeof(EnsureWslCommand).Assembly,                 // Application assembly (where commands are)
-    typeof(IInvestigationService).Assembly,            // Core assembly
-    typeof(IModelOrchestrator).Assembly                // Core assembly
-);
+                // Add the mediator with assembly scanning
+                services.AddSimpleMediator(
+                    typeof(Program).Assembly,                          // Desktop assembly
+                    typeof(EnsureWslCommand).Assembly,                 // Application assembly (where commands are)
+                    typeof(IInvestigationService).Assembly,            // Core assembly
+                    typeof(IModelOrchestrator).Assembly                // Core assembly
+                );
 
                 // Add memory cache for caching behavior (if not already added)
                 services.AddMemoryCache(options =>
@@ -276,9 +306,8 @@ services.AddSimpleMediator(
                 services.AddTransient<INotificationHandler<InvestigationQueryFailedNotification>, InvestigationQueryFailedHandler>();
                 services.AddTransient<INotificationHandler<SessionCreatedNotification>, SessionCreatedHandler>();
 
-
                 // ========================================
-                // Storage Services
+                // Storage Services - UNCHANGED
                 // ========================================
 
                 // Deduplication service
@@ -288,14 +317,7 @@ services.AddSimpleMediator(
                 services.AddSingleton<IMinIOStorageService, MinIOStorageService>();
 
                 // ========================================
-                // Export Services
-                // ========================================
-
-                // Register export services with base path
-                services.AddExportServices(GetDataDirectory());
-
-                // ========================================
-                // UI Services
+                // UI Services - UNCHANGED
                 // ========================================
 
                 // Desktop-specific UI services
@@ -306,7 +328,7 @@ services.AddSimpleMediator(
                 services.AddScoped<ModelSizeCalculator>();
 
                 // ========================================
-                // HTTP Clients
+                // HTTP Clients - UNCHANGED
                 // ========================================
 
                 // IIM API Client
@@ -315,6 +337,14 @@ services.AddSimpleMediator(
                     client.BaseAddress = new Uri(configuration["Api:BaseUrl"] ?? "http://localhost:5080");
                     client.DefaultRequestHeaders.Add("Accept", "application/json");
                 });
+
+                // ========================================
+                // Semantic Kernel Plugins (when ready)
+                // ========================================
+
+                // Register plugins when SK is enabled
+                // services.AddSingleton<ForensicAnalysisPlugin>();
+                // Add other plugins as they're created
             })
             .ConfigureLogging((context, logging) =>
             {
