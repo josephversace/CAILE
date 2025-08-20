@@ -1,8 +1,10 @@
-﻿using IIM.Core.Platform;
+﻿using IIM.Infrastructure.Platform;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
 using FluentAssertions;
+using IIM.Infrastructure.Platform.Models;
+using IIM.Core.Tests.Mocks;
 
 namespace IIM.Integration.Tests;
 
