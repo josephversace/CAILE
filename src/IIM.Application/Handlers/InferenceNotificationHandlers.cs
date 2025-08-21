@@ -6,8 +6,9 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using IIM.Shared.Services; // ADD for IAuditLogger
-using IIM.Shared.Enums; // ADD for NotificationType
+using IIM.Shared.Enums;
+using IIM.Shared.Models;
+using IIM.Shared.Interfaces; // ADD for NotificationType
 
 namespace IIM.Application.Handlers
 {

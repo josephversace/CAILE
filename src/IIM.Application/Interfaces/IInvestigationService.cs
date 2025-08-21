@@ -1,10 +1,11 @@
 using IIM.Core.Models;
 using IIM.Shared.DTOs;
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using CreateSessionRequest = IIM.Core.Models.CreateSessionRequest;
+using CreateSessionRequest = IIM.Shared.Models.CreateSessionRequest;
 
 namespace IIM.Application.Interfaces
 {

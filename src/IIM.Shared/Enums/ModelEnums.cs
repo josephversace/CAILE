@@ -9,7 +9,8 @@ public enum ModelType
     OCR,
     ObjectDetection,
     FaceRecognition,
-    Custom
+    Custom,
+    Vision
 }
 
 public enum ModelStatus

@@ -6,6 +6,7 @@
 using IIM.Core.Models;
 using IIM.Core.Security;
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

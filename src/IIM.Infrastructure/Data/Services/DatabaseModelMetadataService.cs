@@ -1,6 +1,7 @@
 ﻿
 using IIM.Infrastructure.Data.Entities;
 using IIM.Shared.Enums;
+using IIM.Shared.Interfaces;
 using IIM.Shared.Models; // Model from Shared
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

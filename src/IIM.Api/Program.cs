@@ -9,12 +9,13 @@ using IIM.Core.Inference;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using IIM.Core.Security;
-using IIM.Core.Models;
+using IIM.Shared.Models;
 using IIM.Core.Services;
 using IIM.Core.AI;
 using InsufficientMemoryException = IIM.Core.Models.InsufficientMemoryException;
 using IIM.Shared.Enums;
 using IIM.Infrastructure.Platform;
+using IIM.Core.Models;
 
 
 var builder = WebApplication.CreateBuilder(args);

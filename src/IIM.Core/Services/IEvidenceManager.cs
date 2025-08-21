@@ -9,12 +9,12 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using IIM.Core.Models;
+using IIM.Shared.Models;
 
 namespace IIM.Core.Services
 {
     /// <summary>
     /// Interface for managing digital evidence with chain of custody.
-
     /// </summary>
     public interface IEvidenceManager
     {

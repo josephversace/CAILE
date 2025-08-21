@@ -14,4 +14,28 @@ namespace IIM.Shared.Enums
         Error,
         Critical
     }
+
+
+    public enum NotificationCategory
+    {
+        System,
+        Investigation,
+        Case,
+        Evidence,
+        Model,
+        Training,
+        Export,
+        Import,
+        Security,
+        Update
+    }
+
+    public enum NotificationPriority
+    {
+        Low,
+        Normal,
+        High,
+        Urgent,
+        Critical
+    }
 }

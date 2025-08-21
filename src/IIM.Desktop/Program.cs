@@ -13,7 +13,7 @@ using IIM.Core.Configuration;
 using IIM.Core.Extensions; // ADD THIS for SK extensions
 using IIM.Core.Inference;
 using IIM.Core.Mediator;
-using IIM.Core.Models;
+using IIM.Shared.Models;
 using IIM.Core.RAG;
 using IIM.Core.Security;
 using IIM.Core.Services;
@@ -21,7 +21,7 @@ using IIM.Core.Services.Configuration;
 using IIM.Core.Storage;
 using IIM.Infrastructure.Platform;
 using IIM.Infrastructure.Storage;
-using IIM.Shared.Models;
+using IIM.Shared.Interfaces;
 using Microsoft.AspNetCore.Components.WebView.WindowsForms;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;

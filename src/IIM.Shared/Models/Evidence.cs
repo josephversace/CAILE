@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace IIM.Core.Models
+namespace IIM.Shared.Models
 {
     /// <summary>
     /// Main Evidence entity - represents a piece of digital evidence
@@ -49,6 +49,16 @@ namespace IIM.Core.Models
         public string Description { get; set; } = string.Empty;
         public Dictionary<string, string> CustomFields { get; set; } = new();
     }
+
+    public class EvidenceContext
+    {
+        public string CaseId { get; set; } = string.Empty;
+        public string UserId { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public string Hash { get; set; } = string.Empty;
+    }
+
 
     /// <summary>
     /// Chain of custody entry - tracks evidence handling
@@ -130,11 +140,10 @@ namespace IIM.Core.Models
         public string ExportedBy { get; set; } = string.Empty;
     }
 
-   
+
 
     // Enums
-    
 
-    
+
+
 }
-
