@@ -203,7 +203,7 @@ namespace IIM.Application.Handlers
 
         public Task Handle(InferenceQueuedNotification notification, CancellationToken ct)
         {
-            _auditLogger.LogAuditEvent(new AuditEvent
+            _auditLogger.LogAudit(new AuditEvent
             {
                 EventType = "InferenceQueued",
                 RequestId = notification.RequestId,
@@ -217,7 +217,7 @@ namespace IIM.Application.Handlers
 
         public Task Handle(InferenceCompletedNotification notification, CancellationToken ct)
         {
-            _auditLogger.LogAuditEvent(new AuditEvent
+           _auditLogger.LogAudit(new AuditEvent
             {
                 EventType = "InferenceCompleted",
                 RequestId = notification.RequestId,
@@ -232,7 +232,7 @@ namespace IIM.Application.Handlers
 
         public Task Handle(InferenceFailedNotification notification, CancellationToken ct)
         {
-            _auditLogger.LogAuditEvent(new AuditEvent
+            _auditLogger.LogAudit(new AuditEvent
             {
                 EventType = "InferenceFailed",
                 RequestId = notification.RequestId,

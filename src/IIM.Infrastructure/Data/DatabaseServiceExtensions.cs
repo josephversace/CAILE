@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using IIM.Infrastructure.Data.Services;
 using IIM.Infrastructure.Storage;
+using IIM.Shared.Interfaces;
 
 namespace IIM.Infrastructure.Data
 {

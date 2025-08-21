@@ -69,12 +69,12 @@
 </div>
 
 @code {
-    [Parameter] public Evidence Evidence { get; set; } = new();
+    [Parameter] public IIM.Shared.Models.Evidence Evidence { get; set; } = new();
     [Parameter] public bool ShowDetails { get; set; } = false;
     [Parameter] public EventCallback OnClick { get; set; }
-    [Parameter] public EventCallback<Evidence> OnView { get; set; }
-    [Parameter] public EventCallback<Evidence> OnAnalyze { get; set; }
-    [Parameter] public EventCallback<Evidence> OnChainOfCustody { get; set; }
+    [Parameter] public EventCallback<IIM.Shared.Models.Evidence> OnView { get; set; }
+    [Parameter] public EventCallback<IIM.Shared.Models.Evidence> OnAnalyze { get; set; }
+    [Parameter] public EventCallback<IIM.Shared.Models.Evidence> OnChainOfCustody { get; set; }
 
     private string GetEvidenceIcon() => Evidence.Type switch
     {
