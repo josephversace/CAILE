@@ -1,5 +1,6 @@
 ﻿using IIM.Core.Mediator;
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
 using System;
 
 namespace IIM.Application.Commands.Models

@@ -1,9 +1,19 @@
-﻿using System;
+﻿using IIM.Shared.Enums;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace IIM.Core.Models
+namespace IIM.Shared.Models
 {
+    /// <summary>
+    /// Marker interface for notifications (one-to-many)
+    /// </summary>
+    public interface INotification
+    {
+    }
+
     public class Notification
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
@@ -62,39 +72,7 @@ namespace IIM.Core.Models
         public Dictionary<string, object>? Parameters { get; set; }
     }
 
-    public enum NotificationType
-    {
-        Info,
-        Success,
-        Warning,
-        Error,
-        Critical
-    }
 
-    public enum NotificationCategory
-    {
-        System,
-        Investigation,
-        Case,
-        Evidence,
-        Model,
-        Training,
-        Export,
-        Import,
-        Security,
-        Update
-    }
-
-    public enum NotificationPriority
-    {
-        Low,
-        Normal,
-        High,
-        Urgent,
-        Critical
-    }
-
-    // Event Args
     public class NotificationReceivedEventArgs : EventArgs
     {
         public Notification Notification { get; set; } = null!;
@@ -106,4 +84,8 @@ namespace IIM.Core.Models
         public DateTimeOffset ReadAt { get; set; }
     }
 
+    public class NotificationDeletedEventArgs : EventArgs
+    {
+        public string NotificationId { get; set; } = string.Empty;
+    }
 }

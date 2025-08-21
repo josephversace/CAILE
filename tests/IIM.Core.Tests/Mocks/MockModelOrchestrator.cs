@@ -293,17 +293,22 @@ public class MockInferencePipeline : IInferencePipeline
         _logger = logger;
     }
 
+    public Task<HealthCheckResult> CheckHealthAsync(CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<T> ExecuteAsync<T>(InferencePipelineRequest request, CancellationToken ct = default)
     {
         throw new NotImplementedException();
     }
 
-    public Task<IIM.Core.Inference.BatchResult<T>> ExecuteBatchAsync<T>(IEnumerable<InferencePipelineRequest> requests, CancellationToken ct = default)
+    public Task<BatchResult<T>> ExecuteBatchAsync<T>(IEnumerable<InferencePipelineRequest> requests, CancellationToken ct = default)
     {
         throw new NotImplementedException();
     }
 
-    public IIM.Core.Inference.InferencePipelineStats GetStats()
+    public InferencePipelineStats GetStats()
     {
         throw new NotImplementedException();
     }

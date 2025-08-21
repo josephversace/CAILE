@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -37,12 +38,7 @@ namespace IIM.Core.Mediator
     {
     }
 
-    /// <summary>
-    /// Marker interface for notifications (one-to-many)
-    /// </summary>
-    public interface INotification
-    {
-    }
+ 
 
     /// <summary>
     /// Handler interface for requests

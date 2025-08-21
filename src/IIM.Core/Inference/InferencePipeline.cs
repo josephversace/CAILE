@@ -8,6 +8,9 @@ using Microsoft.Extensions.Options;
 using System;
 using InsufficientMemoryException = IIM.Core.Models.InsufficientMemoryException;
 using System.Collections.Concurrent;
+using IIM.Shared.Enums;
+using IIM.Shared.Interfaces;
+
 
 namespace IIM.Core.Inference
 {
@@ -992,91 +995,5 @@ namespace IIM.Core.Inference
         }
     }
 
-    // Supporting types
-
-    public sealed class QueuedRequest
-    {
-        public required string Id { get; init; }
-        public required InferencePipelineRequest Request { get; init; }
-        public required Priority Priority { get; init; }
-        public DateTimeOffset QueuedAt { get; init; }
-        public TaskCompletionSource<object?> CompletionSource { get; init; } = new();
-        public CancellationToken CancellationToken { get; init; }
-    }
-
-    public class InferencePipelineStats
-    {
-        public long TotalRequests { get; set; }
-        public long CompletedRequests { get; set; }
-        public long FailedRequests { get; set; }
-        public long RejectedRequests { get; set; }
-        public int PendingRequests { get; set; }
-        public int HighPriorityQueueDepth { get; set; }
-        public int NormalPriorityQueueDepth { get; set; }
-        public int LowPriorityQueueDepth { get; set; }
-        public int GpuSlotsAvailable { get; set; }
-        public int CpuSlotsAvailable { get; set; }
-        public double AverageLatencyMs { get; set; }
-        public double P50LatencyMs { get; set; }
-        public double P95LatencyMs { get; set; }
-        public double P99LatencyMs { get; set; }
-        public double ErrorRate { get; set; }
-        public int RequestsPerMinute { get; set; }
-        public Dictionary<string, long> RequestsByModel { get; set; } = new();
-    }
-
-    public class HealthCheckResult
-    {
-        public bool IsHealthy { get; set; }
-        public List<string> Issues { get; set; } = new();
-        public InferencePipelineStats Stats { get; set; } = new();
-    }
-
-    public class MetricEntry
-    {
-        public DateTimeOffset Timestamp { get; set; }
-        public double LatencyMs { get; set; }
-        public string ModelId { get; set; } = string.Empty;
-        public bool Success { get; set; }
-        public string? ErrorType { get; set; }
-    }
-
-    public class InferencePipelineException : Exception
-    {
-        public InferencePipelineException(string message) : base(message) { }
-        public InferencePipelineException(string message, Exception innerException) : base(message, innerException) { }
-    }
-
-    // Enhanced notification classes
-    public class InferenceQueuedNotification : INotification
-    {
-        public string RequestId { get; set; } = string.Empty;
-        public string ModelId { get; set; } = string.Empty;
-        public Priority Priority { get; set; }
-        public int QueueDepth { get; set; }
-    }
-
-    public class InferenceStartedNotification : INotification
-    {
-        public string RequestId { get; set; } = string.Empty;
-        public string ModelId { get; set; } = string.Empty;
-        public long QueueTimeMs { get; set; }
-    }
-
-    public class InferenceCompletedNotification : INotification
-    {
-        public string RequestId { get; set; } = string.Empty;
-        public string ModelId { get; set; } = string.Empty;
-        public long QueueTimeMs { get; set; }
-        public long InferenceTimeMs { get; set; }
-        public int TokensGenerated { get; set; }
-    }
-
-    public class InferenceFailedNotification : INotification
-    {
-        public string RequestId { get; set; } = string.Empty;
-        public string ModelId { get; set; } = string.Empty;
-        public string Error { get; set; } = string.Empty;
-        public string ErrorType { get; set; } = string.Empty;
-    }
+    
 }

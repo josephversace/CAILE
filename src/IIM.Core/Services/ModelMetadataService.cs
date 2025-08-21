@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using IIM.Core.Models;
 using IIM.Shared.Enums;
+using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -29,18 +30,8 @@ namespace IIM.Core.Services
         public Dictionary<string, object> Properties { get; set; } = new();
     }
 
-    {
-    /// <summary>
-    /// Service interface for managing model metadata
-    /// </summary>
-    public interface IModelMetadataService
-    {
-        Task<ModelMetadata> GetMetadataAsync(string modelId, CancellationToken ct = default);
-        Task RegisterMetadataAsync(ModelMetadata metadata, CancellationToken ct = default);
-        Task<List<ModelMetadata>> GetAllMetadataAsync(CancellationToken ct = default);
-        Task LoadFromConfigurationAsync(CancellationToken ct = default);
-    }
-
+    
+  
 
     /// <summary>
     /// Implementation of model metadata service with caching and configuration support
@@ -344,6 +335,21 @@ namespace IIM.Core.Services
                 ModelType.Vision => 2000,
                 _ => 1000
             };
+        }
+
+        Task<Shared.Models.ModelMetadata> IModelMetadataService.GetMetadataAsync(string modelId, CancellationToken ct)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task RegisterMetadataAsync(Shared.Models.ModelMetadata metadata, CancellationToken ct = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<List<Shared.Models.ModelMetadata>> IModelMetadataService.GetAllMetadataAsync(CancellationToken ct)
+        {
+            throw new NotImplementedException();
         }
     }
 

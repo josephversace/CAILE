@@ -1,11 +1,14 @@
-﻿using System;
+﻿using IIM.Shared.Enums;
+using System;
 using System.Collections.Generic;
-using System.IO;
-using IIM.Shared.Enums;
-using IIM.Shared.Models;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace IIM.Core.Models
+namespace IIM.Shared.Models
 {
+    #region InvestigativeSession
+
     public class InvestigationSession
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
@@ -103,6 +106,9 @@ namespace IIM.Core.Models
 
 
 
+
+
+    #endregion
 
 
 }

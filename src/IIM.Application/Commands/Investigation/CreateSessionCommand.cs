@@ -1,6 +1,7 @@
 ﻿using IIM.Core.Mediator;
 using IIM.Core.Models;
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
 using System.Collections.Generic;
 
 namespace IIM.Application.Commands.Investigation
