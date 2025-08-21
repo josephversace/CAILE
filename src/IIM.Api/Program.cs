@@ -85,7 +85,7 @@ builder.Services.AddSingleton<IEvidenceManager>(sp =>
 // Register the background service
 builder.Services.AddHostedService<EvidenceIntegrityMonitor>();
 
-builder.Services.AddSingleton<IModelOrchestrator, ModelOrchestrator>();
+builder.Services.AddSingleton<IModelOrchestrator, S>();
 
 var app = builder.Build();
 

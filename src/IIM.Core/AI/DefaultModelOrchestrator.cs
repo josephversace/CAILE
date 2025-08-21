@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using IIM.Core.Models;
 using IIM.Shared.Enums;
 using IIM.Shared.Models;
+using IIM.Infrastructure.Storage;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Core.AI
@@ -578,14 +579,6 @@ namespace IIM.Core.AI
             return $"Response to: {input}";
         }
 
-        // Internal type - ONLY for internal tracking, not exposed
-        private class LoadedModel
-        {
-            public required ModelHandle Handle { get; init; }
-            public required ModelConfiguration Configuration { get; init; }
-            public Process? Process { get; init; }
-            public DateTimeOffset LastAccessed { get; set; }
-            public int AccessCount { get; set; }
-        }
+       
     }
 }
