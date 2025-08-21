@@ -1,8 +1,8 @@
 ﻿// src/IIM.Core/RAG/InMemoryQdrantService.cs
 using IIM.Core.Configuration;
 using IIM.Infrastructure.Storage;
-using IIM.Infrastructure.VectorStore.Models;
 using IIM.Shared.Models;
+using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -21,7 +21,7 @@ namespace IIM.Core.RAG
     /// </summary>
     public class InMemoryQdrantService : IQdrantService, IDisposable
     {
-        private readonly ILogger<InMemoryQdrantService> _logger;
+        private readonly ILogger<IQdrantService> _logger;
         private readonly StorageConfiguration _config;
         private readonly Dictionary<string, Collection> _collections = new();
         private readonly SemaphoreSlim _semaphore = new(1, 1);
@@ -35,7 +35,7 @@ namespace IIM.Core.RAG
             public DateTime UpdatedAt { get; set; }
         }
 
-        public InMemoryQdrantService(ILogger<InMemoryQdrantService> logger, StorageConfiguration config)
+        public InMemoryQdrantService(ILogger<IQdrantService> logger, StorageConfiguration config)
         {
             _logger = logger;
             _config = config;

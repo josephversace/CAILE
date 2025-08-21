@@ -1,8 +1,8 @@
-﻿using IIM.Shared.Models;
+﻿
 using System;
 using System.Collections.Generic;
 
-namespace IIM.Infrastructure.VectorStore.Models
+namespace IIM.Shared.Models
 {
     /// <summary>
     /// Information about the Qdrant service
@@ -75,7 +75,7 @@ namespace IIM.Infrastructure.VectorStore.Models
         public List<string>? Tags { get; set; }
     }
 
-   
+
 
     /// <summary>
     /// Cluster information for analysis
