@@ -3,6 +3,7 @@
 @using IIM.Core.Security
 @using IIM.Core.Services
 @using IIM.Shared.Enums
+@using IIM.Shared.Models
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.Extensions.Logging
 @inject IEvidenceManager EvidenceManager
@@ -409,7 +410,7 @@
 </div>
 
 @code {
-    private List<IIM.Core.Models.Evidence> evidenceItems = new();
+    private List<IIM.Shared.Models.Evidence> evidenceItems = new();
     private string searchTerm = string.Empty;
     private string errorMessage = string.Empty;
     private string successMessage = string.Empty;
@@ -424,7 +425,7 @@
     private bool showChainModal = false;
     private ChainOfCustodyReport? currentChainReport;
 
-    private IEnumerable<IIM.Core.Models.Evidence> FilteredEvidence =>
+    private IEnumerable<IIM.Shared.Models.Evidence> FilteredEvidence =>
         string.IsNullOrWhiteSpace(searchTerm)
             ? evidenceItems
             : evidenceItems.Where(e =>
@@ -610,7 +611,7 @@
         }
     }
 
-    private void ViewEvidence(IIM.Core.Models.Evidence item)
+    private void ViewEvidence(IIM.Shared.Models.Evidence item)
     {
         // Navigate to detailed view or show in modal
         // For now, show chain of custody

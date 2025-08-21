@@ -2,6 +2,7 @@
 using IIM.Core.HealthChecks;
 using IIM.Core.Inference;
 using IIM.Core.Services;
+using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;

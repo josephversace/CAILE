@@ -48,6 +48,7 @@ namespace IIM.Shared.Models
         public List<NotificationAction>? SecondaryActions { get; set; }
         public string? ImageUrl { get; set; }
         public string? Topic { get; set; }
+    
     }
 
     public class NotificationFilter

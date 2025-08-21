@@ -4,6 +4,8 @@ using IIM.Application.Commands.Wsl;
 using IIM.Core.Mediator;
 using IIM.Core.Models;
 using IIM.Core.Services;
+using IIM.Shared.Enums;
+using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Threading;
 using System.Threading.Tasks;

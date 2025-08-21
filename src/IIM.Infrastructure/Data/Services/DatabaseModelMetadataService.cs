@@ -21,13 +21,16 @@ namespace IIM.Infrastructure.Data.Services
     {
         private readonly ILogger<DatabaseModelMetadataService> _logger;
         private readonly IIMDbContext _context;
+        private readonly IAuditLogger? _auditLogger;
 
         public DatabaseModelMetadataService(
             ILogger<DatabaseModelMetadataService> logger,
-            IIMDbContext context)
+            IIMDbContext context,
+            IAuditLogger? auditLogger = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _auditLogger = auditLogger;
         }
 
         public async Task<Shared.Models.ModelMetadata> GetMetadataAsync(string modelId, CancellationToken ct = default)

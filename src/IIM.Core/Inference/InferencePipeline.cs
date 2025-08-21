@@ -10,6 +10,9 @@ using InsufficientMemoryException = IIM.Core.Models.InsufficientMemoryException;
 using System.Collections.Concurrent;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
+using System.Threading.Channels; // For Channel<T>
+using System.Diagnostics; // For Stopwatch
+using System.Diagnostics.Metrics; // For Meter, Counter, Histogram
 
 
 namespace IIM.Core.Inference
@@ -156,6 +159,7 @@ namespace IIM.Core.Inference
         /// <summary>
         /// Executes a single inference request with timeout and backpressure handling
         /// </summary>
+   
         public async Task<T> ExecuteAsync<T>(InferencePipelineRequest request, CancellationToken ct = default)
         {
             using var activity = _activitySource.StartActivity("ExecuteInference");
@@ -196,6 +200,9 @@ namespace IIM.Core.Inference
             _pendingRequests[queuedRequest.Id] = queuedRequest;
             _queueDepthCounter.Add(1);
 
+            // DECLARE timeoutCts HERE, BEFORE the try block, so it's accessible in catch
+            CancellationTokenSource? timeoutCts = null;
+
             try
             {
                 // Select queue based on priority
@@ -206,8 +213,8 @@ namespace IIM.Core.Inference
                     _ => _normalPriorityQueue
                 };
 
-                // Queue with timeout
-                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(_config.QueueTimeoutSeconds));
+                // Queue with timeout - now ASSIGN to the already declared variable
+                timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(_config.QueueTimeoutSeconds));
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
 
                 var queued = await channel.Writer.WaitToWriteAsync(linkedCts.Token);
@@ -244,8 +251,9 @@ namespace IIM.Core.Inference
                     return (T)result!;
                 }
             }
-            catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested)
+            catch (OperationCanceledException) when (timeoutCts?.IsCancellationRequested == true)
             {
+                // Now timeoutCts is accessible here
                 Interlocked.Increment(ref _rejectedRequests);
                 _errorCounter.Add(1, new KeyValuePair<string, object?>("error.type", "timeout"));
 
@@ -278,6 +286,9 @@ namespace IIM.Core.Inference
             }
             finally
             {
+                // Dispose timeoutCts if it was created
+                timeoutCts?.Dispose();
+
                 _pendingRequests.TryRemove(queuedRequest.Id, out _);
                 _queueDepthCounter.Add(-1);
             }
@@ -798,7 +809,7 @@ namespace IIM.Core.Inference
             return new BatchResult<T>
             {
                 Results = sortedResults,
-                Errors = errors, // This is ConcurrentDictionary<int, Exception>
+                Errors = new Dictionary<int, Exception>(errors),
                 TotalRequests = requestList.Count,
                 SuccessCount = results.Count,
                 FailureCount = errors.Count

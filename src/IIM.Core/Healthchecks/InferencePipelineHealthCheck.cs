@@ -1,7 +1,8 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using IIM.Core.Inference;
+﻿using IIM.Core.Inference;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IIM.Core.HealthChecks
 {
@@ -23,21 +24,45 @@ namespace IIM.Core.HealthChecks
         {
             var result = await _pipeline.CheckHealthAsync(ct);
 
+            var healthData = ToHealthData(result.Stats);
+
             if (result.IsHealthy)
             {
-                return Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy("Inference pipeline is healthy", result.Stats);
+                return Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(
+                    "Inference pipeline is healthy", healthData);
             }
 
             if (result.Issues.Count > 2)
             {
                 return Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Unhealthy(
                     $"Inference pipeline has critical issues: {string.Join("; ", result.Issues)}",
-                    data: result.Stats);
+                    data: healthData);
             }
 
             return Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Degraded(
                 $"Inference pipeline has issues: {string.Join("; ", result.Issues)}",
-                data: result.Stats);
+                data: healthData);
         }
+
+        private static IReadOnlyDictionary<string, object> ToHealthData(InferencePipelineStats stats)
+        {
+            return new Dictionary<string, object>
+            {
+                ["TotalRequests"] = stats.TotalRequests,
+                ["CompletedRequests"] = stats.CompletedRequests,
+                ["FailedRequests"] = stats.FailedRequests,
+                ["PendingRequests"] = stats.PendingRequests,
+                ["HighPriorityQueueDepth"] = stats.HighPriorityQueueDepth,
+                ["NormalPriorityQueueDepth"] = stats.NormalPriorityQueueDepth,
+                ["LowPriorityQueueDepth"] = stats.LowPriorityQueueDepth,
+                ["GpuSlotsAvailable"] = stats.GpuSlotsAvailable,
+                ["CpuSlotsAvailable"] = stats.CpuSlotsAvailable,
+                ["AverageLatencyMs"] = stats.AverageLatencyMs,
+                ["P95LatencyMs"] = stats.P95LatencyMs,
+                ["P99LatencyMs"] = stats.P99LatencyMs
+                // Add more fields if you wish
+            };
+        }
+
     }
 }
