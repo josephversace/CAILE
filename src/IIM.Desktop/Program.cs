@@ -152,8 +152,8 @@ internal static class Program
                 {
                     var config = new StorageConfiguration
                     {
-                        BasePath = configuration["Storage:LocalBasePath"] ??
-                            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IIM")
+                        BasePath = configuration["Storage:BasePath"] ??
+                                   Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IIM")
                     };
                     config.EnsureDirectoriesExist();
                     return config;
@@ -192,21 +192,33 @@ internal static class Program
                 // AI/ML Services - UPDATED WITH SEMANTIC KERNEL
                 // ========================================
 
-                // OPTION 1: Use Semantic Kernel as primary orchestrator
-                // Uncomment this block to use SK:
-                /*
-                services.AddSemanticKernelOrchestration();
-                services.AddInvestigationPlugins();
-                */
-
-                // OPTION 2: Keep existing orchestrator for now
-                // Comment this out when switching to SK:
-                services.AddSingleton<IModelOrchestrator, ModelOrchestrator>();
+             
+           
+               services.AddSingleton<IModelOrchestrator>(sp =>
+                {
+                    var logger = sp.GetRequiredService<ILogger<DefaultModelOrchestrator>>();
+                    var storageConfig = sp.GetRequiredService<StorageConfiguration>();
+                    return new DefaultModelOrchestrator(logger, storageConfig);
+                });
 
                 // These services work with either orchestrator:
                 services.AddSingleton<IInferencePipeline, InferencePipeline>();
                 services.AddSingleton<IModelManagementService, ModelManagementService>();
                 services.AddSingleton<IInferenceService, InferenceService>();
+
+                services.AddSingleton<IReasoningService>(sp =>
+                {
+                    var logger = sp.GetRequiredService<ILogger<SemanticKernelOrchestrator>>();
+                    var modelOrchestrator = sp.GetRequiredService<IModelOrchestrator>();
+                    var sessionService = sp.GetRequiredService<ISessionService>();
+                    var templateService = sp.GetService<IModelConfigurationTemplateService>();
+
+                    return new SemanticKernelOrchestrator(
+                        logger,
+                        modelOrchestrator,
+                        sessionService,
+                        templateService);
+                });
 
                 // ========================================
                 // Template Service - Required for SK
