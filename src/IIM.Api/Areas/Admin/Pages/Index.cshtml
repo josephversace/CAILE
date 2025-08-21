@@ -1,0 +1,64 @@
+﻿@page
+@model IIM.Api.Areas.Admin.Pages.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1>IIM Admin Dashboard</h1>
+
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">System Status</h5>
+                <p class="card-text">
+                    <span id="system-status" class="badge bg-success">Healthy</span>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Active Users</h5>
+                <p class="card-text">
+                    <span id="active-users">0</span>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Models Loaded</h5>
+                <p class="card-text">
+                    <span id="models-loaded">0</span>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Memory Usage</h5>
+                <p class="card-text">
+                    <span id="memory-usage">0%</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/hubs/admin")
+            .build();
+            
+        connection.on("SystemStatusUpdate", function (status) {
+            // Update dashboard
+        });
+        
+        connection.start().catch(err => console.error(err));
+    </script>
+}

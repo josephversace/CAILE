@@ -26,3 +26,12 @@ public enum EvidenceStatus
     Compromised,
     Archived
 }
+
+
+public enum ProcessingStatus
+{
+    Pending,
+    Processing,
+    Completed,
+    Failed
+}

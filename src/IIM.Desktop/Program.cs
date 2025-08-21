@@ -1,47 +1,27 @@
-using DocumentFormat.OpenXml.Drawing.Charts;
-using IIM.Application.Behaviors;
-using IIM.Application.Commands.Investigation;
-using IIM.Application.Commands.Models;
-using IIM.Application.Commands.Wsl;
-using IIM.Application.Handlers;
-using IIM.Application.Interfaces;
-using IIM.Application.Queries;
-using IIM.Application.Services;
 using IIM.Components.Services;
-using IIM.Core.AI;
-using IIM.Core.Configuration;
-using IIM.Core.Extensions; // ADD THIS for SK extensions
-using IIM.Core.Inference;
-using IIM.Core.Mediator;
-using IIM.Core.RAG;
-using IIM.Core.Security;
 using IIM.Core.Services;
-using IIM.Core.Services.Configuration;
-using IIM.Core.Storage;
-using IIM.Infrastructure.Embeddings; // Add for RemoteEmbeddingService
-using IIM.Infrastructure.Platform;
-using IIM.Infrastructure.Storage;
-using IIM.Infrastructure.VectorStore; // Add for QdrantService
+using IIM.Desktop.Services;
 using IIM.Shared.Interfaces;
-using IIM.Shared.Models;
 using Microsoft.AspNetCore.Components.WebView.WindowsForms;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.SemanticKernel; // ADD THIS
 using System;
 using System.IO;
 using System.Windows.Forms;
 
 namespace IIM.Desktop;
 
+/// <summary>
+/// Main program entry point for the IIM Desktop application.
+/// Configures and launches the Windows Forms Blazor Hybrid application.
+/// </summary>
 internal static class Program
 {
     /// <summary>
     /// The main entry point for the application.
+    /// Configures Windows Forms settings and launches the application host.
     /// </summary>
     [STAThread]
     static void Main()
@@ -77,13 +57,16 @@ internal static class Program
     }
 
     /// <summary>
-    /// Global service provider for the application
+    /// Gets the global service provider for dependency injection.
+    /// Used to resolve services throughout the application lifetime.
     /// </summary>
     public static IServiceProvider ServiceProvider { get; private set; } = default!;
 
     /// <summary>
-    /// Creates and configures the host builder
+    /// Creates and configures the host builder with all necessary services and configuration.
+    /// Sets up configuration sources, logging, and dependency injection container.
     /// </summary>
+    /// <returns>Configured IHostBuilder ready to build and run</returns>
     static IHostBuilder CreateHostBuilder()
     {
         return Host.CreateDefaultBuilder()
@@ -130,317 +113,65 @@ internal static class Program
 #endif
                 });
 
-                // Add memory cache
+                // Add memory cache for UI state
                 services.AddMemoryCache();
 
                 // ========================================
-                // HTTP Clients Configuration
+                // API Client Configuration (MAIN SERVICE)
                 // ========================================
 
-                // Add HttpClient factory
-                services.AddHttpClient();
-
-                // API client
-                services.AddHttpClient("IIM.API", client =>
+                // Configure the API client to talk to the backend
+                services.AddHttpClient<IIMApiClient>(client =>
                 {
-                    client.BaseAddress = new Uri(configuration["Api:BaseUrl"] ?? "http://localhost:5080");
+                    var apiUrl = configuration["Api:BaseUrl"] ?? "http://localhost:5080";
+                    client.BaseAddress = new Uri(apiUrl);
                     client.DefaultRequestHeaders.Add("User-Agent", "IIM-Desktop/1.0");
                     client.DefaultRequestHeaders.Add("Accept", "application/json");
                     client.Timeout = TimeSpan.FromSeconds(30);
                 });
 
-                // Qdrant vector database client
-                services.AddHttpClient("qdrant", client =>
-                {
-                    client.BaseAddress = new Uri(configuration["Qdrant:BaseUrl"] ?? "http://localhost:6333");
-                    client.DefaultRequestHeaders.Add("Accept", "application/json");
-                    client.Timeout = TimeSpan.FromSeconds(30);
-                });
+                // Register the API client as the primary service
+                services.AddScoped<IIMApiClient>();
 
-                // Embedding service client
-                services.AddHttpClient("embed", client =>
-                {
-                    client.BaseAddress = new Uri(configuration["EmbedService:BaseUrl"] ?? "http://localhost:8081");
-                    client.DefaultRequestHeaders.Add("Accept", "application/json");
-                    client.Timeout = TimeSpan.FromSeconds(30);
-                });
-
-                // WSL services client
-                services.AddHttpClient("wsl", client =>
-                {
-                    client.Timeout = TimeSpan.FromSeconds(30);
-                });
+                // ========================================
+                // UI-Only Services
+                // ========================================
 
                 // Register main form
                 services.AddSingleton<MainForm>();
 
-                // ========================================
-                // Configuration & Storage
-                // ========================================
+                // UI State Management
+                services.AddSingleton<StateContainer>();
 
-                // Storage configuration
-                services.AddSingleton<StorageConfiguration>(sp =>
-                {
-                    var config = new StorageConfiguration
-                    {
-                        BasePath = configuration["Storage:BasePath"] ??
-                                   Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IIM")
-                    };
-                    config.EnsureDirectoriesExist();
-                    return config;
-                });
-
-                // Evidence configuration
-                services.AddSingleton<EvidenceConfiguration>(sp =>
-                {
-                    var storageConfig = sp.GetRequiredService<StorageConfiguration>();
-                    return new EvidenceConfiguration
-                    {
-                        StorePath = storageConfig.EvidencePath,
-                        EnableEncryption = configuration.GetValue<bool>("Evidence:EnableEncryption", false),
-                        RequireDualControl = configuration.GetValue<bool>("Evidence:RequireDualControl", false),
-                        MaxFileSizeMb = configuration.GetValue<int>("Evidence:MaxFileSizeMb", 10240)
-                    };
-                });
-
-                // Configure MinIO settings
-                services.Configure<MinIOConfiguration>(
-                    configuration.GetSection("Storage:MinIO"));
-
-                // ========================================
-                // Platform Services (WSL, Docker, etc.)
-                // ========================================
-
-                // WSL Manager
-                services.AddSingleton<IWslManager>(sp =>
-                {
-                    var logger = sp.GetRequiredService<ILogger<WslManager>>();
-                    var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
-                    return new WslManager(logger, httpFactory);
-                });
-
-                // WSL Service Orchestrator
-                services.AddSingleton<IWslServiceOrchestrator>(sp =>
-                {
-                    var logger = sp.GetRequiredService<ILogger<WslServiceOrchestrator>>();
-                    var wslManager = sp.GetRequiredService<IWslManager>();
-                    var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
-                 
-                    return new WslServiceOrchestrator(logger, wslManager, httpFactory);
-                });
-
-                // ========================================
-                // AI/ML Services
-                // ========================================
-
-                // Model Orchestrator - manages model loading/unloading
-                services.AddSingleton<IModelOrchestrator>(sp =>
-                {
-                    var logger = sp.GetRequiredService<ILogger<DefaultModelOrchestrator>>();
-                    var storageConfig = sp.GetRequiredService<StorageConfiguration>();
-                    return new DefaultModelOrchestrator(logger, storageConfig);
-                });
-
-                // Inference Pipeline - manages request queueing
-                services.AddSingleton<IInferencePipeline, InferencePipeline>();
-
-                // Model Management Service
-                services.AddSingleton<IModelManagementService, ModelManagementService>();
-
-                // Inference Service
-                services.AddSingleton<IInferenceService, InferenceService>();
-
-                // Reasoning Service (Semantic Kernel)
-                services.AddSingleton<IReasoningService>(sp =>
-                {
-                    var logger = sp.GetRequiredService<ILogger<SemanticKernelOrchestrator>>();
-                    var modelOrchestrator = sp.GetRequiredService<IModelOrchestrator>();
-                    var sessionService = sp.GetRequiredService<ISessionService>();
-                    var templateService = sp.GetService<IModelConfigurationTemplateService>();
-
-                    return new SemanticKernelOrchestrator(
-                        logger,
-                        modelOrchestrator,
-                        sessionService,
-                        templateService);
-                });
-
-                // ========================================
-                // Template Service
-                // ========================================
-
-                services.AddSingleton<IModelConfigurationTemplateService>(sp =>
-                {
-                    var logger = sp.GetRequiredService<ILogger<ModelConfigurationTemplateService>>();
-                    var storageConfig = sp.GetRequiredService<StorageConfiguration>();
-                    var orchestrator = sp.GetRequiredService<IModelOrchestrator>();
-                    var sessionService = sp.GetRequiredService<ISessionService>();
-
-                    return new ModelConfigurationTemplateService(
-                        logger,
-                        storageConfig,
-                        orchestrator,
-                        sessionService);
-                });
-
-                // ========================================
-                // Vector Store & Embedding Services (Sprint 1)
-                // ========================================
-
-                // Qdrant Vector Store Service (replaces InMemoryQdrantService)
-                services.AddSingleton<IQdrantService>(sp =>
-                {
-                    var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
-                    var logger = sp.GetRequiredService<ILogger<QdrantService>>();
-
-                    // Check if we should use in-memory for development
-                    var useInMemory = configuration.GetValue<bool>("Development:UseInMemoryQdrant", false);
-
-                    if (useInMemory)
-                    {
-                        // Use in-memory for development/testing
-                        var storageConfig = sp.GetRequiredService<StorageConfiguration>();
-                        return new InMemoryQdrantService(logger, storageConfig);
-                    }
-                    else
-                    {
-                        // Use real Qdrant service
-                        return new QdrantService(httpFactory, logger);
-                    }
-                });
-
-                // Embedding Service
-                services.AddSingleton<IEmbeddingService>(sp =>
-                {
-                    var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
-                    var logger = sp.GetRequiredService<ILogger<RemoteEmbeddingService>>();
-                    return new RemoteEmbeddingService(httpFactory, logger);
-                });
-
-                //// RAG Service (combines embeddings and vector store)
-                //services.AddSingleton<IRAGService>(sp =>
-                //{
-                //    var qdrantService = sp.GetRequiredService<IQdrantService>();
-                //    var embeddingService = sp.GetRequiredService<IEmbeddingService>();
-                //    var logger = sp.GetRequiredService<ILogger<RAGService>>();
-
-                //    // Note: RAGService needs to be implemented to combine these services
-                //    // For now, this is a placeholder
-                //    throw new NotImplementedException("RAGService implementation needed");
-                //    // return new RAGService(qdrantService, embeddingService, logger);
-                //});
-
-                // ========================================
-                // Model Metadata Service
-                // ========================================
-
-                services.AddSingleton<IModelMetadataService>(sp =>
-                {
-                    var logger = sp.GetRequiredService<ILogger<ModelMetadataService>>();
-                    var config = sp.GetRequiredService<IOptions<ModelMetadataConfiguration>>();
-                    return new ModelMetadataService(logger, config);
-                });
-
-
-                // ========================================
-                // Investigation Services
-                // ========================================
-
-                services.AddScoped<IInvestigationService, InvestigationService>();
-                services.AddScoped<ISessionService, SessionService>();
-                services.AddScoped<IEvidenceManager, EvidenceManager>();
-                services.AddScoped<ICaseManager, JsonCaseManager>();
-
-                // ========================================
-                // Export Services
-                // ========================================
-
-                services.AddSingleton<IFileService, FileService>();
-                services.AddExportServices(GetDataDirectory());
-
-                // ========================================
-                // Mediator Services
-                // ========================================
-
-                // Add the mediator with assembly scanning
-                services.AddSimpleMediator(
-                    typeof(Program).Assembly,                          // Desktop assembly
-                    typeof(EnsureWslCommand).Assembly,                 // Application assembly (where commands are)
-                    typeof(IInvestigationService).Assembly,            // Core assembly
-                    typeof(IModelOrchestrator).Assembly                // Core assembly
-                );
-
-                // Add memory cache for caching behavior
-                services.AddMemoryCache(options =>
-                {
-                    options.SizeLimit = 100_000_000; // 100MB cache limit
-                    options.CompactionPercentage = 0.25;
-                    options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
-                });
-
-                // Register pipeline behaviors in order
-                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
-                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
-                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
-                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RetryBehavior<,>));
-                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
-                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));
-
-                // Register notification handlers for WSL events
-                services.AddTransient<INotificationHandler<WslSetupCompletedNotification>, WslSetupCompletedHandler>();
-                services.AddTransient<INotificationHandler<WslSetupFailedNotification>, WslSetupFailedHandler>();
-                services.AddTransient<INotificationHandler<WslFeatureEnabledNotification>, WslFeatureEnabledHandler>();
-                services.AddTransient<INotificationHandler<WslDistroInstalledNotification>, WslDistroInstalledHandler>();
-
-                // Register notification handlers for Model events
-                services.AddTransient<INotificationHandler<ModelLoadedNotification>, ModelLoadedNotificationHandler>();
-                services.AddTransient<INotificationHandler<ModelLoadedNotification>, ModelLoadedAuditHandler>();
-                services.AddTransient<INotificationHandler<ModelLoadFailedNotification>, ModelLoadFailedHandler>();
-                services.AddTransient<INotificationHandler<ModelUnloadedNotification>, ModelUnloadedHandler>();
-
-                // Register notification handlers for Investigation events
-                services.AddTransient<INotificationHandler<InvestigationQueryStartedNotification>, InvestigationQueryStartedHandler>();
-                services.AddTransient<INotificationHandler<InvestigationQueryCompletedNotification>, InvestigationQueryCompletedHandler>();
-                services.AddTransient<INotificationHandler<InvestigationQueryFailedNotification>, InvestigationQueryFailedHandler>();
-                services.AddTransient<INotificationHandler<SessionCreatedNotification>, SessionCreatedHandler>();
-
-                // ========================================
-                // Storage Services
-                // ========================================
-
-                services.AddSingleton<IDeduplicationService, FixedSizeDeduplicationService>();
-                services.AddSingleton<IMinIOStorageService, MinIOStorageService>();
-
-                // ========================================
-                // UI Services
-                // ========================================
-
+                // Notification Service (UI notifications)
                 services.AddSingleton<INotificationService, NotificationService>();
-                services.AddSingleton<IHubConnectionService, HubConnectionService>();
-                services.AddScoped<IVisualizationService, VisualizationService>();
+
+                // SignalR Hub Connection for real-time updates
+                services.AddSingleton<IHubConnectionService>(sp =>
+                {
+                    var logger = sp.GetRequiredService<ILogger<HubConnectionService>>();
+                    var apiUrl = configuration["Api:BaseUrl"] ?? "http://localhost:5080";
+                    return new HubConnectionService(logger, apiUrl);
+                });
+
+                // UI-specific services
                 services.AddScoped<DataFormattingService>();
                 services.AddScoped<ModelSizeCalculator>();
 
                 // ========================================
-                // HTTP Clients
+                // Configuration for UI
                 // ========================================
 
-                services.AddHttpClient<IimClient>(client =>
+                // Deployment configuration (determines UI behavior)
+                services.AddSingleton<DeploymentConfiguration>(sp =>
                 {
-                    client.BaseAddress = new Uri(configuration["Api:BaseUrl"] ?? "http://localhost:5080");
-                    client.DefaultRequestHeaders.Add("Accept", "application/json");
+                    var deploymentConfig = new DeploymentConfiguration();
+                    configuration.GetSection("Deployment").Bind(deploymentConfig);
+                    return deploymentConfig;
                 });
 
-                // ========================================
-                // Background Services
-                // ========================================
-
-                // Add WSL health monitoring as a hosted service
-                // services.AddHostedService<WslHealthMonitorService>();
-
-                // Add vector store maintenance as a hosted service
-                // services.AddHostedService<VectorStoreMaintenanceService>();
+                // Local settings (UI preferences)
+                services.AddSingleton<ILocalSettingsService, LocalSettingsService>();
             })
             .ConfigureLogging((context, logging) =>
             {
@@ -458,8 +189,10 @@ internal static class Program
     }
 
     /// <summary>
-    /// Gets the current application version
+    /// Gets the current application version from assembly metadata.
+    /// Used for displaying version information in the UI and for telemetry.
     /// </summary>
+    /// <returns>Version string in format "Major.Minor.Build" or "1.0.0" if not available</returns>
     public static string GetApplicationVersion()
     {
         var assembly = System.Reflection.Assembly.GetExecutingAssembly();
@@ -468,34 +201,20 @@ internal static class Program
     }
 
     /// <summary>
-    /// Gets the application data directory
+    /// Gets the local settings directory path for storing UI preferences.
+    /// Creates the directory if it doesn't exist.
     /// </summary>
-    public static string GetDataDirectory()
+    /// <returns>Full path to the settings directory</returns>
+    public static string GetLocalSettingsDirectory()
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var dataDir = Path.Combine(appData, "IIM", "Data");
+        var settingsDir = Path.Combine(appData, "IIM", "Settings");
 
-        if (!Directory.Exists(dataDir))
+        if (!Directory.Exists(settingsDir))
         {
-            Directory.CreateDirectory(dataDir);
+            Directory.CreateDirectory(settingsDir);
         }
 
-        return dataDir;
-    }
-
-    /// <summary>
-    /// Gets the models directory
-    /// </summary>
-    public static string GetModelsDirectory()
-    {
-        var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var modelsDir = Path.Combine(appData, "IIM", "Models");
-
-        if (!Directory.Exists(modelsDir))
-        {
-            Directory.CreateDirectory(modelsDir);
-        }
-
-        return modelsDir;
+        return settingsDir;
     }
 }

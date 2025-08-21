@@ -1,482 +1,255 @@
-Project Overview
-Intelligent Investigation Machine (IIM) - A Blazor Hybrid + WSL2 desktop application for law enforcement AI investigations. Premium training platform delivered as part of the "AI Investigator Mastery Bootcamp" running entirely on-premises on Framework PCs with 128GB RAM and AMD GPUs.
+IIM Platform Migration Plan - Complete Documentation
+Project Current State
+The Intelligent Investigation Machine (IIM) is a Blazor Hybrid desktop application for AI-powered investigations, currently deployed on Framework laptops with 128GB RAM. The codebase has:
 
-1. System Architecture Overview
-mermaidgraph TB
-    subgraph "Windows Host"
-        subgraph "IIM.Desktop (WinForms)"
-            MW[MainForm + WebView2]
-            MW --> BC[Blazor Components]
-        end
-        
-        subgraph "IIM.Api (localhost:5080)"
-            API[Minimal APIs]
-            API --> MW2[Mediator]
-            MW2 --> HSV[Hosted Services]
-        end
-        
-        subgraph "Core Services"
-            SK[SemanticKernel<br/>Orchestrator]
-            IP[Inference<br/>Pipeline]
-            MO[Model<br/>Orchestrator]
-            SK --> IP
-            IP --> MO
-        end
-        
-        subgraph "Storage"
-            SC[Storage<br/>Configuration]
-            ES[Evidence<br/>Store]
-            MT[Model<br/>Templates]
-        end
-    end
-    
-    subgraph "WSL2 Ubuntu"
-        QD[Qdrant<br/>:6333]
-        EMB[Embedding<br/>Service :8081]
-        PG[PostgreSQL<br/>:5432]
-        MIN[MinIO<br/>:9000]
-    end
-    
-    BC -.->|HTTP| API
-    API <-->|HTTP| QD
-    API <-->|HTTP| EMB
-    MO --> SC
-    ES --> SC
-2. Investigation Query Flow (Current State)
-mermaidsequenceDiagram
-    participant UI as Blazor UI
-    participant API as API Layer
-    participant Med as Mediator
-    participant SK as Semantic Kernel
-    participant IP as Inference Pipeline
-    participant MO as Model Orchestrator
-    participant WSL as WSL Services
-    
-    Note over UI,WSL: ⚠️ Current: Partially Connected
-    
-    UI->>API: POST /api/investigation/query
-    API->>Med: Send(ProcessQueryCommand)
-    Med->>SK: ProcessQueryAsync()
-    
-    Note over SK: Currently just simulates<br/>with Task.Delay()
-    SK->>SK: ExtractIntent() [STUB]
-    SK->>SK: BuildActionPlan() [STUB]
-    
-    SK->>IP: ExecuteAsync<T>()
-    Note over IP: Queues request but<br/>no actual inference
-    IP->>MO: InferAsync()
-    Note over MO: Would load model<br/>but not connected
-    
-    MO-->>IP: [Mock Result]
-    IP-->>SK: [Mock Result]
-    SK-->>Med: ReasoningResult
-    Med-->>API: Response
-    API-->>UI: JSON Response
-    
-    Note over WSL: ❌ Not Connected:<br/>Qdrant, Embeddings
-3. Model Loading Flow (Current State)
-mermaidflowchart LR
-    subgraph "Current Implementation"
-        TC[Template<br/>Configuration] --> TL[Template<br/>Loader]
-        TL --> MC[Memory<br/>Check]
-        MC --> MO2[Model<br/>Orchestrator]
-        MO2 --> FS[File<br/>System]
-        FS --> OM[ONNX<br/>Model]
-    end
-    
-    subgraph "Missing Connections"
-        MO2 -.->|❌| IP2[Inference<br/>Pipeline]
-        IP2 -.->|❌| AR[Actual<br/>Results]
-    end
-4. Evidence Ingestion Flow (Intended vs Current)
-mermaidgraph TD
-    subgraph "Intended Flow"
-        F1[File Upload] --> H1[SHA-256 Hash]
-        H1 --> E1[Text Extraction]
-        E1 --> EM1[Embedding Service]
-        EM1 --> V1[Vector Store]
-        V1 --> Q1[Qdrant Index]
-    end
-    
-    subgraph "Current State"
-        F2[File Upload] --> H2[SHA-256 Hash]
-        H2 --> E2[Text Extraction]
-        E2 -.->|❌| EM2[Embedding Service]
-        EM2 -.->|❌| V2[Vector Store]
-        V2 -.->|❌| Q2[Qdrant Index]
-    end
-    
-    style EM2 stroke:#f66,stroke-width:2px
-    style V2 stroke:#f66,stroke-width:2px
-    style Q2 stroke:#f66,stroke-width:2px
-5. Mediator Communication Pattern
-mermaidgraph TB
-    subgraph "Commands (State Changes)"
-        C1[LoadModelCommand]
-        C2[CreateSessionCommand]
-        C3[ConfigureProxyCommand]
-    end
-    
-    subgraph "Queries (Read Data)"
-        Q1[GetWslStatusQuery]
-        Q2[GetAvailableModelsQuery]
-        Q3[GetSessionQuery]
-    end
-    
-    subgraph "Notifications (Events)"
-        N1[ModelLoadedNotification]
-        N2[InferenceCompletedNotification]
-        N3[WslSetupCompletedNotification]
-    end
-    
-    subgraph "Mediator Pipeline"
-        M[Mediator]
-        M --> VB[Validation]
-        VB --> AB[Authorization]
-        AB --> LB[Logging]
-        LB --> PB[Performance]
-        PB --> CB[Caching]
-        CB --> H[Handler]
-    end
-    
-    C1 --> M
-    Q1 --> M
-    H --> N1
-    
-    subgraph "Multiple Handlers"
-        N1 --> H1[UI Update Handler]
-        N1 --> H2[Audit Log Handler]
-        N1 --> H3[Metrics Handler]
-    end
-6. WSL Service Management Flow
-mermaidstateDiagram-v2
-    [*] --> CheckWSL: App Starts
-    
-    CheckWSL --> WSLNotInstalled: Not Found
-    CheckWSL --> WSLInstalled: Found
-    
-    WSLNotInstalled --> ShowSetupUI: Guide User
-    ShowSetupUI --> GenerateScript: Create PS Script
-    GenerateScript --> UserRunsScript: Manual Action
-    UserRunsScript --> WSLInstalled: After Restart
-    
-    WSLInstalled --> CheckDistro: Check Ubuntu
-    CheckDistro --> DistroMissing: Not Found
-    CheckDistro --> DistroReady: Found
-    
-    DistroMissing --> InstallDistro: Auto Install
-    InstallDistro --> DistroReady: Success
-    
-    DistroReady --> StartServices: Start Stack
-    StartServices --> CheckHealth: Monitor
-    
-    CheckHealth --> ServicesHealthy: All Good
-    CheckHealth --> ServicesFailed: Issues
-    ServicesFailed --> RestartServices: Auto Retry
-    RestartServices --> CheckHealth: Re-check
-    
-    ServicesHealthy --> [*]: Ready
-7. Inference Pipeline Queue System
-mermaidgraph LR
-    subgraph "Request Entry"
-        R1[High Priority]
-        R2[Normal Priority]
-        R3[Low Priority]
-    end
-    
-    subgraph "Queue Channels"
-        Q1[High Queue<br/>Channel]
-        Q2[Normal Queue<br/>Channel]
-        Q3[Low Queue<br/>Channel]
-    end
-    
-    subgraph "Processing"
-        P1[GPU Semaphore<br/>Max: 2]
-        P2[CPU Semaphore<br/>Max: 4]
-        PT[Processing<br/>Tasks]
-    end
-    
-    subgraph "Current Issue"
-        PT -.->|❌| EX[Actual<br/>Execution]
-        EX -.->|Missing| RES[Real<br/>Results]
-    end
-    
-    R1 --> Q1
-    R2 --> Q2
-    R3 --> Q3
-    
-    Q1 --> PT
-    Q2 --> PT
-    Q3 --> PT
-    
-    PT --> P1
-    PT --> P2
-8. Complete Data Flow - Investigation Query (What Should Happen)
-mermaidgraph TD
-    subgraph "1. Query Input"
-        U[User Query] --> UI[Blazor UI]
-    end
-    
-    subgraph "2. Command Layer"
-        UI --> CMD[ProcessQueryCommand]
-        CMD --> MED[Mediator]
-    end
-    
-    subgraph "3. Intelligence Layer"
-        MED --> SK[Semantic Kernel]
-        SK --> IE[Intent Extraction]
-        IE --> AP[Action Planning]
-        AP --> RT[Route to Tools/Models]
-    end
-    
-    subgraph "4. Execution Layer"
-        RT --> IP[Inference Pipeline]
-        IP --> QM[Queue Management]
-        QM --> MO[Model Orchestrator]
-    end
-    
-    subgraph "5. Infrastructure Layer"
-        MO --> LM[Load Models]
-        RT --> EMB[Embedding Service]
-        EMB --> QD[Qdrant Search]
-        QD --> CTX[Context Retrieval]
-    end
-    
-    subgraph "6. Generation"
-        CTX --> LLM[LLM Generation]
-        LLM --> CIT[Add Citations]
-    end
-    
-    subgraph "7. Response"
-        CIT --> RESP[Response]
-        RESP --> NOT[Notifications]
-        RESP --> UI2[Update UI]
-    end
-    
-    style EMB stroke:#f66,stroke-width:2px
-    style QD stroke:#f66,stroke-width:2px
-    style LLM stroke:#f66,stroke-width:2px
-9. Service Dependency Map
-mermaidgraph BT
-    subgraph "Infrastructure Layer"
-        WSL[WslManager]
-        STOR[StorageConfiguration]
-        HTTP[HttpClientFactory]
-    end
-    
-    subgraph "Core Services"
-        MO[ModelOrchestrator]
-        IP[InferencePipeline]
-        SK[SemanticKernelOrchestrator]
-    end
-    
-    subgraph "Application Services"
-        IS[InvestigationService]
-        SS[SessionService]
-        MS[ModelManagementService]
-    end
-    
-    subgraph "UI Components"
-        INV[Investigation.razor]
-        WSLUI[WslStatus.razor]
-        MOD[Models.razor]
-    end
-    
-    MO --> STOR
-    IP --> MO
-    SK --> MO
-    SK --> SS
-    
-    IS --> SK
-    IS --> SS
-    MS --> MO
-    
-    INV --> IS
-    WSLUI --> WSL
-    MOD --> MS
-    
-    style SK fill:#ffa
-    style IP fill:#ffa
-    Note1[🟡 Partially Implemented]
+IIM.Desktop: Blazor Hybrid UI (currently has all service registrations - wrong)
+IIM.Api: ASP.NET Core Minimal API (should have all services but doesn't)
+Infrastructure: WSL2, Docker containers (Qdrant, MinIO, embedding service)
+Problem: Services are registered in Desktop instead of API, making Desktop fat instead of thin
 
-Key Observations
-✅ What's Connected:
+Target Architecture
+Three Deployment Modes (Single Installer):
+┌─────────────────────────────────────────────┐
+│ Mode 1: Standalone (Single Investigator)     │
+│ - Desktop UI + Local API                     │
+│ - Everything on one machine                  │
+│ - Dynamic model loading                      │
+└─────────────────────────────────────────────┘
 
-UI ↔ API communication
-Mediator pattern infrastructure
-Model template system
-Basic file operations
+┌─────────────────────────────────────────────┐
+│ Mode 2: Client (Team Member)                 │
+│ - Desktop UI only                            │
+│ - Connects to central API server             │
+│ - No local services                          │
+└─────────────────────────────────────────────┘
 
-⚠️ Partially Connected:
+┌─────────────────────────────────────────────┐
+│ Mode 3: Server (Central API)                 │
+│ - API only, no UI                            │
+│ - Serves multiple investigators              │
+│ - Admin web interface for configuration      │
+│ - Template-based model management            │
+└─────────────────────────────────────────────┘
+Key Technical Decisions Made
 
-Semantic Kernel (structure only)
-Inference Pipeline (queuing only)
-WSL Manager (not auto-starting)
+API Backwards Compatibility: Client 1.2 works with API 1.2+
+Configuration: Hybrid approach (appsettings.json bootstrap + database runtime)
+Admin Interface: Razor Pages in API project (/admin routes)
+Data Isolation: Start with no isolation, design for department-based filtering
+Authentication: OpenIddict for OAuth2/OIDC
+Real-time Updates: SignalR for notifications
+Storage: MinIO for all evidence (even standalone)
+Model Management:
 
-❌ Not Connected:
-
-WSL services (Qdrant, Embeddings)
-Actual model inference execution
-RAG pipeline
-Real-time notifications to UI
-Tool implementations (OCR, OSINT, etc.)
+Standalone: Dynamic loading
+Server: Admin-configured templates
 
 
-Current State (What's Actually Working)
-✅ Implemented & Functional:
 
-Desktop Shell: Windows Forms + Blazor WebView UI rendering
-Storage Configuration: Path management for models/evidence/templates
-Model Templates: Complete structure for investigation types (CSAM, Financial, etc.)
-Queue System: Priority-based InferencePipeline with GPU/CPU resource management
-WSL Manager: Core WSL operations (install, enable, execute commands)
-Mediator Infrastructure: MediatR setup with pipeline behaviors
-Basic Models: DefaultModelOrchestrator can load/unload ONNX models
+Migration Plan - Phases
+Phase 1: Service Migration (Current Focus)
+Goal: Move all services from Desktop to API, make Desktop a thin client
+Step 1.1: Create API Service Structure ✅ READY TO IMPLEMENT
+Create extension methods in API project to organize services:
+src/IIM.Api/
+├── Extensions/
+│   ├── ServiceCollectionExtensions.cs (orchestrator)
+│   ├── CoreServiceExtensions.cs (business logic)
+│   ├── InfrastructureServiceExtensions.cs (external systems)
+│   ├── ApplicationServiceExtensions.cs (app-specific)
+│   ├── HttpClientExtensions.cs (HTTP clients)
+│   ├── BackgroundServiceExtensions.cs (hosted services)
+│   └── MediatRExtensions.cs (command/query handlers)
+├── Configuration/
+│   ├── DeploymentConfiguration.cs
+│   ├── QdrantConfiguration.cs
+│   ├── InferenceConfiguration.cs
+│   └── ModelTemplateConfiguration.cs
+├── Commands/ (MediatR for audit-critical operations)
+│   ├── Investigation/
+│   ├── Evidence/
+│   └── Models/
+├── Behaviors/ (MediatR pipeline)
+│   ├── AuditBehavior.cs
+│   ├── LoggingBehavior.cs
+│   └── ValidationBehavior.cs
+└── Hubs/ (SignalR)
+    ├── InvestigationHub.cs
+    └── AdminHub.cs
+Step 1.2: Move Services from Desktop to API
+Services to move (in order):
 
-⚠️ Partially Implemented:
+HTTP Clients (qdrant, embed, wsl)
+Infrastructure (WslManager, QdrantService, EmbeddingService)
+Core Services (ModelOrchestrator, InferencePipeline, SessionService)
+Application Services (InvestigationService, EvidenceManager, CaseManager)
+Background Services (EvidenceIntegrityMonitor, WslServiceOrchestrator)
 
-SemanticKernelOrchestrator: Structure exists but doesn't route to actual execution (just simulates with delays)
-InferencePipeline: Queue management works but missing actual inference execution
-Investigation Service: Framework exists but tools return mock data
-Notification System: Publishing events but no UI subscription
-
-❌ Not Connected/Missing:
-
-WSL Auto-start: Commented out in TrayService
-Vector Store: No Qdrant client implementation
-Embedding Service: No connection to FastAPI service
-Tool Implementations: OCR, OSINT, Redaction are stubs
-Command/Query Handlers: Many defined but not implemented
-Real-time Updates: No SignalR/WebSocket connection
-
-Intended State (The Vision)
-A local-first AI investigation platform where:
-
-User opens app → WSL services auto-start (Qdrant, embeddings, etc.)
-Selects investigation template → Models load based on available memory
-Drags in evidence → Files are hashed, extracted, embedded, indexed
-Asks questions → SK routes through appropriate models/tools/RAG
-Gets grounded answers → With citations, evidence links, and audit trail
-All offline → No cloud dependencies, complete privacy
-
-System Overview
-User Interface (Blazor)
-    ↓ [Commands/Queries via Mediator]
-Semantic Kernel (Intelligence - WHAT to do)
-    ↓ [Determines required operations]
-Inference Pipeline (Scheduling - WHEN to run)  
-    ↓ [Manages queue/priority]
-Model Orchestrator (Resources - HOW to load)
-    ↓ [Manages memory/models]
-WSL Services (Infrastructure)
-    - Qdrant (Vector DB)
-    - Embedding Service (FastAPI)
-    - Future: Ollama, etc.
-The Plan - Next Sprint Priorities
-Sprint 1: Foundation (Week 1)
-Goal: Get WSL services running and connected
-
-Fix WSL Auto-start
-csharp// Uncomment in TrayService
-public void EnsureStarted() { 
-    if(!_wsl.IsWslEnabled()) _wsl.EnableWsl(); 
-    _wsl.StartIimStackAsync(); 
+Step 1.3: Create API Client for Desktop
+csharppublic interface IIIMApiClient
+{
+    // All operations Desktop needs
+    Task<InvestigationSession> CreateSessionAsync(...);
+    Task<Evidence> IngestEvidenceAsync(...);
+    Task<InferenceResult> ProcessQueryAsync(...);
+    // etc.
 }
+Step 1.4: Strip Desktop to Thin Client
+Desktop will only have:
 
-Implement Qdrant Client
-csharppublic interface IVectorStore {
-    Task<string> IndexAsync(float[] embedding, Dictionary<string, object> metadata);
-    Task<SearchResult[]> SearchAsync(float[] query, int topK);
+Blazor components
+IIMApiClient
+StateContainer
+UI services only
+
+Phase 2: Deployment Mode Support
+Step 2.1: Add Deployment Configuration
+csharppublic class DeploymentConfiguration
+{
+    public DeploymentMode Mode { get; set; }
+    public bool CanChangeMode { get; set; }
+    public string ApiUrl { get; set; }
+    public AuthenticationConfig Auth { get; set; }
 }
+Step 2.2: Implement Mode-Specific Services
+csharp// Different implementations based on mode
+IModelManager → DynamicModelManager (standalone) | TemplateModelManager (server)
+IAuthService → LocalAuthService (standalone) | OpenIddictAuthService (server)
+IConfigService → FileConfigService (standalone) | DatabaseConfigService (server)
+Step 2.3: Add Admin Web Interface
+/admin routes in API:
+├── /admin/dashboard
+├── /admin/models (template configuration)
+├── /admin/users
+├── /admin/system
+└── /admin/audit
+Phase 3: SignalR & Real-time
+Step 3.1: Add SignalR Infrastructure
 
-Connect Embedding Service
-csharppublic interface IEmbeddingService {
-    Task<float[]> EmbedTextAsync(string text);
-    Task<float[]> EmbedImageAsync(byte[] image);
+InvestigationHub for session updates
+AdminHub for system notifications
+Client reconnection logic
+Event broadcasting system
+
+Step 3.2: Connect Desktop to SignalR
+
+Auto-connect on startup
+Subscribe to relevant channels
+Handle disconnections gracefully
+
+Phase 4: Authentication & Authorization
+Step 4.1: Implement OpenIddict
+
+OAuth2/OIDC server in API
+Support for external providers
+Default admin account for setup
+
+Step 4.2: Add Authentication to Desktop
+
+Login flow
+Token management
+Automatic refresh
+
+Phase 5: Multi-User Preparation
+Step 5.1: Design for Data Isolation
+Add DepartmentId/TenantId to all entities:
+csharppublic class Evidence
+{
+    public string Id { get; set; }
+    public string DepartmentId { get; set; } // For future isolation
+    // ... rest of properties
 }
+Step 5.2: Add Filtering Layer
+csharppublic interface IDataFilter
+{
+    IQueryable<T> ApplyFilter<T>(IQueryable<T> query, UserContext context);
+}
+Implementation Checklist
+Immediate Tasks (This Sprint)
 
+ Run PowerShell script to create API extension structure
+ Move service registrations from Desktop to API
+ Update API Program.cs to use extension methods
+ Create IIMApiClient interface
+ Implement HttpClient in Desktop for API calls
+ Remove business services from Desktop
+ Test standalone mode works
+ Add basic SignalR hubs
 
-Sprint 2: Execution Bridge (Week 2)
-Goal: Connect SK orchestration to actual model execution
+Next Sprint
 
-Wire up SemanticKernelOrchestrator.ExecuteStepAsync()
+ Add deployment mode configuration
+ Implement admin Razor pages
+ Add model template management
+ Implement OpenIddict authentication
+ Add mode switching capability
+ Test client-server mode
 
-Route to actual InferencePipeline
-Connect to tool implementations
-Return real results
+Future Sprints
 
+ Data isolation implementation
+ Multi-investigator collaboration
+ Advanced audit logging
+ Performance optimization
+ Backup/restore functionality
 
-Complete InferencePipeline execution
+Code Patterns to Follow
+1. Service Registration Pattern
+csharp// Always use interfaces
+services.AddSingleton<IServiceName, ImplementationName>();
 
-Add actual model inference call
-Implement IModelMetadataService
-Connect retry/error handling
+// Mode-specific registration
+services.AddSingleton<IModelManager>(sp =>
+{
+    var config = sp.GetRequiredService<DeploymentConfiguration>();
+    return config.Mode == DeploymentMode.Standalone
+        ? new DynamicModelManager(...)
+        : new TemplateModelManager(...);
+});
+2. API Endpoint Pattern
+csharp// Audit-critical = MediatR
+app.MapPost("/api/evidence/ingest", async (IMediator mediator, IngestEvidenceCommand command) =>
+{
+    var result = await mediator.Send(command);
+    return Results.Ok(result);
+});
 
+// Simple operations = Direct service
+app.MapGet("/api/status", async (ISystemService service) =>
+{
+    return Results.Ok(await service.GetStatusAsync());
+});
+3. Configuration Pattern
+csharp// Bootstrap from file
+var deploymentMode = configuration["DeploymentMode"];
 
-Implement core tools
+// Runtime from database/service
+var modelTemplate = await configService.GetModelTemplateAsync();
+Critical Notes for Implementation
 
-OCR (Tesseract integration)
-Entity extraction (NER)
-Basic OSINT (web search)
+Don't break standalone mode - It must keep working throughout migration
+Keep MediatR selective - Only for audit-critical operations
+Design for multi-tenancy - Add DepartmentId fields now, implement filtering later
+Backward compatibility - API changes must not break older clients
+Configuration location - Bootstrap from file, runtime from database
 
+Success Criteria
+Phase 1 is complete when:
 
+Desktop only contains UI code
+All business logic is in API
+Desktop calls API for all operations
+Standalone mode works exactly as before
+Code is organized with extension methods
+SignalR infrastructure is in place
 
-Sprint 3: Investigation Flow (Week 3)
-Goal: Complete end-to-end investigation capability
+Next LLM Instructions
+When continuing this work:
 
-Evidence ingestion pipeline
-
-File → Hash → Extract → Embed → Index
-
-
-RAG implementation
-
-Query → Embed → Search → Retrieve → Generate
-
-
-Template-based model loading
-
-Memory checking
-User selection for constrained memory
-Progress reporting
-
-
-
-Sprint 4: Polish & Monitoring (Week 4)
-Goal: Production readiness
-
-Health monitoring
-
-Service health checks
-Auto-restart failed services
-Status dashboard
-
-
-Real-time updates
-
-SignalR for notifications
-Progress indicators
-Live logs
-
-
-Error handling
-
-Graceful degradation
-User-friendly error messages
-Recovery procedures
-
-
-
-Success Metrics
-
-Week 1: Can start WSL, index a document, search vectors
-Week 2: Can load a model and get real inference results
-Week 3: Can complete a full investigation query with RAG
-Week 4: Stable, monitored, production-ready system
-
-Risk Mitigations
-
-Memory constraints: Implement swap/offloading for large models
-WSL issues: Provide manual setup scripts as fallback
-Performance: Add caching layer for repeated queries
-Debugging: Comprehensive logging at each integration point
+Check current state against this plan
+Complete Phase 1 migration first
+Use the PowerShell scripts already created
+Follow the service registration patterns
+Keep MediatR for audit operations only
+Test standalone mode after each change
+Don't add complexity that isn't needed yet
