@@ -1,232 +1,482 @@
 Project Overview
 Intelligent Investigation Machine (IIM) - A Blazor Hybrid + WSL2 desktop application for law enforcement AI investigations. Premium training platform delivered as part of the "AI Investigator Mastery Bootcamp" running entirely on-premises on Framework PCs with 128GB RAM and AMD GPUs.
-Current Solution Structure
-/src
-├── IIM.Shared/          # DTOs, Enums, Common Models (no dependencies)
-│   ├── DTOs/           # API request/response contracts
-│   ├── Enums/          # Shared enumerations  
-│   └── Models/         # TimeRange, FileMetadata, etc.
-│
-├── IIM.Infrastructure/  # External services, WSL, Storage
-│   └── Platform/       # ✅ PHASE 1 COMPLETE
-│       ├── IWslManager.cs (interface)
-│       ├── WslManager.cs 
-│       ├── WslManager.Core.cs
-│       ├── WslManager.Docker.cs
-│       ├── WslManager.Files.cs
-│       └── WslServiceOrchestrator.cs
-│
-├── IIM.Plugin.SDK/     # Plugin interfaces for extensibility
-│
-├── IIM.Core/           # Domain models, business logic
-│   ├── Models/         # Case, Evidence, Investigation, ModelConfiguration
-│   ├── Services/       # Core business services, Export services, SessionService
-│   ├── AI/            
-│   │   ├── ModelOrchestrator.cs (✅ Working implementation)
-│   │   ├── DefaultModelOrchestrator.cs
-│   │   ├── SemanticKernelOrchestrator.cs (✅ NEW - SK integration)
-│   │   └── IModelOrchestrator.cs (interface)
-│   ├── Inference/     
-│   │   └── InferencePipeline.cs (⚠️ Needs queue processing completion)
-│   ├── RAG/           # ⚠️ Empty implementations
-│   ├── Mediator/      # ✅ Custom mediator (complete, working)
-│   ├── Configuration/ # ✅ Template system (complete)
-│   │   └── IModelConfigurationTemplate.cs
-│   ├── Extensions/    # ✅ NEW - SK service registration
-│   │   └── SemanticKernelServiceExtensions.cs
-│   └── Plugins/       # ✅ NEW - SK Plugins
-│       └── ForensicAnalysisPlugin.cs
-│
-├── IIM.Application/    # Application services, CQRS
-│   ├── Commands/      # ✅ CQRS commands with handlers
-│   │   ├── Wsl/       # Including ConfigureProxyCommand
-│   │   ├── Models/    # Load/Unload model commands
-│   │   └── Investigation/
-│   ├── Queries/       # ✅ Query handlers
-│   ├── Behaviors/     # ✅ 7 Pipeline behaviors (all working)
-│   └── Services/      
-│       ├── InferenceService.cs (Functional with basic implementation)
-│       └── InvestigationService.cs (Working)
-│
-├── IIM.Api/           # HTTP endpoints, Minimal APIs
-│   └── Program.cs     # All endpoints defined here
-│
-├── IIM.Components/    # Blazor UI components
-│   └── Components/    # UI components for investigations
-│
-└── IIM.Desktop/       # Windows Forms host
-    └── Program.cs     # ✅ Updated with SK support (builds successfully)
 
-/tests
-├── IIM.Core.Tests/
-│   ├── Infrastructure/
-│   │   └── WslManagerTests.cs
-│   └── Mocks/
-│       ├── MockWslManager.cs (✅ Complete implementation)
-│       └── MockModelOrchestrator.cs
-└── IIM.Integration.Tests/
-✅ COMPLETED WORK
-Phase 1: WSL & Docker Foundation (COMPLETE)
-
-WslManager: Full WSL2 management with Docker orchestration
-Service Orchestration: Qdrant (6333), PostgreSQL (5432), MinIO (9000/9001)
-Non-admin support: PowerShell script generation for IT departments
-Tor proxy support: InstallTorAndApplyProxyAsync implementation
-
-Mediator Pattern (COMPLETE)
-
-Custom Mediator: Fully implemented without MediatR dependency
-7 Pipeline Behaviors: Logging, Validation, Performance, Caching, Retry, Transaction, Audit
-Notification System: Complete with handlers for WSL, Model, and Investigation events
-Command/Query Handlers: Full CQRS implementation
-
-Template System (COMPLETE)
-
-ModelConfigurationTemplate: Full template management for investigation types
-Template Service: Save/load/apply templates to sessions
-System Templates: Pre-configured templates for different investigation scenarios
-
-Semantic Kernel Integration (NEW - COMPLETE)
-
-SemanticKernelOrchestrator: Implements IModelOrchestrator interface
-SK Service Extensions: Clean DI registration
-ForensicAnalysisPlugin: First SK plugin with investigation functions
-Backward Compatible: Works alongside existing ModelOrchestrator
-
-🚧 CURRENT STATUS
-What's Working:
-
-Build Status: ✅ Solution builds successfully
-WSL Management: ✅ Fully functional
-Mediator Pattern: ✅ All commands/queries working
-Template System: ✅ Models loaded from templates
-Basic Inference: ✅ Mock inference working
-SK Integration: ✅ Compiles and ready for testing
-
-What Needs Work:
-
-DirectML/ONNX: Package installed but no actual GPU inference
-InferencePipeline: Queue processing incomplete
-RAG Implementation: Empty, needs document ingestion
-Real Model Loading: Currently using mocks
-
-📋 NEXT STEPS (Priority Order)
-Sprint 1: Test SK Integration (This Week)
-csharp// 1. Test SK orchestrator with mock models
-var orchestrator = ServiceProvider.GetRequiredService<IModelOrchestrator>();
-var models = await orchestrator.GetAvailableModelsAsync();
-await orchestrator.LoadModelAsync(new ModelRequest { ... });
-
-// 2. Test ForensicAnalysisPlugin
-var plugin = ServiceProvider.GetRequiredService<ForensicAnalysisPlugin>();
-var hash = await plugin.CalculateHashAsync("evidence.pdf");
-
-// 3. Verify template integration
-var templates = await templateService.GetTemplatesAsync();
-Sprint 2: Complete DirectML/ONNX (Week 2)
-csharp// 1. Implement DirectMLTextGenerationService properly
-public class DirectMLTextGenerationService : ITextGenerationService
-{
-    private readonly InferenceSession _session;
+1. System Architecture Overview
+mermaidgraph TB
+    subgraph "Windows Host"
+        subgraph "IIM.Desktop (WinForms)"
+            MW[MainForm + WebView2]
+            MW --> BC[Blazor Components]
+        end
+        
+        subgraph "IIM.Api (localhost:5080)"
+            API[Minimal APIs]
+            API --> MW2[Mediator]
+            MW2 --> HSV[Hosted Services]
+        end
+        
+        subgraph "Core Services"
+            SK[SemanticKernel<br/>Orchestrator]
+            IP[Inference<br/>Pipeline]
+            MO[Model<br/>Orchestrator]
+            SK --> IP
+            IP --> MO
+        end
+        
+        subgraph "Storage"
+            SC[Storage<br/>Configuration]
+            ES[Evidence<br/>Store]
+            MT[Model<br/>Templates]
+        end
+    end
     
-    public DirectMLTextGenerationService(string modelPath)
-    {
-        var sessionOptions = new SessionOptions();
-        sessionOptions.AppendExecutionProvider_DML(0);
-        _session = new InferenceSession(modelPath, sessionOptions);
-    }
+    subgraph "WSL2 Ubuntu"
+        QD[Qdrant<br/>:6333]
+        EMB[Embedding<br/>Service :8081]
+        PG[PostgreSQL<br/>:5432]
+        MIN[MinIO<br/>:9000]
+    end
     
-    // Actual tensor operations here
+    BC -.->|HTTP| API
+    API <-->|HTTP| QD
+    API <-->|HTTP| EMB
+    MO --> SC
+    ES --> SC
+2. Investigation Query Flow (Current State)
+mermaidsequenceDiagram
+    participant UI as Blazor UI
+    participant API as API Layer
+    participant Med as Mediator
+    participant SK as Semantic Kernel
+    participant IP as Inference Pipeline
+    participant MO as Model Orchestrator
+    participant WSL as WSL Services
+    
+    Note over UI,WSL: ⚠️ Current: Partially Connected
+    
+    UI->>API: POST /api/investigation/query
+    API->>Med: Send(ProcessQueryCommand)
+    Med->>SK: ProcessQueryAsync()
+    
+    Note over SK: Currently just simulates<br/>with Task.Delay()
+    SK->>SK: ExtractIntent() [STUB]
+    SK->>SK: BuildActionPlan() [STUB]
+    
+    SK->>IP: ExecuteAsync<T>()
+    Note over IP: Queues request but<br/>no actual inference
+    IP->>MO: InferAsync()
+    Note over MO: Would load model<br/>but not connected
+    
+    MO-->>IP: [Mock Result]
+    IP-->>SK: [Mock Result]
+    SK-->>Med: ReasoningResult
+    Med-->>API: Response
+    API-->>UI: JSON Response
+    
+    Note over WSL: ❌ Not Connected:<br/>Qdrant, Embeddings
+3. Model Loading Flow (Current State)
+mermaidflowchart LR
+    subgraph "Current Implementation"
+        TC[Template<br/>Configuration] --> TL[Template<br/>Loader]
+        TL --> MC[Memory<br/>Check]
+        MC --> MO2[Model<br/>Orchestrator]
+        MO2 --> FS[File<br/>System]
+        FS --> OM[ONNX<br/>Model]
+    end
+    
+    subgraph "Missing Connections"
+        MO2 -.->|❌| IP2[Inference<br/>Pipeline]
+        IP2 -.->|❌| AR[Actual<br/>Results]
+    end
+4. Evidence Ingestion Flow (Intended vs Current)
+mermaidgraph TD
+    subgraph "Intended Flow"
+        F1[File Upload] --> H1[SHA-256 Hash]
+        H1 --> E1[Text Extraction]
+        E1 --> EM1[Embedding Service]
+        EM1 --> V1[Vector Store]
+        V1 --> Q1[Qdrant Index]
+    end
+    
+    subgraph "Current State"
+        F2[File Upload] --> H2[SHA-256 Hash]
+        H2 --> E2[Text Extraction]
+        E2 -.->|❌| EM2[Embedding Service]
+        EM2 -.->|❌| V2[Vector Store]
+        V2 -.->|❌| Q2[Qdrant Index]
+    end
+    
+    style EM2 stroke:#f66,stroke-width:2px
+    style V2 stroke:#f66,stroke-width:2px
+    style Q2 stroke:#f66,stroke-width:2px
+5. Mediator Communication Pattern
+mermaidgraph TB
+    subgraph "Commands (State Changes)"
+        C1[LoadModelCommand]
+        C2[CreateSessionCommand]
+        C3[ConfigureProxyCommand]
+    end
+    
+    subgraph "Queries (Read Data)"
+        Q1[GetWslStatusQuery]
+        Q2[GetAvailableModelsQuery]
+        Q3[GetSessionQuery]
+    end
+    
+    subgraph "Notifications (Events)"
+        N1[ModelLoadedNotification]
+        N2[InferenceCompletedNotification]
+        N3[WslSetupCompletedNotification]
+    end
+    
+    subgraph "Mediator Pipeline"
+        M[Mediator]
+        M --> VB[Validation]
+        VB --> AB[Authorization]
+        AB --> LB[Logging]
+        LB --> PB[Performance]
+        PB --> CB[Caching]
+        CB --> H[Handler]
+    end
+    
+    C1 --> M
+    Q1 --> M
+    H --> N1
+    
+    subgraph "Multiple Handlers"
+        N1 --> H1[UI Update Handler]
+        N1 --> H2[Audit Log Handler]
+        N1 --> H3[Metrics Handler]
+    end
+6. WSL Service Management Flow
+mermaidstateDiagram-v2
+    [*] --> CheckWSL: App Starts
+    
+    CheckWSL --> WSLNotInstalled: Not Found
+    CheckWSL --> WSLInstalled: Found
+    
+    WSLNotInstalled --> ShowSetupUI: Guide User
+    ShowSetupUI --> GenerateScript: Create PS Script
+    GenerateScript --> UserRunsScript: Manual Action
+    UserRunsScript --> WSLInstalled: After Restart
+    
+    WSLInstalled --> CheckDistro: Check Ubuntu
+    CheckDistro --> DistroMissing: Not Found
+    CheckDistro --> DistroReady: Found
+    
+    DistroMissing --> InstallDistro: Auto Install
+    InstallDistro --> DistroReady: Success
+    
+    DistroReady --> StartServices: Start Stack
+    StartServices --> CheckHealth: Monitor
+    
+    CheckHealth --> ServicesHealthy: All Good
+    CheckHealth --> ServicesFailed: Issues
+    ServicesFailed --> RestartServices: Auto Retry
+    RestartServices --> CheckHealth: Re-check
+    
+    ServicesHealthy --> [*]: Ready
+7. Inference Pipeline Queue System
+mermaidgraph LR
+    subgraph "Request Entry"
+        R1[High Priority]
+        R2[Normal Priority]
+        R3[Low Priority]
+    end
+    
+    subgraph "Queue Channels"
+        Q1[High Queue<br/>Channel]
+        Q2[Normal Queue<br/>Channel]
+        Q3[Low Queue<br/>Channel]
+    end
+    
+    subgraph "Processing"
+        P1[GPU Semaphore<br/>Max: 2]
+        P2[CPU Semaphore<br/>Max: 4]
+        PT[Processing<br/>Tasks]
+    end
+    
+    subgraph "Current Issue"
+        PT -.->|❌| EX[Actual<br/>Execution]
+        EX -.->|Missing| RES[Real<br/>Results]
+    end
+    
+    R1 --> Q1
+    R2 --> Q2
+    R3 --> Q3
+    
+    Q1 --> PT
+    Q2 --> PT
+    Q3 --> PT
+    
+    PT --> P1
+    PT --> P2
+8. Complete Data Flow - Investigation Query (What Should Happen)
+mermaidgraph TD
+    subgraph "1. Query Input"
+        U[User Query] --> UI[Blazor UI]
+    end
+    
+    subgraph "2. Command Layer"
+        UI --> CMD[ProcessQueryCommand]
+        CMD --> MED[Mediator]
+    end
+    
+    subgraph "3. Intelligence Layer"
+        MED --> SK[Semantic Kernel]
+        SK --> IE[Intent Extraction]
+        IE --> AP[Action Planning]
+        AP --> RT[Route to Tools/Models]
+    end
+    
+    subgraph "4. Execution Layer"
+        RT --> IP[Inference Pipeline]
+        IP --> QM[Queue Management]
+        QM --> MO[Model Orchestrator]
+    end
+    
+    subgraph "5. Infrastructure Layer"
+        MO --> LM[Load Models]
+        RT --> EMB[Embedding Service]
+        EMB --> QD[Qdrant Search]
+        QD --> CTX[Context Retrieval]
+    end
+    
+    subgraph "6. Generation"
+        CTX --> LLM[LLM Generation]
+        LLM --> CIT[Add Citations]
+    end
+    
+    subgraph "7. Response"
+        CIT --> RESP[Response]
+        RESP --> NOT[Notifications]
+        RESP --> UI2[Update UI]
+    end
+    
+    style EMB stroke:#f66,stroke-width:2px
+    style QD stroke:#f66,stroke-width:2px
+    style LLM stroke:#f66,stroke-width:2px
+9. Service Dependency Map
+mermaidgraph BT
+    subgraph "Infrastructure Layer"
+        WSL[WslManager]
+        STOR[StorageConfiguration]
+        HTTP[HttpClientFactory]
+    end
+    
+    subgraph "Core Services"
+        MO[ModelOrchestrator]
+        IP[InferencePipeline]
+        SK[SemanticKernelOrchestrator]
+    end
+    
+    subgraph "Application Services"
+        IS[InvestigationService]
+        SS[SessionService]
+        MS[ModelManagementService]
+    end
+    
+    subgraph "UI Components"
+        INV[Investigation.razor]
+        WSLUI[WslStatus.razor]
+        MOD[Models.razor]
+    end
+    
+    MO --> STOR
+    IP --> MO
+    SK --> MO
+    SK --> SS
+    
+    IS --> SK
+    IS --> SS
+    MS --> MO
+    
+    INV --> IS
+    WSLUI --> WSL
+    MOD --> MS
+    
+    style SK fill:#ffa
+    style IP fill:#ffa
+    Note1[🟡 Partially Implemented]
+
+Key Observations
+✅ What's Connected:
+
+UI ↔ API communication
+Mediator pattern infrastructure
+Model template system
+Basic file operations
+
+⚠️ Partially Connected:
+
+Semantic Kernel (structure only)
+Inference Pipeline (queuing only)
+WSL Manager (not auto-starting)
+
+❌ Not Connected:
+
+WSL services (Qdrant, Embeddings)
+Actual model inference execution
+RAG pipeline
+Real-time notifications to UI
+Tool implementations (OCR, OSINT, etc.)
+
+
+Current State (What's Actually Working)
+✅ Implemented & Functional:
+
+Desktop Shell: Windows Forms + Blazor WebView UI rendering
+Storage Configuration: Path management for models/evidence/templates
+Model Templates: Complete structure for investigation types (CSAM, Financial, etc.)
+Queue System: Priority-based InferencePipeline with GPU/CPU resource management
+WSL Manager: Core WSL operations (install, enable, execute commands)
+Mediator Infrastructure: MediatR setup with pipeline behaviors
+Basic Models: DefaultModelOrchestrator can load/unload ONNX models
+
+⚠️ Partially Implemented:
+
+SemanticKernelOrchestrator: Structure exists but doesn't route to actual execution (just simulates with delays)
+InferencePipeline: Queue management works but missing actual inference execution
+Investigation Service: Framework exists but tools return mock data
+Notification System: Publishing events but no UI subscription
+
+❌ Not Connected/Missing:
+
+WSL Auto-start: Commented out in TrayService
+Vector Store: No Qdrant client implementation
+Embedding Service: No connection to FastAPI service
+Tool Implementations: OCR, OSINT, Redaction are stubs
+Command/Query Handlers: Many defined but not implemented
+Real-time Updates: No SignalR/WebSocket connection
+
+Intended State (The Vision)
+A local-first AI investigation platform where:
+
+User opens app → WSL services auto-start (Qdrant, embeddings, etc.)
+Selects investigation template → Models load based on available memory
+Drags in evidence → Files are hashed, extracted, embedded, indexed
+Asks questions → SK routes through appropriate models/tools/RAG
+Gets grounded answers → With citations, evidence links, and audit trail
+All offline → No cloud dependencies, complete privacy
+
+System Overview
+User Interface (Blazor)
+    ↓ [Commands/Queries via Mediator]
+Semantic Kernel (Intelligence - WHAT to do)
+    ↓ [Determines required operations]
+Inference Pipeline (Scheduling - WHEN to run)  
+    ↓ [Manages queue/priority]
+Model Orchestrator (Resources - HOW to load)
+    ↓ [Manages memory/models]
+WSL Services (Infrastructure)
+    - Qdrant (Vector DB)
+    - Embedding Service (FastAPI)
+    - Future: Ollama, etc.
+The Plan - Next Sprint Priorities
+Sprint 1: Foundation (Week 1)
+Goal: Get WSL services running and connected
+
+Fix WSL Auto-start
+csharp// Uncomment in TrayService
+public void EnsureStarted() { 
+    if(!_wsl.IsWslEnabled()) _wsl.EnableWsl(); 
+    _wsl.StartIimStackAsync(); 
 }
 
-// 2. Test with real ONNX models
-// 3. Benchmark GPU vs CPU performance
-Sprint 3: Complete InferencePipeline (Week 3)
-
-Fix queue processing loop
-Implement priority-based scheduling
-Add batch processing
-Handle cancellation properly
-
-Sprint 4: RAG Implementation (Week 4)
-
-Document chunking strategies
-Embedding generation with ONNX
-Qdrant integration
-Citation extraction
-
-🎯 Configuration for Testing
-appsettings.json
-json{
-  "Storage": {
-    "LocalBasePath": "C:\\\\Users\\\\[username]\\\\AppData\\\\Local\\\\IIM"
-  },
-  "Models": {
-    "BasePath": "C:\\\\Users\\\\[username]\\\\AppData\\\\Local\\\\IIM\\\\Models"
-  },
-  "Api": {
-    "BaseUrl": "http://localhost:5080"
-  },
-  "Evidence": {
-    "EnableEncryption": false,
-    "RequireDualControl": false,
-    "MaxFileSizeMb": 10240
-  }
+Implement Qdrant Client
+csharppublic interface IVectorStore {
+    Task<string> IndexAsync(float[] embedding, Dictionary<string, object> metadata);
+    Task<SearchResult[]> SearchAsync(float[] query, int topK);
 }
-To Switch Between Orchestrators:
-Option 1: Keep Existing (Safe)
-csharp// In Program.cs
-services.AddSingleton<IModelOrchestrator, ModelOrchestrator>();
-Option 2: Use Semantic Kernel (New)
-csharp// In Program.cs
-services.AddSemanticKernelOrchestration();
-services.AddInvestigationPlugins();
-🔧 Technical Decisions
 
-Semantic Kernel over Custom: Better plugin ecosystem, Microsoft support
-DirectML over ROCm: ROCm unstable on Windows, DirectML is native
-ONNX Format: Best DirectML compatibility
-Custom Mediator: Full control, no external dependencies
-Templates First: Models discovered from templates, not hardcoded
+Connect Embedding Service
+csharppublic interface IEmbeddingService {
+    Task<float[]> EmbedTextAsync(string text);
+    Task<float[]> EmbedImageAsync(byte[] image);
+}
 
-📊 Success Metrics
-Current phase complete when:
 
-✅ SK successfully loads a model
-✅ Inference pipeline processes a request
-✅ ForensicAnalysisPlugin executes a function
-⬜ DirectML runs inference on GPU
-⬜ RAG returns results with citations
-⬜ Memory usage under 64GB for typical workload
+Sprint 2: Execution Bridge (Week 2)
+Goal: Connect SK orchestration to actual model execution
 
-💡 Development Commands
-bash# Build
-dotnet build
+Wire up SemanticKernelOrchestrator.ExecuteStepAsync()
 
-# Run Desktop App
-dotnet run --project src/IIM.Desktop
+Route to actual InferencePipeline
+Connect to tool implementations
+Return real results
 
-# Run API
-dotnet run --project src/IIM.Api
 
-# Run Tests
-dotnet test
+Complete InferencePipeline execution
 
-# Check WSL Status
-wsl --list --verbose
+Add actual model inference call
+Implement IModelMetadataService
+Connect retry/error handling
 
-# Start Docker in WSL
-wsl -d IIM-Ubuntu -- docker ps
-🐛 Known Issues
+
+Implement core tools
+
+OCR (Tesseract integration)
+Entity extraction (NER)
+Basic OSINT (web search)
 
 
 
-📝 Notes for Developers
+Sprint 3: Investigation Flow (Week 3)
+Goal: Complete end-to-end investigation capability
 
-Current State: WSL works, SK integrated, ready for AI implementation
-Next Priority: Test SK with real models
-Blockers: Need actual ONNX model files
+Evidence ingestion pipeline
 
-Testing: Use MockWslManager for unit tests
+File → Hash → Extract → Embed → Index
 
-Remember: This is for law enforcement training - reliability and ease of use are paramount. The system must "just work" out of the box for non-technical users.
+
+RAG implementation
+
+Query → Embed → Search → Retrieve → Generate
+
+
+Template-based model loading
+
+Memory checking
+User selection for constrained memory
+Progress reporting
+
+
+
+Sprint 4: Polish & Monitoring (Week 4)
+Goal: Production readiness
+
+Health monitoring
+
+Service health checks
+Auto-restart failed services
+Status dashboard
+
+
+Real-time updates
+
+SignalR for notifications
+Progress indicators
+Live logs
+
+
+Error handling
+
+Graceful degradation
+User-friendly error messages
+Recovery procedures
+
+
+
+Success Metrics
+
+Week 1: Can start WSL, index a document, search vectors
+Week 2: Can load a model and get real inference results
+Week 3: Can complete a full investigation query with RAG
+Week 4: Stable, monitored, production-ready system
+
+Risk Mitigations
+
+Memory constraints: Implement swap/offloading for large models
+WSL issues: Provide manual setup scripts as fallback
+Performance: Add caching layer for repeated queries
+Debugging: Comprehensive logging at each integration point

@@ -13,21 +13,24 @@ using IIM.Core.Configuration;
 using IIM.Core.Extensions; // ADD THIS for SK extensions
 using IIM.Core.Inference;
 using IIM.Core.Mediator;
-using IIM.Shared.Models;
 using IIM.Core.RAG;
 using IIM.Core.Security;
 using IIM.Core.Services;
 using IIM.Core.Services.Configuration;
 using IIM.Core.Storage;
+using IIM.Infrastructure.Embeddings; // Add for RemoteEmbeddingService
 using IIM.Infrastructure.Platform;
 using IIM.Infrastructure.Storage;
+using IIM.Infrastructure.VectorStore; // Add for QdrantService
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using Microsoft.AspNetCore.Components.WebView.WindowsForms;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel; // ADD THIS
 using System;
 using System.IO;
@@ -130,13 +133,41 @@ internal static class Program
                 // Add memory cache
                 services.AddMemoryCache();
 
+                // ========================================
+                // HTTP Clients Configuration
+                // ========================================
+
                 // Add HttpClient factory
                 services.AddHttpClient();
+
+                // API client
                 services.AddHttpClient("IIM.API", client =>
                 {
                     client.BaseAddress = new Uri(configuration["Api:BaseUrl"] ?? "http://localhost:5080");
                     client.DefaultRequestHeaders.Add("User-Agent", "IIM-Desktop/1.0");
                     client.DefaultRequestHeaders.Add("Accept", "application/json");
+                    client.Timeout = TimeSpan.FromSeconds(30);
+                });
+
+                // Qdrant vector database client
+                services.AddHttpClient("qdrant", client =>
+                {
+                    client.BaseAddress = new Uri(configuration["Qdrant:BaseUrl"] ?? "http://localhost:6333");
+                    client.DefaultRequestHeaders.Add("Accept", "application/json");
+                    client.Timeout = TimeSpan.FromSeconds(30);
+                });
+
+                // Embedding service client
+                services.AddHttpClient("embed", client =>
+                {
+                    client.BaseAddress = new Uri(configuration["EmbedService:BaseUrl"] ?? "http://localhost:8081");
+                    client.DefaultRequestHeaders.Add("Accept", "application/json");
+                    client.Timeout = TimeSpan.FromSeconds(30);
+                });
+
+                // WSL services client
+                services.AddHttpClient("wsl", client =>
+                {
                     client.Timeout = TimeSpan.FromSeconds(30);
                 });
 
@@ -180,7 +211,7 @@ internal static class Program
                 // Platform Services (WSL, Docker, etc.)
                 // ========================================
 
-                // WSL Manager - KEEP AS-IS
+                // WSL Manager
                 services.AddSingleton<IWslManager>(sp =>
                 {
                     var logger = sp.GetRequiredService<ILogger<WslManager>>();
@@ -188,24 +219,38 @@ internal static class Program
                     return new WslManager(logger, httpFactory);
                 });
 
+                // WSL Service Orchestrator
+                services.AddSingleton<IWslServiceOrchestrator>(sp =>
+                {
+                    var logger = sp.GetRequiredService<ILogger<WslServiceOrchestrator>>();
+                    var wslManager = sp.GetRequiredService<IWslManager>();
+                    var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
+                 
+                    return new WslServiceOrchestrator(logger, wslManager, httpFactory);
+                });
+
                 // ========================================
-                // AI/ML Services - UPDATED WITH SEMANTIC KERNEL
+                // AI/ML Services
                 // ========================================
 
-             
-           
-               services.AddSingleton<IModelOrchestrator>(sp =>
+                // Model Orchestrator - manages model loading/unloading
+                services.AddSingleton<IModelOrchestrator>(sp =>
                 {
                     var logger = sp.GetRequiredService<ILogger<DefaultModelOrchestrator>>();
                     var storageConfig = sp.GetRequiredService<StorageConfiguration>();
                     return new DefaultModelOrchestrator(logger, storageConfig);
                 });
 
-                // These services work with either orchestrator:
+                // Inference Pipeline - manages request queueing
                 services.AddSingleton<IInferencePipeline, InferencePipeline>();
+
+                // Model Management Service
                 services.AddSingleton<IModelManagementService, ModelManagementService>();
+
+                // Inference Service
                 services.AddSingleton<IInferenceService, InferenceService>();
 
+                // Reasoning Service (Semantic Kernel)
                 services.AddSingleton<IReasoningService>(sp =>
                 {
                     var logger = sp.GetRequiredService<ILogger<SemanticKernelOrchestrator>>();
@@ -221,10 +266,9 @@ internal static class Program
                 });
 
                 // ========================================
-                // Template Service - Required for SK
+                // Template Service
                 // ========================================
 
-                // Register template service (works with both orchestrators)
                 services.AddSingleton<IModelConfigurationTemplateService>(sp =>
                 {
                     var logger = sp.GetRequiredService<ILogger<ModelConfigurationTemplateService>>();
@@ -240,39 +284,82 @@ internal static class Program
                 });
 
                 // ========================================
-                // RAG & Vector Services - UNCHANGED
+                // Vector Store & Embedding Services (Sprint 1)
                 // ========================================
 
-                // Qdrant service (in-memory for now, replace with real implementation)
+                // Qdrant Vector Store Service (replaces InMemoryQdrantService)
                 services.AddSingleton<IQdrantService>(sp =>
                 {
-                    var logger = sp.GetRequiredService<ILogger<InMemoryQdrantService>>();
-                    var storageConfig = sp.GetRequiredService<StorageConfiguration>();
-                    return new InMemoryQdrantService(logger, storageConfig);
+                    var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
+                    var logger = sp.GetRequiredService<ILogger<QdrantService>>();
+
+                    // Check if we should use in-memory for development
+                    var useInMemory = configuration.GetValue<bool>("Development:UseInMemoryQdrant", false);
+
+                    if (useInMemory)
+                    {
+                        // Use in-memory for development/testing
+                        var storageConfig = sp.GetRequiredService<StorageConfiguration>();
+                        return new InMemoryQdrantService(logger, storageConfig);
+                    }
+                    else
+                    {
+                        // Use real Qdrant service
+                        return new QdrantService(httpFactory, logger);
+                    }
                 });
 
+                // Embedding Service
+                services.AddSingleton<IEmbeddingService>(sp =>
+                {
+                    var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
+                    var logger = sp.GetRequiredService<ILogger<RemoteEmbeddingService>>();
+                    return new RemoteEmbeddingService(httpFactory, logger);
+                });
+
+                //// RAG Service (combines embeddings and vector store)
+                //services.AddSingleton<IRAGService>(sp =>
+                //{
+                //    var qdrantService = sp.GetRequiredService<IQdrantService>();
+                //    var embeddingService = sp.GetRequiredService<IEmbeddingService>();
+                //    var logger = sp.GetRequiredService<ILogger<RAGService>>();
+
+                //    // Note: RAGService needs to be implemented to combine these services
+                //    // For now, this is a placeholder
+                //    throw new NotImplementedException("RAGService implementation needed");
+                //    // return new RAGService(qdrantService, embeddingService, logger);
+                //});
+
                 // ========================================
-                // Investigation Services - UNCHANGED
+                // Model Metadata Service
                 // ========================================
 
-                // Core investigation services
+                services.AddSingleton<IModelMetadataService>(sp =>
+                {
+                    var logger = sp.GetRequiredService<ILogger<ModelMetadataService>>();
+                    var config = sp.GetRequiredService<IOptions<ModelMetadataConfiguration>>();
+                    return new ModelMetadataService(logger, config);
+                });
+
+
+                // ========================================
+                // Investigation Services
+                // ========================================
+
                 services.AddScoped<IInvestigationService, InvestigationService>();
                 services.AddScoped<ISessionService, SessionService>();
                 services.AddScoped<IEvidenceManager, EvidenceManager>();
                 services.AddScoped<ICaseManager, JsonCaseManager>();
 
                 // ========================================
-                // Export Services - Added FileService
+                // Export Services
                 // ========================================
 
-                // Add FileService (needed by plugins)
                 services.AddSingleton<IFileService, FileService>();
-
-                // Register export services with base path
                 services.AddExportServices(GetDataDirectory());
 
                 // ========================================
-                // Mediator Services - UNCHANGED
+                // Mediator Services
                 // ========================================
 
                 // Add the mediator with assembly scanning
@@ -283,7 +370,7 @@ internal static class Program
                     typeof(IModelOrchestrator).Assembly                // Core assembly
                 );
 
-                // Add memory cache for caching behavior (if not already added)
+                // Add memory cache for caching behavior
                 services.AddMemoryCache(options =>
                 {
                     options.SizeLimit = 100_000_000; // 100MB cache limit
@@ -291,14 +378,14 @@ internal static class Program
                     options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
                 });
 
-                // Register ALL pipeline behaviors in order (they execute in registration order)
-                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));       // 1. Logging
-                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));    // 2. Validation
-                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));   // 3. Performance monitoring
-                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));       // 4. Caching for queries
-                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RetryBehavior<,>));         // 5. Retry logic
-                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));   // 6. Transactions
-                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));         // 7. Audit logging
+                // Register pipeline behaviors in order
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RetryBehavior<,>));
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));
 
                 // Register notification handlers for WSL events
                 services.AddTransient<INotificationHandler<WslSetupCompletedNotification>, WslSetupCompletedHandler>();
@@ -308,7 +395,7 @@ internal static class Program
 
                 // Register notification handlers for Model events
                 services.AddTransient<INotificationHandler<ModelLoadedNotification>, ModelLoadedNotificationHandler>();
-                services.AddTransient<INotificationHandler<ModelLoadedNotification>, ModelLoadedAuditHandler>(); // Same event, different handler
+                services.AddTransient<INotificationHandler<ModelLoadedNotification>, ModelLoadedAuditHandler>();
                 services.AddTransient<INotificationHandler<ModelLoadFailedNotification>, ModelLoadFailedHandler>();
                 services.AddTransient<INotificationHandler<ModelUnloadedNotification>, ModelUnloadedHandler>();
 
@@ -319,20 +406,16 @@ internal static class Program
                 services.AddTransient<INotificationHandler<SessionCreatedNotification>, SessionCreatedHandler>();
 
                 // ========================================
-                // Storage Services - UNCHANGED
+                // Storage Services
                 // ========================================
 
-                // Deduplication service
                 services.AddSingleton<IDeduplicationService, FixedSizeDeduplicationService>();
-
-                // MinIO storage service
                 services.AddSingleton<IMinIOStorageService, MinIOStorageService>();
 
                 // ========================================
-                // UI Services - UNCHANGED
+                // UI Services
                 // ========================================
 
-                // Desktop-specific UI services
                 services.AddSingleton<INotificationService, NotificationService>();
                 services.AddSingleton<IHubConnectionService, HubConnectionService>();
                 services.AddScoped<IVisualizationService, VisualizationService>();
@@ -340,10 +423,9 @@ internal static class Program
                 services.AddScoped<ModelSizeCalculator>();
 
                 // ========================================
-                // HTTP Clients - UNCHANGED
+                // HTTP Clients
                 // ========================================
 
-                // IIM API Client
                 services.AddHttpClient<IimClient>(client =>
                 {
                     client.BaseAddress = new Uri(configuration["Api:BaseUrl"] ?? "http://localhost:5080");
@@ -351,12 +433,14 @@ internal static class Program
                 });
 
                 // ========================================
-                // Semantic Kernel Plugins (when ready)
+                // Background Services
                 // ========================================
 
-                // Register plugins when SK is enabled
-                // services.AddSingleton<ForensicAnalysisPlugin>();
-                // Add other plugins as they're created
+                // Add WSL health monitoring as a hosted service
+                // services.AddHostedService<WslHealthMonitorService>();
+
+                // Add vector store maintenance as a hosted service
+                // services.AddHostedService<VectorStoreMaintenanceService>();
             })
             .ConfigureLogging((context, logging) =>
             {

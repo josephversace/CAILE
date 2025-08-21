@@ -1,9 +1,12 @@
-﻿// src/IIM.Core/RAG/InMemoryQdrantService.cs
-using IIM.Infrastructure.VectorStore.Models;
-using IIM.Shared.Models;
+﻿using IIM.Shared.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
-
-namespace IIM.Core.RAG
+namespace IIM.Shared.Interfaces
 {
     public interface IQdrantService
     {
