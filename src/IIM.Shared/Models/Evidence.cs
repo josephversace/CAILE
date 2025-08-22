@@ -22,6 +22,13 @@ namespace IIM.Shared.Models
         public string Signature { get; set; } = string.Empty;
         public bool IntegrityValid { get; set; } = true;
 
+        public string Hash { get; set; } = string.Empty;
+        public string HashAlgorithm { get; set; } = "SHA256";
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset? UpdatedAt { get; set; }
+        public string CreatedBy { get; set; } = string.Empty;
+     
+
         // Metadata
         public EvidenceMetadata Metadata { get; set; } = new();
         public DateTimeOffset IngestTimestamp { get; set; } = DateTimeOffset.UtcNow;
@@ -48,6 +55,8 @@ namespace IIM.Shared.Models
         public string DeviceSource { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public Dictionary<string, string> CustomFields { get; set; } = new();
+
+        public string? SessionId { get; set; }
     }
 
     public class EvidenceContext
@@ -110,21 +119,11 @@ namespace IIM.Shared.Models
         public DateTime IngestTimestamp { get; set; } = DateTime.UtcNow;
         public string MachineIdentifier { get; set; } = Environment.MachineName;
         public Dictionary<string, string> OriginalHashes { get; set; } = new();
-        public List<AuditLogEntry> AuditLog { get; set; } = new();
+        public List<AuditEvent> AuditLog { get; set; } = new();
         public string PublicKey { get; set; } = string.Empty;
     }
 
-    /// <summary>
-    /// Audit log entry
-    /// </summary>
-    public class AuditLogEntry
-    {
-        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-        public string Event { get; set; } = string.Empty;
-        public string User { get; set; } = string.Empty;
-        public string Action { get; set; } = string.Empty;
-        public Dictionary<string, object> Metadata { get; set; } = new();
-    }
+
 
     /// <summary>
     /// Evidence export package

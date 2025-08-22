@@ -3,7 +3,7 @@ using IIM.Application.Behaviors;
 using IIM.Shared.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using IIM.Infrastructure.Data.Services;
+using IIM.Core.Services;
 
 namespace IIM.Api.Extensions
 {

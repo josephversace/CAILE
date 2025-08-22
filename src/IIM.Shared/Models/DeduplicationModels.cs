@@ -1,5 +1,10 @@
-﻿// IIM.Core/Storage/ChunkData.cs
-namespace IIM.Core.Storage
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace IIM.Shared.Models
 {
     public class ChunkData
     {

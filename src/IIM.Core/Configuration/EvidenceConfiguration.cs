@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 
 
-namespace IIM.Core.Security
+namespace IIM.Core.Configuration
 {
     /// <summary>
     /// Configuration for evidence storage, security, and chain of custody requirements.
@@ -163,9 +163,14 @@ namespace IIM.Core.Security
 
         /// <summary>
         /// Gets the appropriate storage path for evidence based on its classification
+        /// The moment something in the chat is flagged as sensitive, it should be stored in a secure location.
+        /// These paths are used to segregate evidence based on its classification level.
+        /// There should be a callback for the the Session to handle this.
+        /// MinIO should manage the storage of these files, but the path is used for local operations.
         /// </summary>
         public string GetStoragePathForClassification(string classification)
         {
+
             return classification?.ToUpperInvariant() switch
             {
                 "TOP SECRET" => Path.Combine(StorePath, "TopSecret"),

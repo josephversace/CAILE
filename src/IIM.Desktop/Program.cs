@@ -131,7 +131,10 @@ internal static class Program
                 });
 
                 // Register the API client as the primary service
-                services.AddScoped<IIMApiClient>();
+                services.AddScoped<IIIMApiClient, IIMApiClient>();
+
+                //Notifications
+                services.AddScoped<INotificationService, NotificationService>();
 
                 // ========================================
                 // UI-Only Services

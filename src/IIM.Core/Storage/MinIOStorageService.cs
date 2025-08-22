@@ -1,4 +1,5 @@
 ﻿using IIM.Core.Configuration;
+using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;

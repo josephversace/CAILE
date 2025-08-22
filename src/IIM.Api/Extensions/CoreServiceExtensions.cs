@@ -1,9 +1,9 @@
 ﻿using IIM.Api.Configuration;
 using IIM.Core.AI;
+using IIM.Core.Configuration;
 using IIM.Core.Inference;
 using IIM.Core.Services;
-using IIM.Core.Services.Configuration;
-using IIM.Infrastructure.Storage;  // Add this for StorageConfiguration
+using IIM.Infrastructure.Storage;  
 using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +30,11 @@ namespace IIM.Api.Extensions
                 return new DefaultModelOrchestrator(logger, storageConfig);
             });
 
+
+            services.AddHttpContextAccessor(); // For ConfigurationService
+            services.AddScoped<IConfigurationService, ConfigurationService>();
+            services.AddScoped<IAuditLogger, SqliteAuditLogger>();
+
             // Remove IModelManager section - it doesn't exist
             // The model management is handled by IModelOrchestrator
 
@@ -45,7 +50,7 @@ namespace IIM.Api.Extensions
             });
 
             // Model Metadata Service
-            services.AddSingleton<IModelMetadataService>(sp =>
+            services.AddScoped<IModelMetadataService>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<ModelMetadataService>>();
                 var config = sp.GetRequiredService<IOptions<ModelMetadataConfiguration>>();
@@ -53,7 +58,7 @@ namespace IIM.Api.Extensions
             });
 
             // Reasoning Service (Semantic Kernel)
-            services.AddSingleton<IReasoningService>(sp =>
+            services.AddScoped<IReasoningService>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<SemanticKernelOrchestrator>>();
                 var modelOrchestrator = sp.GetRequiredService<IModelOrchestrator>();
@@ -71,7 +76,7 @@ namespace IIM.Api.Extensions
             services.AddScoped<ISessionService, SessionService>();
 
             // Model Configuration Templates
-            services.AddSingleton<IModelConfigurationTemplateService>(sp =>
+            services.AddScoped<IModelConfigurationTemplateService>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<ModelConfigurationTemplateService>>();
                 var storageConfig = sp.GetRequiredService<StorageConfiguration>();
@@ -85,8 +90,7 @@ namespace IIM.Api.Extensions
                     sessionService);
             });
 
-            // Remove IConfigurationService - not needed yet
-            // Can be added later when implementing database configuration
+        
 
             return services;
         }

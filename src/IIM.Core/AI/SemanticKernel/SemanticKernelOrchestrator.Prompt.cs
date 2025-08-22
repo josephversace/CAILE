@@ -1,5 +1,6 @@
 ﻿// File: SemanticKernelOrchestrator.Prompt.cs
-using IIM.Core.Services.Configuration;
+
+using IIM.Core.Configuration;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;

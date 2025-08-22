@@ -1,25 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+﻿using IIM.Core.Configuration;
+
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
-using IIM.Infrastructure.Data.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace IIM.Infrastructure.Data.Services
+namespace IIM.Core.Services
 {
     /// <summary>
     /// SQLite-based audit logger implementation
     /// </summary>
     public class SqliteAuditLogger : IAuditLogger
     {
-        private readonly IIMDbContext _context;
+        private readonly AuditDbContext _context;
         private readonly ILogger<SqliteAuditLogger> _logger;
 
-        public SqliteAuditLogger(IIMDbContext context, ILogger<SqliteAuditLogger> logger)
+        public SqliteAuditLogger(AuditDbContext context, ILogger<SqliteAuditLogger> logger)
         {
             _context = context;
             _logger = logger;
@@ -42,12 +44,20 @@ namespace IIM.Infrastructure.Data.Services
             LogAudit(evt);
         }
 
+        /// <summary>
+        /// Logs an audit entry using your existing audit system
+        /// </summary>
+        public void LogLogAuditEventAudit(AuditEvent auditEvent)
+        {
+     
+            LogAudit(auditEvent);
+        }
+
         public async Task LogAuditAsync(AuditEvent auditEvent, CancellationToken ct = default)
         {
             try
             {
-                var entity = AuditLogEntity.FromAuditEvent(auditEvent);
-                _context.AuditLogs.Add(entity);
+                _context.AuditLogs.Add(auditEvent);
                 await _context.SaveChangesAsync(ct);
             }
             catch (Exception ex)
@@ -68,7 +78,7 @@ namespace IIM.Infrastructure.Data.Services
             await LogAuditAsync(evt, ct);
         }
 
-        public async Task<List<AuditLog>> GetAuditLogsAsync(AuditLogFilter? filter = null, CancellationToken ct = default)
+        public async Task<List<AuditEvent>> GetAuditLogsAsync(AuditLogFilter? filter = null, CancellationToken ct = default)
         {
             var query = _context.AuditLogs.AsNoTracking();
 
@@ -80,17 +90,17 @@ namespace IIM.Infrastructure.Data.Services
                 if (filter.EndDate.HasValue)
                     query = query.Where(a => a.Timestamp <= filter.EndDate.Value.UtcDateTime);
 
-                if (!string.IsNullOrEmpty(filter.EventType))
-                    query = query.Where(a => a.EventType == filter.EventType);
+                //if (!string.IsNullOrEmpty(filter.EventType))
+                //    query = query.Where(a => a.EventType == filter.EventType);
 
-                if (!string.IsNullOrEmpty(filter.UserId))
-                    query = query.Where(a => a.UserId == filter.UserId);
+                //if (!string.IsNullOrEmpty(filter.UserId))
+                //    query = query.Where(a => a.User == filter.UserId);
 
-                if (!string.IsNullOrEmpty(filter.EntityId))
-                    query = query.Where(a => a.EntityId == filter.EntityId);
+                //if (!string.IsNullOrEmpty(filter.EntityId))
+                //    query = query.Where(a => a.EntityId == filter.EntityId);
 
-                if (!string.IsNullOrEmpty(filter.EntityType))
-                    query = query.Where(a => a.EntityType == filter.EntityType);
+                //if (!string.IsNullOrEmpty(filter.EntityType))
+                //    query = query.Where(a => a.EntityType == filter.EntityType);
 
                 query = query.OrderByDescending(a => a.Timestamp);
 
@@ -106,17 +116,18 @@ namespace IIM.Infrastructure.Data.Services
             }
 
             var entities = await query.ToListAsync(ct);
-            return entities.Select(e => e.ToDomainModel()).ToList();
+            return entities;
         }
 
-        public async Task<AuditLog?> GetAuditLogAsync(long id, CancellationToken ct = default)
+
+        public async Task<List<AuditEvent>?> GetAuditLogAsync(long id, CancellationToken ct = default)
         {
-            var entity = await _context.AuditLogs
-                .AsNoTracking()
-                .FirstOrDefaultAsync(a => a.Id == id, ct);
+            var entity = await _context.AuditLogs.ToListAsync();
+     
 
-            return entity?.ToDomainModel();
+            return entity;
         }
+
 
         public async Task<int> PurgeOldLogsAsync(DateTimeOffset olderThan, CancellationToken ct = default)
         {
@@ -132,6 +143,13 @@ namespace IIM.Infrastructure.Data.Services
             }
 
             return toDelete.Count;
+        }
+
+    
+
+        public void LogAuditEvent(AuditEvent auditEvent)
+        {
+            LogAudit(auditEvent);
         }
     }
 }

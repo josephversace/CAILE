@@ -1,14 +1,18 @@
 ﻿using IIM.Application.Commands.Investigation;
 using IIM.Application.Commands.Models;
+using IIM.Shared.DTOs;
+using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
+
+
 
 /// <summary>
 /// Main API client for communicating with the IIM backend.
 /// Handles all HTTP communication between the desktop client and API server.
 /// </summary>
-public class IIMApiClient
+public class IIMApiClient : IIIMApiClient
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<IIMApiClient> _logger;
@@ -80,6 +84,32 @@ public class IIMApiClient
         var response = await _httpClient.PostAsync("/api/evidence/ingest", content);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<Evidence>();
+    }
+
+    public async Task<InitiateEvidenceUploadResponse> InitiateEvidenceUploadAsync(
+       InitiateEvidenceUploadRequest request,
+       CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.PostAsJsonAsync(
+            "/api/evidence/initiate",
+            request,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<InitiateEvidenceUploadResponse>();
+    }
+
+    public async Task<ConfirmEvidenceUploadResponse> ConfirmEvidenceUploadAsync(
+        ConfirmEvidenceUploadRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.PostAsJsonAsync(
+            "/api/evidence/confirm",
+            request,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<ConfirmEvidenceUploadResponse>();
     }
 
     // ========================================
@@ -170,4 +200,46 @@ public class IIMApiClient
         var response = await _httpClient.PostAsync("/api/wsl/ensure", null);
         return response.IsSuccessStatusCode;
     }
+
+    /// <summary>
+    /// Gets current application settings
+    /// </summary>
+    public async Task<SettingsDto> GetSettingsAsync()
+    {
+        var response = await _httpClient.GetAsync("/api/settings");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<SettingsDto>()
+            ?? new SettingsDto();
+    }
+
+    /// <summary>
+    /// Updates application settings
+    /// </summary>
+    public async Task UpdateSettingsAsync(SettingsDto settings)
+    {
+        var response = await _httpClient.PutAsJsonAsync("/api/settings", settings);
+        response.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
+    /// Tests MinIO connection
+    /// </summary>
+    public async Task<TestConnectionResult> TestMinIOConnectionAsync(string endpoint)
+    {
+        var request = new { Endpoint = endpoint };
+        var response = await _httpClient.PostAsJsonAsync("/api/settings/test/minio", request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<TestConnectionResult>()
+                ?? new TestConnectionResult { Success = false, Error = "Unknown error" };
+        }
+
+        return new TestConnectionResult
+        {
+            Success = false,
+            Error = "Connection test failed"
+        };
+    }
 }
+

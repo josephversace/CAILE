@@ -1,4 +1,6 @@
 ﻿// IIM.Core/Storage/IDeduplicationService.cs
+using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -8,30 +10,21 @@ using System.Threading;
 using System.Threading.Tasks;
 
 
-namespace IIM.Core.Storage
+
+namespace IIM.Core.Services
 {
-    public interface IDeduplicationService
+    public class DeduplicationService : IDeduplicationService
     {
-        Task<DeduplicationResult> DeduplicateStreamAsync(
-            Stream stream,
-            int chunkSize,
-            CancellationToken cancellationToken = default);
-
-        Task<string> ComputeHashAsync(
-            Stream stream,
-            CancellationToken cancellationToken = default);
-    }
-
-
-    public class FixedSizeDeduplicationService : IDeduplicationService
-    {
-        private readonly ILogger<FixedSizeDeduplicationService> _logger;
+        private readonly Dictionary<string, List<string>> _hashToEvidenceIds = new();
+        private readonly Dictionary<string, Evidence> _evidenceStore = new();
+        private readonly ILogger<DeduplicationService> _logger;
         private readonly Dictionary<string, int> _chunkRefCount = new();
 
-        public FixedSizeDeduplicationService(ILogger<FixedSizeDeduplicationService> logger)
+        public DeduplicationService(ILogger<DeduplicationService> logger)
         {
             _logger = logger;
         }
+
 
         public async Task<DeduplicationResult> DeduplicateStreamAsync(
             Stream stream,
@@ -106,5 +99,54 @@ namespace IIM.Core.Storage
             sha256.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
             return BitConverter.ToString(sha256.Hash).Replace("-", "").ToLowerInvariant();
         }
+
+        /// <summary>
+        /// Check if a hash already exists and return the evidence
+        /// </summary>
+        public async Task<Evidence?> CheckDuplicateAsync(string hash, CancellationToken cancellationToken = default)
+        {
+            if (_hashToEvidenceIds.TryGetValue(hash, out var evidenceIds) && evidenceIds.Any())
+            {
+                var firstId = evidenceIds.First();
+                if (_evidenceStore.TryGetValue(firstId, out var evidence))
+                {
+                    return evidence;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Get count of how many times this hash has been seen
+        /// </summary>
+        public async Task<int> GetDuplicateCountAsync(string hash, CancellationToken cancellationToken = default)
+        {
+            if (_hashToEvidenceIds.TryGetValue(hash, out var evidenceIds))
+            {
+                return evidenceIds.Count;
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Register a new hash with its evidence ID
+        /// </summary>
+        public async Task RegisterHashAsync(string hash, string evidenceId, CancellationToken cancellationToken = default)
+        {
+            if (!_hashToEvidenceIds.ContainsKey(hash))
+            {
+                _hashToEvidenceIds[hash] = new List<string>();
+            }
+
+            _hashToEvidenceIds[hash].Add(evidenceId);
+
+            _logger.LogInformation("Registered hash {Hash} for evidence {EvidenceId}", hash, evidenceId);
+
+            await Task.CompletedTask;
+        }
     }
 }
+
+   

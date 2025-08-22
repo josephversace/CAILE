@@ -69,14 +69,23 @@ namespace IIM.Infrastructure.Storage;
         /// </summary>
         public string LogsPath => Path.Combine(BasePath, "Logs");
 
-        // ========================================
-        // MODEL STORAGE
-        // ========================================
 
-        /// <summary>
-        /// Gets the root path for all AI models
-        /// </summary>
-        public string ModelsPath => Path.Combine(BasePath, "Models");
+    // ========================================
+    // MinIO 
+    // ========================================
+    public string? MinioBucketName { get; set; } = "evidence";
+    
+    public bool VerifyHashOnUpload { get; set; } = true;
+
+
+    // ========================================
+    // MODEL STORAGE
+    // ========================================
+
+    /// <summary>
+    /// Gets the root path for all AI models
+    /// </summary>
+    public string ModelsPath => Path.Combine(BasePath, "Models");
 
         /// <summary>
         /// Gets the path for system-provided models (read-only, managed by IIM)

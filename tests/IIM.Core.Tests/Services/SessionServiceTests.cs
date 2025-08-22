@@ -5,6 +5,7 @@ using FluentAssertions;
 using IIM.Core.Models;
 using IIM.Core.Services;
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;

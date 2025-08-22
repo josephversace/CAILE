@@ -24,6 +24,9 @@ public enum EvidenceStatus
     Analyzed,
     Verified,
     Compromised,
+    Active,   
+    Failed,
+    Deleted,
     Archived
 }
 

@@ -1,0 +1,16 @@
+﻿
+@* @code {
+var progress = new Progress<UploadProgress>(update =>
+{
+    // Update UI on the UI thread
+    InvokeAsync(() =>
+    {
+        ProgressText = update.Status;
+        ProgressPercent = update.Percentage;
+        StateHasChanged();
+    });
+});
+
+await UploadClient.UploadEvidenceAsync(file, metadata, progress);
+
+} *@

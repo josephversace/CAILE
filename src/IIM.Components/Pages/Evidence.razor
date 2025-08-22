@@ -1,6 +1,5 @@
 @page "/evidence"
 @using IIM.Core.Models
-@using IIM.Core.Security
 @using IIM.Core.Services
 @using IIM.Shared.Enums
 @using IIM.Shared.Models
@@ -370,9 +369,9 @@
                                         {
                                             <tr>
                                                 <td>@audit.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
-                                                <td>@audit.Event</td>
-                                                <td>@audit.User</td>
                                                 <td>@audit.Action</td>
+                                                <td>@audit.UserId</td>
+                                                <td>@audit.Details</td>
                                             </tr>
                                         }
                                     </tbody>

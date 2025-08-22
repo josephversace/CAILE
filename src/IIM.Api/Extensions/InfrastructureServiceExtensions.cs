@@ -32,7 +32,7 @@ namespace IIM.Api.Extensions
             }
 
             // Storage Configuration
-            services.AddSingleton<StorageConfiguration>(sp =>
+            services.AddScoped<StorageConfiguration>(sp =>
             {
                 var basePath = configuration["Storage:BasePath"] ??
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IIM");
@@ -55,10 +55,10 @@ namespace IIM.Api.Extensions
             services.Configure<MinIOConfiguration>(configuration.GetSection("Storage:MinIO"));
 
             // Deduplication Service (register before MinIO since it's a dependency)
-            services.AddSingleton<IDeduplicationService, FixedSizeDeduplicationService>();
+            services.AddScoped<IDeduplicationService, DeduplicationService>();
 
             // MinIO Object Storage - Fix: provide all required parameters
-            services.AddSingleton<IMinIOStorageService>(sp =>
+            services.AddScoped<IMinIOStorageService>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<MinIOStorageService>>();
                 var config = sp.GetRequiredService<IOptions<MinIOConfiguration>>();
@@ -68,7 +68,7 @@ namespace IIM.Api.Extensions
             });
 
             // Vector Store
-            services.AddSingleton<IQdrantService>(sp =>
+            services.AddScoped<IQdrantService>(sp =>
             {
                 var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
                 var logger = sp.GetRequiredService<ILogger<QdrantService>>();
@@ -87,7 +87,7 @@ namespace IIM.Api.Extensions
             });
 
             // Embedding Service
-            services.AddSingleton<IEmbeddingService>(sp =>
+            services.AddScoped<IEmbeddingService>(sp =>
             {
                 var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
                 var logger = sp.GetRequiredService<ILogger<RemoteEmbeddingService>>();

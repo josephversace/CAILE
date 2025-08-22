@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace IIM.Infrastructure.Data
+namespace IIM.Core.Configuration
 {
     /// <summary>
     /// Background service to ensure database is created and migrated on startup
@@ -29,11 +29,13 @@ namespace IIM.Infrastructure.Data
             _logger.LogInformation("Ensuring database is created and up to date");
 
             using var scope = _serviceProvider.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<IIMDbContext>();
+            var auditcontext = scope.ServiceProvider.GetRequiredService<AuditDbContext>();
+            var configcontext = scope.ServiceProvider.GetRequiredService<ConfigDbContext>();
+            var modelcontext = scope.ServiceProvider.GetRequiredService<ModelDbContext>();
 
             try
             {
-                var created = await context.Database.EnsureCreatedAsync(cancellationToken);
+                var created = await auditcontext.Database.EnsureCreatedAsync(cancellationToken);
 
                 if (created)
                 {
@@ -41,8 +43,8 @@ namespace IIM.Infrastructure.Data
                     _logger.LogInformation("Database created successfully");
                 }
 
-                var modelCount = await context.ModelMetadata.CountAsync(cancellationToken);
-                var auditCount = await context.AuditLogs.CountAsync(cancellationToken);
+                var modelCount = await modelcontext.ModelMetadata.CountAsync(cancellationToken);
+                var auditCount = await auditcontext.AuditLogs.CountAsync(cancellationToken);
                 // Remove InvestigationTemplates count
 
                 _logger.LogInformation("Database ready: {Models} models, {Audits} audit entries",

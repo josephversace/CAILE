@@ -72,5 +72,6 @@
 
   <ItemGroup>
     <Folder Include="Platform\" />
+    <Folder Include="Security\" />
   </ItemGroup>
 </Project>
