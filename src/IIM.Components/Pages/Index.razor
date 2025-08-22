@@ -1,12 +1,12 @@
 @page "/"
 @using IIM.Components.Services
-
 @using IIM.Core.Services
 @using IIM.Infrastructure.Hardware
 @using IIM.Infrastructure.Platform
+@using IIM.Shared.Interfaces
 @using IIM.Shared.Models
-@inject IWslManager Wsl
-@inject IimClient Iim
+
+@inject IIIMApiClient iim
 
 <div class="container py-4">
     <h3 class="mb-3">IIM Dashboard</h3>
@@ -339,20 +339,19 @@ export default {
 
     private async Task StartIim()
     {
-        await Wsl.StartIim();
-        await Task.Delay(1000);
-        statusText = await Iim.HealthAsync() ? "Running" : "Stopped";
+     
+         statusText = await iim.IsApiAvailableAsync() ? "Running" : "Stopped";
     }
 
     private async Task StopIim()
     {
-        await Iim.StopAllAsync();
-        statusText = "Stopped";
+        await iim.EnsureWslAsync();
+        statusText = await iim.IsApiAvailableAsync() ? "Running" : "Stopped";
     }
 
     private async Task Generate()
     {
-        var res = await Iim.GenerateAsync<string>("demo", prompt);
-        output = res;
+       await iim.GetSettingsAsync();
+
     }
 }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using IIM.Core.Models;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -16,21 +17,7 @@ namespace IIM.Core.Services
     /// <summary>
     /// Model metadata for routing and resource management
     /// </summary>
-    public class ModelMetadata
-    {
-        public string ModelId { get; set; } = string.Empty;
-        public string ModelPath { get; set; } = string.Empty;
-        public ModelType Type { get; set; }
-        public bool RequiresGpu { get; set; }
-        public bool SupportsBatching { get; set; }
-        public int MaxBatchSize { get; set; } = 1;
-        public long EstimatedMemoryMb { get; set; }
-        public int DefaultPriority { get; set; } = 1; // 0=Low, 1=Normal, 2=High
-        public string Provider { get; set; } = "cpu";
-        public Dictionary<string, object> Properties { get; set; } = new();
-    }
 
-    
   
 
     /// <summary>
@@ -342,10 +329,7 @@ namespace IIM.Core.Services
             throw new NotImplementedException();
         }
 
-        public Task RegisterMetadataAsync(Shared.Models.ModelMetadata metadata, CancellationToken ct = default)
-        {
-            throw new NotImplementedException();
-        }
+ 
 
         Task<List<Shared.Models.ModelMetadata>> IModelMetadataService.GetAllMetadataAsync(CancellationToken ct)
         {

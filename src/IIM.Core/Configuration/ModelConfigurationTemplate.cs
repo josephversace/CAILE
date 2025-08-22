@@ -1,9 +1,11 @@
 ﻿using IIM.Core.AI;
 using IIM.Core.Configuration;
 using IIM.Core.Models;
+using IIM.Core.Services;
 using IIM.Infrastructure.Storage;
 using IIM.Shared.Enums;
 using IIM.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -14,7 +16,15 @@ using System.Threading;
 using System.Threading.Tasks;
 
 
-namespace IIM.Core.Services.Configuration;
+namespace IIM.Core.Configuration;
+
+public class ModelDbContext : DbContext
+{
+    public ModelDbContext(DbContextOptions<ModelDbContext> options) : base(options) { }
+
+    public DbSet<ModelMetadata> ModelMetadata { get; set; }
+}
+
 
 /// <summary>
 /// Represents a saved model configuration template for investigations.

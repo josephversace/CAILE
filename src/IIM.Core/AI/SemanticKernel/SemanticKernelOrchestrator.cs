@@ -1,7 +1,7 @@
 ﻿// File: SemanticKernelOrchestrator.cs
+using IIM.Core.Configuration;
 using IIM.Core.Models;
 using IIM.Core.Services;
-using IIM.Core.Services.Configuration;
 using IIM.Shared.DTOs;
 using IIM.Shared.Enums;
 using IIM.Shared.Models;

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using IIM.Shared.Enums;
 
 namespace IIM.Shared.Models
@@ -18,6 +19,9 @@ namespace IIM.Shared.Models
         public long EstimatedMemoryMb { get; set; }
         public int DefaultPriority { get; set; } = 1; // 0=Low, 1=Normal, 2=High
         public string Provider { get; set; } = "cpu";
+        public bool IsEnabled { get; set; } = true;
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }    
         public Dictionary<string, object> Properties { get; set; } = new();
     }
 }

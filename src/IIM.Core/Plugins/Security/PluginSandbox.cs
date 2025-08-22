@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using IIM.Core.Plugins.Security.Implementations;
-using IIM.Core.Security;
 using IIM.Plugin.SDK;
 using IIM.Plugin.SDK.Security;
 using IIM.Shared.Interfaces;

@@ -1,6 +1,7 @@
 ﻿using IIM.Shared.Models;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,9 +21,14 @@ public interface IAuditLogger
     Task LogAuditAsync(string eventType, string? entityId = null, Dictionary<string, object>? details = null, CancellationToken ct = default);
 
     // Query audit logs
-    Task<List<AuditLog>> GetAuditLogsAsync(AuditLogFilter? filter = null, CancellationToken ct = default);
-    Task<AuditLog?> GetAuditLogAsync(long id, CancellationToken ct = default);
+    Task<List<AuditEvent>> GetAuditLogsAsync(AuditLogFilter? filter = null, CancellationToken ct = default);
+    Task<List<AuditEvent>> GetAuditLogAsync(long id, CancellationToken ct = default);
 
     // Cleanup
     Task<int> PurgeOldLogsAsync(DateTimeOffset olderThan, CancellationToken ct = default);
+
+    /// <summary>
+    /// Logs an audit entry using your existing audit system
+    /// </summary>
+    void LogAuditEvent(AuditEvent auditEvent);
 }

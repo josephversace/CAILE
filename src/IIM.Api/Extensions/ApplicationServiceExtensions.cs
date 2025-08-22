@@ -9,7 +9,8 @@ using IIM.Api.Configuration;
 using System;
 using System.IO;
 // Use fully qualified name to avoid ambiguity
-using CoreEvidenceConfiguration = IIM.Core.Security.EvidenceConfiguration;
+using CoreEvidenceConfiguration = IIM.Core.Configuration.EvidenceConfiguration;
+using IIM.Core.Configuration;
 
 namespace IIM.Api.Extensions
 {
@@ -24,10 +25,11 @@ namespace IIM.Api.Extensions
             services.AddScoped<IInvestigationService, InvestigationService>();
 
             // Evidence Management - use Core.Security.EvidenceConfiguration
-            services.AddSingleton<IEvidenceManager>(sp =>
+            services.AddScoped<IEvidenceManager>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<EvidenceManager>>();
                 var storageConfig = sp.GetRequiredService<StorageConfiguration>();
+                var auditContext = sp.GetRequiredService<AuditDbContext>();
 
                 // Use the Core.Security.EvidenceConfiguration explicitly
                 var config = new CoreEvidenceConfiguration
@@ -38,7 +40,7 @@ namespace IIM.Api.Extensions
                     MaxFileSizeMb = configuration.GetValue<int>("Evidence:MaxFileSizeMb", 10240)
                 };
 
-                return new EvidenceManager(logger, config);
+                return new EvidenceManager(logger, config, auditContext);
             });
 
             // Case Management
@@ -60,7 +62,7 @@ namespace IIM.Api.Extensions
             services.AddScoped<IVisualizationService, VisualizationService>();
 
             // File Services
-            services.AddSingleton<IFileService, FileService>();
+            services.AddScoped<IFileService, FileService>();
           
 
             return services;

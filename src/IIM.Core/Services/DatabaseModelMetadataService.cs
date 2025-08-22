@@ -1,5 +1,6 @@
 ﻿
-using IIM.Infrastructure.Data.Entities;
+
+using IIM.Core.Configuration;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models; // Model from Shared
@@ -12,7 +13,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace IIM.Infrastructure.Data.Services
+namespace IIM.Core.Data.Services
 {
     /// <summary>
     /// Database-backed implementation of model metadata service using SQLite
@@ -20,12 +21,12 @@ namespace IIM.Infrastructure.Data.Services
     public class DatabaseModelMetadataService : IModelMetadataService
     {
         private readonly ILogger<DatabaseModelMetadataService> _logger;
-        private readonly IIMDbContext _context;
+        private readonly ModelDbContext _context;
         private readonly IAuditLogger? _auditLogger;
 
         public DatabaseModelMetadataService(
             ILogger<DatabaseModelMetadataService> logger,
-            IIMDbContext context,
+            ModelDbContext context,
             IAuditLogger? auditLogger = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -41,7 +42,7 @@ namespace IIM.Infrastructure.Data.Services
 
             if (entity != null)
             {
-                return MapToModelMetadata(entity);
+                return entity;
             }
 
             _logger.LogWarning("Metadata not found for model {ModelId}, returning defaults", modelId);
@@ -58,7 +59,7 @@ namespace IIM.Infrastructure.Data.Services
 
             if (entity == null)
             {
-                entity = new ModelMetadataEntity
+                entity = new Shared.Models.ModelMetadata
                 {
                     ModelId = metadata.ModelId,
                     CreatedAt = DateTime.UtcNow
@@ -94,7 +95,7 @@ namespace IIM.Infrastructure.Data.Services
                 .OrderBy(m => m.ModelId)
                 .ToListAsync(ct);
 
-            return entities.Select(MapToModelMetadata).ToList();
+            return entities;
         }
 
         public async Task LoadFromConfigurationAsync(CancellationToken ct = default)
@@ -104,22 +105,7 @@ namespace IIM.Infrastructure.Data.Services
             _logger.LogInformation("Database contains metadata for {Count} models", count);
         }
 
-        private Shared.Models.ModelMetadata MapToModelMetadata(ModelMetadataEntity entity)
-        {
-            return new Shared.Models.ModelMetadata
-            {
-                ModelId = entity.ModelId,
-                ModelPath = entity.ModelPath ?? string.Empty,
-                Type = entity.Type,
-                RequiresGpu = entity.RequiresGpu,
-                SupportsBatching = entity.SupportsBatching,
-                MaxBatchSize = entity.MaxBatchSize,
-                EstimatedMemoryMb = entity.EstimatedMemoryMb,
-                DefaultPriority = entity.DefaultPriority,
-                Provider = entity.Provider,
-                Properties = entity.Properties
-            };
-        }
+  
 
         private Shared.Models.ModelMetadata CreateDefaultMetadata(string modelId)
         {

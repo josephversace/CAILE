@@ -9,6 +9,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using IIM.Core.Models;
+using IIM.Shared.Enums;
 using IIM.Shared.Models;
 
 namespace IIM.Core.Services
@@ -33,7 +34,7 @@ namespace IIM.Core.Services
         Task<EvidenceExport> ExportEvidenceAsync(string evidenceId, string exportPath, CancellationToken cancellationToken = default);
 
         // Audit & Logging
-        Task<List<AuditLogEntry>> GetAuditLogAsync(string evidenceId, CancellationToken cancellationToken = default);
+        Task<List<AuditEvent>> GetAuditLogAsync(string evidenceId, CancellationToken cancellationToken = default);
         Task LogAccessAsync(string evidenceId, string action, string userId, CancellationToken cancellationToken = default);
 
         // Evidence Retrieval
@@ -43,6 +44,29 @@ namespace IIM.Core.Services
 
         Task<List<Evidence>> GetEvidenceByCaseAsync(string caseId, CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// Registers evidence in pending state before upload completes
+        /// </summary>
+        /// <param name="evidence">Evidence to register</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>The registered evidence</returns>
+        Task<Evidence> RegisterPendingEvidenceAsync(
+            Evidence evidence,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Updates the status of existing evidence
+        /// </summary>
+        /// <param name="evidenceId">ID of evidence to update</param>
+        /// <param name="status">New status</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Task</returns>
+        Task UpdateEvidenceStatusAsync(
+            string evidenceId,
+            EvidenceStatus status,
+            CancellationToken cancellationToken = default);
+
+        
     }
 
 

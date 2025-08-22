@@ -11,7 +11,7 @@ using IIM.Core.AI;
 using IIM.Core.Configuration;
 using IIM.Core.Models;
 using IIM.Core.Services;
-using IIM.Core.Services.Configuration;
+
 using IIM.Shared.DTOs;
 using IIM.Shared.Enums;
 using IIM.Shared.Models;
@@ -35,9 +35,7 @@ namespace IIM.Core.Tests.Services
         private readonly Mock<IModelOrchestrator> _modelOrchestratorMock;
         private readonly Mock<IModelConfigurationTemplateService> _templateServiceMock;
         private readonly Mock<IExportService> _exportServiceMock;
-        private readonly Mock<IPdfService> _pdfServiceMock;
-        private readonly Mock<IWordService> _wordServiceMock;
-        private readonly Mock<IExcelService> _excelServiceMock;
+
         private readonly Mock<IVisualizationService> _visualizationServiceMock;
 
         public InvestigationServiceTests()
@@ -47,9 +45,7 @@ namespace IIM.Core.Tests.Services
             _modelOrchestratorMock = new Mock<IModelOrchestrator>();
             _templateServiceMock = new Mock<IModelConfigurationTemplateService>();
             _exportServiceMock = new Mock<IExportService>();
-            _pdfServiceMock = new Mock<IPdfService>();
-            _wordServiceMock = new Mock<IWordService>();
-            _excelServiceMock = new Mock<IExcelService>();
+   
             _visualizationServiceMock = new Mock<IVisualizationService>();
 
             _sut = new InvestigationService(
@@ -58,9 +54,7 @@ namespace IIM.Core.Tests.Services
                 _modelOrchestratorMock.Object,
                 _templateServiceMock.Object,
                 _exportServiceMock.Object,
-                _pdfServiceMock.Object,
-                _wordServiceMock.Object,
-                _excelServiceMock.Object,
+    
                 _visualizationServiceMock.Object
             );
         }
@@ -388,26 +382,6 @@ namespace IIM.Core.Tests.Services
             result.Id.Should().Be(createdResponse.Id);
         }
 
-        [Fact]
-        public async Task ExportResponseAsync_PDF_Should_CallPdfService()
-        {
-            // Arrange
-            var responseId = Guid.NewGuid().ToString();
-            var expectedBytes = new byte[] { 1, 2, 3 };
-
-            _pdfServiceMock
-                .Setup(x => x.GeneratePdfAsync(It.IsAny<string>(), It.IsAny<PdfGenerationOptions>()))
-                .ReturnsAsync(expectedBytes);
-
-            // Act
-            var result = await _sut.ExportResponseAsync(responseId, ExportFormat.Pdf);
-
-            // Assert
-            result.Should().NotBeNull();
-            result.Should().BeEquivalentTo(expectedBytes);
-            _pdfServiceMock.Verify(x => x.GeneratePdfAsync(
-                It.IsAny<string>(), It.IsAny<PdfGenerationOptions>()), Times.Once);
-        }
 
     
 

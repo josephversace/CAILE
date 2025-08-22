@@ -1,7 +1,12 @@
 ﻿using IIM.Api.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using IIM.Core.Configuration;
+
+using IIM.Infrastructure.Storage;
+using IIM.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using IIM.Core.Security;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace IIM.Api.Extensions
 {
@@ -23,7 +28,11 @@ namespace IIM.Api.Extensions
             var deploymentConfig = new DeploymentConfiguration();
             configuration.GetSection("Deployment").Bind(deploymentConfig);
             services.AddSingleton(deploymentConfig);
-            
+
+            services.AddIIMDatabases(configuration);
+   
+            services.AddMemoryCache();
+
             // Add configuration objects
             services.AddConfiguration(configuration);
             
@@ -38,9 +47,16 @@ namespace IIM.Api.Extensions
             
             // Add services in dependency order
             services.AddHttpClients(configuration);
+
+
+
+            
             services.AddInfrastructureServices(configuration, deploymentConfig);
+            
             services.AddCoreServices(configuration, deploymentConfig);
+            
             services.AddApplicationServices(configuration, deploymentConfig);
+            
             services.AddBackgroundServices(configuration, deploymentConfig);
             
             // Add authentication based on deployment mode
@@ -71,7 +87,7 @@ namespace IIM.Api.Extensions
             services.Configure<InferenceConfiguration>(configuration.GetSection("Inference"));
             services.Configure<WslConfiguration>(configuration.GetSection("Wsl"));
             services.Configure<EvidenceConfiguration>(configuration.GetSection("Evidence"));
-           // services.Configure<AuditConfiguration>(configuration.GetSection("Audit"));
+           services.Configure<AuditConfiguration>(configuration.GetSection("Audit"));
             services.Configure<ModelTemplateConfiguration>(configuration.GetSection("ModelTemplates"));
             
             return services;

@@ -3,7 +3,7 @@ using IIM.Core.AI;
 using IIM.Core.Configuration;
 using IIM.Core.Models;
 using IIM.Core.Services;
-using IIM.Core.Services.Configuration;
+
 using IIM.Shared.DTOs;
 using IIM.Shared.Enums;
 using IIM.Shared.Models;
@@ -24,9 +24,7 @@ namespace IIM.Application.Services
         private readonly IModelOrchestrator _modelOrchestrator;
         private readonly IModelConfigurationTemplateService _templateService;
         private readonly IExportService _exportService;
-        private readonly IPdfService _pdfService;
-        private readonly IWordService _wordService;
-        private readonly IExcelService _excelService;
+   
         private readonly IVisualizationService _visualizationService;
 
         private readonly Dictionary<string, SessionModelTracking> _sessionModelTracking = new();
@@ -40,9 +38,7 @@ namespace IIM.Application.Services
             IModelOrchestrator modelOrchestrator,
             IModelConfigurationTemplateService templateService,
             IExportService exportService,
-            IPdfService pdfService,
-            IWordService wordService,
-            IExcelService excelService,
+     
             IVisualizationService visualizationService)
         {
             _logger = logger;
@@ -50,9 +46,7 @@ namespace IIM.Application.Services
             _modelOrchestrator = modelOrchestrator;
             _templateService = templateService;
             _exportService = exportService;
-            _pdfService = pdfService;
-            _wordService = wordService;
-            _excelService = excelService;
+   
             _visualizationService = visualizationService;
 
             InitializeSampleData();

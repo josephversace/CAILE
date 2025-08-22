@@ -3,10 +3,11 @@
 // Purpose: Implementation using ONLY existing Models
 // ============================================
 
+using IIM.Core.Configuration;
 using IIM.Core.Models;
-using IIM.Core.Security;
 using IIM.Shared.Enums;
 using IIM.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -26,14 +27,16 @@ namespace IIM.Core.Services
     {
         private readonly ILogger<EvidenceManager> _logger;
         private readonly EvidenceConfiguration _config;
+        private readonly AuditDbContext _audit;
         private readonly Dictionary<string, Evidence> _evidenceStore = new();
         private readonly object _lock = new();
 
-        public EvidenceManager(ILogger<EvidenceManager> logger, EvidenceConfiguration config)
+        public EvidenceManager(ILogger<EvidenceManager> logger, EvidenceConfiguration config, AuditDbContext audit)
         {
             _logger = logger;
             _config = config;
             EnsureDirectoriesExist();
+            _audit = audit;
         }
 
         public async Task<Evidence> IngestEvidenceAsync(Stream stream, string fileName, EvidenceMetadata metadata, CancellationToken cancellationToken = default)
@@ -266,15 +269,28 @@ namespace IIM.Core.Services
             return export;
         }
 
-        public Task<List<AuditLogEntry>> GetAuditLogAsync(string evidenceId, CancellationToken cancellationToken = default)
+        public async Task<List<AuditEvent>> GetAuditLogAsync(string evidenceId, CancellationToken cancellationToken = default)
         {
-            // In production, retrieve from database
-            return Task.FromResult(new List<AuditLogEntry>());
+            var evidenceLog = await _audit.AuditLogs
+                .Where(e => e.EntityId == evidenceId)
+                .ToListAsync(cancellationToken);
+
+            return evidenceLog;
         }
+
 
         public Task LogAccessAsync(string evidenceId, string action, string userId, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Evidence {EvidenceId} accessed: {Action} by {UserId}", evidenceId, action, userId);
+            AuditEvent auditEvent = new AuditEvent
+            {
+                EntityId = evidenceId,
+                Action = action,
+                UserId = userId,
+                Timestamp = DateTimeOffset.UtcNow
+            };
+
+            _audit.AuditLogs.Add(auditEvent);
+            _audit.SaveChanges();
             return Task.CompletedTask;
         }
 
@@ -386,5 +402,65 @@ namespace IIM.Core.Services
                 return Task.FromResult(evidence);
             }
         }
+
+        /// <summary>
+        /// Registers evidence in pending state before upload completes
+        /// </summary>
+        public async Task<Evidence> RegisterPendingEvidenceAsync(
+            Evidence evidence,
+            CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Registering pending evidence {Id} for case {CaseNumber}",
+                evidence.Id, evidence.CaseNumber);
+
+            // Store in memory dictionary (or database if you have one)
+            lock (_lock)
+            {
+                _evidenceStore[evidence.Id] = evidence;
+            }
+
+            // If you have a database context, save it here:
+            // await _dbContext.Evidence.AddAsync(evidence, cancellationToken);
+            // await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return await Task.FromResult(evidence);
+        }
+
+        /// <summary>
+        /// Updates the status of existing evidence
+        /// </summary>
+        public async Task UpdateEvidenceStatusAsync(
+            string evidenceId,
+            EvidenceStatus status,
+            CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Updating evidence {Id} status to {Status}",
+                evidenceId, status);
+
+            lock (_lock)
+            {
+                if (_evidenceStore.TryGetValue(evidenceId, out var evidence))
+                {
+                    evidence.Status = status;
+                    evidence.UpdatedAt = DateTimeOffset.UtcNow;
+                }
+                else
+                {
+                    _logger.LogWarning("Evidence {Id} not found for status update", evidenceId);
+                }
+            }
+
+            // If using database:
+            // var evidence = await _dbContext.Evidence.FindAsync(evidenceId);
+            // if (evidence != null)
+            // {
+            //     evidence.Status = status;
+            //     await _dbContext.SaveChangesAsync(cancellationToken);
+            // }
+
+            await Task.CompletedTask;
+        }
+
+     
     }
 }

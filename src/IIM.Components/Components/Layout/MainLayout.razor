@@ -344,9 +344,7 @@
     [Inject] private NavigationManager NavigationManager { get; set; } = default!;
     [Inject] private ILogger<MainLayout> Logger { get; set; } = default!;
 
-    // Optional service injections - check if available
-    [Inject] private IInvestigationService? InvestigationService { get; set; }
-    [Inject] private IModelManagementService? ModelService { get; set; }
+  
 
     protected override async Task OnInitializedAsync()
     {
@@ -354,21 +352,7 @@
         _isDarkMode = await LoadPreference("darkMode", true);
         _sidebarCollapsed = await LoadPreference("sidebarCollapsed", false);
 
-        // Load sessions if service available
-        if (InvestigationService != null)
-        {
-            try
-            {
-                //Todo: implement
-
-               // _sessions = await InvestigationService.GetSessionsAsync();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to load investigation sessions");
-            }
-        }
-
+      
         // Initialize monitoring
         await StartSystemMonitoring();
     }
@@ -404,19 +388,7 @@
 
     private async Task HandleSessionSelected(string sessionId)
     {
-        if (InvestigationService != null)
-        {
-            try
-            {
-                _currentSession = await InvestigationService.GetSessionAsync(sessionId);
-                ShowNotification($"Session loaded: {_currentSession.Title}", NotificationType.Success, "Session Loaded", NotificationCategory.Investigation);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to load session {SessionId}", sessionId);
-                ShowNotification("Failed to load session", NotificationType.Error, "Error", NotificationCategory.System);
-            }
-        }
+     
 
         // Navigate to investigation page with session
         NavigationManager.NavigateTo($"/investigation/{sessionId}");
@@ -424,35 +396,7 @@
 
     private async Task HandleNewSession()
     {
-        if (InvestigationService != null)
-        {
-            try
-            {
-                var request = new CreateSessionRequest
-                {
-                    Title = "New Investigation",
-                    CaseId = "",
-                    InvestigationType = InvestigationType.GeneralInquiry.ToString()
-                };
 
-                var session = await InvestigationService.CreateSessionAsync(request);
-                _currentSession = session;
-                ShowNotification("New investigation session created", NotificationType.Success, "Session Created", NotificationCategory.Investigation);
-                NavigationManager.NavigateTo($"/investigation/{session.Id}");
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to create new session");
-                ShowNotification("Failed to create session", NotificationType.Error, "Error", NotificationCategory.System);
-            }
-        }
-        else
-        {
-            // Fallback if service not available
-            var sessionId = Guid.NewGuid().ToString();
-            ShowNotification("New investigation session created", NotificationType.Info, "Session Created", NotificationCategory.Investigation);
-            NavigationManager.NavigateTo($"/investigation/{sessionId}");
-        }
     }
 
     private void HandleSettingsClicked()
@@ -476,39 +420,7 @@
 
     private async Task StartSystemMonitoring()
     {
-        // Monitor GPU and system resources
-        var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
-
-        _ = Task.Run(async () =>
-        {
-            while (await timer.WaitForNextTickAsync())
-            {
-                try
-                {
-                    if (ModelService != null)
-                    {
-                        _gpuStats = await ModelService.GetGpuStatsAsync();
-                        if (_gpuStats != null)
-                        {
-                            _gpuUsage = (int)_gpuStats.UtilizationPercent;
-                            _ramUsage = (int)((double)_gpuStats.UsedMemory / _gpuStats.TotalMemory * 100);
-                        }
-                    }
-                    else
-                    {
-                        // Simulate if service not available
-                        _gpuUsage = Random.Shared.Next(40, 60);
-                        _ramUsage = Random.Shared.Next(55, 70);
-                    }
-
-                    await InvokeAsync(StateHasChanged);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, "Error monitoring system resources");
-                }
-            }
-        });
+ 
     }
 
     private void ShowNotification(string message, NotificationType type, string? title = null, NotificationCategory category = NotificationCategory.System)

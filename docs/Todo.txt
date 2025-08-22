@@ -1,255 +1,354 @@
-IIM Platform Migration Plan - Complete Documentation
-Project Current State
-The Intelligent Investigation Machine (IIM) is a Blazor Hybrid desktop application for AI-powered investigations, currently deployed on Framework laptops with 128GB RAM. The codebase has:
+IIM Platform Status Report - Post-Migration
+Executive Summary
+We have successfully completed the initial phase of migrating the IIM platform from a monolithic desktop application to a properly architected thin client/API server model. The system now has clear separation of concerns with the Desktop acting as a pure UI layer and the API handling all business logic.
 
-IIM.Desktop: Blazor Hybrid UI (currently has all service registrations - wrong)
-IIM.Api: ASP.NET Core Minimal API (should have all services but doesn't)
-Infrastructure: WSL2, Docker containers (Qdrant, MinIO, embedding service)
-Problem: Services are registered in Desktop instead of API, making Desktop fat instead of thin
+What We've Accomplished
+1. Architecture Transformation
+FROM: Monolithic Desktop Application
+Desktop App (Fat Client)
+├── UI Components
+├── Business Logic
+├── Model Orchestration
+├── Evidence Management
+├── WSL Management
+└── Direct Database Access
+TO: Clean Client-Server Architecture
+Desktop (Thin Client)          API Server
+├── UI Components        →     ├── Business Logic
+├── API Client           →     ├── Model Orchestration
+└── State Management            ├── Evidence Management
+                               ├── WSL Management
+                               └── All Services
+2. Service Organization
+Created a clean, maintainable service registration pattern:
+IIM.Api/Extensions/
+├── ServiceCollectionExtensions.cs     # Main orchestrator
+├── HttpClientExtensions.cs            # HTTP clients
+├── InfrastructureServiceExtensions.cs # External systems
+├── CoreServiceExtensions.cs           # Business logic
+├── ApplicationServiceExtensions.cs    # App-specific
+├── BackgroundServiceExtensions.cs     # Background tasks
+├── CommandHandlingExtensions.cs       # Command pattern
+└── AuthenticationExtensions.cs        # Auth/Security
+3. Deployment Modes Implemented
+The system now supports three deployment modes:
 
-Target Architecture
-Three Deployment Modes (Single Installer):
-┌─────────────────────────────────────────────┐
-│ Mode 1: Standalone (Single Investigator)     │
-│ - Desktop UI + Local API                     │
-│ - Everything on one machine                  │
-│ - Dynamic model loading                      │
-└─────────────────────────────────────────────┘
+Standalone Mode (Default)
 
-┌─────────────────────────────────────────────┐
-│ Mode 2: Client (Team Member)                 │
-│ - Desktop UI only                            │
-│ - Connects to central API server             │
-│ - No local services                          │
-└─────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────┐
-│ Mode 3: Server (Central API)                 │
-│ - API only, no UI                            │
-│ - Serves multiple investigators              │
-│ - Admin web interface for configuration      │
-│ - Template-based model management            │
-└─────────────────────────────────────────────┘
-Key Technical Decisions Made
-
-API Backwards Compatibility: Client 1.2 works with API 1.2+
-Configuration: Hybrid approach (appsettings.json bootstrap + database runtime)
-Admin Interface: Razor Pages in API project (/admin routes)
-Data Isolation: Start with no isolation, design for department-based filtering
-Authentication: OpenIddict for OAuth2/OIDC
-Real-time Updates: SignalR for notifications
-Storage: MinIO for all evidence (even standalone)
-Model Management:
-
-Standalone: Dynamic loading
-Server: Admin-configured templates
+API runs locally on same machine
+Full functionality for single investigator
+No authentication required
 
 
+Client Mode (Future)
 
-Migration Plan - Phases
-Phase 1: Service Migration (Current Focus)
-Goal: Move all services from Desktop to API, make Desktop a thin client
-Step 1.1: Create API Service Structure ✅ READY TO IMPLEMENT
-Create extension methods in API project to organize services:
-src/IIM.Api/
-├── Extensions/
-│   ├── ServiceCollectionExtensions.cs (orchestrator)
-│   ├── CoreServiceExtensions.cs (business logic)
-│   ├── InfrastructureServiceExtensions.cs (external systems)
-│   ├── ApplicationServiceExtensions.cs (app-specific)
-│   ├── HttpClientExtensions.cs (HTTP clients)
-│   ├── BackgroundServiceExtensions.cs (hosted services)
-│   └── MediatRExtensions.cs (command/query handlers)
-├── Configuration/
-│   ├── DeploymentConfiguration.cs
-│   ├── QdrantConfiguration.cs
-│   ├── InferenceConfiguration.cs
-│   └── ModelTemplateConfiguration.cs
-├── Commands/ (MediatR for audit-critical operations)
-│   ├── Investigation/
-│   ├── Evidence/
-│   └── Models/
-├── Behaviors/ (MediatR pipeline)
-│   ├── AuditBehavior.cs
-│   ├── LoggingBehavior.cs
-│   └── ValidationBehavior.cs
-└── Hubs/ (SignalR)
-    ├── InvestigationHub.cs
-    └── AdminHub.cs
-Step 1.2: Move Services from Desktop to API
-Services to move (in order):
+Desktop connects to remote API
+Multiple investigators share resources
+Authentication required
 
-HTTP Clients (qdrant, embed, wsl)
-Infrastructure (WslManager, QdrantService, EmbeddingService)
-Core Services (ModelOrchestrator, InferencePipeline, SessionService)
-Application Services (InvestigationService, EvidenceManager, CaseManager)
-Background Services (EvidenceIntegrityMonitor, WslServiceOrchestrator)
 
-Step 1.3: Create API Client for Desktop
-csharppublic interface IIIMApiClient
+Server Mode (Future)
+
+API runs as central server
+Admin web interface
+Template-based model management
+
+
+
+
+Current Data Flows
+Evidence Ingestion Flow
+User drags file to Desktop UI
+    ↓
+Desktop calls IIMApiClient.IngestEvidenceAsync()
+    ↓ [HTTP POST /api/evidence/ingest]
+API receives multipart form data
+    ↓
+SimpleMediator dispatches IngestEvidenceCommand
+    ↓
+AuditBehavior logs the command (chain of custody)
+    ↓
+EvidenceManager processes file
+    ├── Calculates hash
+    ├── Stores in MinIO
+    ├── Deduplication check
+    └── Records metadata
+    ↓
+Returns Evidence object with ID
+    ↓
+Desktop updates UI
+Investigation Query Flow
+User types query in Desktop UI
+    ↓
+Desktop calls IIMApiClient.ProcessQueryAsync()
+    ↓ [HTTP POST /api/investigation/query]
+API receives query
+    ↓
+SimpleMediator dispatches ProcessQueryCommand
+    ↓
+InvestigationService processes
+    ├── Embeds query (via embedding service)
+    ├── Searches Qdrant vector DB
+    ├── Retrieves relevant documents
+    ├── Generates response via LLM
+    └── Adds citations
+    ↓
+Returns InvestigationResponse
+    ↓
+Desktop displays answer with citations
+Model Management Flow
+Desktop requests available models
+    ↓ [HTTP GET /api/models/available]
+API returns model list
+    ↓
+User selects model to load
+    ↓
+Desktop calls IIMApiClient.LoadModelAsync()
+    ↓ [HTTP POST /api/v1/models/load]
+API receives LoadModelCommand
+    ↓
+ModelOrchestrator loads model
+    ├── Checks available memory
+    ├── Downloads if needed
+    ├── Loads into memory
+    └── Initializes inference pipeline
+    ↓
+Returns success/failure
+
+What's Working ✅
+Infrastructure
+
+✅ Clean separation between Desktop (UI) and API (business logic)
+✅ Service registration using extension methods
+✅ Dependency injection properly configured
+✅ HTTP communication between Desktop and API
+✅ SignalR hubs configured for real-time updates
+✅ Health check endpoints
+✅ Swagger documentation (development mode)
+
+Core Services
+
+✅ SimpleMediator for command/query handling
+✅ Audit pipeline for critical operations
+✅ WSL management endpoints
+✅ Model orchestration framework
+✅ Session management
+✅ Evidence management structure
+
+Storage & Persistence
+
+✅ MinIO integration for object storage
+✅ Deduplication service
+✅ Storage configuration
+✅ Evidence chain of custody
+
+
+What's NOT Working Yet ❌
+Critical Gaps
+
+RAG Pipeline Not Connected
+
+❌ Embedding service returns dummy data
+❌ Qdrant vector search not implemented
+❌ LLM generation stubbed
+❌ No actual document retrieval
+
+
+Model Loading Incomplete
+
+❌ DefaultModelOrchestrator.LoadModelAsync() is stubbed
+❌ No actual ONNX/Ollama integration
+❌ InferencePipeline.ExecuteAsync() returns mock data
+
+
+Authentication Not Implemented
+
+❌ JWT generation not working
+❌ No user management
+❌ OpenIddict not configured
+
+
+WSL Services
+
+❌ Docker container management not automated
+❌ Qdrant/embedding services must be started manually
+❌ Health checks incomplete
+
+
+Investigation Tools
+
+❌ OCR not implemented
+❌ Audio transcription stubbed
+❌ Image analysis not working
+❌ Entity extraction missing
+
+
+
+
+Next Steps (Prioritized)
+Sprint 1: Complete RAG Pipeline (1 week)
+Goal: Get end-to-end document search working
+
+Wire up Embedding Service
+csharp// In RemoteEmbeddingService
+- Remove stub code
+- Implement actual HTTP calls to FastAPI embedding service
+- Handle batching and errors
+
+Complete Qdrant Integration
+csharp// In QdrantService
+- Implement CreateCollectionAsync()
+- Implement UpsertAsync() for indexing
+- Implement SearchAsync() for retrieval
+
+Connect InferencePipeline
+csharp// In DefaultModelOrchestrator
+- Implement LoadModelAsync() with ONNX Runtime
+- Wire up DirectML provider
+- Handle model lifecycle
+
+Complete Investigation Flow
+csharp// In InvestigationService.ProcessQueryAsync()
+- Connect all pieces: embed → search → generate
+- Add citation linking
+- Return real results
+
+
+Sprint 2: Model Loading & Inference (1 week)
+
+ONNX Runtime Integration
+
+Load actual models from disk
+Implement inference execution
+Memory management
+
+
+Model Templates
+
+Implement template switching
+Pre-load default models
+Resource monitoring
+
+
+Inference Pipeline
+
+Queue management
+Batch processing
+Error handling
+
+
+
+Sprint 3: WSL & Container Automation (3 days)
+
+Docker Automation
+bash# Automate in WslServiceOrchestrator
+docker run -d --name qdrant -p 6333:6333 qdrant/qdrant
+docker run -d --name embeddings -p 8081:8000 iim/embeddings
+
+Health Monitoring
+
+Implement health checks
+Auto-restart failed services
+Status dashboard
+
+
+
+Sprint 4: Authentication & Multi-User (1 week)
+
+JWT Implementation
+
+Token generation
+Refresh tokens
+Role-based access
+
+
+User Management
+
+Login/logout endpoints
+User profiles
+Session management
+
+
+Admin Interface
+
+Razor Pages for admin
+Model management UI
+System monitoring
+
+
+
+
+Testing Strategy
+Current Test Coverage
+
+❌ Unit tests: ~10% (mostly stubs)
+❌ Integration tests: Not implemented
+❌ E2E tests: Not implemented
+
+Needed Tests
+
+API Integration Tests
+
+Evidence ingestion
+Query processing
+Model management
+
+
+Desktop UI Tests
+
+API client mocking
+State management
+Error handling
+
+
+
+
+Risk Assessment
+High Risk Items
+
+Model Memory Management - Need proper resource limits
+Concurrent User Access - Not tested for multi-user
+Large File Processing - Streaming not fully implemented
+WSL Dependency - Windows-specific, no Linux fallback
+
+Mitigation Strategies
+
+Implement resource quotas and monitoring
+Add request queuing and rate limiting
+Implement chunked upload/download
+Create Docker-only deployment option
+
+
+Immediate Action Items
+This Week
+
+Complete RemoteEmbeddingService - Remove stubs, add real HTTP calls
+Wire up QdrantService - Implement vector operations
+Test E2E flow - Evidence upload → embedding → search
+Fix ModelOrchestrator - Load at least one real model
+
+Configuration Needed
+bash# Start required services
+docker run -d -p 6333:6333 qdrant/qdrant
+docker run -d -p 8081:8000 iim/embeddings:latest
+docker run -d -p 9000:9000 minio/minio server /data
+Environment Setup
+json// Update appsettings.json
 {
-    // All operations Desktop needs
-    Task<InvestigationSession> CreateSessionAsync(...);
-    Task<Evidence> IngestEvidenceAsync(...);
-    Task<InferenceResult> ProcessQueryAsync(...);
-    // etc.
+  "Development": {
+    "UseInMemoryQdrant": false,  // Switch to real Qdrant
+    "MockExternalServices": false  // Use real services
+  }
 }
-Step 1.4: Strip Desktop to Thin Client
-Desktop will only have:
 
-Blazor components
-IIMApiClient
-StateContainer
-UI services only
+Success Metrics
+We'll know Phase 1 is complete when:
 
-Phase 2: Deployment Mode Support
-Step 2.1: Add Deployment Configuration
-csharppublic class DeploymentConfiguration
-{
-    public DeploymentMode Mode { get; set; }
-    public bool CanChangeMode { get; set; }
-    public string ApiUrl { get; set; }
-    public AuthenticationConfig Auth { get; set; }
-}
-Step 2.2: Implement Mode-Specific Services
-csharp// Different implementations based on mode
-IModelManager → DynamicModelManager (standalone) | TemplateModelManager (server)
-IAuthService → LocalAuthService (standalone) | OpenIddictAuthService (server)
-IConfigService → FileConfigService (standalone) | DatabaseConfigService (server)
-Step 2.3: Add Admin Web Interface
-/admin routes in API:
-├── /admin/dashboard
-├── /admin/models (template configuration)
-├── /admin/users
-├── /admin/system
-└── /admin/audit
-Phase 3: SignalR & Real-time
-Step 3.1: Add SignalR Infrastructure
+✅ User can upload a document
+✅ Document gets embedded and indexed
+✅ User can query about the document
+✅ System returns accurate answer with citations
+✅ All operations are audited
 
-InvestigationHub for session updates
-AdminHub for system notifications
-Client reconnection logic
-Event broadcasting system
-
-Step 3.2: Connect Desktop to SignalR
-
-Auto-connect on startup
-Subscribe to relevant channels
-Handle disconnections gracefully
-
-Phase 4: Authentication & Authorization
-Step 4.1: Implement OpenIddict
-
-OAuth2/OIDC server in API
-Support for external providers
-Default admin account for setup
-
-Step 4.2: Add Authentication to Desktop
-
-Login flow
-Token management
-Automatic refresh
-
-Phase 5: Multi-User Preparation
-Step 5.1: Design for Data Isolation
-Add DepartmentId/TenantId to all entities:
-csharppublic class Evidence
-{
-    public string Id { get; set; }
-    public string DepartmentId { get; set; } // For future isolation
-    // ... rest of properties
-}
-Step 5.2: Add Filtering Layer
-csharppublic interface IDataFilter
-{
-    IQueryable<T> ApplyFilter<T>(IQueryable<T> query, UserContext context);
-}
-Implementation Checklist
-Immediate Tasks (This Sprint)
-
- Run PowerShell script to create API extension structure
- Move service registrations from Desktop to API
- Update API Program.cs to use extension methods
- Create IIMApiClient interface
- Implement HttpClient in Desktop for API calls
- Remove business services from Desktop
- Test standalone mode works
- Add basic SignalR hubs
-
-Next Sprint
-
- Add deployment mode configuration
- Implement admin Razor pages
- Add model template management
- Implement OpenIddict authentication
- Add mode switching capability
- Test client-server mode
-
-Future Sprints
-
- Data isolation implementation
- Multi-investigator collaboration
- Advanced audit logging
- Performance optimization
- Backup/restore functionality
-
-Code Patterns to Follow
-1. Service Registration Pattern
-csharp// Always use interfaces
-services.AddSingleton<IServiceName, ImplementationName>();
-
-// Mode-specific registration
-services.AddSingleton<IModelManager>(sp =>
-{
-    var config = sp.GetRequiredService<DeploymentConfiguration>();
-    return config.Mode == DeploymentMode.Standalone
-        ? new DynamicModelManager(...)
-        : new TemplateModelManager(...);
-});
-2. API Endpoint Pattern
-csharp// Audit-critical = MediatR
-app.MapPost("/api/evidence/ingest", async (IMediator mediator, IngestEvidenceCommand command) =>
-{
-    var result = await mediator.Send(command);
-    return Results.Ok(result);
-});
-
-// Simple operations = Direct service
-app.MapGet("/api/status", async (ISystemService service) =>
-{
-    return Results.Ok(await service.GetStatusAsync());
-});
-3. Configuration Pattern
-csharp// Bootstrap from file
-var deploymentMode = configuration["DeploymentMode"];
-
-// Runtime from database/service
-var modelTemplate = await configService.GetModelTemplateAsync();
-Critical Notes for Implementation
-
-Don't break standalone mode - It must keep working throughout migration
-Keep MediatR selective - Only for audit-critical operations
-Design for multi-tenancy - Add DepartmentId fields now, implement filtering later
-Backward compatibility - API changes must not break older clients
-Configuration location - Bootstrap from file, runtime from database
-
-Success Criteria
-Phase 1 is complete when:
-
-Desktop only contains UI code
-All business logic is in API
-Desktop calls API for all operations
-Standalone mode works exactly as before
-Code is organized with extension methods
-SignalR infrastructure is in place
-
-Next LLM Instructions
-When continuing this work:
-
-Check current state against this plan
-Complete Phase 1 migration first
-Use the PowerShell scripts already created
-Follow the service registration patterns
-Keep MediatR for audit operations only
-Test standalone mode after each change
-Don't add complexity that isn't needed yet
+Current Status: Architecture complete, implementation ~40% done
+Estimated Completion: 2-3 weeks for full Phase 1 functionality
