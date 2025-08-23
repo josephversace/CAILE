@@ -1,6 +1,7 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Logging;
 

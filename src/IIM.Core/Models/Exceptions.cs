@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using IIM.Shared.Models;
 
 namespace IIM.Core.Models;
 

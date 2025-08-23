@@ -7,6 +7,7 @@ using IIM.Shared.Enums;
 using IIM.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using IIM.Shared.Models;
 
 /// Handles processing of investigation queries - adapted to actual shared models.
 /// </summary>

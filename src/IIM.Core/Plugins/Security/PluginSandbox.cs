@@ -4,6 +4,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using IIM.Core.Plugins.Security.Implementations;

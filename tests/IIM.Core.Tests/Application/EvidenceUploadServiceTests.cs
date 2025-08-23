@@ -15,6 +15,7 @@ using Moq;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 using Xunit;
 
 namespace IIM.Application.Tests.Services

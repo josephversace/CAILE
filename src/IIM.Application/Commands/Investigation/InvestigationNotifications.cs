@@ -2,6 +2,7 @@ using IIM.Core.Mediator;
 using IIM.Shared.DTOs;
 using System;
 using System.Collections.Generic;
+using IIM.Shared.Models;
 
 namespace IIM.Application.Commands.Investigation
 {

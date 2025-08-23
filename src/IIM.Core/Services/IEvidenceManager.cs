@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 using IIM.Core.Models;
 using IIM.Shared.Enums;
 using IIM.Shared.DTOs;

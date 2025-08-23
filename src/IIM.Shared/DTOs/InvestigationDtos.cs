@@ -64,23 +64,6 @@ public record InvestigationResponse(
     Dictionary<string, object>? Metadata = null
 );
 
-public record SessionResponseDto(
-    string Id,
-    string CaseId,
-    string UserId,
-    string Title,
-    string Type,
-    string Status,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt,
-    DateTimeOffset? ClosedAt,
-    int MessageCount,
-    List<string> EnabledTools,
-    Dictionary<string, ModelConfigDto> Models,
-    List<FindingDto>? Findings,
-    Dictionary<string, object>? Metrics
-);
-
 public record InvestigationMessage(
     string Id,
     string Role,

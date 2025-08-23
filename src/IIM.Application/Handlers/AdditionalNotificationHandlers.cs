@@ -1,4 +1,4 @@
-﻿using IIM.Application.Commands.Investigation;
+using IIM.Application.Commands.Investigation;
 using IIM.Application.Commands.Models;
 using IIM.Application.Commands.Wsl;
 using IIM.Core.Mediator;
@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 
 namespace IIM.Application.Handlers
 {

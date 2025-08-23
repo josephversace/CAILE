@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 using Xunit;
 
 namespace IIM.Core.Tests.Services
