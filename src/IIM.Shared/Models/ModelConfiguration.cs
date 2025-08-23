@@ -19,6 +19,11 @@ namespace IIM.Shared.Models
         public DateTimeOffset? LoadedAt { get; set; }
         public ModelCapabilities Capabilities { get; set; } = new();
         public string Name { get; set; } = string.Empty;
+
+        public string? SessionId { get; set; }
+        public Dictionary<string, object>? Metadata { get; set; }
+        public string? ModelPath { get; set; }
+        public long RequiredMemory { get; set; }
     }
 
     public class ModelCapabilities
@@ -46,6 +51,10 @@ namespace IIM.Shared.Models
         public int GpuLayers { get; init; } = -1;
         public string? Provider { get; set; }
         public Dictionary<string, object>? Options { get; set; }
+
+        public int? DeviceId { get; set; }
+        public ModelPriority Priority { get; set; } = ModelPriority.Balanced;
+        public Dictionary<string, object>? CustomOptions { get; set; }
     }
 
 
@@ -58,6 +67,9 @@ namespace IIM.Shared.Models
         public IntPtr Handle { get; set; }
         public long MemoryUsage { get; set; }
         public DateTimeOffset LoadedAt { get; set; } = DateTimeOffset.UtcNow;
+
+        public ModelState State { get; set; } = ModelState.Loading;
+        public Dictionary<string, object> Metadata { get; set; } = new();
     }
 
     public sealed class ModelStats

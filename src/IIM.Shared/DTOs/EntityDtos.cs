@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace IIM.Shared.DTOs;
 
-public record EntityDto(
+public record Entity(
     string Id,
     string Name,
     string Type,
@@ -18,7 +18,7 @@ public record EntityDto(
     Dictionary<string, object>? Attributes
 );
 
-public record RelationshipDto(
+public record Relationship(
     string Id,
     string SourceEntityId,
     string TargetEntityId,
@@ -30,7 +30,7 @@ public record RelationshipDto(
 );
 
 public record EntityListResponse(
-    List<EntityDto> Entities,
+    List<Entity> Entities,
     int TotalCount,
     int Page,
     int PageSize

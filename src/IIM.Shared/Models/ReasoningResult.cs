@@ -133,30 +133,6 @@ namespace IIM.Shared.Models
 
  
     /// <summary>
-    /// Model recommendation result.
-    /// </summary>
-    public class ModelRecommendation
-    {
-        public string ModelId { get; set; } = string.Empty;
-        public string Reason { get; set; } = string.Empty;
-        public float ConfidenceScore { get; set; }
-        public List<string> AlternativeModels { get; set; } = new();
-        public Dictionary<string, object> RecommendedParameters { get; set; } = new();
-    }
-
-    /// <summary>
-    /// Constraints for model selection.
-    /// </summary>
-    public class ModelConstraints
-    {
-        public int? MaxLatencyMs { get; set; }
-        public float? MinAccuracy { get; set; }
-        public long? MaxMemoryBytes { get; set; }
-        public bool PreferLocal { get; set; } = true;
-        public List<string> RequiredCapabilities { get; set; } = new();
-    }
-
-    /// <summary>
     /// Request for reasoning operations.
     /// </summary>
     public class ReasoningRequest

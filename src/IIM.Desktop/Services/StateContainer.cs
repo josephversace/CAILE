@@ -1,4 +1,4 @@
-﻿using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 
 /// <summary>
 /// State container for managing UI state across Blazor components.

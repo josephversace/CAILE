@@ -11,7 +11,7 @@ using IIM.Core.Models;
 using IIM.Core.Services;
 using IIM.Infrastructure.Platform;
 using IIM.Shared.Interfaces;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.OpenApi.Models;

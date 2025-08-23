@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
@@ -12,7 +12,7 @@ using IIM.Plugin.SDK.Security;
 using IIM.Shared.Interfaces;
 using IIM.Core.Models;
 using IIM.Core.Services;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 
 namespace IIM.Core.Plugins.Security;
 

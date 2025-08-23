@@ -1,10 +1,10 @@
-﻿using IIM.Core.AI;
+using IIM.Core.AI;
 using IIM.Core.Configuration;
 using IIM.Core.Models;
 using IIM.Core.Services;
 using IIM.Infrastructure.Storage;
 using IIM.Shared.Enums;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;

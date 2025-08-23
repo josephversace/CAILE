@@ -27,7 +27,7 @@ public record EvidenceExportRequest(
 );
 
 // Response DTOs
-public record EvidenceResponseDto(
+public record EvidenceResponse(
     string Id,
     string CaseId,
     string CaseNumber,

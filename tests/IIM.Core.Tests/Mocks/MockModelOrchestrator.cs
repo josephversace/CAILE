@@ -1,8 +1,8 @@
-﻿using IIM.Core.AI;
+using IIM.Core.AI;
 using IIM.Core.Inference;
 using IIM.Core.Models;
 using IIM.Shared.Enums;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Core.Tests.Mocks;

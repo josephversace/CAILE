@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.SemanticKernel;
 using IIM.Core.Models;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using IIM.Shared.Enums;
 using IIM.Shared.DTOs;
 

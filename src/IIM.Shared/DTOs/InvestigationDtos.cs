@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace IIM.Shared.DTOs;
 
 // Request DTOs
-public record CreateSessionRequestDto(
+public record CreateSessionRequest(
     string CaseId,
     string Title,
     string InvestigationType,
@@ -14,7 +14,7 @@ public record CreateSessionRequestDto(
     SessionContextDto? Context = null
 );
 
-public record InvestigationQueryDto(
+public record InvestigationQuery(
     string SessionId,
     string Text,
     List<AttachmentDto>? Attachments = null,
@@ -46,7 +46,7 @@ public record AttachmentDto(
 );
 
 // Response DTOs
-public record InvestigationResponseDto(
+public record InvestigationResponse(
     string Id,
     string SessionId,
     string QueryId,
@@ -81,7 +81,7 @@ public record SessionResponseDto(
     Dictionary<string, object>? Metrics
 );
 
-public record InvestigationMessageDto(
+public record InvestigationMessage(
     string Id,
     string Role,
     string Content,

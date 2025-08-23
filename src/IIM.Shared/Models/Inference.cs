@@ -169,4 +169,14 @@ namespace IIM.Shared.Models
         public int TokensGenerated { get; init; }
         public double TokensPerSecond { get; init; }
     }
+
+    public class InferenceRequest
+    {
+        public string Prompt { get; set; } = string.Empty;
+        public Dictionary<string, object>? Parameters { get; set; }
+        public List<string>? StopSequences { get; set; }
+        public int? MaxTokens { get; set; }
+        public float? Temperature { get; set; }
+        public float? TopP { get; set; }
+    }
 }

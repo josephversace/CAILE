@@ -1,354 +1,351 @@
-IIM Platform Status Report - Post-Migration
+
+Status: Development Phase - Core Infrastructure Stabilized
 Executive Summary
-We have successfully completed the initial phase of migrating the IIM platform from a monolithic desktop application to a properly architected thin client/API server model. The system now has clear separation of concerns with the Desktop acting as a pure UI layer and the API handling all business logic.
+The Intelligent Investigation Machine (IIM) is a sophisticated AI-powered investigation platform for law enforcement training. Since the initial handover, significant progress has been made in stabilizing the core infrastructure, implementing comprehensive audit logging, and resolving critical dependency injection issues. The platform now has a solid foundation with proper service lifetimes, database persistence for audit trails, and cleaned-up service registration.
+Recent Accomplishments (Since Last Handover)
+✅ 1. Dependency Injection Issues Resolved
 
-What We've Accomplished
-1. Architecture Transformation
-FROM: Monolithic Desktop Application
-Desktop App (Fat Client)
-├── UI Components
-├── Business Logic
-├── Model Orchestration
-├── Evidence Management
-├── WSL Management
-└── Direct Database Access
-TO: Clean Client-Server Architecture
-Desktop (Thin Client)          API Server
-├── UI Components        →     ├── Business Logic
-├── API Client           →     ├── Model Orchestration
-└── State Management            ├── Evidence Management
-                               ├── WSL Management
-                               └── All Services
-2. Service Organization
-Created a clean, maintainable service registration pattern:
-IIM.Api/Extensions/
-├── ServiceCollectionExtensions.cs     # Main orchestrator
-├── HttpClientExtensions.cs            # HTTP clients
-├── InfrastructureServiceExtensions.cs # External systems
-├── CoreServiceExtensions.cs           # Business logic
-├── ApplicationServiceExtensions.cs    # App-specific
-├── BackgroundServiceExtensions.cs     # Background tasks
-├── CommandHandlingExtensions.cs       # Command pattern
-└── AuthenticationExtensions.cs        # Auth/Security
-3. Deployment Modes Implemented
-The system now supports three deployment modes:
+Fixed all service lifetime mismatches preventing application startup
+Properly configured Singleton vs Scoped services based on their purpose
+Reorganized service registration for clarity and maintainability
+Key changes:
 
-Standalone Mode (Default)
-
-API runs locally on same machine
-Full functionality for single investigator
-No authentication required
-
-
-Client Mode (Future)
-
-Desktop connects to remote API
-Multiple investigators share resources
-Authentication required
-
-
-Server Mode (Future)
-
-API runs as central server
-Admin web interface
-Template-based model management
+StorageConfiguration → Singleton
+IModelMetadataService → Singleton
+IQdrantService → Singleton (for connection pooling)
+IEmbeddingService → Singleton (for performance)
+All DbContexts remain Scoped (EF Core requirement)
 
 
 
+✅ 2. Audit System Enhanced
 
-Current Data Flows
-Evidence Ingestion Flow
-User drags file to Desktop UI
-    ↓
-Desktop calls IIMApiClient.IngestEvidenceAsync()
-    ↓ [HTTP POST /api/evidence/ingest]
-API receives multipart form data
-    ↓
-SimpleMediator dispatches IngestEvidenceCommand
-    ↓
-AuditBehavior logs the command (chain of custody)
-    ↓
-EvidenceManager processes file
-    ├── Calculates hash
-    ├── Stores in MinIO
-    ├── Deduplication check
-    └── Records metadata
-    ↓
-Returns Evidence object with ID
-    ↓
-Desktop updates UI
-Investigation Query Flow
-User types query in Desktop UI
-    ↓
-Desktop calls IIMApiClient.ProcessQueryAsync()
-    ↓ [HTTP POST /api/investigation/query]
-API receives query
-    ↓
-SimpleMediator dispatches ProcessQueryCommand
-    ↓
-InvestigationService processes
-    ├── Embeds query (via embedding service)
-    ├── Searches Qdrant vector DB
-    ├── Retrieves relevant documents
-    ├── Generates response via LLM
-    └── Adds citations
-    ↓
-Returns InvestigationResponse
-    ↓
-Desktop displays answer with citations
-Model Management Flow
-Desktop requests available models
-    ↓ [HTTP GET /api/models/available]
-API returns model list
-    ↓
-User selects model to load
-    ↓
-Desktop calls IIMApiClient.LoadModelAsync()
-    ↓ [HTTP POST /api/v1/models/load]
-API receives LoadModelCommand
-    ↓
-ModelOrchestrator loads model
-    ├── Checks available memory
-    ├── Downloads if needed
-    ├── Loads into memory
-    └── Initializes inference pipeline
-    ↓
-Returns success/failure
+Implemented comprehensive database-backed audit logging
 
-What's Working ✅
-Infrastructure
+Created AuditBehavior for MediatR pipeline with full database persistence
+Audit events now capture: User ID, IP address, timestamps, request/response data
+Sensitive data filtering (passwords, tokens automatically redacted)
+Complete chain-of-custody tracking for evidence
 
-✅ Clean separation between Desktop (UI) and API (business logic)
-✅ Service registration using extension methods
+
+Added audit query endpoint at /audit/logs with filtering capabilities
+Integrated with SQLite for tamper-proof persistence (7-year retention)
+
+✅ 3. Service Architecture Cleaned Up
+
+Consolidated duplicate service registrations
+Removed circular dependencies
+Organized services by lifetime and purpose
+Added comprehensive documentation of lifetime decisions
+Fixed parameter ordering issues in API endpoints
+
+✅ 4. API Development Experience Improved
+
+Swagger UI now launches automatically on startup
+Added development dashboard with links to all tools
+Fixed CORS configuration for Blazor client
+Health check endpoints properly configured
+
+Current Project Status
+🟢 Working Components
+
+Core Infrastructure
+
+✅ WSL2 management (detection, not installation)
+✅ SQLite databases (Audit, Config, Model)
 ✅ Dependency injection properly configured
-✅ HTTP communication between Desktop and API
-✅ SignalR hubs configured for real-time updates
-✅ Health check endpoints
-✅ Swagger documentation (development mode)
+✅ HTTP client factories
+✅ SignalR hub registration
 
-Core Services
 
-✅ SimpleMediator for command/query handling
-✅ Audit pipeline for critical operations
-✅ WSL management endpoints
-✅ Model orchestration framework
-✅ Session management
-✅ Evidence management structure
+API Layer
 
-Storage & Persistence
+✅ Minimal API endpoints structured
+✅ Swagger/OpenAPI documentation
+✅ Health checks
+✅ CORS properly configured
+✅ Audit endpoints functional
 
-✅ MinIO integration for object storage
-✅ Deduplication service
-✅ Storage configuration
-✅ Evidence chain of custody
 
+Audit & Compliance
 
-What's NOT Working Yet ❌
-Critical Gaps
+✅ Complete audit trail implementation
+✅ Database persistence
+✅ User context tracking
+✅ Sensitive data filtering
+✅ Chain-of-custody for evidence
 
-RAG Pipeline Not Connected
 
-❌ Embedding service returns dummy data
-❌ Qdrant vector search not implemented
-❌ LLM generation stubbed
-❌ No actual document retrieval
+Desktop Client
 
+✅ Blazor WebView integration
+✅ API client communication
+✅ Basic UI structure
 
-Model Loading Incomplete
 
-❌ DefaultModelOrchestrator.LoadModelAsync() is stubbed
-❌ No actual ONNX/Ollama integration
-❌ InferencePipeline.ExecuteAsync() returns mock data
 
+🟡 Partially Implemented
 
-Authentication Not Implemented
+RAG Pipeline (40% complete)
 
-❌ JWT generation not working
-❌ No user management
-❌ OpenIddict not configured
+✅ Qdrant integration exists
+✅ In-memory Qdrant for development
+⚠️ Embedding service needs local implementation
+⚠️ Document chunking needs refinement
 
 
-WSL Services
+Model Management (30% complete)
 
-❌ Docker container management not automated
-❌ Qdrant/embedding services must be started manually
-❌ Health checks incomplete
+✅ Model orchestrator structure
+⚠️ Actual model loading not implemented
+⚠️ ONNX runtime integration missing
+⚠️ GPU resource management incomplete
 
 
-Investigation Tools
 
-❌ OCR not implemented
-❌ Audio transcription stubbed
-❌ Image analysis not working
-❌ Entity extraction missing
+🔴 Not Yet Implemented
 
+Critical Features
 
+❌ SemanticKernelOrchestrator (throws NotImplementedException)
+❌ Export services (PDF, Word, Excel all throw NotImplementedException)
+❌ Plugin system
+❌ Multi-modal processing (CLIP/Whisper)
+❌ Real-time updates via SignalR
 
 
-Next Steps (Prioritized)
-Sprint 1: Complete RAG Pipeline (1 week)
-Goal: Get end-to-end document search working
+UI Components (all stubbed with "TODO")
 
-Wire up Embedding Service
-csharp// In RemoteEmbeddingService
-- Remove stub code
-- Implement actual HTTP calls to FastAPI embedding service
-- Handle batching and errors
+❌ Investigation dashboard
+❌ Evidence viewer
+❌ Model management UI
+❌ Settings pages
+❌ Chain-of-custody display
 
-Complete Qdrant Integration
-csharp// In QdrantService
-- Implement CreateCollectionAsync()
-- Implement UpsertAsync() for indexing
-- Implement SearchAsync() for retrieval
 
-Connect InferencePipeline
-csharp// In DefaultModelOrchestrator
-- Implement LoadModelAsync() with ONNX Runtime
-- Wire up DirectML provider
-- Handle model lifecycle
 
-Complete Investigation Flow
-csharp// In InvestigationService.ProcessQueryAsync()
-- Connect all pieces: embed → search → generate
-- Add citation linking
-- Return real results
-
-
-Sprint 2: Model Loading & Inference (1 week)
-
-ONNX Runtime Integration
-
-Load actual models from disk
-Implement inference execution
-Memory management
-
-
-Model Templates
-
-Implement template switching
-Pre-load default models
-Resource monitoring
-
-
-Inference Pipeline
-
-Queue management
-Batch processing
-Error handling
-
-
-
-Sprint 3: WSL & Container Automation (3 days)
-
-Docker Automation
-bash# Automate in WslServiceOrchestrator
-docker run -d --name qdrant -p 6333:6333 qdrant/qdrant
-docker run -d --name embeddings -p 8081:8000 iim/embeddings
-
-Health Monitoring
-
-Implement health checks
-Auto-restart failed services
-Status dashboard
-
-
-
-Sprint 4: Authentication & Multi-User (1 week)
-
-JWT Implementation
-
-Token generation
-Refresh tokens
-Role-based access
-
-
-User Management
-
-Login/logout endpoints
-User profiles
-Session management
-
-
-Admin Interface
-
-Razor Pages for admin
-Model management UI
-System monitoring
-
-
-
-
-Testing Strategy
-Current Test Coverage
-
-❌ Unit tests: ~10% (mostly stubs)
-❌ Integration tests: Not implemented
-❌ E2E tests: Not implemented
-
-Needed Tests
-
-API Integration Tests
-
-Evidence ingestion
-Query processing
-Model management
-
-
-Desktop UI Tests
-
-API client mocking
-State management
-Error handling
-
-
-
-
-Risk Assessment
-High Risk Items
-
-Model Memory Management - Need proper resource limits
-Concurrent User Access - Not tested for multi-user
-Large File Processing - Streaming not fully implemented
-WSL Dependency - Windows-specific, no Linux fallback
-
-Mitigation Strategies
-
-Implement resource quotas and monitoring
-Add request queuing and rate limiting
-Implement chunked upload/download
-Create Docker-only deployment option
-
-
-Immediate Action Items
-This Week
-
-Complete RemoteEmbeddingService - Remove stubs, add real HTTP calls
-Wire up QdrantService - Implement vector operations
-Test E2E flow - Evidence upload → embedding → search
-Fix ModelOrchestrator - Load at least one real model
-
-Configuration Needed
-bash# Start required services
-docker run -d -p 6333:6333 qdrant/qdrant
-docker run -d -p 8081:8000 iim/embeddings:latest
-docker run -d -p 9000:9000 minio/minio server /data
-Environment Setup
-json// Update appsettings.json
+Immediate Next Steps (Priority Order)
+Week 1-2: Complete Core AI Functionality
+csharp// 1. Implement SemanticKernelOrchestrator
+public class SemanticKernelOrchestrator : IReasoningService
 {
-  "Development": {
-    "UseInMemoryQdrant": false,  // Switch to real Qdrant
-    "MockExternalServices": false  // Use real services
-  }
+    // TODO: Implement actual reasoning logic
+    // - Connect to model orchestrator
+    // - Implement prompt templates
+    // - Add memory/context management
 }
 
+// 2. Complete model loading
+public class DefaultModelOrchestrator
+{
+    // TODO: Implement LoadModelAsync
+    // - ONNX runtime integration
+    // - Model file management
+    // - GPU/CPU allocation
+}
+Week 3-4: Export Services
+csharp// Implement all export formats
+- PDF generation using PdfPig
+- Word documents using OpenXML
+- Excel spreadsheets
+- JSON with full metadata
+Week 5-6: Complete RAG Pipeline
+
+Implement local embedding generation
+Add proper document chunking strategies
+Implement re-ranking
+Add citation extraction
+Complete vector search optimization
+
+Week 7-8: UI Implementation
+
+Complete investigation dashboard
+Implement evidence upload/viewer
+Add real-time notifications via SignalR
+Complete settings management
+Add chain-of-custody visualization
+
+Technical Debt to Address
+1. Testing Coverage
+bash# Current coverage: ~5%
+# Target: 80%
+
+- Unit tests for all services
+- Integration tests for API endpoints
+- E2E tests for critical workflows
+- Performance benchmarks
+2. Configuration Management
+json// Move hardcoded values to appsettings.json
+{
+  "ModelCache": {
+    "MaxSizeGb": 64,
+    "PreloadModels": ["phi-3", "whisper-small"]
+  },
+  "RagPipeline": {
+    "ChunkSize": 512,
+    "ChunkOverlap": 50,
+    "TopK": 5
+  }
+}
+3. Error Handling
+
+Add global exception handler
+Implement retry policies with Polly
+Add circuit breakers for external services
+Improve error messages for users
+
+Development Environment Setup
+Prerequisites
+powershell# Required software
+- Windows 11 Pro/Enterprise
+- .NET 8 SDK
+- Visual Studio 2022 17.8+
+- Docker Desktop
+- WSL2 with Ubuntu 22.04
+- 32GB+ RAM
+- 100GB+ free disk space
+Quick Start
+bash# 1. Clone repository
+git clone [repository-url]
+
+# 2. Restore packages
+dotnet restore
+
+# 3. Initialize databases
+dotnet ef database update -c AuditDbContext
+dotnet ef database update -c ConfigDbContext
+dotnet ef database update -c ModelDbContext
+
+# 4. Start API
+cd src/IIM.Api
+dotnet run
+
+# 5. Start Desktop (separate terminal)
+cd src/IIM.Desktop
+dotnet run
+Verify Installation
+
+API running: http://localhost:5080/swagger
+Health check: http://localhost:5080/api/healthz
+Audit logs: http://localhost:5080/audit/logs
+
+Known Issues & Workarounds
+Issue 1: WSL Not Found
+Error: "IIM distributions not found"
+Workaround: This is expected on first run. WSL setup not automated yet.
+Issue 2: Model Loading Fails
+Error: NotImplementedException in LoadModelAsync
+Workaround: Models cannot be loaded until implementation complete.
+Issue 3: Export Functions Fail
+Error: NotImplementedException in export services
+Workaround: Use JSON export from API directly as temporary solution.
+Architecture Decisions Made
+1. Service Lifetimes
+
+Singleton: Infrastructure, models, GPU management
+Scoped: Per-request services, DB contexts, audit
+Transient: Lightweight, stateless handlers
+
+2. Audit Strategy
+
+All commands audited automatically
+Sensitive queries selectively audited
+7-year retention policy
+SQLite for tamper-proof storage
+
+3. Model Management
+
+Singleton orchestrator for resource sharing
+Lazy loading with preload options
+GPU priority queue implementation
+
+Resource Requirements
+Minimum for Development
+
+16GB RAM
+50GB disk space
+4-core CPU
+No GPU required (CPU fallback)
+
+Recommended for Production
+
+128GB RAM (as per course spec)
+500GB NVMe SSD
+AMD Ryzen 9 or better
+AMD GPU with ROCm support
+Dedicated 10Gbps network
+
 Success Metrics
-We'll know Phase 1 is complete when:
+Technical Metrics
 
-✅ User can upload a document
-✅ Document gets embedded and indexed
-✅ User can query about the document
-✅ System returns accurate answer with citations
-✅ All operations are audited
+ API response time < 200ms (p95)
+ Model load time < 30 seconds
+ RAG query time < 2 seconds
+ 99.9% uptime
+ Zero data loss events
 
-Current Status: Architecture complete, implementation ~40% done
-Estimated Completion: 2-3 weeks for full Phase 1 functionality
+Functional Metrics
+
+ Process 200MB dataset in 90 minutes
+ Support 5 concurrent investigations
+ Generate reports in < 30 seconds
+ Maintain complete audit trail
+ Pass CAI-LE certification requirements
+
+Risk Assessment
+High Risk
+
+SemanticKernel not implemented - Blocks core AI functionality
+No model loading - Cannot demonstrate AI capabilities
+Export services incomplete - Cannot generate required reports
+
+Medium Risk
+
+Limited test coverage - Quality issues likely
+No performance optimization - May not meet 90-minute requirement
+UI incomplete - Poor user experience
+
+Low Risk
+
+WSL auto-setup missing - Can be done manually
+Plugin system not implemented - Not required for MVP
+Some UI polish needed - Functional but not beautiful
+
+Contact & Resources
+Documentation
+
+Architecture: /docs/architecture.md
+API Specs: http://localhost:5080/swagger
+Course Materials: IIM_Technical_Overview.pdf
+
+Key Files Modified Recently
+
+src/IIM.Api/Extensions/CoreServiceExtensions.cs - Fixed DI
+src/IIM.Application/Behaviors/AuditBehavior.cs - Added audit
+src/IIM.Api/Program.cs - Added audit endpoints
+src/IIM.Core/Services/SqliteAuditLogger.cs - Audit implementation
+
+Support Channels
+
+GitHub Issues: [repository]/issues
+Internal Slack: #iim-development
+Course Forum: portal.iim.edu/forum
+
+Handover Checklist
+
+ Service lifetime issues resolved
+ Audit system fully functional
+ API endpoints documented
+ Development environment verified
+ Known issues documented
+ Test suite running
+ Performance benchmarks established
+ Security review completed
+ Deployment pipeline configured
+ Production environment ready
+
+Conclusion
+The IIM project has made significant progress in establishing a solid foundation. The dependency injection issues have been resolved, audit logging is fully functional, and the service architecture is clean and maintainable.
+The immediate priority is implementing the core AI functionality (SemanticKernelOrchestrator and model loading), followed by export services and RAG pipeline completion. With these components in place, the platform will be ready for UI implementation and testing.
+The project is approximately 35% complete overall, with infrastructure at 80%, core services at 40%, and UI at 10%. The estimated time to MVP is 6-8 weeks with a focused development effort.
+Critical Success Factor: Prioritize implementing SemanticKernelOrchestrator and model loading first, as these are blockers for all AI functionality demonstrations.

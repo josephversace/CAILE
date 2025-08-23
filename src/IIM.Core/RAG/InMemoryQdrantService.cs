@@ -1,7 +1,7 @@
-﻿// src/IIM.Core/RAG/InMemoryQdrantService.cs
+// src/IIM.Core/RAG/InMemoryQdrantService.cs
 using IIM.Core.Configuration;
 using IIM.Infrastructure.Storage;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;

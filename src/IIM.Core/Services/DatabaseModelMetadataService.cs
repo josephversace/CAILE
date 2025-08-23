@@ -1,9 +1,9 @@
-﻿
+
 
 using IIM.Core.Configuration;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
-using IIM.Shared.Models; // Model from Shared
+using IIM.Shared.DTOs; // Model from Shared
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.OnnxRuntime;

@@ -1,6 +1,6 @@
-﻿// File: SemanticKernelOrchestrator.Intent.cs
+// File: SemanticKernelOrchestrator.Intent.cs
 using IIM.Shared.Enums;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;

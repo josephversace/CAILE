@@ -1,10 +1,10 @@
-﻿// File: SemanticKernelOrchestrator.cs
+// File: SemanticKernelOrchestrator.cs
 using IIM.Core.Configuration;
 using IIM.Core.Models;
 using IIM.Core.Services;
 using IIM.Shared.DTOs;
 using IIM.Shared.Enums;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using NPOI.SS.Formula.Functions;

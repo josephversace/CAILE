@@ -1,6 +1,6 @@
 using IIM.Core.Models;
 using IIM.Shared.Enums;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
