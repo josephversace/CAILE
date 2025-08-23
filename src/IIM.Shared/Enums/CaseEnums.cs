@@ -8,19 +8,13 @@ public enum CaseStatus
     AssignedTo,
     Pending,
     UnderReview,
+    Suspended,
     Closed,
     Cold,
     Archived
 }
 
-public enum CasePriority
-{
-    Low,
-    Medium,
-    High,
-    Critical,
-    Emergency
-}
+
 
 public enum CaseType
 {
@@ -39,3 +33,16 @@ public enum CaseType
     Terrorism,
     Other
 }
+
+
+
+
+public enum CasePriority
+{
+    Low,
+    Medium,
+    High,
+    Critical,
+    Emergency
+}
+

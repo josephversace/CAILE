@@ -5,5 +5,9 @@
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="DTOs\Entities\" />
+    <Folder Include="DTOs\Reports\" />
+  </ItemGroup>
 </Project>
 

@@ -6,6 +6,19 @@ using System.Threading.Tasks;
 
 namespace IIM.Shared.Enums
 {
+    public enum AnalysisType
+    {
+        TextAnalysis,
+        ImageAnalysis,
+        AudioAnalysis,
+        VideoAnalysis,
+        DocumentAnalysis,
+        NetworkAnalysis,
+        BehavioralAnalysis,
+        PatternAnalysis,
+        ForensicAnalysis
+    }
+
 
     public enum ReportType
     {

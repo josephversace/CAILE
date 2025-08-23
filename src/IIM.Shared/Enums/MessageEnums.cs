@@ -18,4 +18,13 @@ namespace IIM.Shared.Enums
         Edited,
         Deleted
     }
+    public enum MessageRole
+    {
+        User,
+        Assistant,
+        System,
+        Tool
+    }
+
+
 }
