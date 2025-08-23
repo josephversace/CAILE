@@ -1,11 +1,14 @@
-﻿using IIM.Core.AI;
+﻿using IIM.Application.Commands.Models;
+using IIM.Core.AI;
 using IIM.Core.Mediator;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Threading;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
-namespace IIM.Application.Commands.Models
+namespace IIM.Application.Commands.Investigation
 {
     /// <summary>
     /// Handler for unloading models

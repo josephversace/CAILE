@@ -22,7 +22,7 @@ namespace IIM.Api.Extensions
             DeploymentConfiguration deployment)
         {
             // Investigation Service
-            services.AddScoped<IInvestigationService, InvestigationService>();
+     
 
             // Evidence Management - use Core.Security.EvidenceConfiguration
             services.AddScoped<IEvidenceManager>(sp =>
@@ -46,24 +46,24 @@ namespace IIM.Api.Extensions
             // Case Management
             services.AddScoped<ICaseManager>(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<JsonCaseManager>>();
+                var logger = sp.GetRequiredService<ILogger<SqliteCaseManager>>();
                 var storageConfig = sp.GetRequiredService<StorageConfiguration>();
-                return new JsonCaseManager(logger, storageConfig);
+                return new SqliteCaseManager(logger, storageConfig);
             });
 
             // Inference Service (high-level)
             services.AddScoped<IInferenceService, InferenceService>();
 
+            services.Configure<TemplateEngineOptions>(configuration.GetSection("TemplateEngine"));
+            services.AddScoped<ITemplateEngine, TemplateEngine>();
+
             // Export Services
-            services.AddScoped<IExportService, ExportService>();
-            services.AddScoped<IPdfService, PdfService>();
-            services.AddScoped<IWordService, WordService>();
-            services.AddScoped<IExcelService, ExcelService>();
+            services.AddExportServices();
+      
             services.AddScoped<IVisualizationService, VisualizationService>();
 
-            // File Services
-            services.AddScoped<IFileService, FileService>();
-          
+       
+            services.AddScoped<IInvestigationService, InvestigationService>();
 
             return services;
         }

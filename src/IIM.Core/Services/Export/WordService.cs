@@ -118,7 +118,7 @@ public class WordService : IWordService
         // Add response content
         var contentParagraph = body.AppendChild(new Paragraph());
         var contentRun = contentParagraph.AppendChild(new Run());
-        contentRun.AppendChild(new Text(response.Content));
+        contentRun.AppendChild(new Text(response.Message));
         
         // Add confidence if available
         if (response.Confidence.HasValue && options.IncludeMetadata)

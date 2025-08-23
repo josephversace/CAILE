@@ -49,26 +49,23 @@ public interface IExportService
 public class ExportService : IExportService
 {
     private readonly ILogger<ExportService> _logger;
-    private readonly IPdfService _pdfService;
-    private readonly IWordService _wordService;
-    private readonly IExcelService _excelService;
+    //private readonly IPdfService _pdfService;
+    //private readonly IWordService _wordService;
+    //private readonly IExcelService _excelService;
     private readonly ITemplateEngine _templateEngine;
     private readonly IFileService _fileService;
     private readonly ISecurityService _securityService;
 
     public ExportService(
         ILogger<ExportService> logger,
-        IPdfService pdfService,
-        IWordService wordService,
-        IExcelService excelService,
-        ITemplateEngine templateEngine,
+    ITemplateEngine templateEngine,
         IFileService fileService,
         ISecurityService securityService)
     {
         _logger = logger;
-        _pdfService = pdfService;
-        _wordService = wordService;
-        _excelService = excelService;
+        //_pdfService = pdfService;
+        //_wordService = wordService;
+        //_excelService = excelService;
         _templateEngine = templateEngine;
         _fileService = fileService;
         _securityService = securityService;
@@ -156,7 +153,8 @@ public class ExportService : IExportService
             FooterHtml = options.IncludeFooters ? await GetFooterHtmlAsync(response) : null
         };
 
-        return await _pdfService.GeneratePdfAsync(html, pdfOptions);
+        throw new NotImplementedException("PDF export is not implemented yet");
+        //return await _pdfService.GeneratePdfAsync(html, pdfOptions);
     }
 
     private async Task<byte[]> ExportToWordAsync(
@@ -164,7 +162,9 @@ public class ExportService : IExportService
         ExportOptions options)
     {
         // Implementation for Word export
-        return await _wordService.GenerateDocumentAsync(response, options);
+        //return await _wordService.GenerateDocumentAsync(response, options);
+        throw new NotImplementedException("Word export is not implemented yet");
+
     }
 
     private async Task<byte[]> ExportToExcelAsync(
@@ -172,7 +172,9 @@ public class ExportService : IExportService
         ExportOptions options)
     {
         // Implementation for Excel export
-        return await _excelService.GenerateSpreadsheetAsync(response, options);
+        // return await _excelService.GenerateSpreadsheetAsync(response, options);
+
+        throw new NotImplementedException("Excel export is not implemented yet");
     }
 
     private async Task<byte[]> ExportToJsonAsync(
@@ -228,7 +230,7 @@ public class ExportService : IExportService
 
         // Content
         markdown.AppendLine("## Content");
-        markdown.AppendLine(response.Content);
+        markdown.AppendLine(response.Message);
         markdown.AppendLine();
 
         // Chain of Custody

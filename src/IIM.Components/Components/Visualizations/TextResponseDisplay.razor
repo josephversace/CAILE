@@ -25,10 +25,10 @@
             </div>
         }
     }
-    else if (Response != null && !string.IsNullOrEmpty(Response.Content))
+    else if (Response != null && !string.IsNullOrEmpty(Response.Message))
     {
         <div class="response-text">
-            @((MarkupString)FormatContent(Response.Content))
+            @((MarkupString)FormatContent(Response.Message))
         </div>
     }
     

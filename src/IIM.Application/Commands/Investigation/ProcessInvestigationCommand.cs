@@ -1,70 +1,57 @@
-﻿using IIM.Core.Mediator;
-using IIM.Core.Models;
+﻿// File: IIM.Application/Commands/Investigation/ProcessInvestigationCommand.cs
+using IIM.Core.Mediator;
 using IIM.Shared.Enums;
 using IIM.Shared.Models;
-using System;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace IIM.Application.Commands.Investigation
 {
     /// <summary>
-    /// Command to process an investigation query
+    /// Command to process an investigation query within a session.
+    /// This matches the existing usage in Program.cs and IIMApiClient.
     /// </summary>
     public class ProcessInvestigationCommand : IRequest<InvestigationResponse>
     {
         /// <summary>
-        /// Session ID for the investigation
+        /// Gets or sets the session ID to process the query in.
+        /// Property setter needed for model binding from HTTP POST.
         /// </summary>
+        [Required]
         public string SessionId { get; set; } = string.Empty;
 
         /// <summary>
-        /// The user's query text
+        /// Gets or sets the query text to process.
+        /// This matches the usage in IIMApiClient.
         /// </summary>
+        [Required]
         public string Query { get; set; } = string.Empty;
 
         /// <summary>
-        /// Type of investigation
+        /// Gets or sets optional attachments for the query.
         /// </summary>
-        public InvestigationType Type { get; set; } = InvestigationType.GeneralInquiry;
+        public List<Attachment>? Attachments { get; set; }
 
         /// <summary>
-        /// List of tools enabled for this query
+        /// Gets or sets the user ID for audit trail.
         /// </summary>
-        public List<string> EnabledTools { get; set; } = new();
+        public string? UserId { get; set; }
 
         /// <summary>
-        /// Additional context for the query
+        /// Default constructor for model binding.
         /// </summary>
-        public Dictionary<string, object> Context { get; set; } = new();
+        public ProcessInvestigationCommand() { }
 
         /// <summary>
-        /// File attachments for the query
+        /// Initializes a new instance with required fields.
         /// </summary>
-        public List<Attachment> Attachments { get; set; } = new();
-
-        /// <summary>
-        /// Maximum tokens for response
-        /// </summary>
-        public int MaxTokens { get; set; } = 2048;
-
-        /// <summary>
-        /// Temperature for generation (0.0 - 1.0)
-        /// </summary>
-        public double Temperature { get; set; } = 0.3;
-
-        /// <summary>
-        /// Whether to include citations
-        /// </summary>
-        public bool IncludeCitations { get; set; } = true;
-
-        /// <summary>
-        /// Whether to verify factual accuracy
-        /// </summary>
-        public bool VerifyAccuracy { get; set; } = true;
-
-        /// <summary>
-        /// Model configuration to use
-        /// </summary>
-        public string? ModelConfigurationId { get; set; }
+        /// <param name="sessionId">Session ID where query will be processed</param>
+        /// <param name="query">Query text to process</param>
+        public ProcessInvestigationCommand(string sessionId, string query)
+        {
+            SessionId = sessionId ?? throw new ArgumentNullException(nameof(sessionId));
+            Query = query ?? throw new ArgumentNullException(nameof(query));
+        }
     }
+
+   
 }

@@ -47,4 +47,22 @@ namespace IIM.Shared.Models
         public int? Limit { get; set; } = 100;
         public int? Offset { get; set; }
     }
+
+    /// <summary>
+    /// Entry in the chain of custody for evidence.
+    /// </summary>
+    public class ChainOfCustodyEntry
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
+        public string Action { get; set; } = string.Empty;
+        public string Actor { get; set; } = string.Empty;
+        public string Details { get; set; } = string.Empty;
+        public string Hash { get; set; } = string.Empty;
+        public string PreviousHash { get; set; } = string.Empty;
+        public Dictionary<string, object>? Metadata { get; set; }
+
+        public string Officer { get; set; }
+        public string Notes { get; set; }
+    }
 }

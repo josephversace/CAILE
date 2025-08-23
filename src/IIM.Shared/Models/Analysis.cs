@@ -4,55 +4,54 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IIM.Shared.Models
-{
+namespace IIM.Shared.Models;
+
     public class AnalysisResult
     {
         public string Id { get; set; } = Guid.NewGuid().ToString("N");
-        public string AnalysisType { get; set; } = string.Empty;
+  
         public DateTimeOffset PerformedAt { get; set; } = DateTimeOffset.UtcNow;
         public string PerformedBy { get; set; } = string.Empty;
-        public Dictionary<string, object> Results { get; set; } = new();
+        public Dictionary<string, object> Results { get; set; } = new();    
         public double Confidence { get; set; }
         public List<string> Tags { get; set; } = new();
-    }
+
+    public AnalysisType Type { get; set; }
+    public List<Finding> Findings { get; set; } = new();  // Using existing Finding from IIM.Shared.Models
+    public List<string> Recommendations { get; set; } = new();
+    public Dictionary<string, object> Metadata { get; set; } = new();
+    public TimeSpan AnalysisTime { get; set; }
+    public float ConfidenceScore { get; set; }
+}
 
 
-    // Citation stays in Core because it has ID generation logic
-    public class Citation
-    {
-        public string Id { get; set; } = Guid.NewGuid().ToString("N");
-        public string Source { get; set; } = string.Empty;
-        public string SourceId { get; set; } = string.Empty;
-        public string SourceType { get; set; } = string.Empty;
-        public string Text { get; set; } = string.Empty;
-        public int? PageNumber { get; set; }
-        public string? Location { get; set; }
-        public double Relevance { get; set; }
-    }
+/// <summary>
+/// Citation reference with extended properties.
+/// </summary>
+public class Citation
+{
+    // Existing core properties
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string SourceId { get; set; } = string.Empty;
+    public string SourceType { get; set; } = string.Empty;
+    public string Text { get; set; } = string.Empty;
+    public int? PageNumber { get; set; }
+    public string? Location { get; set; }
+    public double Relevance { get; set; }
+
+    // New optional properties
+    public int? Index { get; set; }  // Citation number in response
+    public string? Source { get; set; }  // Source name/title
+    public string? Url { get; set; }  // Link to source
+    public DateTimeOffset? AccessedAt { get; set; }  // When cited
+    public string? Author { get; set; }  // Source author
+    public DateTimeOffset? PublishedAt { get; set; }  // Publication date
+    public Dictionary<string, object>? Metadata { get; set; }
+}
 
 
-    public class TranscriptionResult
-    {
-        public string Id { get; set; } = Guid.NewGuid().ToString("N");
-        public string EvidenceId { get; set; } = string.Empty;
-        public string Text { get; set; } = string.Empty;
-        public string Language { get; set; } = string.Empty;
-        public double Confidence { get; set; }
-        public List<TranscriptionSegment> Segments { get; set; } = new();
-        public Dictionary<string, object> Metadata { get; set; } = new();
-    }
 
-    public class TranscriptionSegment
-    {
-        public int Start { get; set; }
-        public int End { get; set; }
-        public string Text { get; set; } = string.Empty;
-        public double Confidence { get; set; }
-        public string? Speaker { get; set; }
-    }
-
-    public class ImageAnalysisResult
+public class ImageAnalysisResult
     {
         public string Id { get; set; } = Guid.NewGuid().ToString("N");
         public string EvidenceId { get; set; } = string.Empty;
@@ -96,4 +95,3 @@ namespace IIM.Shared.Models
         public double Similarity { get; set; }
     }
 
-}

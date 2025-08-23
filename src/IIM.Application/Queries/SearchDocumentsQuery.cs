@@ -1,5 +1,6 @@
 ﻿using IIM.Core.Mediator;
 using IIM.Shared.DTOs;
+using IIM.Shared.Models;
 using System.Collections.Generic;
 
 namespace IIM.Application.Queries
@@ -7,7 +8,7 @@ namespace IIM.Application.Queries
     /// <summary>
     /// Query to search documents using RAG pipeline
     /// </summary>
-    public class SearchDocumentsQuery : IQuery<RAGSearchResultDto>
+    public class SearchDocumentsQuery : IQuery<RAGSearchResult>
     {
         /// <summary>
         /// Search query text

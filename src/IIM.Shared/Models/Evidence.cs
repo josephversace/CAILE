@@ -1,52 +1,70 @@
 ﻿using IIM.Shared.Enums;
+using IIM.Shared.Models;
 using System;
 using System.Collections.Generic;
 
 namespace IIM.Shared.Models
 {
     /// <summary>
-    /// Main Evidence entity - represents a piece of digital evidence
+    /// Represents digital evidence with chain of custody tracking.
+    /// Extended with optional properties for enhanced functionality.
     /// </summary>
     public class Evidence
     {
-        public string Id { get; set; } = Guid.NewGuid().ToString("N");
+        // Existing core properties
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         public string CaseId { get; set; } = string.Empty;
         public string CaseNumber { get; set; } = string.Empty;
         public string OriginalFileName { get; set; } = string.Empty;
         public long FileSize { get; set; }
         public EvidenceType Type { get; set; }
         public EvidenceStatus Status { get; set; }
-
-        // Integrity
-        public Dictionary<string, string> Hashes { get; set; } = new();
-        public string Signature { get; set; } = string.Empty;
-        public bool IntegrityValid { get; set; } = true;
-
         public string Hash { get; set; } = string.Empty;
-        public string HashAlgorithm { get; set; } = "SHA256";
-        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-        public DateTimeOffset? UpdatedAt { get; set; }
-        public string CreatedBy { get; set; } = string.Empty;
-     
-
-        // Metadata
-        public EvidenceMetadata Metadata { get; set; } = new();
-        public DateTimeOffset IngestTimestamp { get; set; } = DateTimeOffset.UtcNow;
+        public string HashAlgorithm { get; set; } = string.Empty;
         public string StoragePath { get; set; } = string.Empty;
+        public DateTimeOffset IngestTimestamp { get; set; } = DateTimeOffset.UtcNow;
+        public EvidenceMetadata Metadata { get; set; } = new();
+        public DateTime CreatedAt { get; set; }
+        public string CreatedBy { get; set; }
 
-        // Chain of Custody
-        public List<ChainOfCustodyEntry> ChainOfCustody { get; set; } = new();
-        public List<ProcessedEvidence> ProcessedVersions { get; set; } = new();
+        // New optional properties for compatibility
+        public string? FileType { get; set; }  // MIME type
+        public string? FileName { get; set; }  // Alias for OriginalFileName
+        public DateTimeOffset? UploadedAt { get; set; }  // Alias for IngestTimestamp
+        public DateTimeOffset? UpdatedAt { get; set; }  // Last update timestamp
+        public string? UploadedBy { get; set; }  // User who uploaded
+        public bool? IntegrityValid { get; set; }  // Hash verification status
+        public string? Signature { get; set; }  // Digital signature
+        public List<ChainOfCustodyEntry>? ChainOfCustody { get; set; }
+        public List<ProcessedEvidence>? ProcessedVersions { get; set; }
+        public Dictionary<string, string>? Hashes { get; set; }  // Multiple hash types
 
-        // Analysis
-        public List<AnalysisResult> Analyses { get; set; } = new();
-        public Dictionary<string, object> ExtractedData { get; set; } = new();
+        // Computed properties for convenience
+        public string GetFileType() => FileType ?? DetermineFileType(OriginalFileName);
+        public DateTimeOffset GetUploadedAt() => UploadedAt ?? IngestTimestamp;
+        public DateTimeOffset GetUpdatedAt() => UpdatedAt ?? IngestTimestamp;
+
+        private string DetermineFileType(string fileName)
+        {
+            var extension = System.IO.Path.GetExtension(fileName)?.ToLowerInvariant() ?? "";
+            return extension switch
+            {
+                ".pdf" => "application/pdf",
+                ".doc" or ".docx" => "application/msword",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".mp3" => "audio/mpeg",
+                ".mp4" => "video/mp4",
+                _ => "application/octet-stream"
+            };
+        }
     }
 
-    /// <summary>
-    /// Evidence metadata - collection information
-    /// </summary>
-    public class EvidenceMetadata
+
+/// <summary>
+/// Evidence metadata - collection information
+/// </summary>
+public class EvidenceMetadata
     {
         public string CaseNumber { get; set; } = string.Empty;
         public string CollectedBy { get; set; } = string.Empty;
@@ -70,34 +88,21 @@ namespace IIM.Shared.Models
 
 
     /// <summary>
-    /// Chain of custody entry - tracks evidence handling
-    /// </summary>
-    public class ChainOfCustodyEntry
-    {
-        public string Id { get; set; } = Guid.NewGuid().ToString("N");
-        public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
-        public string Action { get; set; } = string.Empty;
-        public string Actor { get; set; } = string.Empty;
-        public string Officer { get; set; } = string.Empty;
-        public string Details { get; set; } = string.Empty;
-        public string Hash { get; set; } = string.Empty;
-        public string PreviousHash { get; set; } = string.Empty;
-        public string Notes { get; set; } = string.Empty;
-    }
-
-    /// <summary>
-    /// Processed evidence - derived/processed versions
+    /// Processed version of evidence (OCR, transcription, etc.).
     /// </summary>
     public class ProcessedEvidence
     {
-        public string Id { get; set; } = Guid.NewGuid().ToString("N");
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         public string OriginalEvidenceId { get; set; } = string.Empty;
         public string ProcessingType { get; set; } = string.Empty;
         public DateTimeOffset ProcessedTimestamp { get; set; } = DateTimeOffset.UtcNow;
         public string ProcessedBy { get; set; } = string.Empty;
         public string ProcessedHash { get; set; } = string.Empty;
         public string StoragePath { get; set; } = string.Empty;
-        public Dictionary<string, object> ProcessingResults { get; set; } = new();
+        public Dictionary<string, object>? ProcessingResults { get; set; }
+        public TimeSpan? ProcessingDuration { get; set; }
+        public bool Success { get; set; } = true;
+        public string? ErrorMessage { get; set; }
     }
 
     /// <summary>
@@ -138,11 +143,6 @@ namespace IIM.Shared.Models
         public DateTimeOffset ExportedAt { get; set; } = DateTimeOffset.UtcNow;
         public string ExportedBy { get; set; } = string.Empty;
     }
-
-
-
-    // Enums
-
 
 
 }

@@ -71,24 +71,24 @@ namespace IIM.Application.Commands.Wsl
                 // Install distro if needed
                 if (request.InstallDistro && !status.HasIimDistro)
                 {
-                    _logger.LogInformation("Installing IIM Ubuntu distribution");
+                    //_logger.LogInformation("Installing IIM Ubuntu distribution");
 
-                    var distro = await _wslManager.EnsureDistroAsync(request.DistroName, cts.Token);
+                    //var distro = await _wslManager.EnsureDistroAsync(request.DistroName, cts.Token);
 
-                    if (distro == null)
-                    {
-                        throw new InvalidOperationException($"Failed to install {request.DistroName}");
-                    }
+                    //if (distro == null)
+                    //{
+                    //    throw new InvalidOperationException($"Failed to install {request.DistroName}");
+                    //}
 
-                    _logger.LogInformation("Distribution {DistroName} installed", distro.Name);
+                    //_logger.LogInformation("Distribution {DistroName} installed", distro.Name);
 
-                    await _mediator.Publish(new WslDistroInstalledNotification
-                    {
-                        DistroName = distro.Name,
-                        State = distro.State,
-                        Version = distro.Version,
-                        Timestamp = DateTimeOffset.UtcNow
-                    }, cts.Token);
+                    //await _mediator.Publish(new WslDistroInstalledNotification
+                    //{
+                    //    DistroName = distro.Name,
+                    //    State = distro.State,
+                    //    Version = distro.Version,
+                    //    Timestamp = DateTimeOffset.UtcNow
+                    //}, cts.Token);
                 }
 
                 // Start services if requested

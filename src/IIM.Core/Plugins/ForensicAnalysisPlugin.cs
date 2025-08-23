@@ -211,7 +211,7 @@ namespace IIM.Core.AI
                 EvidenceId = evidenceId,
                 OriginalHash = primaryHash,
                 CurrentHash = primaryHash,
-                IntegrityVerified = evidence.IntegrityValid,
+                IntegrityVerified = evidence.IntegrityValid.GetValueOrDefault(),
                 CustodyEvents = custodyEvents,
                 GeneratedAt = DateTimeOffset.UtcNow
             };

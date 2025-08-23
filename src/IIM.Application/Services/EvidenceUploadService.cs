@@ -119,7 +119,7 @@ namespace IIM.Application.Services
                     Metadata = request.Metadata,
                     Status = EvidenceStatus.Pending,
                     Type = DetermineEvidenceType(request.FileName),
-                    CreatedAt = DateTimeOffset.UtcNow,
+                    CreatedAt = DateTimeOffset.UtcNow.Date,
                     CreatedBy = userId
                 };
 
