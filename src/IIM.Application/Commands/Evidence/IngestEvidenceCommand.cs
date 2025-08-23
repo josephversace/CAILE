@@ -1,6 +1,6 @@
-﻿using IIM.Core.Mediator;
+using IIM.Core.Mediator;
 using IIM.Core.Models;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 
 namespace IIM.Application.Commands.Evidence
 {

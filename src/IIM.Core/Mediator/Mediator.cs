@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // File: src/IIM.Core/Mediator/IMediator.cs
 // Custom lightweight mediator implementation
 // ============================================
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

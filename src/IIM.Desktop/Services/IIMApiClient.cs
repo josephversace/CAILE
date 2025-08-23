@@ -1,8 +1,8 @@
-﻿using IIM.Application.Commands.Investigation;
+using IIM.Application.Commands.Investigation;
 using IIM.Application.Commands.Models;
 using IIM.Shared.DTOs;
 using IIM.Shared.Interfaces;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 

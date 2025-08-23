@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using IIM.Api.Configuration;
 
 namespace IIM.Api.Hubs

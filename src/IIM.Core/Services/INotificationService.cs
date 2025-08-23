@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // File: src/IIM.Core/Services/INotificationService.cs
 // Purpose: Core service for managing system notifications
 // ============================================
@@ -6,7 +6,7 @@
 using IIM.Core.Models;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Threading;

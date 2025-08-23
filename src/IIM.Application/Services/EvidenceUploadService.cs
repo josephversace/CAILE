@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,7 +12,7 @@ using IIM.Infrastructure.Storage;
 using IIM.Shared.DTOs;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 using Minio;
 using Minio.DataModel.Args;

@@ -1,10 +1,10 @@
-﻿using IIM.Application.Commands.Investigation;
+using IIM.Application.Commands.Investigation;
 using IIM.Application.Interfaces;
 using IIM.Core.AI;
 using IIM.Core.Mediator;
 using IIM.Core.Services;
 using IIM.Shared.Enums;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 

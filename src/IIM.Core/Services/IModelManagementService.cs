@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -8,7 +8,7 @@ using IIM.Core.Models;
 using IIM.Core.Inference;
 using Microsoft.Extensions.Logging;
 using IIM.Shared.Enums;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 
 namespace IIM.Core.Services
 {

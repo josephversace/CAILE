@@ -1,5 +1,6 @@
 ﻿// File: src/IIM.Shared/Models/LoadedModel.cs
 
+using IIM.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -51,6 +52,11 @@ namespace IIM.Shared.Models
         /// Custom runtime data specific to the provider
         /// </summary>
         public Dictionary<string, object> RuntimeData { get; set; } = new();
+
+        public ModelRequest Request { get; set; }
+        public string ModelPath { get; set; } = string.Empty;
+        public ModelRuntimeOptions RuntimeOptions { get; set; } = new();
+      
     }
 
     /// <summary>
@@ -138,6 +144,8 @@ namespace IIM.Shared.Models
         /// </summary>
         public DateTimeOffset LastUpdated { get; set; } = DateTimeOffset.UtcNow;
 
+
+
         /// <summary>
         /// Updates metrics with a new inference result
         /// </summary>
@@ -171,5 +179,49 @@ namespace IIM.Shared.Models
 
             LastUpdated = DateTimeOffset.UtcNow;
         }
+    }
+
+
+    /// <summary>
+    /// Additional supporting classes for model management.
+    /// </summary>
+
+ 
+     
+    
+
+    /// <summary>
+    /// Runtime options for a loaded model.
+    /// </summary>
+    public class ModelRuntimeOptions
+    {
+        public long MaxMemory { get; set; }
+        public int DeviceId { get; set; }
+        public ModelPriority Priority { get; set; }
+        public string ExecutionProvider { get; set; } = "CPU";
+        public Dictionary<string, object> CustomOptions { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Model constraints for filtering/selection.
+    /// </summary>
+    public class ModelConstraints
+    {
+        public long? MaxMemoryBytes { get; set; }
+        public bool PreferLocal { get; set; }
+        public ModelType? RequiredType { get; set; }
+        public List<string>? RequiredCapabilities { get; set; }
+    }
+
+    /// <summary>
+    /// Model recommendation result.
+    /// </summary>
+    public class ModelRecommendation
+    {
+        public string ModelId { get; set; } = string.Empty;
+        public string Reason { get; set; } = string.Empty;
+        public float ConfidenceScore { get; set; }
+        public List<string> AlternativeModels { get; set; } = new();
+        public Dictionary<string, object>? RecommendedParameters { get; set; }
     }
 }

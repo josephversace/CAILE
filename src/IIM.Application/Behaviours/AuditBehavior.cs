@@ -1,6 +1,6 @@
-﻿using IIM.Core.Mediator;
+using IIM.Core.Mediator;
 using IIM.Shared.Interfaces;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;

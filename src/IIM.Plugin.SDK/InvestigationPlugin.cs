@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net.Http;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using IIM.Shared.Models;         // for ProcessResult (if defined there)
+using IIM.Shared.DTOs;         // for ProcessResult (if defined there)
 using IIM.Shared.Interfaces;   // for IEvidenceStore (if defined there)
 
 namespace IIM.Plugin.SDK;

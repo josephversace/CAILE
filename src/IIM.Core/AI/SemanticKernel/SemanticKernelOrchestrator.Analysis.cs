@@ -1,6 +1,6 @@
-﻿// File: SemanticKernelOrchestrator.Analysis.cs
+// File: SemanticKernelOrchestrator.Analysis.cs
 using IIM.Shared.Enums;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using System;

@@ -1,10 +1,10 @@
-﻿using IIM.Application.Interfaces;
+using IIM.Application.Interfaces;
 using IIM.Core.Mediator;
 using IIM.Core.Models;
 using IIM.Core.Services;
 using IIM.Shared.DTOs;
 using IIM.Shared.Enums;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

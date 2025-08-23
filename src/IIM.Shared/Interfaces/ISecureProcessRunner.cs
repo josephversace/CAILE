@@ -1,6 +1,6 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 
 namespace IIM.Shared.Interfaces;
 

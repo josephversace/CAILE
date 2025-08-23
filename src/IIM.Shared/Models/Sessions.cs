@@ -112,7 +112,7 @@ namespace IIM.Shared.Models
     /// Request to create a new investigation session with extended properties.
     /// </summary>
     public class CreateSessionRequest
-    {
+    { 
         // Existing constructor and properties
         public CreateSessionRequest(string caseId, string title, string investigationType)
         {

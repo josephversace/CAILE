@@ -1,7 +1,7 @@
-﻿using IIM.Core.Configuration;
+using IIM.Core.Configuration;
 
 using IIM.Shared.Interfaces;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;

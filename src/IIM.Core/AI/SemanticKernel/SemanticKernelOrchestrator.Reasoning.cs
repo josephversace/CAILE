@@ -1,5 +1,5 @@
-﻿// File: SemanticKernelOrchestrator.Reasoning.cs
-using IIM.Shared.Models;
+// File: SemanticKernelOrchestrator.Reasoning.cs
+using IIM.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

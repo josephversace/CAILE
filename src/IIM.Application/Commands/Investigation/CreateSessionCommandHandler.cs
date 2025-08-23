@@ -1,7 +1,7 @@
-﻿using IIM.Core.Configuration;
+using IIM.Core.Configuration;
 using IIM.Core.Mediator;
 using IIM.Core.Services;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Application.Commands.Investigation

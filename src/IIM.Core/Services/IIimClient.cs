@@ -1,6 +1,6 @@
-﻿using IIM.Core.Models;
+using IIM.Core.Models;
 using IIM.Infrastructure.Hardware;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;

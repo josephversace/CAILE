@@ -112,7 +112,7 @@ namespace IIM.Application.Handlers
                 "[AUDIT] Model loaded - ID: {ModelId} | Provider: {Provider} | Type: {Type} | Memory: {Memory}MB | Time: {Timestamp}",
                 notification.ModelId,
                 notification.Provider,
-                notification.Type,
+                notification.ModelType,
                 notification.MemoryUsage / (1024 * 1024),
                 notification.Timestamp);
 

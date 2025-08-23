@@ -54,3 +54,33 @@ public enum ModalityType
     Document,
     Structured
 }
+
+/// <summary>
+/// Enums needed for the model system.
+/// Add these to IIM.Shared.Enums if they don't exist.
+/// </summary>
+public enum ModelState
+{
+    Loading,
+    Ready,
+    Busy,
+    Error,
+    Unloading
+}
+
+public enum ModelPriority
+{
+    Realtime,   // Lowest latency, may use more resources
+    Balanced,   // Default - balance between speed and resource usage
+    Throughput  // Maximize throughput, may have higher latency
+}
+
+public enum ModelFormat
+{
+    Unknown,
+    ONNX,
+    GGUF,
+    GGML,
+    PyTorch,
+    TensorFlow
+}

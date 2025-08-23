@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using IIM.Core.Plugins.Security;
 using IIM.Plugin.SDK;
 using Microsoft.Extensions.Logging;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 
 namespace IIM.Core.Plugins;
 

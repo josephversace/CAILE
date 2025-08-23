@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -9,7 +9,7 @@ using IIM.Core.Configuration;
 using IIM.Core.Models;
 using IIM.Infrastructure.Storage;
 using IIM.Shared.Enums;
-using IIM.Shared.Models;
+using IIM.Shared.DTOs;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 
