@@ -34,14 +34,6 @@ namespace IIM.Api.Extensions
             return services;
         }
 
-        public static IServiceCollection AddAuditServices(
-            this IServiceCollection services,
-            IConfiguration configuration)
-        {
-            // Register the audit logger (already in Shared)
-            services.AddScoped<IAuditLogger, SqliteAuditLogger>();  // Or wherever your implementation is
-
-            return services;
-        }
+     
     }
 }

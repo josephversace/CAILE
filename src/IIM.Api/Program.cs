@@ -1,19 +1,21 @@
 using IIM.Api.Configuration;
 using IIM.Api.Extensions;
 using IIM.Api.Hubs;
+using IIM.Application.Commands.Evidence;
 using IIM.Application.Commands.Investigation;
+using IIM.Application.Commands.Models;        
 using IIM.Core.AI;
 using IIM.Core.Inference;
 using IIM.Core.Mediator;
+using IIM.Core.Models;                       
 using IIM.Core.Services;
 using IIM.Infrastructure.Platform;
+using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
-using Microsoft.AspNetCore.ResponseCompression;
-using System.Text.Json;
-using IIM.Application.Commands.Models;        
-using IIM.Core.Models;                       
 using Microsoft.AspNetCore.Mvc;
-using IIM.Application.Commands.Evidence;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.OpenApi.Models;
+using System.Text.Json;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,9 +31,25 @@ builder.Configuration.GetSection("Deployment").Bind(deploymentConfig);
 // ============================================
 builder.Services.AddApiServices(builder.Configuration);
 
-// Add standard services
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddEndpointsApiExplorer(); // Required for minimal APIs
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "IIM API",
+        Version = "v1",
+        Description = "Intelligent Investigation Machine API",
+        Contact = new OpenApiContact
+        {
+            Name = "IIM Team",
+            Email = "support@iim.local"
+        }
+    });
+});
+
+
+
 builder.Services.AddHealthChecks();
 
 // Add response compression for SignalR
@@ -61,7 +79,14 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "IIM API v1");
+        options.RoutePrefix = "swagger"; // Swagger at /swagger
+
+        // Optional: Make Swagger the default page
+        // options.RoutePrefix = string.Empty; // Swagger at root
+    });
 }
 
 app.UseResponseCompression();
@@ -411,6 +436,29 @@ rag.MapPost("/query", async (HttpRequest req, IHttpClientFactory f) =>
 })
 .WithName("RagQuery")
 .WithOpenApi();
+
+var audit = api.MapGroup("/audit");
+
+audit.MapGet("/logs", async (
+    [FromServices] IAuditLogger auditLogger, 
+    [FromQuery] DateTime? startDate,
+    [FromQuery] DateTime? endDate,
+    [FromQuery] string? entityId,
+    [FromQuery] int limit = 100) =>          
+{
+    var filter = new AuditLogFilter
+    {
+        StartDate = startDate,
+        EndDate = endDate,
+        EntityId = entityId,
+        Limit = limit
+    };
+
+    var logs = await auditLogger.GetAuditLogsAsync(filter);
+    return Results.Ok(logs);
+})
+.WithName("GetAuditLogs")
+.RequireAuthorization("AdminOnly");
 
 // Start the application
 app.Run("http://localhost:5080");

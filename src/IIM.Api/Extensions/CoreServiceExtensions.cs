@@ -2,12 +2,10 @@
 using IIM.Core.AI;
 using IIM.Core.Configuration;
 using IIM.Core.Inference;
+using IIM.Core.Mediator;
 using IIM.Core.Services;
-using IIM.Infrastructure.Storage;  
+using IIM.Infrastructure.Storage;
 using IIM.Shared.Interfaces;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace IIM.Api.Extensions
@@ -19,63 +17,56 @@ namespace IIM.Api.Extensions
             IConfiguration configuration,
             DeploymentConfiguration deployment)
         {
-            // Model Orchestration - use existing DefaultModelOrchestrator for all modes
+            // ========================================
+            // AI/Model Services (Singleton for performance)
+            // ========================================
+
+            // Model Orchestration (Singleton - manages loaded models)
             services.AddSingleton<IModelOrchestrator>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<DefaultModelOrchestrator>>();
                 var storageConfig = sp.GetRequiredService<StorageConfiguration>();
-
-                // Use DefaultModelOrchestrator for all modes
-                // (TemplateBasedModelOrchestrator doesn't exist yet)
                 return new DefaultModelOrchestrator(logger, storageConfig);
             });
 
-
-            services.AddHttpContextAccessor(); // For ConfigurationService
-            services.AddScoped<IConfigurationService, ConfigurationService>();
-            services.AddScoped<IAuditLogger, SqliteAuditLogger>();
-
-            // Remove IModelManager section - it doesn't exist
-            // The model management is handled by IModelOrchestrator
-
-            // Inference Pipeline
-            services.AddSingleton<IInferencePipeline>(sp =>
-            {
-                var logger = sp.GetRequiredService<ILogger<InferencePipeline>>();
-                var orchestrator = sp.GetRequiredService<IModelOrchestrator>();
-                var metadataService = sp.GetRequiredService<IModelMetadataService>();
-                var config = sp.GetRequiredService<IOptions<InferencePipelineConfiguration>>();
-
-                return new InferencePipeline(logger, orchestrator, metadataService, config);
-            });
-
-            // Model Metadata Service
-            services.AddScoped<IModelMetadataService>(sp =>
+            // Model Metadata (Singleton - cached metadata)
+            services.AddSingleton<IModelMetadataService>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<ModelMetadataService>>();
                 var config = sp.GetRequiredService<IOptions<ModelMetadataConfiguration>>();
                 return new ModelMetadataService(logger, config);
             });
 
-            // Reasoning Service (Semantic Kernel)
-            services.AddScoped<IReasoningService>(sp =>
+            // Inference Pipeline (Singleton - manages GPU/CPU resources)
+            services.AddSingleton<IInferencePipeline>(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<SemanticKernelOrchestrator>>();
-                var modelOrchestrator = sp.GetRequiredService<IModelOrchestrator>();
-                var sessionService = sp.GetRequiredService<ISessionService>();
-                var templateService = sp.GetRequiredService<IModelConfigurationTemplateService>();
+                var logger = sp.GetRequiredService<ILogger<InferencePipeline>>();
+                var orchestrator = sp.GetRequiredService<IModelOrchestrator>();
+                var metadataService = sp.GetRequiredService<IModelMetadataService>();
+                var config = sp.GetRequiredService<IOptions<InferencePipelineConfiguration>>();
+                var mediator = sp.GetService<IMediator>(); // Optional mediator
 
-                return new SemanticKernelOrchestrator(
-                    logger,
-                    modelOrchestrator,
-                    sessionService,
-                    templateService);
+                return new InferencePipeline(logger, orchestrator, metadataService, config, mediator);
             });
 
-            // Session Management
+            // ========================================
+            // Session/User Services (Scoped per request)
+            // ========================================
+
+            // Session Management (Scoped - per request)
             services.AddScoped<ISessionService, SessionService>();
 
-            // Model Configuration Templates
+            // User Context (Scoped - per request)
+            services.AddScoped<IUserContext, UserContextService>();
+
+            // Configuration Service (Scoped - uses HttpContext)
+            services.AddScoped<IConfigurationService, ConfigurationService>();
+
+            // ========================================
+            // Template Services (Scoped - uses session)
+            // ========================================
+
+            // Model Configuration Templates (Scoped - uses SessionService)
             services.AddScoped<IModelConfigurationTemplateService>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<ModelConfigurationTemplateService>>();
@@ -90,7 +81,27 @@ namespace IIM.Api.Extensions
                     sessionService);
             });
 
-        
+            // Reasoning Service (Scoped - uses session)
+            services.AddScoped<IReasoningService>(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<SemanticKernelOrchestrator>>();
+                var modelOrchestrator = sp.GetRequiredService<IModelOrchestrator>();
+                var sessionService = sp.GetRequiredService<ISessionService>();
+                var templateService = sp.GetRequiredService<IModelConfigurationTemplateService>();
+
+                return new SemanticKernelOrchestrator(
+                    logger,
+                    modelOrchestrator,
+                    sessionService,
+                    templateService);
+            });
+
+            // ========================================
+            // Audit Services (Scoped for request tracking)
+            // ========================================
+
+            // Audit Logger (Scoped - tracks per request)
+            services.AddScoped<IAuditLogger, SqliteAuditLogger>();
 
             return services;
         }
