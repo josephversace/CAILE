@@ -1,12 +1,6 @@
-// ============================================
-// File: src/IIM.Core/Services/EvidenceManager.cs
-// Purpose: Implementation using ONLY existing Models
-// ============================================
-
 using IIM.Core.Configuration;
 using IIM.Core.Models;
 using IIM.Shared.Enums;
-using IIM.Shared.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;

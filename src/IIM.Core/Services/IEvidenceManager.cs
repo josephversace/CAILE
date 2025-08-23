@@ -1,8 +1,3 @@
-// ============================================
-// File: src/IIM.Core/Services/IEvidenceManager.cs
-// Purpose: Evidence management interface - uses existing Models
-// ============================================
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +6,7 @@ using System.Threading.Tasks;
 using IIM.Shared.Models;
 using IIM.Core.Models;
 using IIM.Shared.Enums;
-using IIM.Shared.DTOs;
+
 
 namespace IIM.Core.Services
 {

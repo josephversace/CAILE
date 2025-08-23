@@ -1,5 +1,4 @@
 using IIM.Core.Inference;
-using IIM.Shared.DTOs;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Threading;
 using System.Threading.Tasks;
