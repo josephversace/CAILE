@@ -5,7 +5,8 @@ using IIM.Shared.DTOs;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using CreateSessionRequest = IIM.Shared.DTOs.CreateSessionRequest;
+using IIM.Shared.Models;
+using CreateSessionRequest = IIM.Shared.Models.CreateSessionRequest;
 
 namespace IIM.Application.Interfaces
 {

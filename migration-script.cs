@@ -380,16 +380,16 @@ foreach (var file in filesToUpdate)
         if (content.Contains("CreateSessionRequest") && !content.Contains("IIM.Shared.DTOs"))
         {
             content = content.Replace("using IIM.Shared.DTOs;", 
-                "using IIM.Shared.DTOs;\nusing CreateSessionRequest = IIM.Shared.DTOs.CreateSessionRequest;");
+                "using IIM.Shared.DTOs;\nusing CreateSessionRequest = IIM.Shared.Models.CreateSessionRequest;");
         }
     }
     
     // Update fully qualified names
-    content = content.Replace("IIM.Shared.DTOs.InvestigationSession", "IIM.Shared.DTOs.InvestigationSession");
-    content = content.Replace("IIM.Shared.DTOs.InvestigationMessage", "IIM.Shared.DTOs.InvestigationMessage");
-    content = content.Replace("IIM.Shared.DTOs.InvestigationQuery", "IIM.Shared.DTOs.InvestigationQuery");
-    content = content.Replace("IIM.Shared.DTOs.InvestigationResponse", "IIM.Shared.DTOs.InvestigationResponse");
-    content = content.Replace("IIM.Shared.DTOs.CreateSessionRequest", "IIM.Shared.DTOs.CreateSessionRequest");
+    content = content.Replace("IIM.Shared.Models.InvestigationSession", "IIM.Shared.Models.InvestigationSession");
+    content = content.Replace("IIM.Shared.Models.InvestigationMessage", "IIM.Shared.Models.InvestigationMessage");
+    content = content.Replace("IIM.Shared.Models.InvestigationQuery", "IIM.Shared.Models.InvestigationQuery");
+    content = content.Replace("IIM.Shared.Models.InvestigationResponse", "IIM.Shared.Models.InvestigationResponse");
+    content = content.Replace("IIM.Shared.Models.CreateSessionRequest", "IIM.Shared.Models.CreateSessionRequest");
     
     // Remove Dto suffixes where they appear
     content = Regex.Replace(content, @"\bInvestigationSessionDto\b", "InvestigationSession");

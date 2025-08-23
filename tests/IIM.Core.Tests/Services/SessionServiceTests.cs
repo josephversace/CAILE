@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 using FluentAssertions;
 using IIM.Core.Services;
 using IIM.Shared.Enums;
@@ -31,7 +32,7 @@ namespace IIM.Core.Tests.Services
         [Fact]
         public async Task CreateSessionAsync_Should_CreateNewSession()
         {
-            var request = new CreateSessionRequest("case-123", "Test Investigation", "GeneralInquiry");
+            var request = new CreateSessionRequest { CaseId = "case-123", Title = "Test Investigation", InvestigationType = "GeneralInquiry" };
 
             var result = await _sut.CreateSessionAsync(request);
 
@@ -48,7 +49,7 @@ namespace IIM.Core.Tests.Services
         [Fact]
         public async Task GetSessionAsync_WithValidId_Should_ReturnSession()
         {
-            var request = new CreateSessionRequest("case-123", "Test Investigation", "GeneralInquiry");
+            var request = new CreateSessionRequest { CaseId = "case-123", Title = "Test Investigation", InvestigationType = "GeneralInquiry" };
             var session = await _sut.CreateSessionAsync(request);
 
             var result = await _sut.GetSessionAsync(session.Id);
@@ -71,7 +72,7 @@ namespace IIM.Core.Tests.Services
         [Fact]
         public async Task UpdateSessionAsync_Should_UpdateSession()
         {
-            var request = new CreateSessionRequest("case-123", "Original Title", "GeneralInquiry");
+            var request = new CreateSessionRequest { CaseId = "case-123", Title = "Original Title", InvestigationType = "GeneralInquiry" };
             var session = await _sut.CreateSessionAsync(request);
             var originalUpdateTime = session.UpdatedAt;
 
@@ -92,7 +93,7 @@ namespace IIM.Core.Tests.Services
         [Fact]
         public async Task CloseSessionAsync_Should_MarkSessionAsCompleted()
         {
-            var request = new CreateSessionRequest("case-123", "Test Investigation", "GeneralInquiry");
+            var request = new CreateSessionRequest { CaseId = "case-123", Title = "Test Investigation", InvestigationType = "GeneralInquiry" };
             var session = await _sut.CreateSessionAsync(request);
 
             var result = await _sut.CloseSessionAsync(session.Id);
@@ -115,8 +116,8 @@ namespace IIM.Core.Tests.Services
         [Fact]
         public async Task GetAllSessionsAsync_Should_ReturnAllSessions()
         {
-            var request1 = new CreateSessionRequest("case-123", "Investigation 1", "GeneralInquiry");
-            var request2 = new CreateSessionRequest("case-456", "Investigation 2", "DeepAnalysis");
+            var request1 = new CreateSessionRequest { CaseId = "case-123", Title = "Investigation 1", InvestigationType = "GeneralInquiry" };
+            var request2 = new CreateSessionRequest { CaseId = "case-456", Title = "Investigation 2", InvestigationType = "DeepAnalysis" };
 
             await _sut.CreateSessionAsync(request1);
             await _sut.CreateSessionAsync(request2);
@@ -134,9 +135,9 @@ namespace IIM.Core.Tests.Services
         {
             var caseId = "case-123";
 
-            await _sut.CreateSessionAsync(new CreateSessionRequest(caseId, "Investigation 1", "GeneralInquiry"));
-            await _sut.CreateSessionAsync(new CreateSessionRequest(caseId, "Investigation 2", "DeepAnalysis"));
-            await _sut.CreateSessionAsync(new CreateSessionRequest("case-456", "Different Case", "GeneralInquiry"));
+            await _sut.CreateSessionAsync(new CreateSessionRequest { CaseId = caseId, Title = "Investigation 1", InvestigationType = "GeneralInquiry" });
+            await _sut.CreateSessionAsync(new CreateSessionRequest { CaseId = caseId, Title = "Investigation 2", InvestigationType = "DeepAnalysis" });
+            await _sut.CreateSessionAsync(new CreateSessionRequest { CaseId = "case-456", Title = "Different Case", InvestigationType = "GeneralInquiry" });
 
             var result = await _sut.GetSessionsByCaseAsync(caseId);
 
@@ -148,7 +149,7 @@ namespace IIM.Core.Tests.Services
         [Fact]
         public async Task DeleteSessionAsync_Should_RemoveSession()
         {
-            var request = new CreateSessionRequest("case-123", "Test Investigation", "GeneralInquiry");
+            var request = new CreateSessionRequest { CaseId = "case-123", Title = "Test Investigation", InvestigationType = "GeneralInquiry" };
             var session = await _sut.CreateSessionAsync(request);
 
             var result = await _sut.DeleteSessionAsync(session.Id);
@@ -172,7 +173,7 @@ namespace IIM.Core.Tests.Services
         [Fact]
         public async Task AddMessageAsync_Should_AddMessageToSession()
         {
-            var request = new CreateSessionRequest("case-123", "Test Investigation", "GeneralInquiry");
+            var request = new CreateSessionRequest { CaseId = "case-123", Title = "Test Investigation", InvestigationType = "GeneralInquiry" };
             var session = await _sut.CreateSessionAsync(request);
 
             var message = new InvestigationMessage
@@ -207,12 +208,12 @@ namespace IIM.Core.Tests.Services
         [Fact]
         public async Task GetAllSessionsAsync_Should_ReturnSessionsInCorrectOrder()
         {
-            var request1 = new CreateSessionRequest("case-123", "First", "GeneralInquiry");
+            var request1 = new CreateSessionRequest { CaseId = "case-123", Title = "First", InvestigationType = "GeneralInquiry" };
             var session1 = await _sut.CreateSessionAsync(request1);
 
             await Task.Delay(10);
 
-            var request2 = new CreateSessionRequest("case-123", "Second", "GeneralInquiry");
+            var request2 = new CreateSessionRequest { CaseId = "case-123", Title = "Second", InvestigationType = "GeneralInquiry" };
             var session2 = await _sut.CreateSessionAsync(request2);
 
             await _sut.UpdateSessionAsync(session1.Id, s => s.Title = "First Updated");

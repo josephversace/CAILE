@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 using Microsoft.SemanticKernel;
 using IIM.Core.Models;
 using IIM.Shared.DTOs;

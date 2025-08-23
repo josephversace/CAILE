@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using System;
 using InsufficientMemoryException = IIM.Core.Models.InsufficientMemoryException;
 using System.Collections.Concurrent;
+using IIM.Shared.Models;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
 using System.Threading.Channels; // For Channel<T>

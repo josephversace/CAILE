@@ -2,7 +2,7 @@
 using IIM.Application.Commands.Models;
 using IIM.Application.Commands.Wsl;
 using IIM.Core.Mediator;
-using IIM.Core.Models;
+using IIM.Shared.Models;
 using IIM.Core.Services;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;

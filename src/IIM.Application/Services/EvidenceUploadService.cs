@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 using IIM.Core.Models;
 using IIM.Core.Services;
 using IIM.Infrastructure.Storage;

@@ -7,6 +7,7 @@ using IIM.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Text.Json;
+using IIM.Shared.Models;
 
 namespace IIM.Application.Commands.Investigation
 {

@@ -1,4 +1,4 @@
-﻿using IIM.Shared.Enums;
+using IIM.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,6 +42,15 @@ namespace IIM.Shared.Models
         public string? ModelUsed { get; set; }
         public Dictionary<string, object>? Metadata { get; set; }
 
+        
+        // Properties from DTO version
+        public RAGSearchResult? RAGResults { get; set; }
+        public List<TranscriptionResult>? Transcriptions { get; set; }
+        public List<ImageAnalysisResult>? ImageAnalyses { get; set; }
+        public List<string>? EvidenceIds { get; set; }
+        public List<string>? EntityIds { get; set; }
+        public string? FineTuneJobId { get; set; }
+        
         // New optional properties
         public string? SessionId { get; set; }  // Session this message belongs to
         public string? ParentMessageId { get; set; }  // For threaded conversations
@@ -56,6 +65,16 @@ namespace IIM.Shared.Models
     public class InvestigationQuery
     {
         public string Text { get; set; } = string.Empty;
+        public List<Attachment> Attachments { get; set; } = new();
+        public List<string> EnabledTools { get; set; } = new();
+        public Dictionary<string, object> Context { get; set; } = new();
+        public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
+        
+        // Properties from DTO version
+        public string? SessionId { get; set; }
+        public Dictionary<string, object>? Parameters { get; set; }
+        public List<string>? RequestedTools { get; set; }
+    } = string.Empty;
         public List<Attachment> Attachments { get; set; } = new();
         public List<string> EnabledTools { get; set; } = new();
         public Dictionary<string, object> Context { get; set; } = new();
@@ -79,6 +98,15 @@ namespace IIM.Shared.Models
         public Dictionary<string, object>? DisplayMetadata { get; set; }
         public List<Visualization>? Visualizations { get; set; }
 
+        
+        // Properties from DTO version
+        public RAGSearchResult? RAGResults { get; set; }
+        public List<TranscriptionResult>? Transcriptions { get; set; }
+        public List<ImageAnalysisResult>? ImageAnalyses { get; set; }
+        public List<string>? EvidenceIds { get; set; }
+        public List<string>? EntityIds { get; set; }
+        public string? FineTuneJobId { get; set; }
+        
         // New optional properties
         public string? SessionId { get; set; }  // Session this response belongs to
         public DateTimeOffset? Timestamp { get; set; }  // When response was generated
@@ -125,12 +153,25 @@ namespace IIM.Shared.Models
         public string Title { get; }
         public string InvestigationType { get; }
 
+        
+        // Properties from DTO version
+        public RAGSearchResult? RAGResults { get; set; }
+        public List<TranscriptionResult>? Transcriptions { get; set; }
+        public List<ImageAnalysisResult>? ImageAnalyses { get; set; }
+        public List<string>? EvidenceIds { get; set; }
+        public List<string>? EntityIds { get; set; }
+        public string? FineTuneJobId { get; set; }
+        
         // New optional properties
         public string? Description { get; set; }
         public string? UserId { get; set; }
         public Dictionary<string, object>? Metadata { get; set; }
         public List<string>? EnabledTools { get; set; }
         public Dictionary<string, object>? InitialContext { get; set; }
+        
+        // Properties from DTO version
+        public Dictionary<string, ModelConfiguration>? Models { get; set; }
+        public SessionContext? Context { get; set; }
     }
 }
 

@@ -8,6 +8,7 @@ using OpenAI.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using IIM.Shared.Models;
 
 namespace IIM.Core.Services;
 

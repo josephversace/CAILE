@@ -43,10 +43,8 @@ namespace IIM.Application.Commands.Investigation
             }
 
             // Create session request - use only properties that exist
-            var createRequest = new CreateSessionRequest(
-                request.CaseId,
-                request.Title,
-                request.InvestigationType);
+            var createRequest = new CreateSessionRequest { CaseId = 
+                request.CaseId, Title = request.Title, InvestigationType = request.InvestigationType };
             // Note: Description, UserId, Metadata don't exist on CreateSessionRequest
 
             // Create session

@@ -1,10 +1,11 @@
-﻿using IIM.Core.Mediator;
+using IIM.Core.Mediator;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 
 namespace IIM.Application.Behaviors
 {
