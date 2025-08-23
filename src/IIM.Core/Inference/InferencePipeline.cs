@@ -2,7 +2,6 @@ using IIM.Core.AI;
 using IIM.Core.Models;
 using IIM.Core.Mediator;
 using IIM.Core.Collections; 
-using IIM.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;

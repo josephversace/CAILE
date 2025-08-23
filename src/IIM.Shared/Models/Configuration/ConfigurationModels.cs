@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IIM.Shared.Models.Configuration
+namespace IIM.Shared.Models
 {
     internal class ConfigurationModels
     {

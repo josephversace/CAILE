@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IIM.Shared.Models.Audit
+namespace IIM.Shared.Models
 {
     // <summary>
     /// Audit event for tracking system activities

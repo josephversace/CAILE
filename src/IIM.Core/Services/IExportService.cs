@@ -1,8 +1,6 @@
 using DocumentFormat.OpenXml.Wordprocessing;
 using IIM.Core.Models;
-using IIM.Shared.DTOs;
 using IIM.Shared.Enums;
-using IIM.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 using OpenAI.Interfaces;
 using System;
