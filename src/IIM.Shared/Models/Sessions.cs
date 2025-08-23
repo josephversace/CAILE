@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace IIM.Shared.Models
 {
-    #region InvestigativeSession
+  
 
     public class InvestigationSession
     {
@@ -26,17 +26,31 @@ namespace IIM.Shared.Models
         public List<Finding> Findings { get; set; } = new();
     }
 
+    /// <summary>
+    /// Message in an investigation session with extended properties.
+    /// </summary>
     public class InvestigationMessage
     {
+        // Existing core properties
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public MessageRole Role { get; set; }
         public string Content { get; set; } = string.Empty;
-        public List<Attachment> Attachments { get; set; } = new();
-        public List<ToolResult> ToolResults { get; set; } = new();
-        public List<Citation> Citations { get; set; } = new();
+        public List<Attachment>? Attachments { get; set; }
+        public List<ToolResult>? ToolResults { get; set; }
+        public List<Citation>? Citations { get; set; }
         public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
         public string? ModelUsed { get; set; }
-        public Dictionary<string, object> Metadata { get; set; } = new();
+        public Dictionary<string, object>? Metadata { get; set; }
+
+        // New optional properties
+        public string? SessionId { get; set; }  // Session this message belongs to
+        public string? ParentMessageId { get; set; }  // For threaded conversations
+        public List<string>? ChildMessageIds { get; set; }  // Reply chain
+        public bool? IsEdited { get; set; }  // Message was edited
+        public DateTimeOffset? EditedAt { get; set; }  // When edited
+        public string? EditedBy { get; set; }  // Who edited
+        public MessageStatus? Status { get; set; }  // Processing status
+        public double? Confidence { get; set; }  // Confidence score
     }
 
     public class InvestigationQuery
@@ -48,29 +62,35 @@ namespace IIM.Shared.Models
         public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
     }
 
+    /// <summary>
+    /// Response from an investigation query with extended properties.
+    /// </summary>
     public class InvestigationResponse
     {
-        public string Message { get; set; } = string.Empty;
-        public List<ToolResult> ToolResults { get; set; } = new();
-        public List<Citation> Citations { get; set; } = new();
-        public List<Evidence> RelatedEvidence { get; set; } = new();
-        public Dictionary<string, object> Metadata { get; set; } = new();
-
-        // Add display-specific properties to existing model
-        public ResponseDisplayType DisplayType { get; set; } = ResponseDisplayType.Auto;
-        public double? Confidence { get; set; }
-        public ResponseVisualization? Visualization { get; set; }
-        public Dictionary<string, object>? DisplayMetadata { get; set; }
-
-        // Add these missing properties that ExportService needs:
+        // Existing core properties
         public string Id { get; set; } = Guid.NewGuid().ToString();
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public string CreatedBy { get; set; } = Environment.UserName;
-        public string Hash { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public List<ToolResult>? ToolResults { get; set; }
+        public List<Citation>? Citations { get; set; }
+        public List<Evidence>? RelatedEvidence { get; set; }
+        public double? Confidence { get; set; }
+        public ResponseDisplayType DisplayType { get; set; } = ResponseDisplayType.Auto;
+        public Dictionary<string, object>? Metadata { get; set; }
+        public Dictionary<string, object>? DisplayMetadata { get; set; }
+        public List<Visualization>? Visualizations { get; set; }
 
-        // Add a helper property to map Message to Content for compatibility
-        public string Content => Message;
+        // New optional properties
+        public string? SessionId { get; set; }  // Session this response belongs to
+        public DateTimeOffset? Timestamp { get; set; }  // When response was generated
+        public string? QueryId { get; set; }  // Original query ID
+        public string? ModelUsed { get; set; }  // Which model generated this
+        public TimeSpan? ProcessingTime { get; set; }  // How long it took
+        public string? CreatedBy { get; set; }  // User or system
+        public DateTimeOffset? CreatedAt { get; set; }  // Creation timestamp
+        public string? Hash { get; set; }  // For integrity verification
+        public ResponseVisualization? Visualization { get; set; }  // Primary visualization
     }
+
 
     public class ResponseVisualization
     {
@@ -88,27 +108,31 @@ namespace IIM.Shared.Models
         public string? CustomTemplate { get; set; } // For Custom visualizations
     }
 
+    /// <summary>
+    /// Request to create a new investigation session with extended properties.
+    /// </summary>
     public class CreateSessionRequest
     {
-        public string CaseId { get; set; } = string.Empty;
-        public string Title { get; set; } = "New Investigation";
-        public string InvestigationType { get; set; } = "GeneralInquiry";
-
-        public CreateSessionRequest() { }
-
+        // Existing constructor and properties
         public CreateSessionRequest(string caseId, string title, string investigationType)
         {
             CaseId = caseId;
             Title = title;
             InvestigationType = investigationType;
         }
+
+        public string CaseId { get; }
+        public string Title { get; }
+        public string InvestigationType { get; }
+
+        // New optional properties
+        public string? Description { get; set; }
+        public string? UserId { get; set; }
+        public Dictionary<string, object>? Metadata { get; set; }
+        public List<string>? EnabledTools { get; set; }
+        public Dictionary<string, object>? InitialContext { get; set; }
     }
-
-
-
-
-
-    #endregion
-
-
 }
+
+
+

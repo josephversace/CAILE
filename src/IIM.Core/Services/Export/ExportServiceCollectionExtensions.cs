@@ -15,37 +15,19 @@ public static class ExportServiceCollectionExtensions
             basePath = AppDomain.CurrentDomain.BaseDirectory;
         }
 
-    
-        // Create full template path
-        var templatePath = Path.Combine(basePath, "Templates", "Export");
-
-
-        // Create directory structure if it doesn't exist
-        if (!Directory.Exists(templatePath))
-        {
-            Directory.CreateDirectory(templatePath);
-
-            // Optionally create default templates
-            CreateDefaultTemplates(templatePath);
-        }
-        services.AddSingleton<ITemplateEngine>(provider =>
-            new TemplateEngine(
-                provider.GetRequiredService<ILogger<TemplateEngine>>(),
-                templatePath));
+   
 
         //Export services
+        //Security services
+        services.AddScoped<ISecurityService, SecurityService>();
 
-        services.AddSingleton<IPdfService, PdfService>();
-        services.AddSingleton<IWordService, WordService>();
-        services.AddSingleton<IExcelService, ExcelService>();
-        services.AddSingleton<IExportService, ExportService>();
+        services.AddScoped<IExportService, ExportService>();
 
         //File services
 
-        services.AddSingleton<IFileService, FileService>();
+        services.AddScoped<IFileService, FileService>();
 
-        //Security services
-        services.AddSingleton<ISecurityService, SecurityService>();
+
 
         return services;
     }

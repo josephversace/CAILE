@@ -7,11 +7,32 @@ using RazorLight;
 
 namespace IIM.Core.Services;
 
+
+using Microsoft.Extensions.Options;
+
+public class TemplateEngineOptions
+{
+    public string TemplatePath { get; set; }
+}
+
+
 public class TemplateEngine : ITemplateEngine
 {
     private readonly ILogger<TemplateEngine> _logger;
     private readonly RazorLightEngine _engine;
     private readonly string _templatePath;
+
+    public TemplateEngine(ILogger<TemplateEngine> logger, IOptions<TemplateEngineOptions> options)
+    {
+        _logger = logger;
+        _templatePath = options.Value.TemplatePath;
+
+        _engine = new RazorLightEngineBuilder()
+            .UseFileSystemProject(_templatePath)
+            .UseMemoryCachingProvider()
+            .Build();
+    }
+
     
     public TemplateEngine(ILogger<TemplateEngine> logger, string templatePath)
     {

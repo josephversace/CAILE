@@ -11,15 +11,38 @@ namespace IIM.Shared.Models
     /// <summary>
     /// Response from RAG (Retrieval Augmented Generation) query
     /// </summary>
+  // <summary>
+    /// Response from RAG pipeline with extended properties.
+    /// </summary>
     public class RagResponse
     {
+        // Existing core properties
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Query { get; set; } = string.Empty;
         public string Answer { get; set; } = string.Empty;
-        public Source[] Sources { get; set; } = Array.Empty<Source>();
-        public float Confidence { get; set; }
-        public int TokensUsed { get; set; }
-        public TimeSpan ProcessingTime { get; set; }
+        public double Confidence { get; set; }
+
+        // New optional properties
+        public List<RetrievedChunk>? RetrievedChunks { get; set; }  // Retrieved document chunks
+        public List<object>? Chunks { get; set; }  // Generic chunks for compatibility
+        public List<string>? Sources { get; set; }  // Source documents
+        public Dictionary<string, double>? SourceScores { get; set; }  // Relevance scores
+        public TimeSpan? RetrievalTime { get; set; }  // Time to retrieve
+        public TimeSpan? GenerationTime { get; set; }  // Time to generate answer
     }
 
+    /// <summary>
+    /// Retrieved chunk from vector search.
+    /// </summary>
+    public class RetrievedChunk
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Source { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
+        public int PageNumber { get; set; }
+        public double Relevance { get; set; }
+        public Dictionary<string, object>? Metadata { get; set; }
+    }
 
     public class RAGSearchResult
     {

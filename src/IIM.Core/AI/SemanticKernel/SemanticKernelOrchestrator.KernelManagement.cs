@@ -1,5 +1,6 @@
 ﻿// File: SemanticKernelOrchestrator.KernelManagement.cs
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;

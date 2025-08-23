@@ -138,9 +138,8 @@ namespace IIM.Infrastructure.Platform
                 var installPath = Path.Combine(_configPath, installName);
                 Directory.CreateDirectory(installPath);
 
-                var result = await RunCommandAsync("wsl",
-                    $"--import {installName} \"{installPath}\" \"{distroPath}\" --version 2",
-                    60000, ct);
+                var command = $"--import {installName} \"{installPath}\" \"{distroPath}\" --version 2";
+                var result = await RunCommandAsync("wsl", command, 60000, ct);
 
                 if (result.ExitCode == 0)
                 {
@@ -155,14 +154,66 @@ namespace IIM.Infrastructure.Platform
                     return true;
                 }
 
-                _logger.LogError("Failed to install {Name}: {Error}", installName, result.StandardError);
+                // Enhanced Error Message
+                _logger.LogError(
+                    "Failed to install WSL distro '{InstallName}'.\n" +
+                    "ExitCode: {ExitCode}\n" +
+                    "Command: wsl {Command}\n" +
+                    "Install Path: {InstallPath}\n" +
+                    "Distro Path: {DistroPath}\n" +
+                    "StandardError: {StdErr}\n" +
+                    "Hints: {Hints}",
+                    installName,
+                    result.ExitCode,
+                    command,
+                    installPath,
+                    distroPath,
+                    result.StandardError,
+                    GetDistroImportHints(result.StandardError, distroPath)
+                );
+
                 return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to install distro {Name}", installName);
+                _logger.LogError(ex, "Exception occurred while installing distro {Name}", installName);
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Attempts to provide hints based on standard error output and context.
+        /// </summary>
+        private string GetDistroImportHints(string stdErr, string distroPath)
+        {
+            if (string.IsNullOrWhiteSpace(stdErr)) return "(No additional hints)";
+
+            if (stdErr.Contains("The system cannot find the file specified", StringComparison.OrdinalIgnoreCase) ||
+                !File.Exists(distroPath))
+            {
+                return "Check if the distro image exists and the path is correct. " +
+                       "The download may have failed or the file may be corrupt.";
+            }
+            if (stdErr.Contains("invalid tar file", StringComparison.OrdinalIgnoreCase) ||
+                stdErr.Contains("unexpected EOF", StringComparison.OrdinalIgnoreCase))
+            {
+                return "The downloaded file appears to be corrupt or incomplete. " +
+                       "Try deleting it and re-downloading.";
+            }
+            if (stdErr.Contains("Access is denied", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Access denied. Try running as administrator or check file/folder permissions.";
+            }
+            if (stdErr.Contains("not supported", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Check if your WSL version supports this operation.";
+            }
+            if (stdErr.Contains("There is not enough space", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Not enough disk space. Free up space and try again.";
+            }
+
+            return "(No specific hints. See standard error above.)";
         }
 
         /// <summary>
@@ -286,25 +337,58 @@ namespace IIM.Infrastructure.Platform
 
                 var filePath = Path.Combine(downloadPath, fileName);
 
-                // Check if already downloaded
+                // Check if already downloaded, but verify size
                 if (File.Exists(filePath))
                 {
-                    _logger.LogInformation("Using existing download at {Path}", filePath);
-                    return filePath;
+                    var fileInfo = new FileInfo(filePath);
+                    if (fileInfo.Length < 1024 * 1024) // Less than 1 MB
+                    {
+                        _logger.LogWarning("Existing download for {Path} is suspiciously small ({Size} bytes). Deleting and re-downloading.", filePath, fileInfo.Length);
+                        try
+                        {
+                            File.Delete(filePath);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to delete suspiciously small file {Path}.", filePath);
+                            throw; // You may choose to throw or return null here
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Using existing download at {Path}", filePath);
+                        return filePath;
+                    }
                 }
 
                 _logger.LogInformation("Downloading {Distro} from {Url}", distroName, downloadUrl);
 
+                // Optional: Set a browser-like User-Agent to avoid weird redirects
+                _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; IIMDownloader/1.0)");
+
                 using var response = await _httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, ct);
+
+                _logger.LogInformation("HTTP status: {Status}, headers: {Headers}", response.StatusCode, response.Headers.ToString());
+
                 response.EnsureSuccessStatusCode();
 
-                var totalBytes = response.Content.Headers.ContentLength ?? 0;
-                var downloadedBytes = 0L;
-                var buffer = new byte[8192];
-                var lastProgressReport = DateTime.UtcNow;
+                // Check content type - it should be a binary file, not text/html
+                var contentType = response.Content.Headers.ContentType?.MediaType ?? "";
+                var contentLength = response.Content.Headers.ContentLength ?? 0;
+
+                if (!contentType.StartsWith("application") && !contentType.Contains("gzip") && !contentType.Contains("x-tar"))
+                {
+                    var errorText = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Unexpected content type: {ContentType}, length: {ContentLength}, content: {Content}", contentType, contentLength, errorText.Substring(0, Math.Min(errorText.Length, 200)));
+                    throw new InvalidOperationException($"Downloaded file is not a valid WSL image. Content-Type: {contentType}, Content-Length: {contentLength}");
+                }
 
                 using var contentStream = await response.Content.ReadAsStreamAsync(ct);
                 using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
+
+                var buffer = new byte[8192];
+                long downloadedBytes = 0;
+                var lastProgressReport = DateTime.UtcNow;
 
                 int bytesRead;
                 while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
@@ -312,17 +396,23 @@ namespace IIM.Infrastructure.Platform
                     await fileStream.WriteAsync(buffer, 0, bytesRead, ct);
                     downloadedBytes += bytesRead;
 
-                    // Report progress every second
                     if ((DateTime.UtcNow - lastProgressReport).TotalSeconds >= 1)
                     {
-                        var progress = totalBytes > 0 ? (downloadedBytes * 100.0 / totalBytes) : 0;
+                        var progress = contentLength > 0 ? (downloadedBytes * 100.0 / contentLength) : 0;
                         _logger.LogInformation("Download progress: {Progress:F1}% ({Downloaded}/{Total} bytes)",
-                            progress, downloadedBytes, totalBytes);
+                            progress, downloadedBytes, contentLength);
                         lastProgressReport = DateTime.UtcNow;
                     }
                 }
 
-                _logger.LogInformation("Download complete: {Path}", filePath);
+                _logger.LogInformation("Download complete: {Path}, size: {Size} bytes", filePath, downloadedBytes);
+
+                // Extra: If file is suspiciously small, log warning
+                if (downloadedBytes < 1024 * 1024) // less than 1 MB
+                {
+                    _logger.LogWarning("Downloaded file size is suspiciously small: {Size} bytes. File: {Path}", downloadedBytes, filePath);
+                }
+
                 return filePath;
             }
             catch (Exception ex)
@@ -330,11 +420,12 @@ namespace IIM.Infrastructure.Platform
                 _logger.LogError(ex, "Failed to download {Distro}", distroName);
                 return null;
             }
-        }
+            }
 
-        /// <summary>
-        /// Starts a WSL distribution.
-        /// </summary>
+
+                /// <summary>
+                /// Starts a WSL distribution.
+                /// </summary>
         private async Task StartDistroAsync(string distroName, CancellationToken ct)
         {
             try

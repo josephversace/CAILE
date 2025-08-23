@@ -92,7 +92,7 @@
                                         <small>@FormatFileSize(item.FileSize)</small>
                                     </td>
                                     <td>
-                                        @if (item.IntegrityValid)
+                                        @if (item.IntegrityValid.GetValueOrDefault())
                                         {
                                             <span class="badge bg-success">
                                                 <i class="bi bi-check-circle"></i> Valid

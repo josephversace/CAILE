@@ -1,55 +1,62 @@
 ﻿using IIM.Core.Mediator;
-using IIM.Core.Models;
-using IIM.Shared.Enums;
 using IIM.Shared.Models;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace IIM.Application.Commands.Investigation
 {
     /// <summary>
-    /// Command to create a new investigation session
+    /// Command to create a new investigation session within a case.
+    /// The session inherits the case's model configuration and evidence pool.
     /// </summary>
     public class CreateSessionCommand : IRequest<InvestigationSession>
     {
         /// <summary>
-        /// Case ID this session belongs to
+        /// Gets the unique identifier of the case this session belongs to.
         /// </summary>
-        public string CaseId { get; set; } = string.Empty;
+        [Required]
+        public string CaseId { get; }
 
         /// <summary>
-        /// Title for the session
+        /// Gets the title or description of the session.
         /// </summary>
-        public string Title { get; set; } = string.Empty;
+        [Required]
+        [StringLength(200, MinimumLength = 1)]
+        public string Title { get; }
 
         /// <summary>
-        /// Type of investigation
+        /// Gets the type of investigation for this session.
         /// </summary>
-        public InvestigationType Type { get; set; } = InvestigationType.GeneralInquiry;
+        [Required]
+        public string InvestigationType { get; }
 
         /// <summary>
-        /// Description of the investigation
+        /// Gets the optional description providing context for the session.
         /// </summary>
-        public string? Description { get; set; }
+        [StringLength(1000)]
+        public string? Description { get; }
 
         /// <summary>
-        /// Tools to enable for this session
+        /// Gets the user ID of the person creating the session.
         /// </summary>
-        public List<string> EnabledTools { get; set; } = new()
+        public string? UserId { get; }
+
+        /// <summary>
+        /// Gets optional metadata for the session.
+        /// </summary>
+        public Dictionary<string, object>? Metadata { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the CreateSessionCommand.
+        /// </summary>
+        /// <param name="caseId">Case ID this session belongs to</param>
+        /// <param name="title">Title of the session</param>
+        /// <param name="investigationType">Type of investigation</param>
+        public CreateSessionCommand(string caseId, string title, string investigationType)
         {
-            "rag_search",
-            "image_analysis",
-            "audio_transcription",
-            "pattern_analysis"
-        };
-
-        /// <summary>
-        /// Model configuration template to use
-        /// </summary>
-        public string? ModelTemplateId { get; set; }
-
-        /// <summary>
-        /// Initial context for the session
-        /// </summary>
-        public Dictionary<string, object>? InitialContext { get; set; }
+            CaseId = caseId ?? throw new ArgumentNullException(nameof(caseId));
+            Title = title ?? throw new ArgumentNullException(nameof(title));
+            InvestigationType = investigationType ?? throw new ArgumentNullException(nameof(investigationType));
+            Metadata = new Dictionary<string, object>();
+        }
     }
 }

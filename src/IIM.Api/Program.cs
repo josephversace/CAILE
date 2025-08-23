@@ -140,7 +140,7 @@ api.MapGet("/v1/stats", async (IInferencePipeline pipeline, IModelOrchestrator o
 var investigation = api.MapGroup("/investigation");
 
 investigation.MapPost("/session", async (
-    IMediator mediator,
+   [FromServices] IMediator mediator,
     CreateSessionCommand command) =>
 {
     var result = await mediator.Send(command);
@@ -150,7 +150,7 @@ investigation.MapPost("/session", async (
 .RequireAuthorization();
 
 investigation.MapPost("/query", async (
-    IMediator mediator,
+    [FromServices] IMediator mediator,
     ProcessInvestigationCommand command) =>
 {
     var result = await mediator.Send(command);
@@ -166,7 +166,7 @@ var evidence = api.MapGroup("/evidence");
 
 evidence.MapPost("/ingest", async (
     HttpRequest request,
-    IMediator mediator,
+    [FromServices] IMediator mediator,
     ILogger<Program> logger) =>
 {
     if (!request.HasFormContentType)
@@ -253,7 +253,7 @@ evidence.MapGet("/{evidenceId}/chain", async (
 var models = api.MapGroup("/v1/models");
 
 models.MapPost("/load", async (
-    IMediator mediator,
+    [FromServices] IMediator mediator,
     LoadModelCommand command) =>
 {
     var result = await mediator.Send(command);
@@ -264,7 +264,7 @@ models.MapPost("/load", async (
 
 models.MapPost("/{modelId}/unload", async (
     string modelId,
-    IMediator mediator) =>
+    [FromServices] IMediator mediator) =>
 {
     var command = new UnloadModelCommand { ModelId = modelId };
     var result = await mediator.Send(command);
@@ -344,8 +344,17 @@ wsl.MapGet("/health", async (IWslManager wslManager) =>
 
 wsl.MapPost("/ensure", async (IWslManager wslManager) =>
 {
+    try { 
     var distro = await wslManager.EnsureDistroAsync();
     return Results.Ok(distro);
+}
+    catch (Exception ex)
+    {
+        return Results.Problem(
+            detail: ex.Message,
+            statusCode: 500,
+            title: "WSL Distro Setup Failed");
+    }
 })
 .WithName("EnsureWslDistro")
 .WithOpenApi();

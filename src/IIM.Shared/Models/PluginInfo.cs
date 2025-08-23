@@ -1,4 +1,6 @@
-﻿namespace IIM.Shared.Models;
+﻿using System.Collections.Generic;
+
+namespace IIM.Shared.Models;
 
 
 public class PluginInfo
@@ -11,4 +13,8 @@ public class PluginInfo
     public bool IsEnabled { get; set; } = true;
     public string? PackagePath { get; set; }
     public bool IsLoaded { get; set; }
+
+    public List<string> Functions { get; set; } = new();
+
+    public Dictionary<string, object> Metadata { get; set; } = new();
 }

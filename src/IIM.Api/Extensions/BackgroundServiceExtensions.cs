@@ -19,14 +19,15 @@ namespace IIM.Api.Extensions
                 return services;
             }
 
+      
             // Note: EvidenceIntegrityMonitor is already defined in Program.cs
             // We'll move it here later, for now comment it out
-            services.AddHostedService<EvidenceIntegrityMonitor>();
+           // services.AddHostedService<EvidenceIntegrityMonitor>();
 
             // WSL Service Orchestration (Windows only)
             if (OperatingSystem.IsWindows())
             {
-                services.AddHostedService<WslServiceOrchestrator>();
+                //services.AddHostedService<WslServiceOrchestrator>();
             }
 
             // Infrastructure Health Monitoring

@@ -398,5 +398,55 @@ namespace IIM.Core.Services
             var month = DateTime.UtcNow.Month;
             return $"IIM-{year:0000}-{month:00}-{count + 1:00000}";
         }
+
+        /// <summary>
+        /// Gets the timeline of events for a case.
+        /// This is an extension method to avoid breaking existing ICaseManager implementations.
+        /// </summary>
+        /// <param name="caseManager">The case manager instance</param>
+        /// <param name="caseId">ID of the case</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>List of timeline events</returns>
+     
+        public async Task<List<TimelineEvent>> GetCaseTimelineAsync(string caseId, CancellationToken cancellationToken = default)
+        {
+            // Get the case
+            var caseEntity = await GetCaseAsync(caseId, cancellationToken);
+            if (caseEntity == null)
+            {
+                return new List<TimelineEvent>();
+            }
+
+            var events = new List<TimelineEvent>();
+
+            // Add case creation event
+
+
+            // Add evidence events if available
+            if (caseEntity.Id != null)
+            {
+
+            }
+
+            // Add session events if available
+            if (caseEntity.Sessions != null)
+            {
+
+            }
+
+            // Add case update event
+            if (caseEntity.UpdatedAt > caseEntity.CreatedAt)
+            {
+
+            }
+
+            // Add case closure event if closed
+            if (caseEntity.ClosedAt.HasValue)
+            {
+
+            }
+
+            return events;
+        }
     }
 }

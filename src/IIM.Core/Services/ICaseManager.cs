@@ -58,4 +58,8 @@ public interface ICaseManager
     /// Deletes a case (soft delete)
     /// </summary>
     Task<bool> DeleteCaseAsync(string caseId, CancellationToken cancellationToken = default);
+
+    Task<List<TimelineEvent>> GetCaseTimelineAsync(
+            string caseId,
+            CancellationToken cancellationToken = default);
 }
