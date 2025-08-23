@@ -8,12 +8,7 @@ using IIM.Infrastructure.Platform;
 using IIM.Infrastructure.Storage;
 using IIM.Infrastructure.VectorStore;
 using IIM.Shared.Interfaces;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;  // Add this
-using System;
-using System.IO;
+using Microsoft.Extensions.Options;
 
 namespace IIM.Api.Extensions
 {
@@ -24,25 +19,25 @@ namespace IIM.Api.Extensions
             IConfiguration configuration,
             DeploymentConfiguration deployment)
         {
-            // WSL Management (not needed for client mode)
-            if (deployment.Mode != DeploymentMode.Client)
+            // ========================================
+            // Platform Services (Singleton)
+            // ========================================
+
+            // WSL Management (Windows only, Singleton)
+            if (deployment.Mode != DeploymentMode.Client && OperatingSystem.IsWindows())
             {
                 services.AddSingleton<IWslManager, WslManager>();
                 services.AddSingleton<IWslServiceOrchestrator, WslServiceOrchestrator>();
             }
 
-            // Storage Configuration
-            services.AddScoped<StorageConfiguration>(sp =>
+            // Storage Configuration (Singleton - doesn't change)
+            services.AddSingleton<StorageConfiguration>(sp =>
             {
                 var basePath = configuration["Storage:BasePath"] ??
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IIM");
 
-                var config = new StorageConfiguration
-                {
-                    BasePath = basePath
-                };
+                var config = new StorageConfiguration { BasePath = basePath };
 
-                // Only create directories if not in client mode
                 if (deployment.Mode != DeploymentMode.Client)
                 {
                     config.EnsureDirectoriesExist();
@@ -51,29 +46,31 @@ namespace IIM.Api.Extensions
                 return config;
             });
 
-            // Configure MinIO settings
-            services.Configure<MinIOConfiguration>(configuration.GetSection("Storage:MinIO"));
+            // ========================================
+            // Storage Services (Scoped for transaction support)
+            // ========================================
 
-            // Deduplication Service (register before MinIO since it's a dependency)
+            // Deduplication Service (Scoped - uses DB context)
             services.AddScoped<IDeduplicationService, DeduplicationService>();
 
-            // MinIO Object Storage - Fix: provide all required parameters
+            // MinIO Object Storage (Scoped - transaction boundary)
             services.AddScoped<IMinIOStorageService>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<MinIOStorageService>>();
                 var config = sp.GetRequiredService<IOptions<MinIOConfiguration>>();
                 var deduplicationService = sp.GetRequiredService<IDeduplicationService>();
-
                 return new MinIOStorageService(logger, config, deduplicationService);
             });
 
-            // Vector Store
-            services.AddScoped<IQdrantService>(sp =>
+            // ========================================
+            // AI Infrastructure (Mixed lifetimes)
+            // ========================================
+
+            // Vector Store (Singleton for connection pooling)
+            services.AddSingleton<IQdrantService>(sp =>
             {
                 var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
                 var logger = sp.GetRequiredService<ILogger<QdrantService>>();
-
-                // Use in-memory for development/testing
                 var useInMemory = configuration.GetValue<bool>("Development:UseInMemoryQdrant", false);
 
                 if (useInMemory && deployment.IsStandalone)
@@ -86,8 +83,8 @@ namespace IIM.Api.Extensions
                 return new QdrantService(httpFactory, logger);
             });
 
-            // Embedding Service
-            services.AddScoped<IEmbeddingService>(sp =>
+            // Embedding Service (Singleton for performance)
+            services.AddSingleton<IEmbeddingService>(sp =>
             {
                 var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
                 var logger = sp.GetRequiredService<ILogger<RemoteEmbeddingService>>();

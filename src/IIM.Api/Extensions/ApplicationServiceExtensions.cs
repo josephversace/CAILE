@@ -1,16 +1,9 @@
-﻿using IIM.Application.Interfaces;
+﻿using IIM.Api.Configuration;
+using IIM.Application.Interfaces;
 using IIM.Application.Services;
+using IIM.Core.Configuration;
 using IIM.Core.Services;
 using IIM.Infrastructure.Storage;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using IIM.Api.Configuration;
-using System;
-using System.IO;
-// Use fully qualified name to avoid ambiguity
-using CoreEvidenceConfiguration = IIM.Core.Configuration.EvidenceConfiguration;
-using IIM.Core.Configuration;
 
 namespace IIM.Api.Extensions
 {
@@ -21,18 +14,21 @@ namespace IIM.Api.Extensions
             IConfiguration configuration,
             DeploymentConfiguration deployment)
         {
-            // Investigation Service
-     
+            // ========================================
+            // Investigation Services (Scoped)
+            // ========================================
 
-            // Evidence Management - use Core.Security.EvidenceConfiguration
+            // Investigation Service (Scoped - per request)
+            services.AddScoped<IInvestigationService, InvestigationService>();
+
+            // Evidence Manager (Scoped - uses DB context)
             services.AddScoped<IEvidenceManager>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<EvidenceManager>>();
                 var storageConfig = sp.GetRequiredService<StorageConfiguration>();
                 var auditContext = sp.GetRequiredService<AuditDbContext>();
 
-                // Use the Core.Security.EvidenceConfiguration explicitly
-                var config = new CoreEvidenceConfiguration
+                var config = new EvidenceConfiguration
                 {
                     StorePath = storageConfig.EvidencePath,
                     EnableEncryption = configuration.GetValue<bool>("Evidence:EnableEncryption", false),
@@ -43,7 +39,7 @@ namespace IIM.Api.Extensions
                 return new EvidenceManager(logger, config, auditContext);
             });
 
-            // Case Management
+            // Case Manager (Scoped - uses DB)
             services.AddScoped<ICaseManager>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<SqliteCaseManager>>();
@@ -51,19 +47,22 @@ namespace IIM.Api.Extensions
                 return new SqliteCaseManager(logger, storageConfig);
             });
 
-            // Inference Service (high-level)
+            // ========================================
+            // Processing Services (Scoped)
+            // ========================================
+
+            // Inference Service (Scoped - high-level operations)
             services.AddScoped<IInferenceService, InferenceService>();
 
+            // Template Engine (Scoped)
             services.Configure<TemplateEngineOptions>(configuration.GetSection("TemplateEngine"));
             services.AddScoped<ITemplateEngine, TemplateEngine>();
 
-            // Export Services
-            services.AddExportServices();
-      
+            // Visualization Service (Scoped)
             services.AddScoped<IVisualizationService, VisualizationService>();
 
-       
-            services.AddScoped<IInvestigationService, InvestigationService>();
+            // Export Services
+            services.AddExportServices();
 
             return services;
         }
