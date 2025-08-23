@@ -1,4 +1,5 @@
 using IIM.Shared.DTOs;
+using IIM.Shared.Models.Audit;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;

@@ -21,6 +21,7 @@ public enum EvidenceStatus
     Pending,
     Ingested,
     Processing,
+    Processed,
     Analyzed,
     Verified,
     Compromised,
@@ -38,3 +39,4 @@ public enum ProcessingStatus
     Completed,
     Failed
 }
+

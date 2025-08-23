@@ -1,5 +1,4 @@
 using IIM.Shared.DTOs;
-using IIM.Shared.DTOs;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,8 +29,8 @@ namespace IIM.Shared.Interfaces
         ConfirmEvidenceUploadRequest request,
         CancellationToken cancellationToken = default);
 
-        Task<SettingsDto> GetSettingsAsync();
-        Task UpdateSettingsAsync(SettingsDto settings);
+        Task<Settings> GetSettingsAsync();
+        Task UpdateSettingsAsync(Settings settings);
 
         Task<TestConnectionResult> TestMinIOConnectionAsync(string endpoint);
 

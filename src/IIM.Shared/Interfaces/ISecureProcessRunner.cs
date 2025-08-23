@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using IIM.Shared.DTOs;
+using IIM.Shared.Models.Audit;
 
 namespace IIM.Shared.Interfaces;
 

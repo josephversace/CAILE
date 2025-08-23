@@ -6,14 +6,7 @@ using System.Threading.Tasks;
 
 namespace IIM.Shared.Enums
 {
-    public enum NotificationType
-    {
-        Info,
-        Success,
-        Warning,
-        Error,
-        Critical
-    }
+
 
 
     public enum NotificationCategory
@@ -30,6 +23,24 @@ namespace IIM.Shared.Enums
         Update
     }
 
+
+
+    // Notification Related Enums
+    public enum NotificationType
+    {
+        Info,
+        Success,
+        Warning,
+        Error,
+        Alert,
+        System,
+        User,
+        Case,
+        Evidence,
+        Investigation,
+        Report
+    }
+
     public enum NotificationPriority
     {
         Low,
@@ -37,5 +48,14 @@ namespace IIM.Shared.Enums
         High,
         Urgent,
         Critical
+    }
+
+    public enum NotificationStatus
+    {
+        Unread,
+        Read,
+        Archived,
+        Deleted,
+        Expired
     }
 }
