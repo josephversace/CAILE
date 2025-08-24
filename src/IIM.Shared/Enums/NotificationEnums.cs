@@ -32,6 +32,7 @@ namespace IIM.Shared.Enums
         Success,
         Warning,
         Error,
+        Critical,
         Alert,
         System,
         User,
@@ -58,4 +59,10 @@ namespace IIM.Shared.Enums
         Deleted,
         Expired
     }
+
+
+
+ 
+
+   
 }

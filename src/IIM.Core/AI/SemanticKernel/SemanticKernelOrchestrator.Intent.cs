@@ -1,6 +1,6 @@
 // File: SemanticKernelOrchestrator.Intent.cs
 using IIM.Shared.Enums;
-using IIM.Shared.DTOs;
+
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,7 +8,7 @@ using IIM.Shared.Models;
 
 namespace IIM.Core.AI
 {
-    public partial class SemanticKernelOrchestrator
+    public partial class SemanticKernelOrchestrator : IReasoningService
     {
 
 

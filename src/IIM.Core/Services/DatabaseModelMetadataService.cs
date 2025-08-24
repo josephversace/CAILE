@@ -21,12 +21,12 @@ namespace IIM.Core.Data.Services
     {
         private readonly ILogger<DatabaseModelMetadataService> _logger;
         private readonly ModelDbContext _context;
-        private readonly IAuditLogger? _auditLogger;
+        private readonly IAuditService? _auditLogger;
 
         public DatabaseModelMetadataService(
             ILogger<DatabaseModelMetadataService> logger,
             ModelDbContext context,
-            IAuditLogger? auditLogger = null)
+            IAuditService? auditLogger = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));

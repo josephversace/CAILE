@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using IIM.Shared.Interfaces;
-using IIM.Shared.DTOs;
+
 using IIM.Plugin.SDK.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

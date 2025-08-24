@@ -1,7 +1,11 @@
 ﻿namespace IIM.Shared.Enums;
 
+
+
+
 public enum ServiceState
 {
+    Unknown,
     NotFound,
     Stopped,
     Starting,

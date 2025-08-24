@@ -10,7 +10,8 @@ public enum ModelType
     ObjectDetection,
     FaceRecognition,
     Custom,
-    Vision
+    Vision,
+    Unknown
 }
 
 public enum ModelStatus
@@ -21,6 +22,7 @@ public enum ModelStatus
     Loaded,
     Running,
     Unloading,
+    Unknown,
     Error
 }
 
@@ -84,3 +86,15 @@ public enum ModelFormat
     PyTorch,
     TensorFlow
 }
+
+
+
+public enum ModelRuntimeState
+{
+    Initializing,
+    Ready,
+    Processing,
+    Error,
+    Disposing
+}
+

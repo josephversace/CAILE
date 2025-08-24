@@ -3,7 +3,7 @@ using IIM.Core.Configuration;
 using IIM.Core.Inference;
 using IIM.Core.Services;
 using IIM.Infrastructure.Storage;
-using IIM.Shared.DTOs;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

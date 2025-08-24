@@ -1,7 +1,7 @@
 using IIM.Core.Mediator;
 using IIM.Infrastructure.Platform;
 using IIM.Infrastructure.Platform.Models;
-using IIM.Shared.DTOs;
+
 using System;
 using System.Collections.Generic;
 

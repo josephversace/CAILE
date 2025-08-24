@@ -1,6 +1,6 @@
 // File: SemanticKernelOrchestrator.KernelManagement.cs
 using IIM.Shared.Enums;
-using IIM.Shared.DTOs;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
@@ -12,8 +12,8 @@ using IIM.Shared.Models;
 
 namespace IIM.Core.AI
 {
-    public partial class SemanticKernelOrchestrator
-    {
+    public partial class SemanticKernelOrchestrator : IReasoningService
+	{
 
 
 

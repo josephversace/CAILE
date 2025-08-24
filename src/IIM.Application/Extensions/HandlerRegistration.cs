@@ -2,7 +2,7 @@ using IIM.Application.Handlers;
 using IIM.Core.Inference;
 using IIM.Core.Mediator;
 using IIM.Core.Services;
-using IIM.Shared.DTOs;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace IIM.Application.Extensions

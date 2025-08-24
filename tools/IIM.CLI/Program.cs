@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using IIM.Plugin.SDK;
-using IIM.Shared.DTOs;
+
 using IIM.Shared.Interfaces;
 
 namespace IIM.CLI;

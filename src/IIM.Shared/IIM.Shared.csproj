@@ -6,8 +6,17 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="DTOs\Entities\" />
-    <Folder Include="DTOs\Reports\" />
+    <Folder Include="Models\Analysis\" />
+    <Folder Include="Models\Audit\" />
+    <Folder Include="Models\Configuration\" />
+    <Folder Include="Models\Core\" />
+    <Folder Include="Models\Infrastructure\" />
+    <Folder Include="Models\Investigation\" />
+    <Folder Include="Models\Notifications\" />
+    <Folder Include="Models\Reporting\" />
+    <Folder Include="Models\Storage\" />
+    <Folder Include="Models\Supporting\" />
+    <Folder Include="Models\VectorDb\" />
   </ItemGroup>
 </Project>
 

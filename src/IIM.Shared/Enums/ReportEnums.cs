@@ -8,15 +8,19 @@ namespace IIM.Shared.Enums
 {
     public enum AnalysisType
     {
-        TextAnalysis,
-        ImageAnalysis,
-        AudioAnalysis,
-        VideoAnalysis,
-        DocumentAnalysis,
-        NetworkAnalysis,
-        BehavioralAnalysis,
-        PatternAnalysis,
-        ForensicAnalysis
+        Forensic,
+        Statistical,
+        Behavioral,
+        Network,
+        Timeline,
+        Pattern,
+        Anomaly,
+        Sentiment,
+        Entity,
+        Relationship,
+        Temporal,
+        Relational,
+        Comprehensive
     }
 
 

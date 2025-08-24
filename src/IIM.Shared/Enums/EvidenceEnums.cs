@@ -31,6 +31,20 @@ public enum EvidenceStatus
     Archived
 }
 
+public enum EvidenceUploadStatus
+{
+    Pending,
+    Approved,
+    Uploading,
+    Processing,
+    Duplicate,
+    Completed,
+    Failed,
+    Rejected
+}
+
+
+
 
 public enum ProcessingStatus
 {

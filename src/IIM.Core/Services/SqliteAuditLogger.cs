@@ -1,7 +1,7 @@
 using IIM.Core.Configuration;
 
 using IIM.Shared.Interfaces;
-using IIM.Shared.DTOs;
+using IIM.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -10,13 +10,14 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 
 namespace IIM.Core.Services
 {
     /// <summary>
     /// SQLite-based audit logger implementation
     /// </summary>
-    public class SqliteAuditLogger : IAuditLogger
+    public class SqliteAuditLogger : IAuditService
     {
         private readonly AuditDbContext _context;
         private readonly ILogger<SqliteAuditLogger> _logger;

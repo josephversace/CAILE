@@ -19,7 +19,9 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.19" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Memory" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.8" />
     <PackageReference Include="OpenIddict.AspNetCore" Version="7.0.0" />
     <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="7.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />

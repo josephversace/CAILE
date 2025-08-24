@@ -40,7 +40,7 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
 
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
     
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
@@ -61,8 +61,8 @@
     <PackageReference Include="Tesseract" Version="5.2.0" />
   <PackageReference Include="Minio" Version="6.0.1" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.16.3" />   
-    <PackageReference Include="LLamaSharp" Version="0.8.1" />
-    <PackageReference Include="LLamaSharp.Backend.Cuda12" Version="0.8.1" />
+    <PackageReference Include="LLamaSharp" Version="0.25.0" />
+    <PackageReference Include="LLamaSharp.Backend.Cuda12" Version="0.25.0" />
 <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
 <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
   </ItemGroup>

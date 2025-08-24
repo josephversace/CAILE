@@ -8,6 +8,8 @@ using IIM.Core.Models;
 using IIM.Core.Inference;
 using Microsoft.Extensions.Logging;
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
+using IIM.Core.Configuration;
 
 
 namespace IIM.Core.Services
@@ -29,11 +31,13 @@ namespace IIM.Core.Services
         private readonly IModelOrchestrator _modelOrchestrator;
         private readonly ILogger<ModelManagementService> _logger;
         private readonly string _modelsBasePath;
+        private readonly ModelDbContext _models;
 
-        public ModelManagementService(IModelOrchestrator modelOrchestrator, ILogger<ModelManagementService> logger)
+        public ModelManagementService(IModelOrchestrator modelOrchestrator, ILogger<ModelManagementService> logger, ModelDbContext model  )
         {
             _modelOrchestrator = modelOrchestrator ?? throw new ArgumentNullException(nameof(modelOrchestrator));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _models = model ?? throw new ArgumentNullException(nameof(model));
 
             // Initialize models base path from environment or use default
             _modelsBasePath = Environment.GetEnvironmentVariable("IIM_MODELS_PATH")

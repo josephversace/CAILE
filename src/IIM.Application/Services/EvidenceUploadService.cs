@@ -10,10 +10,8 @@ using IIM.Shared.Models;
 using IIM.Core.Models;
 using IIM.Core.Services;
 using IIM.Infrastructure.Storage;
-
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
-
 using Microsoft.Extensions.Logging;
 using Minio;
 using Minio.DataModel.Args;
@@ -29,7 +27,7 @@ namespace IIM.Application.Services
         private readonly IMinioClient _minioClient;
         private readonly IEvidenceManager _evidenceManager;
         private readonly IDeduplicationService _deduplicationService;
-        private readonly IAuditLogger _auditLogger; // Your existing audit logger
+        private readonly IAuditService _auditLogger; // Your existing audit logger
         private readonly ISessionService _sessionService;
         private readonly StorageConfiguration _storageConfig;
         private readonly string _bucketName;
@@ -39,7 +37,7 @@ namespace IIM.Application.Services
             IMinioClient minioClient,
             IEvidenceManager evidenceManager,
             IDeduplicationService deduplicationService,
-            IAuditLogger auditLogger, // Using your existing interface
+            IAuditService auditLogger, // Using your existing interface
             ISessionService sessionService,
             StorageConfiguration storageConfig)
         {
@@ -95,7 +93,7 @@ namespace IIM.Application.Services
                         DuplicateInfo = new DuplicateInfo
                         {
                             OriginalEvidenceId = existingEvidence.Id,
-                            OriginalUploadDate = existingEvidence.CreatedAt,
+                            OriginalUploadDate = existingEvidence.UpdatedAt.Value,
                             OriginalUploadedBy = existingEvidence.Metadata.CollectedBy,
                             OriginalCaseNumber = existingEvidence.CaseNumber,
                             DuplicateCount = await _deduplicationService.GetDuplicateCountAsync(
@@ -116,11 +114,11 @@ namespace IIM.Application.Services
                     StoragePath = objectName,
                     FileSize = request.FileSize,
                     Hash = request.FileHash,
-                    HashAlgorithm = "SHA256",
+                    HashAlgorithm = ,
                     Metadata = request.Metadata,
                     Status = EvidenceStatus.Pending,
                     Type = DetermineEvidenceType(request.FileName),
-                    CreatedAt = DateTimeOffset.UtcNow.Date,
+                    UpdatedAt = DateTimeOffset.UtcNow.Date,
                     CreatedBy = userId
                 };
 
@@ -151,7 +149,7 @@ namespace IIM.Application.Services
                 return new InitiateEvidenceUploadResponse
                 {
                     EvidenceId = evidenceId,
-                    Status = EvidenceUploadStatus.Initiated,
+                    Status = EvidenceUploadStatus.Pending,
                     UploadUrl = presignedUrl.Item1,
                     UploadUrlExpires = DateTimeOffset.UtcNow.AddMinutes(30),
                     RequiredHeaders = presignedUrl.Item2
@@ -162,7 +160,7 @@ namespace IIM.Application.Services
                 _logger.LogError(ex, "Failed to initiate evidence upload");
                 return new InitiateEvidenceUploadResponse
                 {
-                    Status = EvidenceUploadStatus.Error
+                    Status = EvidenceUploadStatus.Failed
                 };
             }
         }

@@ -1,3 +1,15 @@
+using IIM.Core.Configuration;
+using IIM.Core.Models;
+using IIM.Infrastructure.Storage;
+using IIM.Shared.Enums;
+using IIM.Shared.Models;
+using LLama;
+using LLama.Common;
+using LLama.Native;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.ML.OnnxRuntime;
+using Microsoft.ML.OnnxRuntime.Tensors;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -7,16 +19,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using IIM.Core.Models;
-using IIM.Shared.Enums;
-
-using IIM.Infrastructure.Storage;
-using Microsoft.Extensions.Logging;
-using Microsoft.ML.OnnxRuntime;
-using Microsoft.ML.OnnxRuntime.Tensors;
-using LLama;
-using LLama.Common;
-using LLama.Native;
 
 namespace IIM.Core.AI
 {
@@ -986,6 +988,114 @@ namespace IIM.Core.AI
             _logger.LogInformation("DefaultModelOrchestrator disposed");
         }
 
+        Task<bool> IModelOrchestrator.UnloadModelAsync(string modelId, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> IsModelLoadedAsync(string modelId, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<ModelConfiguration>> GetLoadedModelsAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<ModelConfiguration>> GetAvailableModelsAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<ModelConfiguration?> GetModelInfoAsync(
+    ModelDbContext models,
+    string filename,
+    long size,
+    CancellationToken cancellationToken = default)
+        {
+            var model = await models.ModelMetadata
+                .SingleOrDefaultAsync(b => b.Filename == filename && b.Size == size, cancellationToken);
+
+            if (model is null)
+                return null;
+
+            // Map database entity to ModelConfiguration
+            return new ModelConfiguration
+            {
+                // Assign fields as needed, e.g.:
+                ModelId = model.ModelId,
+                FileName = model.Filename,
+                Size = model.Size,
+                // ... other fields ...
+            };
+        }
+
+
+        public Task<ModelConfiguration?> GetModelInfoAsync(ModelDbContext models, string modelId, CancellationToken cancellationToken = default)
+        {
+
+            var model = await models.ModelMetadata.SingleAsync(b => b. == );
+
+
+            return new ModelConfiguration
+            {
+                // Assign fields as needed, e.g.:
+                ModelId = model.ModelId,
+                FileName = model.Filename,
+                Size = model.Size,
+                // ... other fields ...
+            };
+
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> UpdateModelParametersAsync(string modelId, Dictionary<string, object> parameters, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<GpuStats> GetGpuStatsAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ModelResourceUsage> GetModelResourceUsageAsync(string modelId, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> OptimizeMemoryAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<long> GetTotalMemoryUsageAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> DownloadModelAsync(string modelId, string source, IProgress<DownloadProgress>? progress = null, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> DeleteModelAsync(string modelId, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<long> GetModelSizeAsync(string modelId, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ModelStats> GetStatsAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+    
         #endregion
     }
 

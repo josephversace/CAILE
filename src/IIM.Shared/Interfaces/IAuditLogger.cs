@@ -1,17 +1,18 @@
-using IIM.Shared.DTOs;
-using IIM.Shared.Models.Audit;
+
+using IIM.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 
 namespace IIM.Shared.Interfaces;
 
 /// <summary>
 /// Interface for audit logging - available to all layers
 /// </summary>
-public interface IAuditLogger
+public interface IAuditService
 {
     // Synchronous logging (fire and forget)
     void LogAudit(AuditEvent auditEvent);

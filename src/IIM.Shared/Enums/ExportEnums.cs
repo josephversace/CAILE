@@ -19,4 +19,12 @@ namespace IIM.Shared.Enums
         Text
     }
 
+    public enum ExportStatus
+    {
+        Pending,
+        Processing,
+        Completed,
+        Failed,
+        Cancelled
+    }
 }

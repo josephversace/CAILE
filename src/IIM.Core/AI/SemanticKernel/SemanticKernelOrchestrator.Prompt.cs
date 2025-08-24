@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace IIM.Core.AI
 {
-    public partial class SemanticKernelOrchestrator
+    public partial class SemanticKernelOrchestrator : IReasoningService
     {
  
 

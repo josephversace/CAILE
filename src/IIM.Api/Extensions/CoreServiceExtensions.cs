@@ -101,7 +101,7 @@ namespace IIM.Api.Extensions
             // ========================================
 
             // Audit Logger (Scoped - tracks per request)
-            services.AddScoped<IAuditLogger, SqliteAuditLogger>();
+            services.AddScoped<IAuditService, SqliteAuditLogger>();
 
             return services;
         }
