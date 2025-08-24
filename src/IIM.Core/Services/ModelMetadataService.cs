@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using IIM.Core.Models;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

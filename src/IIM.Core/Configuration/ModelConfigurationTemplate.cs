@@ -4,7 +4,7 @@ using IIM.Core.Models;
 using IIM.Core.Services;
 using IIM.Infrastructure.Storage;
 using IIM.Shared.Enums;
-using IIM.Shared.DTOs;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -812,8 +812,7 @@ public class ModelConfigurationTemplateService : IModelConfigurationTemplateServ
             {
                 ModelId = modelId,
                 ModelPath = Path.Combine(_storageConfig.ModelsPath, modelId),
-                ModelType = DetermineModelType(modelId),
-                Options = parameters
+                ModelType = DetermineModelType(modelId)
             };
 
             var handle = await _modelOrchestrator.LoadModelAsync(request, null, cancellationToken);

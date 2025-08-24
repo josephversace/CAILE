@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
-using IIM.Shared.DTOs;
+
 using IIM.Core.Models;
 using IIM.Shared.Enums;
 

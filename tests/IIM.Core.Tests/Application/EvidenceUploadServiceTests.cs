@@ -4,10 +4,10 @@ using IIM.Core.Models;
 using IIM.Core.Services;
 using IIM.Core.Storage;
 using IIM.Infrastructure.Storage;
-using IIM.Shared.DTOs;
+
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
-using IIM.Shared.DTOs;
+
 using Microsoft.Extensions.Logging;
 using Minio;
 using Minio.DataModel.Args;
@@ -29,7 +29,7 @@ namespace IIM.Application.Tests.Services
         private readonly Mock<IMinioClient> _minioClientMock;
         private readonly Mock<IEvidenceManager> _evidenceManagerMock;
         private readonly Mock<IDeduplicationService> _deduplicationServiceMock;
-        private readonly Mock<IAuditLogger> _auditServiceMock;
+        private readonly Mock<IAuditService> _auditServiceMock;
         private readonly Mock<ISessionService> _sessionServiceMock;
         private readonly StorageConfiguration _storageConfig;
         private readonly EvidenceUploadService _service;
@@ -40,7 +40,7 @@ namespace IIM.Application.Tests.Services
             _minioClientMock = new Mock<IMinioClient>();
             _evidenceManagerMock = new Mock<IEvidenceManager>();
             _deduplicationServiceMock = new Mock<IDeduplicationService>();
-            _auditServiceMock = new Mock<IAuditLogger>();
+            _auditServiceMock = new Mock<IAuditService>();
             _sessionServiceMock = new Mock<ISessionService>();
             _storageConfig = new StorageConfiguration
             {

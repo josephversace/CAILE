@@ -94,33 +94,33 @@ public class ExportService : IExportService
                 _ => throw new NotSupportedException($"Export format {format} is not supported")
             };
 
-            return new ExportResult(
-                Success: true,
-                FilePath: null,
-                Data: data,
-                FileSize: data.Length,
-                ErrorMessage: null,
-                Metadata: new Dictionary<string, object>
+            return new ExportResult {
+                Success= true,
+                FilePath= null,
+                Data= data,
+                FileSize= data.Length,
+                ErrorMessage= null,
+                Metadata= new Dictionary<string, object>
                 {
                     ["responseId"] = response.Id,
                     ["format"] = format.ToString(),
                     ["exportedAt"] = DateTime.UtcNow,
                     ["exportedBy"] = _securityService.GetCurrentUser().Id
                 }
-            );
+            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to export response {ResponseId}", response.Id);
 
-            return new ExportResult(
-                Success: false,
-                FilePath: null,
-                Data: null,
-                FileSize: 0,
-                ErrorMessage: ex.Message,
-                Metadata: null
-            );
+            return new ExportResult {
+                Success= false,
+                FilePath= null,
+                Data= null,
+                FileSize= 0,
+                ErrorMessage= ex.Message,
+                Metadata= null
+            };
         }
     }
 
@@ -283,8 +283,8 @@ public class ExportService : IExportService
         // Add basic fields
         csv.AppendLine($"ID,\"{response.Id}\"");
         csv.AppendLine($"Message,\"{response.Message.Replace("\"", "\"\"")}\"");
-        csv.AppendLine($"Created,\"{response.CreatedAt:yyyy-MM-dd HH:mm:ss}\"");
-        csv.AppendLine($"Created By,\"{response.CreatedBy}\"");
+        csv.AppendLine($"Created,\"{response.Timestamp:yyyy-MM-dd HH:mm:ss}\"");
+        csv.AppendLine($"Created By,\"{response.ModelUsed}\"");
 
         if (response.Confidence.HasValue)
         {
@@ -357,8 +357,8 @@ public class ExportService : IExportService
         {
             html.AppendLine("<div class=\"metadata\">");
             html.AppendLine("<h2>Metadata</h2>");
-            html.AppendLine($"<p><strong>Created:</strong> {response.CreatedAt:g}</p>");
-            html.AppendLine($"<p><strong>Created By:</strong> {response.CreatedBy}</p>");
+            html.AppendLine($"<p><strong>Created:</strong> {response.Timestamp:g}</p>");
+            html.AppendLine($"<p><strong>Created By:</strong> {response.ModelUsed}</p>");
             html.AppendLine($"<p><strong>Type:</strong> {response.DisplayType}</p>");
             if (response.Confidence.HasValue)
             {
@@ -432,9 +432,10 @@ public class ExportService : IExportService
             ToolResults = message.ToolResults,
             Citations = message.Citations,
             Metadata = message.Metadata,
-            CreatedAt = message.Timestamp.DateTime,
-            CreatedBy = message.ModelUsed ?? "User",
-            Hash = await _securityService.GenerateHashAsync(message.Content)
+            Timestamp = message.Timestamp.DateTime,
+            ModelUsed = message.ModelUsed ?? "User",
+            Hash = await _securityService.GenerateHashAsync(message.Content),
+            HashType = HashType.SHA256,
         };
 
         return await ExportResponseAsync(response, format, options);
@@ -480,14 +481,14 @@ public class ExportService : IExportService
 
         var data = Encoding.UTF8.GetBytes(json);
 
-        return new ExportResult(
-            Success: true,
-            FilePath: null,
-            Data: data,
-            FileSize: data.Length,
-            ErrorMessage: null,
-            Metadata: new Dictionary<string, object> { ["sessionId"] = session.Id }
-        );
+        return new ExportResult {
+            Success= true,
+            FilePath= null,
+            Data= data,
+            FileSize= data.Length,
+            ErrorMessage= null,
+            Metadata= new Dictionary<string, object> { ["sessionId"] = session.Id }
+        };
     }
 
     public async Task<ExportResult> ExportCaseAsync(
@@ -511,14 +512,14 @@ public class ExportService : IExportService
 
         var data = Encoding.UTF8.GetBytes(json);
 
-        return new ExportResult(
-            Success: true,
-            FilePath: null,
-            Data: data,
-            FileSize: data.Length,
-            ErrorMessage: null,
-            Metadata: new Dictionary<string, object> { ["caseId"] = caseEntity.Id }
-        );
+        return new ExportResult {
+            Success=true,
+            FilePath= null,
+            Data= data,
+            FileSize= data.Length,
+            ErrorMessage= null,
+            Metadata= new Dictionary<string, object> { ["caseId"] = caseEntity.Id }
+        };
     }
 
     public async Task<ExportResult> BatchExportAsync(

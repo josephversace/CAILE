@@ -32,8 +32,10 @@
     
     <!-- File System Testing -->
     <PackageReference Include="System.IO.Abstractions.TestingHelpers" Version="21.1.7" />
-    
 
+
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.8" />
     
     <!-- Logging for Tests -->
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />

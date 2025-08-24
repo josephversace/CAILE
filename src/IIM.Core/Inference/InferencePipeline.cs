@@ -189,7 +189,7 @@ namespace IIM.Core.Inference
 
             var queuedRequest = new QueuedRequest
             {
-                Id = request.Id ?? Guid.NewGuid().ToString("N"),
+          
                 Request = request,
                 Priority = await DeterminePriorityAsync(request),
                 QueuedAt = DateTimeOffset.UtcNow,

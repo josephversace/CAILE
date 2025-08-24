@@ -11,7 +11,7 @@ using IIM.Core.Mediator;
 using IIM.Core.Models;                       
 using IIM.Core.Services;
 using IIM.Infrastructure.Platform;
-using IIM.Shared.DTOs;
+
 using IIM.Shared.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -131,34 +131,8 @@ app.MapWslEndpoints();           // WSL management
 app.MapInferenceEndpoints();     // Inference & generation
 app.MapRagEndpoints();           // RAG endpoints
 app.MapAuditEndpoints();         // Audit logging
-
+app.MapCaseEndpoints();
 
 // Start the application
 app.Run("http://localhost:5080");
 
-// ============================================
-// Request/Response DTOs (move to separate file later)
-// ============================================
-public record GenerateRequest(
-    string ModelId,
-    string Prompt,
-    Dictionary<string, object>? Parameters = null,
-    HashSet<string>? Tags = null
-);
-
-public record QueryBody(string query, int k);
-
-public record FileSyncRequest(string WindowsPath, string WslPath);
-
-public record ProcessingRequest(
-    string ProcessingType,
-    Dictionary<string, object>? Parameters = null
-);
-
-public record ExportRequest(
-    string? ExportPath = null,
-    bool IncludeProcessedVersions = true,
-    bool GenerateVerificationScript = true
-);
-
-// [Keep other helper classes at the bottom]

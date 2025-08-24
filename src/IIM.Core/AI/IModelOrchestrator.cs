@@ -1,5 +1,6 @@
 using IIM.Core.Models;
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -40,15 +41,7 @@ namespace IIM.Core.AI
         Task<long> GetModelSizeAsync(string modelId, CancellationToken cancellationToken = default);
         Task<ModelStats> GetStatsAsync();
 
-        /// <summary>
-        /// Performs inference using a loaded model
-        /// </summary>
-        /// <param name="modelId">ID of the model to use</param>
-        /// <param name="input">Input data for inference</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns>Inference result with output and metrics</returns>
-        Task<InferenceResult> InferAsync(string modelId, object input, CancellationToken ct = default);
-
+      
         // Events
         event EventHandler<ModelLoadedEventArgs>? ModelLoaded;
         event EventHandler<ModelUnloadedEventArgs>? ModelUnloaded;

@@ -2,8 +2,9 @@ using IIM.Application.Commands.Models;
 using IIM.Core.AI;
 using IIM.Core.Mediator;
 using IIM.Core.Models;
-using IIM.Shared.DTOs;
+
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

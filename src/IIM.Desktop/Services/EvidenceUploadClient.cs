@@ -1,7 +1,7 @@
 using IIM.Desktop.Services.Http;
-using IIM.Shared.DTOs;
+
 using IIM.Shared.Interfaces;
-using IIM.Shared.DTOs;
+
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;

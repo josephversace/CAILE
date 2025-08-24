@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using IIM.Plugin.SDK.Security;
-using IIM.Shared.DTOs;
+
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Core.Plugins.Security.Implementations;

@@ -82,8 +82,7 @@ namespace IIM.Core.Services
                 evidence.ChainOfCustody.Add(new ChainOfCustodyEntry
                 {
                     Action = "INGESTED",
-                    Actor = metadata.CollectedBy,
-                    Officer = metadata.CollectedBy,
+                    Actor = metadata.CollectedBy,          
                     Details = $"Evidence ingested from {metadata.CollectionLocation}",
                     Hash = hashes.GetValueOrDefault("SHA256", ""),
                     Notes = metadata.Description
@@ -166,7 +165,7 @@ namespace IIM.Core.Services
             {
                 Action = $"PROCESSED_{processingType.ToUpper()}",
                 Actor = Environment.UserName,
-                Officer = Environment.UserName,
+        
                 Details = $"Processed with {processingType}",
                 Hash = processedHash
             });

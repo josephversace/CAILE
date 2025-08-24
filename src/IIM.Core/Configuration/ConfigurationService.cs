@@ -1,5 +1,5 @@
 using IIM.Shared.Interfaces;
-
+using IIM.Shared.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -28,7 +28,7 @@ namespace IIM.Core.Configuration
         private readonly ConfigDbContext _dbContext;
         private readonly IMemoryCache _cache;
         private readonly ILogger<ConfigurationService> _logger;
-        private readonly IAuditLogger _auditlogger;
+        private readonly IAuditService _auditlogger;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public ConfigurationService(
@@ -36,7 +36,7 @@ namespace IIM.Core.Configuration
             ConfigDbContext dbContext,
             IMemoryCache cache,
             ILogger<ConfigurationService> logger,
-            IAuditLogger auditlogger, IHttpContextAccessor httpContextAccessor )
+            IAuditService auditlogger, IHttpContextAccessor httpContextAccessor )
         {
             _staticConfig = staticConfig;
             _dbContext = dbContext;

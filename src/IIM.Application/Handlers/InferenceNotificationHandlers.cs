@@ -1,13 +1,13 @@
 using IIM.Core.Inference;
 using IIM.Core.Mediator;
 using IIM.Core.Services;
-using IIM.Shared.DTOs;
+
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using IIM.Shared.Enums;
-using IIM.Shared.DTOs;
+
 using IIM.Shared.Interfaces; // ADD for NotificationType
 
 namespace IIM.Application.Handlers
@@ -194,9 +194,9 @@ namespace IIM.Application.Handlers
         INotificationHandler<InferenceCompletedNotification>,
         INotificationHandler<InferenceFailedNotification>
     {
-        private readonly IAuditLogger _auditLogger;
+        private readonly IAuditService _auditLogger;
 
-        public InferenceAuditHandler(IAuditLogger auditLogger)
+        public InferenceAuditHandler(IAuditService auditLogger)
         {
             _auditLogger = auditLogger;
         }

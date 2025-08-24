@@ -1,7 +1,7 @@
 // File: IIM.Application/Commands/Investigation/ProcessInvestigationCommand.cs
 using IIM.Core.Mediator;
 using IIM.Shared.Enums;
-using IIM.Shared.DTOs;
+using IIM.Shared.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace IIM.Application.Commands.Investigation

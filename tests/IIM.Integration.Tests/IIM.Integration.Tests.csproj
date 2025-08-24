@@ -26,6 +26,10 @@
     <PackageReference Include="Testcontainers" Version="3.10.0" />
     <PackageReference Include="Testcontainers.PostgreSql" Version="3.10.0" />
     <PackageReference Include="Testcontainers.Redis" Version="3.10.0" />
+
+
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.8" />
     
     <!-- Database Testing -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />

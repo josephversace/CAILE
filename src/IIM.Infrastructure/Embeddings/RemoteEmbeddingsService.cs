@@ -9,9 +9,10 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using IIM.Shared.DTOs;
-using IIM.Shared.DTOs;
+
+
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 
 namespace IIM.Infrastructure.Embeddings;
 
@@ -318,38 +319,39 @@ public class RemoteEmbeddingService : IEmbeddingService
 
             if (!response.IsSuccessStatusCode)
             {
-                return new EmbeddingServiceInfo(
-                    Status: "error",
-                    LoadedModels: new List<EmbeddingModelInfo>(),
-                    TotalMemoryUsage: 0,
-                    RequestsProcessed: 0,
-                    AverageLatencyMs: 0,
-                    Version: "unknown"
-                );
+                return new EmbeddingServiceInfo {
+                    Status= "error",
+                    LoadedModels= new List<EmbeddingModelInfo>(),
+                    TotalMemoryUsage= 0,
+                    RequestsProcessed= 0,
+                    AverageLatencyMs= 0,
+                    Version= "unknown"
+                };
             }
 
             var result = await response.Content.ReadFromJsonAsync<EmbeddingServiceInfo>(_jsonOptions, ct);
 
-            return result ?? new EmbeddingServiceInfo(
-                Status: "unknown",
-                LoadedModels: new List<EmbeddingModelInfo>(),
-                TotalMemoryUsage: 0,
-                RequestsProcessed: 0,
-                AverageLatencyMs: 0,
-                Version: "unknown"
-            );
+            return result ?? new EmbeddingServiceInfo
+            {
+                Status = "unknown",
+                LoadedModels = new List<EmbeddingModelInfo>(),
+                TotalMemoryUsage = 0,
+                RequestsProcessed = 0,
+                AverageLatencyMs = 0,
+                Version = "unknown"
+            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting service info");
-            return new EmbeddingServiceInfo(
-                Status: "error",
-                LoadedModels: new List<EmbeddingModelInfo>(),
-                TotalMemoryUsage: 0,
-                RequestsProcessed: 0,
-                AverageLatencyMs: 0,
-                Version: "unknown"
-            );
+            return new EmbeddingServiceInfo {
+                Status= "error",
+                LoadedModels= new List<EmbeddingModelInfo>(),
+                TotalMemoryUsage= 0,
+                RequestsProcessed= 0,
+                AverageLatencyMs= 0,
+                Version= "unknown"
+            };
         }
     }
 }

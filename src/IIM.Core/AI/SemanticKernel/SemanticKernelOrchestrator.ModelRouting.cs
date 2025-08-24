@@ -1,6 +1,6 @@
 // File: SemanticKernelOrchestrator.ModelRouting.cs
 using IIM.Shared.Enums;
-using IIM.Shared.DTOs;
+using IIM.Shared.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace IIM.Core.AI
 {
-    public partial class SemanticKernelOrchestrator
+    public partial class SemanticKernelOrchestrator : IReasoningService
     {
   
    

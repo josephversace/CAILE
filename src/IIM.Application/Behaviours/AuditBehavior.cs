@@ -1,6 +1,6 @@
 using IIM.Core.Mediator;
 using IIM.Shared.Interfaces;
-using IIM.Shared.DTOs;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
@@ -22,7 +22,7 @@ namespace IIM.Application.Behaviors
         where TRequest : IRequest<TResponse>
     {
         private readonly ILogger<AuditBehavior<TRequest, TResponse>> _logger;
-        private readonly IAuditLogger _auditLogger;
+        private readonly IAuditService _auditLogger;
         private readonly IHttpContextAccessor? _httpContextAccessor;
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace IIM.Application.Behaviors
         /// </summary>
         public AuditBehavior(
             ILogger<AuditBehavior<TRequest, TResponse>> logger,
-            IAuditLogger auditLogger,
+            IAuditService auditLogger,
             IHttpContextAccessor? httpContextAccessor = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

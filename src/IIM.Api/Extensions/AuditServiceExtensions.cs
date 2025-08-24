@@ -23,7 +23,7 @@ namespace IIM.Api.Extensions
             services.TryAddScoped<IUserContext, UserContextService>();
 
             // Add audit logger
-            services.TryAddScoped<IAuditLogger, SqliteAuditLogger>();
+            services.TryAddScoped<IAuditService, SqliteAuditLogger>();
 
             // Add audit configuration
             services.Configure<AuditConfiguration>(

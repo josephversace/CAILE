@@ -12,9 +12,9 @@ using IIM.Core.Configuration;
 using IIM.Core.Models;
 using IIM.Core.Services;
 
-using IIM.Shared.DTOs;
+
 using IIM.Shared.Enums;
-using IIM.Shared.DTOs;
+
 using Microsoft.Extensions.Logging;
 using Moq;
 using NSubstitute;

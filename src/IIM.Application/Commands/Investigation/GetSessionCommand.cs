@@ -1,5 +1,5 @@
 using IIM.Core.Mediator;
-using IIM.Shared.DTOs;
+
 using System.ComponentModel.DataAnnotations;
 using IIM.Shared.Models;
 

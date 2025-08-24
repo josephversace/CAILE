@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using IIM.Plugin.SDK;
-using IIM.Shared.DTOs;
+
 using IIM.Core.Plugins.Security; // Add this for PluginManifest
 
 namespace IIM.Core.Plugins;
