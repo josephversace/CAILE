@@ -1,7 +1,8 @@
 using IIM.Core.Mediator;
-
-using System.ComponentModel.DataAnnotations;
+using IIM.Core.Services;
 using IIM.Shared.Models;
+using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
 
 namespace IIM.Application.Commands.Investigation
 {
@@ -39,4 +40,38 @@ namespace IIM.Application.Commands.Investigation
             MaxMessages = maxMessages;
         }
     }
+
+    /// <summary>
+    /// Query to get sessions by case ID
+    /// </summary>
+    public class GetSessionsByCaseCommand : IRequest<List<InvestigationSession>>
+    {
+        public string CaseId { get; }
+
+       
+    }
+
+    public class GetSessionsByCaseCommandHandler : IRequestHandler<GetSessionsByCaseCommand, List<InvestigationSession>>
+    {
+        private readonly ISessionService _sessionService;
+        private readonly ILogger<GetSessionsByCaseCommandHandler> _logger;
+
+        public GetSessionsByCaseCommandHandler(
+            ISessionService sessionService,
+            ILogger<GetSessionsByCaseCommandHandler> logger)
+        {
+            _sessionService = sessionService;
+            _logger = logger;
+        }
+
+        public async Task<List<InvestigationSession>> Handle(
+            GetSessionsByCaseCommand request,
+            CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Getting sessions for case {CaseId}", request.CaseId);
+            return await _sessionService.GetSessionsByCaseAsync(request.CaseId, cancellationToken);
+        }
+    }
+
+
 }

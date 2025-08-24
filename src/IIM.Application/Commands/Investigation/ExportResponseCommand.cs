@@ -1,8 +1,10 @@
 using IIM.Core.Mediator;
 
 using IIM.Shared.Enums;
-
+using IIM.Shared.Models;
+using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
+using static IIM.Application.Commands.Investigation.ExportResponseCommand;
 
 namespace IIM.Application.Commands.Investigation
 {
@@ -46,5 +48,40 @@ namespace IIM.Application.Commands.Investigation
             Format = format;
             Options = options;
         }
-    }
+
+		/// <summary>
+		/// Command to export investigation results
+		/// </summary>
+		public class ExportInvestigationCommand : IRequest<byte[]>
+		{
+			public string SessionId { get; }
+			public ExportFormat Format { get; }
+			public ExportOptions? Options { get; set; }
+
+			public ExportInvestigationCommand(string sessionId, ExportFormat format)
+			{
+				SessionId = sessionId ?? throw new ArgumentNullException(nameof(sessionId));
+				Format = format;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Command to export investigation results
+	/// </summary>
+	public class ExportInvestigationCommand : IRequest<byte[]>
+	{
+		public string SessionId { get; }
+		public ExportFormat Format { get; }
+		public ExportOptions? Options { get; set; }
+
+		public ExportInvestigationCommand(string sessionId, ExportFormat format)
+		{
+			SessionId = sessionId ?? throw new ArgumentNullException(nameof(sessionId));
+			Format = format;
+		}
+	}
+
+
+	
 }
