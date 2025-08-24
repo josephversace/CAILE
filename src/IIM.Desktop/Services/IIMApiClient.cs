@@ -8,7 +8,7 @@ using System.Net.Http.Json;
 using IIM.Shared.Models;
 
 
-
+namespace IIM.Desktop.Services;
 /// <summary>
 /// Main API client for communicating with the IIM backend.
 /// Handles all HTTP communication between the desktop client and API server.
@@ -241,6 +241,16 @@ public class IIMApiClient : IIIMApiClient
             Success = false,
             Error = "Connection test failed"
         };
+    }
+
+    Task<Settings> IIIMApiClient.GetSettingsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task UpdateSettingsAsync(Settings settings)
+    {
+        throw new NotImplementedException();
     }
 }
 
