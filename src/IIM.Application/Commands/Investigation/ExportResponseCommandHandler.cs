@@ -102,4 +102,41 @@ namespace IIM.Application.Commands.Investigation
             return null;
         }
     }
+
+
+    public class ExportInvestigationCommandHandler : IRequestHandler<ExportInvestigationCommand, byte[]>
+    {
+        private readonly ISessionService _sessionService;
+        private readonly IExportService _exportService;
+        private readonly ILogger<ExportInvestigationCommandHandler> _logger;
+
+        public ExportInvestigationCommandHandler(
+            ISessionService sessionService,
+            IExportService exportService,
+            ILogger<ExportInvestigationCommandHandler> logger)
+        {
+            _sessionService = sessionService;
+            _exportService = exportService;
+            _logger = logger;
+        }
+
+        public async Task<byte[]> Handle(
+            ExportInvestigationCommand request,
+            CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Exporting session {SessionId} as {Format}",
+                request.SessionId, request.Format);
+
+            var session = await _sessionService.GetSessionAsync(request.SessionId, cancellationToken);
+
+           var report = await _exportService.ExportSessionAsync(
+                session,
+                request.Format,
+                request.Options);
+
+            return report.Data ?? Array.Empty<byte[]>();
+
+
+        }
+    }
 }
