@@ -1,9 +1,11 @@
 using IIM.Api.Configuration;
+using IIM.Application.Inference;
 using IIM.Core.Configuration;
-using IIM.Core.Inference;
-using IIM.Core.Services;
-using IIM.Infrastructure.Storage;
 
+using IIM.Core.Services;
+using IIM.Infrastructure.Models;
+using IIM.Infrastructure.Storage;
+using IIM.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,8 +23,7 @@ namespace IIM.Api.Extensions
             configuration.GetSection("Deployment").Bind(deploymentConfig);
             services.AddSingleton(deploymentConfig);
 
-            // Add databases (Scoped by default with EF Core)
-            services.AddIIMDatabases(configuration);
+      
 
             // Add memory cache (Singleton)
             services.AddMemoryCache();
@@ -77,7 +78,7 @@ namespace IIM.Api.Extensions
             services.Configure<AuditConfiguration>(configuration.GetSection("Audit"));
             services.Configure<ModelTemplateConfiguration>(configuration.GetSection("ModelTemplates"));
             services.Configure<InferencePipelineConfiguration>(configuration.GetSection("InferencePipeline"));
-            services.Configure<ModelMetadataConfiguration>(configuration.GetSection("ModelMetadata"));
+            services.Configure<ModelConfigurationConfiguration>(configuration.GetSection("ModelConfiguration"));
             services.Configure<MinIOConfiguration>(configuration.GetSection("Storage:MinIO"));
 
             return services;

@@ -1,4 +1,4 @@
-using IIM.Application.Interfaces;
+
 using IIM.Core.AI;
 using IIM.Core.Configuration;
 using IIM.Core.Models;
@@ -16,6 +16,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IIM.Shared.Models;
 
+using IIM.Core.Templates;
+using IIM.Shared.Interfaces;
+
 namespace IIM.Application.Services
 {
     public class InvestigationService : IInvestigationService
@@ -29,7 +32,7 @@ namespace IIM.Application.Services
         private readonly IVisualizationService _visualizationService;
 
         private readonly Dictionary<string, SessionModelTracking> _sessionModelTracking = new();
-        private readonly Dictionary<string, Case> _cases = new();
+        private readonly Dictionary<string, IIM.Shared.Models.Case> _cases = new();
         private readonly Dictionary<string, InvestigationResponse> _responses = new();
         private readonly SemaphoreSlim _trackingLock = new(1, 1);
 
@@ -136,7 +139,7 @@ namespace IIM.Application.Services
                 Message = $"Processing: {query.Text}",
                 ToolResults = new List<ToolResult>(),
                 Citations = new List<Citation>(),
-                RelatedEvidence = new List<Evidence>(),
+                EvidenceIds = new List<string>(),
                 Metadata = new Dictionary<string, object>
                 {
                     ["sessionId"] = sessionId,
@@ -222,7 +225,7 @@ namespace IIM.Application.Services
 
         #region Case Management
 
-        public Task<List<Case>> GetRecentCasesAsync(int count = 10, CancellationToken cancellationToken = default)
+        public Task<List<IIM.Shared.Models.Case>> GetRecentCasesAsync(int count = 10, CancellationToken cancellationToken = default)
         {
             var recentCases = _cases.Values
                 .OrderByDescending(c => c.UpdatedAt)
@@ -239,7 +242,7 @@ namespace IIM.Application.Services
             return GetSessionsByCaseAsync(caseId, cancellationToken);
         }
 
-        public Task<Case> GetCaseAsync(string caseId, CancellationToken cancellationToken = default)
+        public Task<IIM.Shared.Models.Case> GetCaseAsync(string caseId, CancellationToken cancellationToken = default)
         {
             if (_cases.TryGetValue(caseId, out var caseEntity))
             {
@@ -257,18 +260,17 @@ namespace IIM.Application.Services
             InvestigationResponse response,
             InvestigationMessage? message = null)
         {
-            response.DisplayMetadata = new Dictionary<string, object>
+            response.Metadata = new Dictionary<string, object>
             {
                 ["hasToolResults"] = response.ToolResults?.Any() ?? false,
                 ["hasCitations"] = response.Citations?.Any() ?? false,
-                ["hasEvidence"] = response.RelatedEvidence?.Any() ?? false,
+                ["hasEvidence"] = response.EvidenceIds?.Any() ?? false,
                 ["confidence"] = response.Confidence ?? 0
             };
 
             if (message != null)
             {
-                response.DisplayMetadata["messageId"] = message.Id;
-                response.DisplayMetadata["messageRole"] = message.Role.ToString();
+          
             }
 
             return Task.FromResult(response);
@@ -311,8 +313,8 @@ namespace IIM.Application.Services
 
         private async Task LoadModelAsync(ModelConfiguration config, CancellationToken cancellationToken)
         {
-            // ModelRequest is a class with required properties
-            var modelRequest = new ModelRequest
+            // ModelLoadRequest is a class with required properties
+            var ModelLoadRequest = new ModelLoadRequest
             {
                 ModelId = config.ModelId,
                 ModelPath = GetModelPath(config.ModelId),
@@ -320,7 +322,7 @@ namespace IIM.Application.Services
                 Provider = config.Provider
             };
 
-            await _modelOrchestrator.LoadModelAsync(modelRequest, null, cancellationToken);
+            await _modelOrchestrator.LoadModelAsync(ModelLoadRequest, null, cancellationToken);
         }
 
         private string GetModelPath(string modelId)
@@ -353,10 +355,10 @@ namespace IIM.Application.Services
 
         private void InitializeSampleData()
         {
-            var sampleCase = new Case
+            var sampleCase = new IIM.Shared.Models.Case
             {
                 Id = "case-001",
-                Name = "Sample Investigation",
+                Title = "Sample Investigation",
                 Description = "Initial test case",
                 Status = CaseStatus.Active,
                 CreatedAt = DateTimeOffset.UtcNow.AddDays(-7),

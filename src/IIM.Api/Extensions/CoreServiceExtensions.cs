@@ -1,11 +1,22 @@
 ﻿using IIM.Api.Configuration;
+using IIM.Application.AI;
+using IIM.Application.Inference;
+using IIM.Application.Investigation;
 using IIM.Core.AI;
 using IIM.Core.Configuration;
-using IIM.Core.Inference;
+
 using IIM.Core.Mediator;
 using IIM.Core.Services;
+using IIM.Core.Templates;
+using IIM.Infrastructure.AI.DirectML;
+using IIM.Infrastructure.AI.OnnxRuntime;
+using IIM.Infrastructure.Data;
+using IIM.Infrastructure.Models;
+using IIM.Infrastructure.Platform;
 using IIM.Infrastructure.Storage;
+using IIM.Infrastructure.Templates;
 using IIM.Shared.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace IIM.Api.Extensions
@@ -21,6 +32,13 @@ namespace IIM.Api.Extensions
             // AI/Model Services (Singleton for performance)
             // ========================================
 
+            // DirectML Device Manager as Singleton
+            services.AddSingleton<IDirectMLDeviceManager, DirectMLDeviceManager>();
+
+            // ONNX Runtime Manager as Singleton
+            services.AddSingleton<IOnnxRuntimeManager, OnnxRuntimeManager>();
+
+
             // Model Orchestration (Singleton - manages loaded models)
             services.AddSingleton<IModelOrchestrator>(sp =>
             {
@@ -30,11 +48,11 @@ namespace IIM.Api.Extensions
             });
 
             // Model Metadata (Singleton - cached metadata)
-            services.AddSingleton<IModelMetadataService>(sp =>
+            services.AddSingleton<IModelConfigurationService>(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<ModelMetadataService>>();
-                var config = sp.GetRequiredService<IOptions<ModelMetadataConfiguration>>();
-                return new ModelMetadataService(logger, config);
+                var logger = sp.GetRequiredService<ILogger<ModelConfigurationService>>();
+                var config = sp.GetRequiredService<IOptions<ModelConfigurationConfiguration>>();
+                return new ModelConfigurationService(logger, config);
             });
 
             // Inference Pipeline (Singleton - manages GPU/CPU resources)
@@ -42,12 +60,14 @@ namespace IIM.Api.Extensions
             {
                 var logger = sp.GetRequiredService<ILogger<InferencePipeline>>();
                 var orchestrator = sp.GetRequiredService<IModelOrchestrator>();
-                var metadataService = sp.GetRequiredService<IModelMetadataService>();
+                var ModelConfiguration = sp.GetRequiredService<IModelConfigurationService>();
                 var config = sp.GetRequiredService<IOptions<InferencePipelineConfiguration>>();
-                var mediator = sp.GetService<IMediator>(); // Optional mediator
-
-                return new InferencePipeline(logger, orchestrator, metadataService, config, mediator);
+                var mediator = sp.GetService<IMediator>();
+                var onnxManager = sp.GetRequiredService<IOnnxRuntimeManager>();
+                var directMLDeviceManager = sp.GetRequiredService<IDirectMLDeviceManager>();
+                return new InferencePipeline(logger, orchestrator, ModelConfiguration, config,  onnxManager, directMLDeviceManager, mediator);
             });
+
 
             // ========================================
             // Session/User Services (Scoped per request)

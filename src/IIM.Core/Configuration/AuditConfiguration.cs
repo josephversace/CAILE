@@ -7,13 +7,7 @@ using IIM.Shared.Models;
 
 namespace IIM.Core.Configuration
 {
-    public class AuditDbContext : DbContext
-    {
-        public AuditDbContext(DbContextOptions<AuditDbContext> options) : base(options) { }
 
-        // Example audit entity:
-        public DbSet<AuditEvent> AuditLogs { get; set; }
-    }
 
     public class AuditConfiguration
     {

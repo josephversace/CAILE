@@ -1,4 +1,4 @@
-using IIM.Core.Inference;
+
 using IIM.Core.Mediator;
 using IIM.Core.Services;
 
@@ -8,7 +8,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using IIM.Shared.Enums;
 
-using IIM.Shared.Interfaces; // ADD for NotificationType
+using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
+using IIM.Application.Inference;
+using IIM.Application.Services; // ADD for NotificationType
 
 namespace IIM.Application.Handlers
 {

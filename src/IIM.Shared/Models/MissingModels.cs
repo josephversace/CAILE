@@ -10,16 +10,29 @@ using System.Threading.Tasks;
 
     namespace IIM.Shared.Models;
 
-    // ========================================
-    // AI/ML INFERENCE MODELS
-    // ========================================
 
-    #region Inference Models
+public class FileMetadata
+{
+    public string FilePath { get; set; } = string.Empty;
+    public long Size { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime ModifiedAt { get; set; }
+    public string Hash { get; set; } = string.Empty;
+    public string MimeType { get; set; } = string.Empty;
+}
 
-    /// <summary>
-    /// Inference pipeline request
-    /// </summary>
-    public class InferencePipelineRequest
+
+
+// ========================================
+// AI/ML INFERENCE MODELS
+// ========================================
+
+#region Inference Models
+
+/// <summary>
+/// Inference pipeline request
+/// </summary>
+public class InferencePipelineRequest
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string ModelId { get; set; } = string.Empty;
@@ -54,14 +67,16 @@ using System.Threading.Tasks;
         public TimeSpan InferenceTime { get; set; }
         public int TokensGenerated { get; set; }
         public Dictionary<string, object>? Metadata { get; set; }
-    }
+    public int TokensProcessed { get; set; }
+    public double TokensPerSecond { get; set; }
+}
 
     /// <summary>
     /// Queued request for pipeline
     /// </summary>
     public class QueuedRequest
     {
-        public string Id { get; set; } = Guid.NewGuid().ToString("N"),
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
         public InferencePipelineRequest Request { get; set; } = new();
         public TaskCompletionSource<InferenceResult> CompletionSource { get; set; } = new();
         public DateTimeOffset QueuedAt { get; set; } = DateTimeOffset.UtcNow;
@@ -82,15 +97,6 @@ using System.Threading.Tasks;
         public int FailureCount { get; set; }
     }
 
-    /// <summary>
-    /// Health check result
-    /// </summary>
-    public class HealthCheckResult
-    {
-        public bool IsHealthy { get; set; }
-        public List<string> Issues { get; set; } = new();
-        public InferencePipelineStats Stats { get; set; } = new();
-    }
 
     /// <summary>
     /// Metric entry for monitoring
@@ -138,169 +144,6 @@ using System.Threading.Tasks;
 
     #endregion
 
-    #region Model Management
-
-    /// <summary>
-    /// Loaded model information
-    /// </summary>
-    public class LoadedModel
-    {
-        public required ModelHandle Handle { get; init; }
-        public required ModelConfiguration Configuration { get; init; }
-        public Process? Process { get; set; }
-        public DateTimeOffset LastAccessed { get; set; } = DateTimeOffset.UtcNow;
-        public int AccessCount { get; set; }
-        public ModelRuntimeState RuntimeState { get; set; } = ModelRuntimeState.Initializing;
-        public ModelPerformanceMetrics Metrics { get; set; } = new();
-        public Dictionary<string, object> RuntimeData { get; set; } = new();
-        public ModelRequest Request { get; set; } = new();
-        public string ModelPath { get; set; } = string.Empty;
-        public ModelRuntimeOptions RuntimeOptions { get; set; } = new();
-    }
-
-    /// <summary>
-    /// Model handle
-    /// </summary>
-    public class ModelHandle
-    {
-        public string ModelId { get; set; } = string.Empty;
-        public string SessionId { get; set; } = Guid.NewGuid().ToString();
-        public string Provider { get; set; } = string.Empty;
-        public ModelType Type { get; set; }
-        public IntPtr Handle { get; set; }
-        public long MemoryUsage { get; set; }
-        public DateTimeOffset LoadedAt { get; set; } = DateTimeOffset.UtcNow;
-        public ModelState State { get; set; } = ModelState.Loading;
-        public Dictionary<string, object> Metadata { get; set; } = new();
-    }
-
-    /// <summary>
-    /// Model metadata
-    /// </summary>
-    public class ModelMetadata
-    {
-        public string ModelId { get; set; } = string.Empty;
-        public long Size { get; set; }
-        public string ModelPath { get; set; } = string.Empty;
-        public string Filename { get; set; } = string.Empty;
-        public string Hash { get; set; } = string.Empty;
-        public HashType  HashType { get; set; } = HashType.SHA256;
-        public string FileName { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-    public ModelType Type { get; set; }
-        public bool RequiresGpu { get; set; }
-        public bool SupportsBatching { get; set; }
-        public int MaxBatchSize { get; set; } = 1;
-        public long EstimatedMemoryMb { get; set; }
-        public int DefaultPriority { get; set; } = 1;
-        public string Provider { get; set; } = "cpu";
-        public bool IsEnabled { get; set; } = true;
-        public DateTime CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
-        public Dictionary<string, object> Properties { get; set; } = new();
-    }
-
-/// <summary>
-/// Model request
-/// </summary>
-public class ModelRequest
-{
-    public string ModelId { get; set; } = string.Empty;
-    public string? ModelPath { get; set; }
-    public ModelType ModelType { get; set; }
-    public Dictionary<string, object>? Parameters { get; set; }
-    public string ModelSize { get; set; }
-    public string Quantization { get; set; }
-    public int ContextSize { get; set; }
-    public int BatchSize { get; set; } = 512;
-    public int GpuLayers { get; set; } = -1; //Use all available GPU layers
-    public string Provider { get; set; } = "cpu";
-    public Dictionary<string, object> Options { get; set; } = new();
-
-
-    }
-
-    /// <summary>
-    /// Model constraints
-    /// </summary>
-    public class ModelConstraints
-    {
-        public long? MaxMemoryBytes { get; set; }
-        public bool PreferLocal { get; set; }
-        public ModelType? RequiredType { get; set; }
-        public List<string>? RequiredCapabilities { get; set; }
-    }
-
-    /// <summary>
-    /// Model recommendation
-    /// </summary>
-    public class ModelRecommendation
-    {
-        public string ModelId { get; set; } = string.Empty;
-        public string Reason { get; set; } = string.Empty;
-        public float ConfidenceScore { get; set; }
-        public List<string> AlternativeModels { get; set; } = new();
-        public Dictionary<string, object>? RecommendedParameters { get; set; }
-    }
-
-    /// <summary>
-    /// Model runtime options
-    /// </summary>
-    public class ModelRuntimeOptions
-    {
-        public long MaxMemory { get; set; }
-        public int DeviceId { get; set; }
-        public ModelPriority Priority { get; set; }
-        public string ExecutionProvider { get; set; } = "CPU";
-        public Dictionary<string, object> CustomOptions { get; set; } = new();
-    }
-
-    /// <summary>
-    /// Model performance metrics
-    /// </summary>
-    public class ModelPerformanceMetrics
-    {
-        public long TotalRequests { get; set; }
-        public long SuccessfulRequests { get; set; }
-        public long FailedRequests { get; set; }
-        public double AverageInferenceMs { get; set; }
-        public double MinInferenceMs { get; set; } = double.MaxValue;
-        public double MaxInferenceMs { get; set; }
-        public double AverageTokensPerSecond { get; set; }
-        public long TotalTokensProcessed { get; set; }
-        public int QueueDepth { get; set; }
-        public DateTimeOffset LastUpdated { get; set; } = DateTimeOffset.UtcNow;
-    }
-
-    /// <summary>
-    /// Model info
-    /// </summary>
-    public class ModelInfo
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string Type { get; set; } = string.Empty;
-        public string Provider { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public long MemoryUsage { get; set; }
-        public string? LoadedPath { get; set; }
-        public DateTimeOffset? LoadedAt { get; set; }
-        public ModelCapabilities Capabilities { get; set; } = new();
-        public Dictionary<string, object>? Metadata { get; set; }
-    }
-
-    /// <summary>
-    /// Model load request
-    /// </summary>
-    public class ModelLoadRequest
-    {
-        public string ModelId { get; set; } = string.Empty;
-        public string? ModelPath { get; set; }
-        public string? Provider { get; set; }
-        public Dictionary<string, object>? Options { get; set; }
-    }
-
-    #endregion
 
     #region Embeddings
 
@@ -592,58 +435,26 @@ public class ModelRequest
         public Dictionary<string, object> Metadata { get; set; } = new();
     }
 
-    #endregion
-
- 
+#endregion
 
 
-    // ========================================
-    // INTERFACES
-    // ========================================
+#region Secuirity
 
-    #region Interfaces
+public class UserInfo
+{
+    public string Id { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public List<string> Roles { get; set; } = new();
+}
 
-    /// <summary>
-    /// Notification interface for MediatR
-    /// </summary>
-    public interface INotification
-    {
-    }
 
-    #endregion
+#endregion
 
-    // ========================================
-    // EXCEPTIONS
-    // ========================================
+// ========================================
+// INTERFACES
+// ========================================
 
-    #region Exceptions
 
-    /// <summary>
-    /// Inference pipeline exception
-    /// </summary>
-    public class InferencePipelineException : Exception
-    {
-        public InferencePipelineException(string message) : base(message) { }
-        public InferencePipelineException(string message, Exception innerException) : base(message, innerException) { }
-    }
 
-    /// <summary>
-    /// Model load exception
-    /// </summary>
-    public class ModelLoadException : Exception
-    {
-        public ModelLoadException(string message) : base(message) { }
-        public ModelLoadException(string message, Exception innerException) : base(message, innerException) { }
-    }
-
-    /// <summary>
-    /// Inference exception
-    /// </summary>
-    public class InferenceException : Exception
-    {
-        public InferenceException(string message) : base(message) { }
-        public InferenceException(string message, Exception innerException) : base(message, innerException) { }
-    }
-
-    #endregion
 

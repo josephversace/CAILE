@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 
 using IIM.Core.Models;
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
 
 namespace IIM.Api.Hubs
 {

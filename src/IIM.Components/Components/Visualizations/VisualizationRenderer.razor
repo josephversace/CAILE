@@ -60,7 +60,7 @@
 </div>
 
 @code {
-    [Parameter] public ResponseVisualization? Visualization { get; set; }
+    [Parameter] public IIM.Shared.Models.Visualization? Visualization { get; set; }
     [Parameter] public object? Data { get; set; }
     [Parameter] public string? Title { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }

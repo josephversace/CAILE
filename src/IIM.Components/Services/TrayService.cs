@@ -1,5 +1,6 @@
 
 using IIM.Infrastructure.Platform;
+using IIM.Shared.Interfaces;
 
 namespace IIM.Components.Services;
 public sealed class TrayService

@@ -1,6 +1,5 @@
 ﻿@namespace IIM.Components.Visualizations
 @using IIM.Core.Models
-@using IIM.Shared.DTOs
 @using IIM.Shared.Models
 
 <div class="text-response-display">
@@ -20,7 +19,7 @@
                 </h6>
                 @foreach (var transcription in TranscriptionResults)
                 {
-                    <TranscriptionDisplay Result="@transcription" />
+                 
                 }
             </div>
         }
@@ -56,7 +55,7 @@
 @code {
     [Parameter] public InvestigationMessage? Message { get; set; }
     [Parameter] public InvestigationResponse? Response { get; set; }
-    [Parameter] public List<TranscriptionResultDto>? TranscriptionResults { get; set; }
+    [Parameter] public List<TranscriptionResult>? TranscriptionResults { get; set; }
     [Parameter] public List<Entity>? Entities { get; set; }
     
     private string FormatContent(string content)

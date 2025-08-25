@@ -1,0 +1,143 @@
+
+
+using IIM.Core.Configuration;
+using IIM.Shared.Enums;
+using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.ML.OnnxRuntime;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace IIM.Infrastructure.Data
+{
+    /// <summary>
+    /// Database-backed implementation of model metadata service using SQLite
+    /// </summary>
+    public class DatabaseModelConfigurationService : IModelConfigurationService
+    {
+        private readonly ILogger<DatabaseModelConfigurationService> _logger;
+        private readonly ModelDbContext _context;
+        private readonly IAuditService? _auditLogger;
+
+        public DatabaseModelConfigurationService(
+            ILogger<DatabaseModelConfigurationService> logger,
+            ModelDbContext context,
+            IAuditService? auditLogger = null)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _auditLogger = auditLogger;
+        }
+
+        public async Task<Shared.Models.ModelConfiguration> GetMetadataAsync(string modelId, CancellationToken ct = default)
+        {
+            var entity = await _context.ModelConfigurations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.ModelId == modelId && m.IsEnabled, ct);
+
+            if (entity != null)
+            {
+                return entity;
+            }
+
+            _logger.LogWarning("Metadata not found for model {ModelId}, returning defaults", modelId);
+            return CreateDefaultMetadata(modelId);
+        }
+
+        public async Task RegisterMetadataAsync(Shared.Models.ModelConfiguration metadata, CancellationToken ct = default)
+        {
+            if (metadata == null)
+                throw new ArgumentNullException(nameof(metadata));
+
+            var entity = await _context.ModelConfigurations
+                .FirstOrDefaultAsync(m => m.ModelId == metadata.ModelId, ct);
+
+            if (entity == null)
+            {
+                entity = new Shared.Models.ModelConfiguration
+                {
+                    ModelId = metadata.ModelId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.ModelConfigurations.Add(entity);
+                _logger.LogInformation("Registering new model metadata for {ModelId}", metadata.ModelId);
+            }
+            else
+            {
+                entity.UpdatedAt = DateTime.UtcNow;
+                _logger.LogInformation("Updating model metadata for {ModelId}", metadata.ModelId);
+            }
+
+            // Update properties
+            entity.ModelPath = metadata.ModelPath;
+            entity.Type = metadata.Type;
+            entity.RequiresGpu = metadata.RequiresGpu;
+            entity.SupportsBatching = metadata.SupportsBatching;
+            entity.MaxBatchSize = metadata.MaxBatchSize;
+            entity.EstimatedMemoryMb = metadata.EstimatedMemoryMb;
+            entity.DefaultPriority = metadata.DefaultPriority;
+            entity.Provider = metadata.Provider;
+            entity.Properties = metadata.Properties;
+
+            await _context.SaveChangesAsync(ct);
+        }
+
+        public async Task<List<ModelConfiguration>> GetAllMetadataAsync(CancellationToken ct = default)
+        {
+            var entities = await _context.ModelConfigurations
+                .AsNoTracking()
+                .Where(m => m.IsEnabled)
+                .OrderBy(m => m.ModelId)
+                .ToListAsync(ct);
+
+            return entities;
+        }
+
+        public async Task LoadFromConfigurationAsync(CancellationToken ct = default)
+        {
+            await _context.Database.EnsureCreatedAsync(ct);
+            var count = await _context.ModelConfigurations.CountAsync(ct);
+            _logger.LogInformation("Database contains metadata for {Count} models", count);
+        }
+
+  
+
+        private Shared.Models.ModelConfiguration CreateDefaultMetadata(string modelId)
+        {
+            return new Shared.Models.ModelConfiguration
+            {
+                ModelId = modelId,
+                Type = InferModelType(modelId),
+                RequiresGpu = true,
+                SupportsBatching = false,
+                MaxBatchSize = 1,
+                EstimatedMemoryMb = 1000,
+                DefaultPriority = 1,
+                Provider = "cpu"
+            };
+        }
+
+        private ModelType InferModelType(string modelId)
+        {
+            var lower = modelId.ToLowerInvariant();
+
+            if (lower.Contains("whisper"))
+                return ModelType.Whisper;
+
+            if (lower.Contains("embedding") || lower.Contains("bert") || lower.Contains("minilm"))
+                return ModelType.Embedding;
+
+            // Note: ModelType.Vision might not exist in your enums
+            // Use LLM as fallback for vision models for now
+            if (lower.Contains("vision") || lower.Contains("clip"))
+                return ModelType.LLM; // TODO: Add Vision to ModelType enum if needed
+
+            return ModelType.LLM;
+        }
+    }
+}

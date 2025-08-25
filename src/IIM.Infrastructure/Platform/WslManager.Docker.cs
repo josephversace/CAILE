@@ -12,7 +12,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using IIM.Infrastructure.Platform.Models;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Infrastructure.Platform

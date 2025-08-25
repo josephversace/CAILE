@@ -1,6 +1,3 @@
-using IIM.Application.Commands.Investigation;
-using IIM.Application.Commands.Models;
-using IIM.Application.Commands.Wsl;
 using IIM.Core.Mediator;
 using IIM.Core.Models;
 using IIM.Core.Services;
@@ -11,6 +8,9 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using IIM.Shared.Models;
+using IIM.Application.Investigation;
+using IIM.Application.Models;
+using IIM.Application.Wsl;
 
 namespace IIM.Application.Handlers
 {

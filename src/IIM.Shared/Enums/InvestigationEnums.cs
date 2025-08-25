@@ -23,13 +23,6 @@ public enum InvestigationStatus
     Archived
 }
 
-public enum MessageRole
-{
-    User,
-    Assistant,
-    System,
-    Tool
-}
 
 public enum AttachmentType
 {

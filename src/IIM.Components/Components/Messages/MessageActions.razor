@@ -361,8 +361,7 @@
 
     private async Task HandleAction(MessageAction action)
     {
-        Logger.LogInformation("Message action triggered: {Action} for message {MessageId}",
-            action.Type, Message.Id);
+        //Logger.LogInformation("Message action triggered: {Action} for message {MessageId}",  action.Type, Message.Id);
 
         switch (action.Type)
         {

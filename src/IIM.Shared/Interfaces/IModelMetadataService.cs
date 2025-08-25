@@ -12,11 +12,11 @@ namespace IIM.Shared.Interfaces
     /// <summary>
     /// Service interface for managing model metadata
     /// </summary>
-    public interface IModelMetadataService
+    public interface IModelConfigurationService
     {
-        Task<ModelMetadata> GetMetadataAsync(string modelId, CancellationToken ct = default);
-        Task RegisterMetadataAsync(ModelMetadata metadata, CancellationToken ct = default);
-        Task<List<ModelMetadata>> GetAllMetadataAsync(CancellationToken ct = default);
+        Task<ModelConfiguration> GetMetadataAsync(string modelId, CancellationToken ct = default);
+        Task RegisterMetadataAsync(ModelConfiguration metadata, CancellationToken ct = default);
+        Task<List<ModelConfiguration>> GetAllMetadataAsync(CancellationToken ct = default);
         Task LoadFromConfigurationAsync(CancellationToken ct = default);
     }
 

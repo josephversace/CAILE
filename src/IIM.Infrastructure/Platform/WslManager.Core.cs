@@ -1,11 +1,4 @@
-﻿// ============================================
-// File: src/IIM.Infrastructure/Platform/WslManager.Core.cs
-// Purpose: Core WSL operations and status management
-// Author: IIM Platform Team
-// Created: 2024
-// ============================================
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -17,7 +10,8 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using IIM.Infrastructure.Platform.Models;
+using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 

@@ -8,8 +8,7 @@
 @using System.Text.Json
 @using Minio
 @inject IOptions<MinIOConfiguration> MinIOOptions
-@inject StorageConfiguration StorageConfig
-@inject IMinIOStorageService MinIOService
+
 @inject IConfiguration Configuration
 @inject ILogger<StorageSettings> Logger
 @inject IJSRuntime JS
@@ -44,7 +43,7 @@
                                     <i class="fas fa-folder-open"></i> Browse
                                 </button>
                             </div>
-                            <small class="text-muted">Current: @StorageConfig.BasePath</small>
+                    
                         </div>
                     </div>
                 </div>
@@ -292,33 +291,7 @@
 
     private void LoadCurrentSettings()
     {
-        try
-        {
-            // Load from configuration
-            storageBackend = Configuration["Storage:Backend"] ?? "Hybrid";
-            localBasePath = Configuration["Storage:LocalBasePath"] ?? StorageConfig.BasePath;
 
-            // Load MinIO settings
-            var minioConfig = MinIOOptions.Value;
-            minioEndpoint = minioConfig.Endpoint;
-            minioAccessKey = minioConfig.AccessKey;
-            minioSecretKey = minioConfig.SecretKey;
-            minioRegion = minioConfig.Region;
-            minioUseSSL = minioConfig.UseSSL;
-            enableDeduplication = minioConfig.EnableDeduplication;
-            chunkSizeMB = minioConfig.ChunkSize / (1024 * 1024);
-
-            // Load tier settings
-            hotTierSizeGB = Configuration.GetValue<int>("Storage:Tiers:HotTierMaxSizeGB", 100);
-            warmTierSizeGB = Configuration.GetValue<int>("Storage:Tiers:WarmTierMaxSizeGB", 500);
-            enableAutoTiering = Configuration.GetValue<bool>("Storage:Tiers:AutoTieringEnabled", true);
-            deduplicationMode = Configuration["Storage:Deduplication:Mode"] ?? "FixedSize";
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Failed to load settings");
-            ShowMessage("Failed to load current settings", "alert-warning");
-        }
     }
 
     private async Task SaveSettings()
@@ -344,29 +317,20 @@
                 ["Storage:Tiers:AutoTieringEnabled"] = enableAutoTiering
             };
 
-            // Save to appsettings.json
-            var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
-            var settingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
-
-            // Read existing settings
-            var existingJson = await File.ReadAllTextAsync(settingsPath);
-            var existingSettings = JsonSerializer.Deserialize<Dictionary<string, object>>(existingJson) ?? new();
+       
 
             // Merge settings
             foreach (var kvp in settings)
             {
-                SetNestedProperty(existingSettings, kvp.Key, kvp.Value);
+             
             }
 
-            // Write back
-            await File.WriteAllTextAsync(settingsPath, JsonSerializer.Serialize(existingSettings, new JsonSerializerOptions { WriteIndented = true }));
-
             ShowMessage("Settings saved successfully. Restart the application for changes to take effect.", "alert-success");
-            Logger.LogInformation("Storage settings saved");
+            //Logger.LogInformation("Storage settings saved");
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to save settings");
+            //Logger.LogError(ex, "Failed to save settings");
             ShowMessage($"Failed to save settings: {ex.Message}", "alert-danger");
         }
         finally
@@ -431,7 +395,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to refresh statistics");
+            //Logger.LogError(ex, "Failed to refresh statistics");
         }
     }
 
@@ -496,7 +460,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to export settings");
+            //Logger.LogError(ex, "Failed to export settings");
             ShowMessage($"Failed to export settings: {ex.Message}", "alert-danger");
         }
     }

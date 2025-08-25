@@ -7,7 +7,8 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
          // for ProcessResult (if defined there)
-using IIM.Shared.Interfaces;   // for IEvidenceStore (if defined there)
+using IIM.Shared.Interfaces;
+using IIM.Shared.Models;   // for IEvidenceStore (if defined there)
 
 namespace IIM.Plugin.SDK;
 

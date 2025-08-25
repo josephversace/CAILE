@@ -1,0 +1,93 @@
+﻿@page "/models"
+@using IIM.Shared.Models
+@using Microsoft.AspNetCore.SignalR.Client
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<h3>Available Models</h3>
+
+@if (models == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <ul>
+        @foreach (var model in models)
+        {
+            <li>
+                <b>@model.Name</b>
+                <button @onclick="() => DownloadModel(model.Id)">Download</button>
+                <button @onclick="() => CancelDownload(model.Id)">Cancel</button>
+                <button @onclick="() => DeleteModel(model.Id)">Delete</button>
+                <button @onclick="() => RefreshModel(model.Id)">Refresh</button>
+                <div>
+               
+                </div>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<ModelInfo> models;
+    private Dictionary<string, DownloadProgress> downloadProgress = new();
+    private HubConnection hubConnection;
+    private string connectionId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadModels();
+        await SetupSignalR();
+    }
+
+    private async Task LoadModels()
+    {
+      
+    }
+
+    private async Task SetupSignalR()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Nav.ToAbsoluteUri("/modeldownloadhub"))
+            .Build();
+
+        hubConnection.On<string, string, int>("DownloadProgress", (modelId, message, progress) =>
+        {
+            downloadProgress[modelId] = new DownloadProgress
+            {
+                ModelId = modelId,
+          
+                ProgressPercent = progress
+            };
+            InvokeAsync(StateHasChanged);
+        });
+
+        await hubConnection.StartAsync();
+        connectionId = await hubConnection.InvokeAsync<string>("GetConnectionId");
+    }
+
+    private async Task DownloadModel(string modelId)
+    {
+        if (string.IsNullOrEmpty(connectionId))
+            return;
+        await Http.PostAsync($"/api/models/{modelId}/download?connectionId={connectionId}", null);
+    }
+
+    private async Task CancelDownload(string modelId)
+    {
+        if (string.IsNullOrEmpty(connectionId))
+            return;
+        await Http.PostAsync($"/api/models/{modelId}/cancel?connectionId={connectionId}", null);
+    }
+
+    private async Task DeleteModel(string modelId)
+    {
+        await Http.DeleteAsync($"/api/models/{modelId}");
+    }
+
+    private async Task RefreshModel(string modelId)
+    {
+        await Http.PostAsync($"/api/models/{modelId}/refresh", null);
+    }
+}

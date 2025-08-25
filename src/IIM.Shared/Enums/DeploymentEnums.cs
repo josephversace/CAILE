@@ -24,4 +24,28 @@ namespace IIM.Shared.Enums
         Server
     }
 
+    public enum DeviceType
+    {
+        /// <summary>
+        /// CPU device
+        /// </summary>
+        CPU,
+        /// <summary>
+        /// NVIDIA GPU device
+        /// </summary>
+        CUDA,
+        /// <summary>
+        /// AMD GPU device
+        /// </summary>
+        ROCm,
+        /// <summary>
+        /// Apple Silicon GPU device
+        /// </summary>
+        MPS,
+
+        Vulkan,
+
+        GPU
+    }
+
 }

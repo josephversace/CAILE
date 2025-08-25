@@ -9,14 +9,13 @@
     <Folder Include="Models\Analysis\" />
     <Folder Include="Models\Audit\" />
     <Folder Include="Models\Configuration\" />
-    <Folder Include="Models\Core\" />
-    <Folder Include="Models\Infrastructure\" />
     <Folder Include="Models\Investigation\" />
-    <Folder Include="Models\Notifications\" />
     <Folder Include="Models\Reporting\" />
     <Folder Include="Models\Storage\" />
     <Folder Include="Models\Supporting\" />
-    <Folder Include="Models\VectorDb\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
   </ItemGroup>
 </Project>
 

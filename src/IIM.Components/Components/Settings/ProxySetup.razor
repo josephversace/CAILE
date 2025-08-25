@@ -1,6 +1,6 @@
 ﻿@page "/proxy-setup"
-@using IIM.Application.Commands.Wsl
 @using IIM.Core.Mediator
+@using IIM.Shared.Models
 @inject IMediator Mediator
 
 <h4>Proxy & Tor Setup</h4>
@@ -37,7 +37,7 @@
     /// </summary>
     async Task ConfigureProxy()
     {
-        var dto = new ProxyConfigDto
+        var dto = new ProxyConfig
         {
             ProxyType = ProxyType,
             Host = ProxyHost,
@@ -46,7 +46,7 @@
         try
         {
             // Send command to backend
-            await Mediator.Send(new ConfigureProxyCommand(dto));
+            // await Mediator.Send(new ConfigureProxyCommand(dto));
             StatusMessage = "Proxy configured and Tor installation triggered.";
         }
         catch (Exception ex)

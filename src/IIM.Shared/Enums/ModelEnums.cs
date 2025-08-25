@@ -1,11 +1,24 @@
 ﻿namespace IIM.Shared.Enums;
 
+public enum ModelFormat
+{
+    Onnx,
+    GGUF,
+    GGML,
+    Safetensors,
+    Pytorch,
+    TensorFlow,
+    Unknown
+}
+
+
 public enum ModelType
 {
     LLM,
     Embedding,
     Whisper,
     CLIP,
+    ONNX,
     OCR,
     ObjectDetection,
     FaceRecognition,
@@ -77,14 +90,62 @@ public enum ModelPriority
     Throughput  // Maximize throughput, may have higher latency
 }
 
-public enum ModelFormat
+public enum PromptFormat
 {
-    Unknown,
-    ONNX,
-    GGUF,
-    GGML,
-    PyTorch,
-    TensorFlow
+    /// <summary>
+    /// Plain, untitled prompt (e.g., GPT-2/3 base, no instruction).
+    /// </summary>
+    PlainText = 0,
+
+    /// <summary>
+    /// Instruction/response format (e.g., Alpaca, Dolly, FLAN).
+    /// </summary>
+    Instruction,
+
+    /// <summary>
+    /// OpenAI ChatML format (&lt;|system|&gt; / &lt;|user|&gt; / &lt;|assistant|&gt;).
+    /// </summary>
+    ChatML,
+
+    /// <summary>
+    /// LLaMA-2/3 chat format ([INST], &lt;&lt;SYS&gt;&gt;).
+    /// </summary>
+    LlamaChat,
+
+    /// <summary>
+    /// Vicuna/ShareGPT or OpenChat (USER: ... ASSISTANT: ...).
+    /// </summary>
+    Vicuna,
+
+    /// <summary>
+    /// Harmony format (&lt;|im_start|&gt;role ... &lt;|im_end|&gt;).
+    /// </summary>
+    Harmony,
+
+    /// <summary>
+    /// Zephyr/OpenHermes chat format (&lt;|system|&gt; / &lt;|user|&gt; / &lt;|assistant|&gt;).
+    /// </summary>
+    Zephyr,
+
+    /// <summary>
+    /// MPT Chat (User: ... Assistant: ...).
+    /// </summary>
+    Mpt,
+
+    /// <summary>
+    /// Orca format (&lt;|prompter|&gt; / &lt;|assistant|&gt;).
+    /// </summary>
+    Orca,
+
+    /// <summary>
+    /// Tool-calling/function-calling (structured JSON with function calls).
+    /// </summary>
+    ToolCall,
+
+    /// <summary>
+    /// Multimodal (for vision+text, e.g., with &lt;image&gt; tags).
+    /// </summary>
+    Multimodal
 }
 
 
@@ -98,3 +159,14 @@ public enum ModelRuntimeState
     Disposing
 }
 
+/// <summary>
+/// Available ONNX execution providers.
+/// </summary>
+public enum ExecutionProvider
+{
+    CPU,
+    DirectML,
+    Vulkan,
+    CUDA,
+    ROCm
+}

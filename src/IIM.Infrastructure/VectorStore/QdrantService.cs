@@ -7,7 +7,8 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
  
-using IIM.Shared.Interfaces; 
+using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Infrastructure.VectorStore
@@ -883,6 +884,51 @@ namespace IIM.Infrastructure.VectorStore
                 _ => null!
             };
         }
+
+    
+
+        Task<List<Cluster>> IQdrantService.GetClustersAsync(string collectionName, int numClusters, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<CollectionInfo> IQdrantService.GetCollectionInfoAsync(string collectionName, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<QdrantInfo> IQdrantService.GetInfoAsync(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<VectorPoint?> IQdrantService.GetPointAsync(string collectionName, string id, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<List<VectorPoint>> IQdrantService.GetPointsAsync(string collectionName, List<string> ids, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<StorageInfo> IQdrantService.GetStorageInfoAsync(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        Task<List<SearchResult>> IQdrantService.SearchBatchAsync(string collectionName, List<float[]> vectors, int limit, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<List<SearchResult>> IQdrantService.SearchByTextAsync(string collectionName, string text, int limit, float scoreThreshold, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+  
 
         #endregion
     }

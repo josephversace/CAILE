@@ -1,9 +1,10 @@
 using IIM.Core.AI;
-using IIM.Core.Inference;
+
 using IIM.Core.Models;
 using IIM.Shared.Enums;
-
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.ML.OnnxRuntime;
 
 namespace IIM.Core.Tests.Mocks;
 
@@ -116,7 +117,7 @@ public class MockModelOrchestrator : IModelOrchestrator
         return Task.FromResult(false);
     }
 
-    public Task<ModelHandle> LoadModelAsync(ModelRequest request, IProgress<float>? progress = null, CancellationToken cancellationToken = default)
+    public Task<ModelHandle> LoadModelAsync(ModelLoadRequest request, IProgress<float>? progress = null, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Mock: LoadModelAsync called for {ModelId}", request.ModelId);
         return Task.FromResult(new ModelHandle
@@ -268,12 +269,32 @@ public class MockModelOrchestrator : IModelOrchestrator
 
         return new InferenceResult
         {
-            ModelId = modelId,
+            Id = modelId,
             Output = output,
             InferenceTime = delay,
             TokensProcessed = tokensProcessed,
             TokensPerSecond = tokensPerSecond
         };
+    }
+
+    Task IModelOrchestrator.UnloadModelAsync(string modelId, CancellationToken cancellationToken)
+    {
+        return UnloadModelAsync(modelId, cancellationToken);
+    }
+
+    public InferenceSession GetOnnxSession(string modelId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public long GetTotalMemoryUsageAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Dispose()
+    {
+        throw new NotImplementedException();
     }
 
     /// <summary>
