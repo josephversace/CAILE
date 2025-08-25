@@ -1,6 +1,6 @@
-using IIM.Application.Interfaces;
+
 using IIM.Core.AI;
-using IIM.Core.Inference;
+
 using IIM.Core.Models;
 using IIM.Shared.Enums;
 
@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using IIM.Shared.Models;
+using IIM.Shared.Interfaces;
 
 namespace IIM.Application.Services
 {
@@ -65,7 +66,7 @@ namespace IIM.Application.Services
             _logger.LogInformation("Starting audio transcription for {AudioPath}", audioPath);
 
             // Ensure Whisper model is loaded - using correct ModelType enum value
-            var modelHandle = await _orchestrator.LoadModelAsync(new ModelRequest
+            var modelHandle = await _orchestrator.LoadModelAsync(new ModelLoadRequest
             {
                 ModelId = "whisper-base",
                 ModelPath = GetModelPath("whisper-base"),
@@ -117,7 +118,7 @@ namespace IIM.Application.Services
             _logger.LogInformation("Starting image search for top {TopK} results", topK);
 
             // Ensure CLIP model is loaded - using correct ModelType enum value
-            var modelHandle = await _orchestrator.LoadModelAsync(new ModelRequest
+            var modelHandle = await _orchestrator.LoadModelAsync(new ModelLoadRequest
             {
                 ModelId = "clip-vit-base",
                 ModelPath = GetModelPath("clip-vit-base"),
@@ -185,7 +186,7 @@ namespace IIM.Application.Services
 
             // RAG pipeline uses embedding model + LLM model
             // Using correct ModelType enum values
-            var embedderHandle = await _orchestrator.LoadModelAsync(new ModelRequest
+            var embedderHandle = await _orchestrator.LoadModelAsync(new ModelLoadRequest
             {
                 ModelId = "bge-base-en",
                 ModelPath = GetModelPath("bge-base-en"),
@@ -193,7 +194,7 @@ namespace IIM.Application.Services
                 ModelSize = "base"
             }, null, cancellationToken);
 
-            var llmHandle = await _orchestrator.LoadModelAsync(new ModelRequest
+            var llmHandle = await _orchestrator.LoadModelAsync(new ModelLoadRequest
             {
                 ModelId = "llama-3.1-8b",
                 ModelPath = GetModelPath("llama-3.1-8b"),
@@ -403,6 +404,16 @@ namespace IIM.Application.Services
             catch { }
 
             return false;
+        }
+
+        Task<TranscriptionResult> IInferenceService.TranscribeAudioAsync(string audioPath, string language, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<DeviceInfo> IInferenceService.GetDeviceInfo()
+        {
+            throw new NotImplementedException();
         }
     }
 }

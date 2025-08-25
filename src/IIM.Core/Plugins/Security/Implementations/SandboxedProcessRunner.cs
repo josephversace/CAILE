@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using IIM.Shared.Interfaces;
-
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Core.Plugins.Security.Implementations;

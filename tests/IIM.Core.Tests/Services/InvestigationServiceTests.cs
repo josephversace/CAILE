@@ -1,10 +1,4 @@
-// ============================================
-// File: tests/IIM.Core.Tests/Services/InvestigationServiceTests.cs
-// Complete test implementation with all required mocks
-// ============================================
-
 using FluentAssertions;
-using IIM.Application.Interfaces;
 using IIM.Application.Services;
 using IIM.Components.Pages;
 using IIM.Core.AI;
@@ -25,6 +19,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using IIM.Shared.Models;
 using Xunit;
+using IIM.Shared.Interfaces;
+using IIM.Core.Templates;
 
 namespace IIM.Core.Tests.Services
 {
@@ -164,7 +160,7 @@ namespace IIM.Core.Tests.Services
             var query = new InvestigationQuery
             {
                 Text = "Test query",
-                EnabledTools = new List<string> { "search" },
+             
                 Attachments = new List<Attachment>(),
                 Context = new Dictionary<string, object>(),
                 Timestamp = DateTimeOffset.UtcNow
@@ -214,8 +210,7 @@ namespace IIM.Core.Tests.Services
             var sessionId = Guid.NewGuid().ToString();
             var query = new InvestigationQuery
             {
-                Text = "Test query",
-                EnabledTools = new List<string>()
+                Text = "Test query"
             };
 
             var session = new InvestigationSession
@@ -308,7 +303,7 @@ namespace IIM.Core.Tests.Services
             // Assert
             result.Should().NotBeNull();
             result.Id.Should().Be(caseId);
-            result.Name.Should().Be("Sample Investigation");
+            result.Title.Should().Be("Sample Investigation");
         }
 
         [Fact]

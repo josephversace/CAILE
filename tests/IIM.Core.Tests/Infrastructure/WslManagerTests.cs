@@ -1,11 +1,4 @@
-﻿// ============================================
-// File: tests/IIM.Core.Tests/Infrastructure/WslManagerTests.cs
-// Purpose: Unit tests for WslManager functionality
-// Author: IIM Platform Team
-// Created: 2024
-// ============================================
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -14,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using IIM.Infrastructure.Platform;
-using IIM.Infrastructure.Platform.Models;  // Add this for WslDistro, WslStatus, etc.
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;

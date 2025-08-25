@@ -496,7 +496,7 @@
 
     private async Task HandleAction(QuickAction action)
     {
-        Logger.LogInformation("Quick action selected: {ActionId} - {Title}", action.Id, action.Title);
+        //Logger.LogInformation("Quick action selected: {ActionId} - {Title}", action.Id, action.Title);
 
         if (action.Command == "template" && ShowTemplates)
         {

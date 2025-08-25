@@ -1,11 +1,4 @@
-﻿// ============================================
-// File: src/IIM.Infrastructure/Platform/WslManager.Network.cs
-// Purpose: Network, proxy, and health monitoring operations
-// Author: IIM Platform Team
-// Created: 2024
-// ============================================
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -13,7 +6,8 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using IIM.Infrastructure.Platform.Models;
+
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Infrastructure.Platform

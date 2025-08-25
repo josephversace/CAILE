@@ -1,9 +1,10 @@
 ﻿@namespace IIM.Components.Containers
-@using IIM.Application.Interfaces
+
 @using IIM.Components.Models
 @using IIM.Core.Models
 @using IIM.Core.Services
 @using IIM.Shared.Enums
+@using IIM.Shared.Interfaces
 @using IIM.Shared.Models
 @using IIM.Components.Messages
 @using IIM.Components.Input
@@ -454,7 +455,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to initialize investigation container");
+            //Logger.LogError(ex, "Failed to initialize investigation container");
             ErrorMessage = "Failed to initialize session. Please try again.";
         }
     }
@@ -473,7 +474,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to load session {SessionId}", sessionId);
+            //Logger.LogError(ex, "Failed to load session {SessionId}", sessionId);
             ErrorMessage = $"Failed to load session: {ex.Message}";
         }
     }
@@ -496,7 +497,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to create new session");
+            //Logger.LogError(ex, "Failed to create new session");
             ErrorMessage = $"Failed to create session: {ex.Message}";
         }
     }
@@ -536,7 +537,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to connect to hub");
+            //Logger.LogError(ex, "Failed to connect to hub");
             // Continue without real-time updates
         }
     }
@@ -580,7 +581,7 @@
                 var query = new InvestigationQuery
                 {
                     Text = content,
-                    EnabledTools = AvailableTools,
+                  
                     Timestamp = DateTimeOffset.UtcNow,
                     // Add any attachments if they were staged
                     Attachments = _stagedAttachments ?? new List<Attachment>()
@@ -597,7 +598,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to send message");
+            //Logger.LogError(ex, "Failed to send message");
             ErrorMessage = $"Failed to send message: {ex.Message}";
         }
         finally
@@ -619,7 +620,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to send query to backend");
+            //Logger.LogError(ex, "Failed to send query to backend");
             throw; // Re-throw to be handled by caller
         }
     }
@@ -644,7 +645,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to attach files");
+            //Logger.LogError(ex, "Failed to attach files");
             ErrorMessage = "Failed to attach files. Please try again.";
         }
     }
@@ -652,7 +653,7 @@
     // Fix HandleQuickActionSelected - it should use string parameter
     private async Task HandleQuickActionSelected(QuickActionResult result)
     {
-        Logger.LogInformation("Quick action selected: {Command}", result.Command);
+        //Logger.LogInformation("Quick action selected: {Command}", result.Command);
         
         // If the action has a prompt, send it as a message
         if (!string.IsNullOrEmpty(result.Prompt))
@@ -688,8 +689,7 @@
     // Fix HandleQuickAction - simplified version
     private async Task HandleQuickAction(QuickActionResult result)
     {
-        Logger.LogInformation("Quick action triggered: {ActionId} - {Command}",
-            result.ActionId, result.Command);
+        //Logger.LogInformation("Quick action triggered: {ActionId} - {Command}", result.ActionId, result.Command);
 
         // Handle the quick action based on command
         switch (result.Command)
@@ -747,7 +747,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to process voice input");
+            //Logger.LogError(ex, "Failed to process voice input");
             ErrorMessage = "Failed to process voice input.";
         }
         finally
@@ -758,7 +758,7 @@
     
     private async Task SelectTool(string toolId)
     {
-        Logger.LogInformation("Tool selected: {ToolId}", toolId);
+        //Logger.LogInformation("Tool selected: {ToolId}", toolId);
         await Task.CompletedTask;
     }
 
@@ -781,7 +781,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to execute tool {ToolName}", args.toolName);
+            //Logger.LogError(ex, "Failed to execute tool {ToolName}", args.toolName);
             ErrorMessage = $"Failed to execute {args.toolName}";
         }
         finally
@@ -793,21 +793,21 @@
     private async Task HandleAttachmentClick(Attachment attachment)
     {
         // Handle attachment click (view, download, etc.)
-        Logger.LogInformation("Attachment clicked: {FileName}", attachment.FileName);
+        //Logger.LogInformation("Attachment clicked: {FileName}", attachment.FileName);
         await Task.CompletedTask;
     }
     
     private async Task HandleCitationClick(Citation citation)
     {
         // Handle citation click (show source, etc.)
-        Logger.LogInformation("Citation clicked: {Source}", citation.Source);
+        //Logger.LogInformation("Citation clicked: {Source}", citation.Source);
         await Task.CompletedTask;
     }
     
     private async Task HandleMessageAction(InvestigationMessage message)
     {
         // Handle message actions (edit, regenerate, export)
-        Logger.LogInformation("Message action for: {MessageId}", message.Id);
+        //Logger.LogInformation("Message action for: {MessageId}", message.Id);
         await Task.CompletedTask;
     }
 

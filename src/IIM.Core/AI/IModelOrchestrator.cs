@@ -1,116 +1,59 @@
 using IIM.Core.Models;
 using IIM.Shared.Enums;
 using IIM.Shared.Models;
+using Microsoft.ML.OnnxRuntime;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Reflection;
-using System.Security.AccessControl;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace IIM.Core.AI
 {
     /// <summary>
-    /// Orchestrates AI model loading, unloading, and resource management.
-    /// Works with existing ModelConfiguration and ModelHandle types.
+    /// Abstraction for loading, unloading, and managing machine learning models (ONNX, GGUF, etc).
+    /// Provides ONNX InferenceSession for inference when applicable.
     /// </summary>
-    public interface IModelOrchestrator
+    public interface IModelOrchestrator : IDisposable
     {
-        // Model Lifecycle
-        Task<ModelHandle> LoadModelAsync(ModelRequest request, IProgress<float>? progress = null, CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Loads a model into memory and prepares it for inference.
+        /// </summary>
+        Task<ModelHandle> LoadModelAsync(ModelLoadRequest request, IProgress<float>? progress = null, CancellationToken cancellationToken = default);
 
-        Task<bool> UnloadModelAsync(string modelId, CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Unloads a model from memory and releases its resources.
+        /// </summary>
+        Task UnloadModelAsync(string modelId, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Returns true if the model is currently loaded in memory.
+        /// </summary>
         Task<bool> IsModelLoadedAsync(string modelId, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gets a list of all currently loaded models.
+        /// </summary>
         Task<List<ModelConfiguration>> GetLoadedModelsAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gets a list of all models available on disk.
+        /// </summary>
         Task<List<ModelConfiguration>> GetAvailableModelsAsync(CancellationToken cancellationToken = default);
 
-        // Model Information (uses existing ModelConfiguration)
+        /// <summary>
+        /// Gets information about a model, either loaded or on disk.
+        /// </summary>
         Task<ModelConfiguration?> GetModelInfoAsync(string modelId, CancellationToken cancellationToken = default);
-        Task<bool> UpdateModelParametersAsync(string modelId, Dictionary<string, object> parameters, CancellationToken cancellationToken = default);
 
-        // Resource Management
-        Task<GpuStats> GetGpuStatsAsync(CancellationToken cancellationToken = default);
-        Task<ModelResourceUsage> GetModelResourceUsageAsync(string modelId, CancellationToken cancellationToken = default);
-        Task<bool> OptimizeMemoryAsync(CancellationToken cancellationToken = default);
-        Task<long> GetTotalMemoryUsageAsync(CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Gets an ONNX InferenceSession for the specified model (if ONNX).
+        /// Throws if the model/session is not loaded.
+        /// </summary>
+        InferenceSession GetOnnxSession(string modelId);
 
-        // Model Download & Installation
-        Task<bool> DownloadModelAsync(string modelId, string source, IProgress<DownloadProgress>? progress = null, CancellationToken cancellationToken = default);
-        Task<bool> DeleteModelAsync(string modelId, CancellationToken cancellationToken = default);
-        Task<long> GetModelSizeAsync(string modelId, CancellationToken cancellationToken = default);
-        Task<ModelStats> GetStatsAsync();
-
-      
-        // Events
-        event EventHandler<ModelLoadedEventArgs>? ModelLoaded;
-        event EventHandler<ModelUnloadedEventArgs>? ModelUnloaded;
-        event EventHandler<ModelErrorEventArgs>? ModelError;
-        event EventHandler<ResourceThresholdEventArgs>? ResourceThresholdExceeded;
-    }
-
-    // Additional DTOs needed for the orchestrator
-    public class GpuStats
-    {
-        public string DeviceName { get; set; } = string.Empty;
-        public long TotalMemory { get; set; }
-        public long UsedMemory { get; set; }
-        public long AvailableMemory { get; set; }
-        public float UtilizationPercent { get; set; }
-        public float TemperatureCelsius { get; set; }
-        public float PowerWatts { get; set; }
-        public bool IsROCmAvailable { get; set; }
-        public bool IsDirectMLAvailable { get; set; }
-    }
-
-    public class ModelResourceUsage
-    {
-        public string ModelId { get; set; } = string.Empty;
-        public long MemoryBytes { get; set; }
-        public long VramBytes { get; set; }
-        public float CpuPercent { get; set; }
-        public float GpuPercent { get; set; }
-        public int ActiveSessions { get; set; }
-        public TimeSpan Uptime { get; set; }
-    }
-
-    public class DownloadProgress
-    {
-        public string ModelId { get; set; } = string.Empty;
-        public long TotalBytes { get; set; }
-        public long DownloadedBytes { get; set; }
-        public float ProgressPercent { get; set; }
-        public float SpeedMBps { get; set; }
-        public TimeSpan? EstimatedTimeRemaining { get; set; }
-    }
-
-    // Event Args
-    public class ModelLoadedEventArgs : EventArgs
-    {
-        public string ModelId { get; set; } = string.Empty;
-        public ModelType Type { get; set; }
-        public long MemoryUsage { get; set; }
-        public TimeSpan LoadTime { get; set; }
-    }
-
-    public class ModelUnloadedEventArgs : EventArgs
-    {
-        public string ModelId { get; set; } = string.Empty;
-        public string Reason { get; set; } = string.Empty;
-    }
-
-    public class ModelErrorEventArgs : EventArgs
-    {
-        public string ModelId { get; set; } = string.Empty;
-        public string Error { get; set; } = string.Empty;
-        public Exception? Exception { get; set; }
-    }
-
-    public class ResourceThresholdEventArgs : EventArgs
-    {
-        public string ResourceType { get; set; } = string.Empty;
-        public float CurrentUsage { get; set; }
-        public float Threshold { get; set; }
-        public string Recommendation { get; set; } = string.Empty;
+        long GetTotalMemoryUsageAsync();
     }
 }
+
+
+

@@ -1,13 +1,6 @@
 
 @using IIM.Core.Models
 @using IIM.Components.Services
-@using IIM.Core.RAG
-@using IIM.Core.Services
-@using IIM.Infrastructure.Platform
-@using IIM.Shared.Interfaces
-@inject IModelManagementService ModelService
-@inject IWslManager WslManager
-@inject IQdrantService QdrantService
 @implements IDisposable
 
 <div class="status-bar">
@@ -67,26 +60,7 @@
     {
         try
         {
-            // Get GPU stats
-            var gpuStats = await ModelService.GetGpuStatsAsync();
-            GpuUsagePercent = (int)((gpuStats.UsedMemory / (double)gpuStats.TotalMemory) * 100);
-            GpuMemoryUsed = gpuStats.UsedMemory;
-
-            // Get RAM stats
-            var memInfo = GC.GetTotalMemory(false);
-            RamUsagePercent = (int)((memInfo / (double)(128L * 1024 * 1024 * 1024)) * 100);
-            RamUsed = memInfo;
-
-            // Check Qdrant
-            var qdrantHealthy = await QdrantService.IsHealthyAsync();
-            QdrantStatus = qdrantHealthy ? "Connected" : "Disconnected";
-
-            // Overall status
-            SystemStatus = (qdrantHealthy && GpuUsagePercent < 90 && RamUsagePercent < 90) ? "operational" : "degraded";
-            SystemStatusMessage = SystemStatus == "operational" ? "All Systems Operational" : "System Degraded";
-
-            // Update time
-            CurrentTime = DateTime.Now.ToString("HH:mm");
+     
 
             await InvokeAsync(StateHasChanged);
         }

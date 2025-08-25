@@ -1,7 +1,4 @@
-﻿using IIM.Application.Commands.Investigation;
-using IIM.Application.Commands.Models;
-using IIM.Application.Commands.Wsl;
-using IIM.Core.Mediator;
+﻿using IIM.Core.Mediator;
 using IIM.Shared.Models;
 using IIM.Core.Services;
 using IIM.Shared.Enums;
@@ -9,6 +6,9 @@ using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Application.Investigation;
+using IIM.Application.Models;
+using IIM.Application.Wsl;
 
 namespace IIM.Application.Handlers
 {

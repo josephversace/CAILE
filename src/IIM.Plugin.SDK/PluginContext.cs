@@ -5,6 +5,7 @@ using IIM.Shared.Interfaces;
 using IIM.Plugin.SDK.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using IIM.Shared.Models;
 
 namespace IIM.Plugin.SDK;
 

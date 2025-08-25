@@ -1,18 +1,11 @@
-﻿// ============================================
-// File: src/IIM.Infrastructure/Platform/WslManager.Files.cs  
-// Purpose: File sync and configuration management operations
-// Author: IIM Platform Team
-// Created: 2024
-// ============================================
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using IIM.Infrastructure.Platform.Models;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Infrastructure.Platform

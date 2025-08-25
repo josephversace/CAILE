@@ -1,17 +1,11 @@
-﻿// ============================================
-// File: tests/IIM.Core.Tests/Mocks/MockWslManager.cs
-// Purpose: Complete mock implementation of IWslManager for testing
-// Author: IIM Platform Team
-// Created: 2024
-// ============================================
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using IIM.Infrastructure.Platform;
-using IIM.Infrastructure.Platform.Models;
+using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Core.Tests.Mocks

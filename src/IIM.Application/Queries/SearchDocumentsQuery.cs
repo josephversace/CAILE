@@ -34,7 +34,7 @@ namespace IIM.Application.Queries
         /// <summary>
         /// Time range filter
         /// </summary>
-        public TimeRangeDto? TimeRange { get; set; }
+        public TimeRange? TimeRange { get; set; }
 
         /// <summary>
         /// Tags to filter by

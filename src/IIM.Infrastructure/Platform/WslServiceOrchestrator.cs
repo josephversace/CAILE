@@ -12,23 +12,13 @@ using System.Threading.Tasks;
 using IIM.Shared.Enums;
 using System.Collections.Generic;
 using System.Linq;
-using IIM.Infrastructure.Platform.Models;
+using IIM.Shared.Models;
+using IIM.Shared.Interfaces;
 
 
 namespace IIM.Infrastructure.Platform;
 
-/// <summary>
-/// Interface for orchestrating services within WSL2
-/// </summary>
-public interface IWslServiceOrchestrator
-{
-    Task<ServiceStatus> GetServiceStatusAsync(string serviceName, CancellationToken ct = default);
-    Task<bool> StartServiceAsync(string serviceName, ServiceConfig? config = null, CancellationToken ct = default);
-    Task<bool> StopServiceAsync(string serviceName, CancellationToken ct = default);
-    Task<bool> RestartServiceAsync(string serviceName, CancellationToken ct = default);
-    Task<Dictionary<string, ServiceStatus>> GetAllServicesStatusAsync(CancellationToken ct = default);
-    Task<bool> EnsureAllServicesAsync(CancellationToken ct = default);
-}
+
 
 /// <summary>
 /// Orchestrates service lifecycle within WSL2 distributions
@@ -695,37 +685,6 @@ public sealed class WslServiceOrchestrator : IWslServiceOrchestrator, IHostedSer
     #endregion
 }
 
-// Supporting types
-public sealed class ServiceConfig
-{
-    public required string Name { get; init; }
-    public required ServiceType Type { get; init; }
-    public required int Port { get; init; }
-    public string HealthEndpoint { get; init; } = "/health";
-    public required string StartupCommand { get; init; }
-    public string? WorkingDirectory { get; init; }
-    public string? DockerImage { get; init; }
-    public int RequiredMemoryMb { get; init; } = 512;
-    public ServicePriority Priority { get; init; } = ServicePriority.Normal;
-}
-
-public sealed class ServiceInstance
-{
-    public required ServiceConfig Config { get; init; }
-    public required ServiceStatus Status { get; set; }
-    public DateTimeOffset StartedAt { get; init; }
-    public int ProcessId { get; set; }
-}
-
-public sealed class ServiceStatus
-{
-    public required string Name { get; init; }
-    public ServiceState State { get; set; }
-    public bool IsHealthy { get; set; }
-    public string? Endpoint { get; set; }
-    public string? Message { get; set; }
-    public DateTimeOffset? LastHealthCheck { get; set; }
-}
 
 
 

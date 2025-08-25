@@ -1,17 +1,10 @@
-﻿// ============================================
-// File: src/IIM.Infrastructure/Platform/WslManager.Distro.cs
-// Purpose: WSL distribution management operations
-// Author: IIM Platform Team
-// Created: 2024
-// ============================================
-
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using IIM.Infrastructure.Platform.Models;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Infrastructure.Platform

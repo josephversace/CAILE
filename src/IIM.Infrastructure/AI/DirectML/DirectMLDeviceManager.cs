@@ -1,11 +1,6 @@
-﻿// ============================================
-// File: src/IIM.Infrastructure/AI/DirectML/DirectMLDeviceManager.cs
-// Purpose: DirectML device enumeration and management for AMD GPUs
-// Author: IIM Platform Team
-// Created: 2024
-// ============================================
-
-using IIM.Shared.Enums;  // Only use Shared - it has no dependencies
+﻿using IIM.Shared.Enums;  // Only use Shared - it has no dependencies
+using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
@@ -20,94 +15,7 @@ using Vortice.DirectML;
 
 namespace IIM.Infrastructure.AI.DirectML
 {
-    /// <summary>
-    /// Manages DirectML device enumeration and initialization for GPU acceleration
-    /// </summary>
-    public interface IDirectMLDeviceManager
-    {
-        /// <summary>
-        /// Creates a DirectML device for inference
-        /// </summary>
-        /// <param name="deviceId">Device ID (0 for default GPU)</param>
-        /// <returns>DirectML device instance</returns>
-        Task<DirectMLDevice> CreateDeviceAsync(int deviceId = 0);
-
-        /// <summary>
-        /// Enumerates all available DirectML-capable devices
-        /// </summary>
-        /// <returns>List of available devices</returns>
-        Task<IList<DirectMLDevice>> EnumerateDevicesAsync();
-
-        /// <summary>
-        /// Gets device capabilities for a specific device
-        /// </summary>
-        /// <param name="deviceId">Device ID to query</param>
-        /// <returns>Device capabilities</returns>
-        Task<DeviceCapabilities> GetCapabilitiesAsync(int deviceId);
-
-        /// <summary>
-        /// Estimates memory requirements for a model
-        /// </summary>
-        /// <param name="modelPath">Path to the ONNX model</param>
-        /// <returns>Estimated memory in bytes</returns>
-        Task<long> EstimateMemoryRequirementsAsync(string modelPath);
-
-        /// <summary>
-        /// Validates if a model is compatible with DirectML
-        /// </summary>
-        /// <param name="modelPath">Path to the ONNX model</param>
-        /// <returns>True if compatible</returns>
-        Task<bool> ValidateModelCompatibilityAsync(string modelPath);
-    }
-
-    /// <summary>
-    /// DirectML device information - extends existing DeviceInfo
-    /// </summary>
-    public class DirectMLDevice
-    {
-        public int DeviceId { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Vendor { get; set; } = string.Empty;
-        public long DedicatedMemory { get; set; }
-        public long SharedMemory { get; set; }
-        public bool IsDefault { get; set; }
-        public string DeviceType { get; set; } = "GPU";  // Use string to match existing DeviceInfo
-        public int ComputeUnits { get; set; }
-        public string DriverVersion { get; set; } = string.Empty;
-    }
-
-    /// <summary>
-    /// Device capabilities
-    /// </summary>
-    public class DeviceCapabilities
-    {
-        public int DeviceId { get; set; }
-        public bool SupportsFloat16 { get; set; }
-        public bool SupportsInt8 { get; set; }
-        public bool SupportsDynamicShapes { get; set; }
-        public int MaxTensorRank { get; set; }
-        public long MaxTensorSizeInBytes { get; set; }
-        public int MaxBatchSize { get; set; }
-        public List<string> SupportedOperators { get; set; } = new();
-        public DirectMLFeatureLevel FeatureLevel { get; set; }
-    }
-
-    /// <summary>
-    /// DirectML feature level
-    /// </summary>
-    public enum DirectMLFeatureLevel
-    {
-        Unknown = 0,
-        Level_1_0 = 0x1000,
-        Level_2_0 = 0x2000,
-        Level_2_1 = 0x2100,
-        Level_3_0 = 0x3000,
-        Level_3_1 = 0x3100,
-        Level_4_0 = 0x4000,
-        Level_4_1 = 0x4100,
-        Level_5_0 = 0x5000
-    }
-
+ 
     /// <summary>
     /// Implementation of DirectML device manager
     /// </summary>

@@ -1,6 +1,7 @@
 ﻿using IIM.Shared.Enums;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Authentication;
 
 namespace IIM.Shared.Models;
@@ -539,6 +540,8 @@ public class InvestigationQuery
     public bool StreamResponse { get; set; } = false;
     public int? MaxTokens { get; set; }
     public double? Temperature { get; set; }
+    public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
+    public Dictionary<string, object> Context { get; set; }
 }
 
 
@@ -598,7 +601,7 @@ public class InvestigationResponse
     public List<ImageAnalysisResult>? ImageAnalyses { get; set; }
     public List<ToolResult>? ToolResults { get; set; }
     public List<Citation>? Citations { get; set; }
-    public List<Visualization>? Visualizations { get; set; }
+    public Visualization Visualization { get; set; }
 
     // References
     public List<string>? EvidenceIds { get; set; }
@@ -1190,6 +1193,7 @@ public class Attachment
     public Dictionary<string, object>? ExtractedMetadata { get; set; }
     public string? PreviewUrl { get; set; }
     public bool? IsProcessed { get; set; }
+    public Stream Stream { get; set; }
 }
 
 #endregion
@@ -1228,54 +1232,7 @@ public class SyncResult
 
 #region AI Models
 
-/// <summary>
-/// AI model configuration
-/// </summary>
-public class ModelConfiguration
-{
-    public string ModelId { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public string Provider { get; set; } = string.Empty;
-    public ModelType Type { get; set; }
-    public ModelStatus Status { get; set; }
-    public long MemoryUsage { get; set; }
-    public long RequiredMemory { get; set; }
-    public string? LoadedPath { get; set; }
-    public string? ModelPath { get; set; }
-    public DateTimeOffset? LoadedAt { get; set; }
-    public ModelCapabilities Capabilities { get; set; } = new();
-    public Dictionary<string, object> Parameters { get; set; } = new();
-    public string? SessionId { get; set; }
-    public Dictionary<string, object>? Metadata { get; set; }
-}
 
-/// <summary>
-/// Model capabilities
-/// </summary>
-public class ModelCapabilities
-{
-    public int MaxContextLength { get; set; }
-    public List<string> SupportedLanguages { get; set; } = new();
-    public List<string> SpecialFeatures { get; set; } = new();
-    public bool SupportsStreaming { get; set; }
-    public bool SupportsFineTuning { get; set; }
-    public bool SupportsMultiModal { get; set; }
-    public Dictionary<string, object> CustomCapabilities { get; set; } = new();
-}
-
-/// <summary>
-/// Model performance metrics
-/// </summary>
-public class ModelStats
-{
-    public string ModelId { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
-    public long MemoryUsage { get; set; }
-    public int AccessCount { get; set; }
-    public DateTimeOffset LastAccessed { get; set; }
-    public TimeSpan AverageLatency { get; set; }
-    public double AverageTokensPerSecond { get; set; }
-}
 
 #endregion
 
@@ -1319,31 +1276,7 @@ public class TestConnectionResult
     public DateTimeOffset TestedAt { get; set; } = DateTimeOffset.UtcNow;
 }
 
-/// <summary>
-/// WSL subsystem status
-/// Purpose: Monitor WSL2 and Linux services
-/// Used by: WSL manager, platform monitor
-/// </summary>
-public class WslStatus
-{
-    public bool IsInstalled { get; set; }
-    public bool IsWsl2 { get; set; }
-    public string? Version { get; set; }
-    public string? KernelVersion { get; set; }
-    public bool VirtualMachinePlatform { get; set; }
-    public bool HyperV { get; set; }
-    public bool HasIimDistro { get; set; }
-    public bool IsReady { get; set; }
-    public string Message { get; set; } = string.Empty;
 
-    // Runtime status
-    public bool WslReady { get; set; }
-    public bool DistroRunning { get; set; }
-    public bool ServicesHealthy { get; set; }
-    public bool NetworkConnected { get; set; }
-    public List<string> Issues { get; set; } = new();
-    public Dictionary<string, bool> ServiceStatuses { get; set; } = new();
-}
 
 /// <summary>
 /// Device hardware information

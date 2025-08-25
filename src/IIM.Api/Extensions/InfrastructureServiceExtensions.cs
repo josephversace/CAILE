@@ -1,6 +1,4 @@
 ﻿using IIM.Api.Configuration;
-using IIM.Core.Configuration;
-using IIM.Core.RAG;
 using IIM.Core.Services;
 using IIM.Core.Storage;
 using IIM.Infrastructure.Embeddings;

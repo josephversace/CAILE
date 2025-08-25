@@ -61,6 +61,15 @@ public class InsufficientMemoryException : IIMException
     }
 }
 
+/// <summary>
+/// Model load exception
+/// </summary>
+public class ModelLoadException : Exception
+{
+    public ModelLoadException(string message) : base(message) { }
+    public ModelLoadException(string message, Exception innerException) : base(message, innerException) { }
+}
+
 public class ToolExecutionException : IIMException
 {
     public ToolExecutionException(string message, Exception? innerException = null)

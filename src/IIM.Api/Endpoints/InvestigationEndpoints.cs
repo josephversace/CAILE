@@ -1,8 +1,8 @@
-﻿using IIM.Application.Commands.Investigation;
-using IIM.Core.Mediator;
+﻿using IIM.Core.Mediator;
 using IIM.Shared.Models;
 using IIM.Shared.Enums;
 using Microsoft.AspNetCore.Mvc;
+using IIM.Application.Investigation;
 
 namespace IIM.Api.Endpoints;
 
@@ -48,9 +48,8 @@ public static class InvestigationEndpoints
         // Get session by ID
         investigation.MapGet("/session/{sessionId}", async (
             string sessionId,
-            [FromQuery] bool includeMessages = true,
             [FromServices] IMediator mediator,
-            CancellationToken ct) =>
+            CancellationToken ct, [FromQuery] bool includeMessages = true) =>
         {
             var query = new GetSessionCommand(sessionId, includeMessages);
             var session = await mediator.Send(query, ct);
@@ -174,10 +173,10 @@ public static class InvestigationEndpoints
         // Export investigation results
         investigation.MapPost("/session/{sessionId}/export", async (
             string sessionId,
-            [FromQuery] ExportFormat format = ExportFormat.PDF,
             [FromBody] ExportOptions? options,
             [FromServices] IMediator mediator,
-            CancellationToken ct) =>
+            CancellationToken ct,
+             [FromQuery] ExportFormat format = ExportFormat.Pdf) =>
         {
             var command = new ExportInvestigationCommand(sessionId, format)
             {
@@ -188,10 +187,10 @@ public static class InvestigationEndpoints
 
             var contentType = format switch
             {
-                ExportFormat.PDF => "application/pdf",
+                ExportFormat.Pdf => "application/pdf",
                 ExportFormat.Word => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 ExportFormat.Excel => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                ExportFormat.JSON => "application/json",
+                ExportFormat.Json => "application/json",
                 _ => "application/octet-stream"
             };
 

@@ -1,6 +1,7 @@
 ﻿
 @namespace IIM.Components.Visualizations
-@using IIM.Shared.DTOs
+@using IIM.Shared.Models
+
 
 <div class="transcription-display">
     <div class="transcription-header d-flex justify-content-between align-items-center mb-2">
@@ -61,7 +62,7 @@
 </div>
 
 @code {
-    [Parameter] public TranscriptionResultDto Result { get; set; } = null!;
+    [Parameter] public TranscriptionResult Result { get; set; } = null!;
     [Parameter] public bool ShowSegments { get; set; } = true;
     [Parameter] public EventCallback<int> OnPlayAudio { get; set; }
     

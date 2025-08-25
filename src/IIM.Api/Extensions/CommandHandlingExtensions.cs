@@ -4,6 +4,7 @@ using IIM.Shared.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using IIM.Core.Services;
+using IIM.Application.Investigation;
 
 namespace IIM.Api.Extensions
 {
@@ -18,7 +19,7 @@ namespace IIM.Api.Extensions
         {
             // Add SimpleMediator (your custom implementation)
             services.AddSimpleMediator(
-                typeof(IIM.Application.Commands.Investigation.CreateSessionCommand).Assembly,  // Application assembly
+                typeof(CreateSessionCommand).Assembly,  // Application assembly
                 typeof(IIM.Core.AI.IModelOrchestrator).Assembly  // Core assembly
             );
 

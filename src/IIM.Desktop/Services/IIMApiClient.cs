@@ -1,11 +1,8 @@
-using IIM.Application.Commands.Investigation;
-using IIM.Application.Commands.Models;
-
 using IIM.Shared.Interfaces;
-
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 using IIM.Shared.Models;
+using IIM.Application.Investigation;
 
 
 namespace IIM.Desktop.Services;
@@ -205,18 +202,18 @@ public class IIMApiClient : IIIMApiClient
     /// <summary>
     /// Gets current application settings
     /// </summary>
-    public async Task<SettingsDto> GetSettingsAsync()
+    public async Task<Setting> GetSettingsAsync()
     {
         var response = await _httpClient.GetAsync("/api/settings");
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<SettingsDto>()
-            ?? new SettingsDto();
+        return await response.Content.ReadFromJsonAsync<Setting>()
+            ?? new Setting();
     }
 
     /// <summary>
     /// Updates application settings
     /// </summary>
-    public async Task UpdateSettingsAsync(SettingsDto settings)
+    public async Task UpdateSettingsAsync(Settings settings)
     {
         var response = await _httpClient.PutAsJsonAsync("/api/settings", settings);
         response.EnsureSuccessStatusCode();
@@ -243,14 +240,7 @@ public class IIMApiClient : IIIMApiClient
         };
     }
 
-    Task<Settings> IIIMApiClient.GetSettingsAsync()
-    {
-        throw new NotImplementedException();
-    }
 
-    public Task UpdateSettingsAsync(Settings settings)
-    {
-        throw new NotImplementedException();
-    }
+
 }
 

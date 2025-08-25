@@ -1,11 +1,4 @@
-﻿// ============================================
-// File: src/IIM.Infrastructure/AI/OnnxRuntime/OnnxRuntimeManager.cs
-// Purpose: ONNX Runtime session management with DirectML support
-// Author: IIM Platform Team
-// Created: 2024
-// ============================================
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,68 +9,11 @@ using IIM.Infrastructure.AI.DirectML;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
+using IIM.Shared.Interfaces;
 
 namespace IIM.Infrastructure.AI.OnnxRuntime
 {
-    /// <summary>
-    /// Contract for managing ONNX Runtime inference sessions and execution.
-    /// </summary>
-    public interface IOnnxRuntimeManager : IDisposable
-    {
-        /// <summary>
-        /// Creates or retrieves a cached ONNX inference session for the specified model and execution provider.
-        /// </summary>
-        Task<InferenceSession> CreateSessionAsync(string modelPath, ExecutionProvider provider);
-
-        /// <summary>
-        /// Runs inference on the given session using provided named inputs.
-        /// </summary>
-        Task<IDisposableReadOnlyCollection<DisposableNamedOnnxValue>> RunAsync(
-            InferenceSession session,
-            IEnumerable<NamedOnnxValue> inputs,
-            CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Gets input metadata for the given session.
-        /// </summary>
-        IReadOnlyDictionary<string, NodeMetadata> GetInputMetadata(InferenceSession session);
-
-        /// <summary>
-        /// Gets output metadata for the given session.
-        /// </summary>
-        IReadOnlyDictionary<string, NodeMetadata> GetOutputMetadata(InferenceSession session);
-
-        /// <summary>
-        /// Utility to create a NamedOnnxValue from a raw data tensor.
-        /// </summary>
-        NamedOnnxValue CreateTensor<T>(string name, T[] data, int[] dimensions) where T : unmanaged;
-
-        /// <summary>
-        /// Preprocesses raw input data into model-ready NamedOnnxValues according to model type.
-        /// </summary>
-        Task<List<NamedOnnxValue>> PreprocessInputAsync(
-            InferenceSession session,
-            object rawInput,
-            ModelType modelType);
-
-        /// <summary>
-        /// Converts model output to user-facing structure according to model type.
-        /// </summary>
-        Task<object> PostprocessOutputAsync(
-            IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs,
-            ModelType modelType);
-    }
-
-    /// <summary>
-    /// Available ONNX execution providers.
-    /// </summary>
-    public enum ExecutionProvider
-    {
-        CPU,
-        DirectML,
-        CUDA,
-        ROCm
-    }
+ 
 
     /// <summary>
     /// Concrete ONNX Runtime manager.

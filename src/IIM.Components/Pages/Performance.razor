@@ -295,12 +295,12 @@
         catch (HttpRequestException ex)
         {
             errorMessage = "Cannot connect to API. Ensure the service is running.";
-            Logger.LogError(ex, "Failed to connect to API");
+            //Logger.LogError(ex, "Failed to connect to API");
         }
         catch (Exception ex)
         {
             errorMessage = $"Unexpected error: {ex.Message}";
-            Logger.LogError(ex, "Failed to refresh stats");
+            //Logger.LogError(ex, "Failed to refresh stats");
         }
         finally
         {
@@ -376,7 +376,7 @@ ColorClass = "info"
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to parse stats JSON");
+            //Logger.LogError(ex, "Failed to parse stats JSON");
         }
 
         return result;
@@ -422,7 +422,7 @@ ColorClass = "info"
         catch (Exception ex)
         {
             errorMessage = $"Error unloading model: {ex.Message}";
-            Logger.LogError(ex, "Failed to unload model {ModelId}", modelId);
+            //Logger.LogError(ex, "Failed to unload model {ModelId}", modelId);
         }
     }
 

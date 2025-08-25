@@ -238,7 +238,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to load theme settings");
+            //Logger.LogError(ex, "Failed to load theme settings");
         }
     }
 
@@ -309,7 +309,7 @@
             var file = e.File;
             if (file.Size > 5 * 1024 * 1024) // 5MB limit
             {
-                Logger.LogWarning("File too large: {Size}", file.Size);
+                //Logger.LogWarning("File too large: {Size}", file.Size);
                 return;
             }
 
@@ -331,7 +331,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to upload custom background");
+            //Logger.LogError(ex, "Failed to upload custom background");
         }
     }
 

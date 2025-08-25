@@ -1,6 +1,6 @@
 ﻿
 @namespace IIM.Components.Components.Layout
-@using IIM.Application.Interfaces
+
 @using IIM.Core.AI
 @using IIM.Core.Models
 @using IIM.Core.Services
@@ -402,14 +402,14 @@
     private void HandleSettingsClicked()
     {
         // Open settings panel
-        Logger.LogInformation("Settings clicked");
+        //Logger.LogInformation("Settings clicked");
         NavigationManager.NavigateTo($"/settings");
     }
 
     private void HandleToolSelected(string tool)
     {
         _currentTool = tool;
-        Logger.LogInformation("Tool selected: {Tool}", tool);
+        //Logger.LogInformation("Tool selected: {Tool}", tool);
         StateHasChanged();
     }
 
@@ -502,7 +502,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogWarning(ex, "Failed to load preference {Key}", key);
+            //Logger.LogWarning(ex, "Failed to load preference {Key}", key);
         }
         return defaultValue;
     }
@@ -516,7 +516,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogWarning(ex, "Failed to save preference {Key}", key);
+            //Logger.LogWarning(ex, "Failed to save preference {Key}", key);
         }
     }
 

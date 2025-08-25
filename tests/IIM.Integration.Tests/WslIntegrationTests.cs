@@ -3,8 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
 using FluentAssertions;
-using IIM.Infrastructure.Platform.Models;
 using IIM.Core.Tests.Mocks;
+using IIM.Shared.Interfaces;
 
 namespace IIM.Integration.Tests;
 
