@@ -1,4 +1,5 @@
 ﻿using IIM.Infrastructure.Hardware;
+using IIM.Infrastructure.Services;
 using IIM.Shared.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -21,7 +22,7 @@ public static class ExportServiceCollectionExtensions
 
         //Export services
         //Security services
-        services.AddScoped<ISecurityService, ISecurityService>();
+        services.AddScoped<ISecurityService, SecurityService>();
 
         services.AddScoped<IExportService, ExportService>();
 

@@ -86,6 +86,7 @@ namespace IIM.Application.AI
             var entities = new Dictionary<string, object>();
 
             // Simple entity extraction (would use NER model in production)
+            //Todo: replace with Ner Model
             if (query.Contains("email", StringComparison.OrdinalIgnoreCase))
             {
                 entities["entityType"] = EntityType.Account;
