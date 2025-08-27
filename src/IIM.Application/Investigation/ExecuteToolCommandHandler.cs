@@ -2,7 +2,8 @@
 using IIM.Core.Mediator;
 using IIM.Core.Services;
 using IIM.Shared.Enums;
-
+using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 
 namespace IIM.Application.Investigation
@@ -217,8 +218,8 @@ namespace IIM.Application.Investigation
                     TotalSize = evidence.Sum(e => e.FileSize),
                     DateRange = new
                     {
-                        Earliest = evidence.Min(e => e.UploadedAt),
-                        Latest = evidence.Max(e => e.UploadedAt)
+                        Earliest = evidence.Min(e => e.IngestTimestamp),
+                        Latest = evidence.Max(e => e.IngestTimestamp)
                     }
                 },
                 Visualizations = new List<Visualization>

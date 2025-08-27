@@ -17,10 +17,12 @@ namespace IIM.Shared.Models
         // New optional properties
         public List<RetrievedChunk>? RetrievedChunks { get; set; }  // Retrieved document chunks
         public List<object>? Chunks { get; set; }  // Generic chunks for compatibility
-        public List<string>? Sources { get; set; }  // Source documents
+        public List<Source>? Sources { get; set; }  // Source documents
         public Dictionary<string, double>? SourceScores { get; set; }  // Relevance scores
         public TimeSpan? RetrievalTime { get; set; }  // Time to retrieve
         public TimeSpan? GenerationTime { get; set; }  // Time to generate answer
+        public int TokensUsed { get; set; }
+        public TimeSpan ProcessingTime { get; set; }
     }
 
     public class RetrievedChunk
@@ -33,7 +35,12 @@ namespace IIM.Shared.Models
         public Dictionary<string, object>? Metadata { get; set; }
     }
 
-
+    public class Source
+    {
+        public string Document { get; set; }
+        public int Page { get; set; }
+        public float Relevance { get; set; }
+    }
 
     #region Images
 
@@ -50,7 +57,7 @@ namespace IIM.Shared.Models
     {
         public string ImagePath { get; set; } = string.Empty;
         public float Score { get; set; }
-        public MockBoundingBox? BoundingBox { get; set; }
+     
         public Dictionary<string, string> Metadata { get; set; } = new();
     }
 

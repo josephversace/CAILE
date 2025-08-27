@@ -21,6 +21,9 @@ namespace IIM.Application.Models
             // 5. Return template info
 
             // (Implement your logic here)
+            await Task.Delay(1000);
+
+            return new ModelTemplate();
         }
     }
 

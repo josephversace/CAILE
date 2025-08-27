@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 using Minio;
 using Minio.DataModel.Args;
 
-namespace IIM.Application.Services
+namespace IIM.Infrastructure.Storage
 {
     /// <summary>
     /// Evidence upload service that works with your existing interfaces

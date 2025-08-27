@@ -1,4 +1,5 @@
 ﻿using IIM.Core.Services;
+using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 

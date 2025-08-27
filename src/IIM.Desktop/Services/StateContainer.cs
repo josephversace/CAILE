@@ -1,5 +1,7 @@
 
 
+using IIM.Shared.Models;
+
 /// <summary>
 /// State container for managing UI state across Blazor components.
 /// Implements the observer pattern for state change notifications.

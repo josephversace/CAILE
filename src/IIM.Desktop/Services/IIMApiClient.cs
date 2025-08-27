@@ -240,7 +240,9 @@ public class IIMApiClient : IIIMApiClient
         };
     }
 
-
-
+    Task<Settings> IIIMApiClient.GetSettingsAsync()
+    {
+        throw new NotImplementedException();
+    }
 }
 

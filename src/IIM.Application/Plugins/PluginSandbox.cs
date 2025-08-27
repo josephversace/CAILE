@@ -7,13 +7,14 @@ using System.Threading.Tasks;
 using IIM.Shared.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using IIM.Core.Plugins.Security.Implementations;
 using IIM.Plugin.SDK;
 using IIM.Plugin.SDK.Security;
 using IIM.Shared.Interfaces;
 using IIM.Core.Models;
 using IIM.Core.Services;
 using IIM.Core.Plugins.Security;
+using IIM.Core.Plugins.Security.Implementations;
+using IIM.Core.Plugins;
 
 
 namespace IIM.Application.Plugins.Security;
@@ -126,39 +127,5 @@ public class PluginSandbox : IPluginSandbox
 
         return Task.FromResult(violations.Count == 0);
     }
-}
-
-/// <summary>
-/// Plugin manifest with security permissions
-/// </summary>
-public class PluginManifest
-{
-    public string Id { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public string Version { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public PluginAuthor? Author { get; set; }
-    public PluginPermissions? Permissions { get; set; }
-}
-
-/// <summary>
-/// Plugin author information
-/// </summary>
-public class PluginAuthor
-{
-    public string Name { get; set; } = string.Empty;
-    public string? Email { get; set; }
-    public string? Website { get; set; }
-}
-
-/// <summary>
-/// Plugin permission requirements
-/// </summary>
-public class PluginPermissions
-{
-    public string NetworkAccess { get; set; } = "None";
-    public string FileSystemAccess { get; set; } = "Sandboxed";
-    public bool ProcessExecution { get; set; } = false;
-    public List<string> RequiredAPIs { get; set; } = new();
 }
 

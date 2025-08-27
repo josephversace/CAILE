@@ -2,7 +2,6 @@ using FluentAssertions;
 using IIM.Application.Services;
 using IIM.Core.Models;
 using IIM.Core.Services;
-using IIM.Core.Storage;
 using IIM.Infrastructure.Storage;
 
 using IIM.Shared.Enums;
@@ -74,12 +73,12 @@ namespace IIM.Application.Tests.Services
                 }
             };
 
-            var existingEvidence = new Evidence
+            var existingEvidence = new IIM.Shared.Models.Evidence
             {
                 Id = "existing-123",
                 CaseNumber = "CASE-2024-000",
                 Hash = request.FileHash,
-                CreatedAt = DateTimeOffset.UtcNow.AddDays(-5),
+                UpdatedAt = DateTimeOffset.UtcNow.AddDays(-5),
                 Metadata = new EvidenceMetadata
                 {
                     CollectedBy = "Agent Jones"
@@ -143,7 +142,7 @@ namespace IIM.Application.Tests.Services
 
             // Assert
             response.Should().NotBeNull();
-            response.Status.Should().Be(EvidenceUploadStatus.Initiated);
+            response.Status.Should().Be(EvidenceUploadStatus.Uploading);
             response.EvidenceId.Should().NotBeNullOrEmpty();
             response.UploadUrl.Should().Be("https://minio.local/presigned-url");
             response.UploadUrlExpires.Should().BeCloseTo(
@@ -153,7 +152,7 @@ namespace IIM.Application.Tests.Services
 
             // Verify evidence was registered as pending
             _evidenceManagerMock.Verify(x => x.RegisterPendingEvidenceAsync(
-                It.Is<Evidence>(e =>
+                It.Is<IIM.Shared.Models.Evidence>(e =>
                     e.Status == EvidenceStatus.Pending &&
                     e.Hash == request.FileHash),
                 It.IsAny<CancellationToken>()),
@@ -227,7 +226,7 @@ namespace IIM.Application.Tests.Services
                 EvidenceId = "missing-123"
             };
 
-            var evidence = new Evidence
+            var evidence = new IIM.Shared.Models.Evidence
             {
                 Id = request.EvidenceId,
                 Status = EvidenceStatus.Pending,
@@ -268,7 +267,7 @@ namespace IIM.Application.Tests.Services
             var objectName = "CASE-2024-001/evidence123/document.pdf";
             var eventType = "s3:ObjectCreated:Put";
 
-            var evidence = new Evidence
+            var evidence = new IIM.Shared.Models.Evidence
             {
                 Id = "evidence123",
                 Status = EvidenceStatus.Pending,

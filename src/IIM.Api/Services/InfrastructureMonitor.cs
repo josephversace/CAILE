@@ -2,6 +2,7 @@
 using IIM.Core.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using IIM.Shared.Interfaces;
 
 namespace IIM.Api.Services
 {

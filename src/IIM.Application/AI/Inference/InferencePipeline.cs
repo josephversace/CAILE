@@ -5,12 +5,14 @@ using IIM.Core.Models;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
+using LLama.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics; // For Stopwatch
 using System.Diagnostics.Metrics;
+using System.Text.Json;
 using System.Threading.Channels; // For Channel<T>
 using InsufficientMemoryException = IIM.Core.Models.InsufficientMemoryException;
 
@@ -47,9 +49,11 @@ namespace IIM.Application.Inference
         private readonly ILogger<InferencePipeline> _logger;
         private readonly IModelOrchestrator _orchestrator;
         private readonly IModelConfigurationService _ModelConfiguration;
+        private readonly IModelParameterSetRepository _modelParams;
         private readonly IMediator? _mediator;
         private readonly InferencePipelineConfiguration _config;
         private readonly IOnnxRuntimeManager _onnxManager;
+        private readonly ILlamaSharpManager _llamaManager;
         private readonly IDirectMLDeviceManager _directMLDeviceManager;
         
 
@@ -91,8 +95,10 @@ namespace IIM.Application.Inference
             ILogger<InferencePipeline> logger,
             IModelOrchestrator orchestrator,
             IModelConfigurationService ModelConfiguration,
+            IModelParameterSetRepository modelParameterSetRepository,
             IOptions<InferencePipelineConfiguration> config,
             IOnnxRuntimeManager onnxManager,
+            ILlamaSharpManager llamaSharp,
             IDirectMLDeviceManager directMLDeviceManager,
             IMediator? mediator = null)
         {
@@ -102,7 +108,9 @@ namespace IIM.Application.Inference
             _config = config?.Value ?? throw new ArgumentNullException(nameof(config));
             _mediator = mediator;
             _onnxManager = onnxManager;
+            _llamaManager = llamaSharp;
             _directMLDeviceManager = directMLDeviceManager;
+            _modelParams = modelParameterSetRepository ?? throw new ArgumentNullException(nameof(modelParameterSetRepository));
 
             // Initialize metrics
             _metricsBuffer = new CircularBuffer<MetricEntry>(_config.MetricsWindowSize);
@@ -155,16 +163,19 @@ namespace IIM.Application.Inference
         }
 
         /// <summary>
-        /// Executes a single inference request with timeout and backpressure handling
+        /// Executes a single inference request with timeout, mapping, and backpressure handling
         /// </summary>
-   
-        public async Task<T> ExecuteAsync<T>(InferencePipelineRequest request, CancellationToken ct = default)
+        public async Task<T> ExecuteAsync<T>(
+            InferencePipelineRequest request,
+            Func<InferenceResult, T>? converter = null,
+            CancellationToken ct = default)
         {
+            // All pipeline and notification logic stays as-is
             using var activity = _activitySource.StartActivity("ExecuteInference");
             activity?.SetTag("model.id", request.ModelId);
             activity?.SetTag("priority", request.Priority);
 
-            // Check backpressure
+            // Backpressure, queue setup, etc (same as before)
             if (_config.EnableBackpressure)
             {
                 var totalQueued = _highPriorityQueue.Reader.Count +
@@ -175,7 +186,6 @@ namespace IIM.Application.Inference
                 {
                     Interlocked.Increment(ref _rejectedRequests);
                     _errorCounter.Add(1, new KeyValuePair<string, object?>("error.type", "backpressure"));
-
                     _logger.LogWarning("Request rejected due to backpressure. Queue depth: {QueueDepth}", totalQueued);
                     throw new InferencePipelineException($"System overloaded. Queue depth: {totalQueued}");
                 }
@@ -187,23 +197,20 @@ namespace IIM.Application.Inference
 
             var queuedRequest = new QueuedRequest
             {
-          
                 Request = request,
                 Priority = await DeterminePriorityAsync(request),
                 QueuedAt = DateTimeOffset.UtcNow,
-                CompletionSource = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously),
+                CompletionSource = new TaskCompletionSource<InferenceResult>(TaskCreationOptions.RunContinuationsAsynchronously),
                 CancellationToken = ct
             };
 
             _pendingRequests[queuedRequest.Id] = queuedRequest;
             _queueDepthCounter.Add(1);
 
-            // DECLARE timeoutCts HERE, BEFORE the try block, so it's accessible in catch
             CancellationTokenSource? timeoutCts = null;
 
             try
             {
-                // Select queue based on priority
                 var channel = queuedRequest.Priority switch
                 {
                     Priority.High => _highPriorityQueue,
@@ -211,7 +218,6 @@ namespace IIM.Application.Inference
                     _ => _normalPriorityQueue
                 };
 
-                // Queue with timeout - now ASSIGN to the already declared variable
                 timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(_config.QueueTimeoutSeconds));
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
 
@@ -226,7 +232,6 @@ namespace IIM.Application.Inference
                 _logger.LogDebug("Request {RequestId} queued with {Priority} priority for model {ModelId}",
                     queuedRequest.Id, queuedRequest.Priority, request.ModelId);
 
-                // Send notification
                 if (_mediator != null)
                 {
                     await _mediator.Publish(new InferenceQueuedNotification
@@ -238,7 +243,6 @@ namespace IIM.Application.Inference
                     }, ct);
                 }
 
-                // Wait for completion
                 using (ct.Register(() => queuedRequest.CompletionSource.TrySetCanceled()))
                 {
                     var result = await queuedRequest.CompletionSource.Task;
@@ -246,25 +250,25 @@ namespace IIM.Application.Inference
                     Interlocked.Increment(ref _completedRequests);
                     activity?.SetTag("inference.success", true);
 
-                    return (T)result!;
+                    if (converter != null)
+                        return converter(result);
+                    if (typeof(T) == typeof(InferenceResult))
+                        return (T)(object)result;
+                    throw new InvalidOperationException($"No converter provided for type {typeof(T).FullName}");
                 }
             }
             catch (OperationCanceledException) when (timeoutCts?.IsCancellationRequested == true)
             {
-                // Now timeoutCts is accessible here
                 Interlocked.Increment(ref _rejectedRequests);
                 _errorCounter.Add(1, new KeyValuePair<string, object?>("error.type", "timeout"));
-
                 activity?.SetTag("inference.success", false);
                 activity?.SetTag("error.type", "timeout");
-
                 throw new TimeoutException($"Request timed out after {_config.QueueTimeoutSeconds} seconds");
             }
             catch (Exception ex)
             {
                 Interlocked.Increment(ref _failedRequests);
                 _errorCounter.Add(1, new KeyValuePair<string, object?>("error.type", ex.GetType().Name));
-
                 activity?.SetTag("inference.success", false);
                 activity?.SetTag("error.type", ex.GetType().Name);
 
@@ -284,13 +288,13 @@ namespace IIM.Application.Inference
             }
             finally
             {
-                // Dispose timeoutCts if it was created
                 timeoutCts?.Dispose();
-
                 _pendingRequests.TryRemove(queuedRequest.Id, out _);
                 _queueDepthCounter.Add(-1);
             }
         }
+
+
 
         /// <summary>
         /// Processes queues with advanced scheduling and monitoring
@@ -392,7 +396,7 @@ namespace IIM.Application.Inference
             var metadata = await _ModelConfiguration.GetMetadataAsync(request.Request.ModelId);
             var semaphore = metadata.RequiresGpu ? _gpuSemaphore : _cpuSemaphore;
 
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, request.CancellationToken);
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             var cancellationToken = linkedCts.Token;
 
             await semaphore.WaitAsync(cancellationToken);
@@ -423,26 +427,51 @@ namespace IIM.Application.Inference
                 {
                     try
                     {
-                        // --- NEW: Select DirectML (GPU) if needed, else fallback to CPU ---
-                        var provider = ExecutionProvider.CPU; // Default to CPU
-                        if (metadata.RequiresGpu)
+                        // ---- BRANCH BY MODEL TYPE ----
+                        if (metadata.Format == ModelFormat.GGUF || metadata.Format == ModelFormat.GGML)
                         {
-                            var devices = await _directMLDeviceManager.EnumerateDevicesAsync();
-                            if (devices.Any(d => d.DeviceType == "GPU"))
-                                provider = ExecutionProvider.DirectML;
+                            var context = await _llamaManager.CreateContextAsync(metadata.ModelPath, null);
+                            var prompt = request.Request.Input as string ?? string.Empty;
+
+                            // --- New: Merge parameter sets ---
+                            var mergedDict = await GetMergedParametersAsync(request, cancellationToken);
+                            var inferenceParams = ConvertToInferenceParams(mergedDict);
+
+                            var resultText = await _llamaManager.RunPromptAsync(context, prompt, inferenceParams, cancellationToken);
+                            result = resultText;
+
+
+                            // chatHistory = new ChatHistory();
+                            // chatHistory.AddMessage(AuthorRole.User, "Hello, who are you?");
+                            // chatHistory.AddMessage(AuthorRole.Assistant, "I am an AI assistant.");
+                            // ChatSession session = new ChatSession(executor, chatHistory);
+                            // await foreach (var token in session.ChatAsync(new ChatHistory.Message(AuthorRole.User, "What can you do?"), ...)) { ... }
+                            //var resultText = "";
+                            //await foreach (var token in _llamaManager.RunChatAsync(context, prompt, inferenceParams, cancellationToken))
+                            //    resultText += token;
+
+                            //result = resultText;
+
+
                         }
 
-                        // --- NEW: Create or get ONNX session ---
-                        var session = await _onnxManager.CreateSessionAsync(metadata.ModelPath, provider);
+                        else
+                        {
+                            // ONNX path (your current logic)
+                            var provider = ExecutionProvider.CPU;
+                            if (metadata.RequiresGpu)
+                            {
+                                var devices = await _directMLDeviceManager.EnumerateDevicesAsync();
+                                if (devices.Any(d => d.DeviceType == "GPU"))
+                                    provider = ExecutionProvider.DirectML;
+                            }
 
-                        // --- NEW: Preprocess input for the model type ---
-                        var inputs = await _onnxManager.PreprocessInputAsync(session, request.Request.Input, metadata.Type);
-
-                        // --- NEW: Run inference ---
-                        var outputs = await _onnxManager.RunAsync(session, inputs, cancellationToken);
-
-                        // --- NEW: Postprocess result for the model type ---
-                        result = await _onnxManager.PostprocessOutputAsync(outputs, metadata.Type);
+                            var session = await _onnxManager.CreateSessionAsync(metadata.ModelPath, provider);
+                            var inputs = await _onnxManager.PreprocessInputAsync(session, request.Request.Input, metadata.Type);
+                            var outputs = await _onnxManager.RunAsync(session, inputs, cancellationToken);
+                            result = await _onnxManager.PostprocessOutputAsync(outputs, metadata.Type);
+                        }
+                        break; // Success
 
                         break; // Success
                     }
@@ -470,11 +499,19 @@ namespace IIM.Application.Inference
                     }
                 }
 
+                // After model logic:
                 if (result == null)
                     throw lastException ?? new InferencePipelineException("Inference failed after retries");
 
-                // --- Complete request (result could be any user-facing output type) ---
-                request.CompletionSource.TrySetResult(result);
+                // Always wrap into InferenceResult (customize as needed)
+                InferenceResult inferenceResult;
+                if (result is InferenceResult ir)
+                    inferenceResult = ir;
+                else
+                    inferenceResult = new InferenceResult { Output = result };
+
+                request.CompletionSource.TrySetResult(inferenceResult);
+
 
                 stopwatch.Stop();
 
@@ -554,8 +591,8 @@ namespace IIM.Application.Inference
             ModelConfiguration metadata,
             CancellationToken ct)
         {
-            var stats = await _orchestrator.GetStatsAsync();
-            if (!stats.Models.ContainsKey(modelId))
+            var isLoaded = await _orchestrator.IsModelLoadedAsync(modelId);
+            if (!isLoaded)
             {
                 _logger.LogInformation("Auto-loading model {ModelId}", modelId);
 
@@ -738,10 +775,11 @@ namespace IIM.Application.Inference
         }
 
         /// <summary>
-        /// Executes multiple requests as a batch
+        /// Executes multiple requests as a batch, with optional converter and full batching support
         /// </summary>
         public async Task<BatchResult<T>> ExecuteBatchAsync<T>(
             IEnumerable<InferencePipelineRequest> requests,
+            Func<InferenceResult, T>? converter = null,
             CancellationToken ct = default)
         {
             var requestList = requests.ToList();
@@ -756,13 +794,11 @@ namespace IIM.Application.Inference
                 };
             }
 
-            // Assign indices
             for (int i = 0; i < requestList.Count; i++)
             {
                 requestList[i].Index ??= i;
             }
 
-            // Group by model for efficient batching
             var grouped = requestList.GroupBy(r => r.ModelId);
             var results = new ConcurrentBag<(int index, T result)>();
             var errors = new ConcurrentDictionary<int, Exception>();
@@ -777,8 +813,7 @@ namespace IIM.Application.Inference
                 {
                     try
                     {
-                        // True batch processing
-                        var batchResults = await ExecuteBatchInternalAsync<T>(modelId, batch, metadata, token);
+                        var batchResults = await ExecuteBatchInternalAsync(modelId, batch, metadata, converter, token);
                         for (int i = 0; i < batchResults.Length; i++)
                         {
                             results.Add((batch[i].Index!.Value, batchResults[i]));
@@ -794,12 +829,11 @@ namespace IIM.Application.Inference
                 }
                 else
                 {
-                    // Process individually
                     foreach (var req in batch)
                     {
                         try
                         {
-                            var result = await ExecuteAsync<T>(req, token);
+                            var result = await ExecuteAsync(req, converter, token);
                             results.Add((req.Index!.Value, result));
                         }
                         catch (Exception ex)
@@ -822,46 +856,38 @@ namespace IIM.Application.Inference
             };
         }
 
+
         /// <summary>
-        /// Internal batch execution for models that support it
+        /// Internal batch execution for models that support it, with mapping
         /// </summary>
         private async Task<T[]> ExecuteBatchInternalAsync<T>(
-            string modelId,
-            List<InferencePipelineRequest> batch,
-            ModelConfiguration metadata,
-            CancellationToken ct)
+        string modelId,
+        List<InferencePipelineRequest> batch,
+        ModelConfiguration metadata,
+        Func<InferenceResult, T>? converter,
+        CancellationToken ct)
         {
-            // Respect max batch size
             if (batch.Count > metadata.MaxBatchSize)
             {
-                // Split into smaller batches
                 var results = new List<T>();
                 for (int i = 0; i < batch.Count; i += metadata.MaxBatchSize)
                 {
                     var chunk = batch.Skip(i).Take(metadata.MaxBatchSize).ToList();
-                    var chunkResults = await ExecuteBatchInternalAsync<T>(modelId, chunk, metadata, ct);
+                    var chunkResults = await ExecuteBatchInternalAsync(modelId, chunk, metadata, converter, ct);
                     results.AddRange(chunkResults);
                 }
                 return results.ToArray();
             }
 
-            // Execute as true batch
-            var inputs = batch.Select(r => r.Input).ToArray();
-            var batchResult = await _orchestrator.InferAsync(modelId, inputs, ct);
-
-            if (batchResult.Output is T[] typedResults)
-            {
-                return typedResults;
-            }
-
-            // Fallback to individual processing
+            // Universal fallback: run each request one by one (sequentially)
             var fallbackResults = new T[batch.Count];
             for (int i = 0; i < batch.Count; i++)
             {
-                fallbackResults[i] = await ExecuteAsync<T>(batch[i], ct);
+                fallbackResults[i] = await ExecuteAsync(batch[i], converter, ct);
             }
             return fallbackResults;
         }
+
 
         /// <summary>
         /// Gets comprehensive pipeline statistics
@@ -1010,7 +1036,35 @@ namespace IIM.Application.Inference
             _logger.LogInformation("InferencePipeline shutdown complete. Processed {Total} requests ({Success} success, {Failed} failed, {Rejected} rejected)",
                 _totalRequests, _completedRequests, _failedRequests, _rejectedRequests);
         }
+
+        //LlamaSharp requires Inference params 
+        private async Task<Dictionary<string, object>> GetMergedParametersAsync(QueuedRequest request, CancellationToken ct)
+        {
+            // 1. Fetch default parameter set for model
+            var modelParamsList = await _modelParams.GetByModelIdAsync(request.Request.ModelId, ct);
+            var defaultParams = modelParamsList.FirstOrDefault(p => p.Name == "Default")
+                ?.Parameters ?? new Dictionary<string, object>();
+
+            // 2. Overlay request-specific parameters (overrides default)
+            var merged = new Dictionary<string, object>(defaultParams);
+
+            if (request.Request.Parameters != null)
+            {
+                foreach (var kvp in request.Request.Parameters)
+                    merged[kvp.Key] = kvp.Value;
+            }
+
+            return merged;
+        }
+
+        private InferenceParams ConvertToInferenceParams(Dictionary<string, object> dict)
+        {
+            var json = JsonSerializer.Serialize(dict);
+            return JsonSerializer.Deserialize<InferenceParams>(json)!;
+        }
+
+
     }
 
-    
+
 }

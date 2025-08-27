@@ -13,10 +13,19 @@ namespace IIM.Shared.Interfaces
     /// </summary>
     public interface IInferencePipeline
     {
-        Task<T> ExecuteAsync<T>(InferencePipelineRequest request, CancellationToken ct = default);
-        Task<BatchResult<T>> ExecuteBatchAsync<T>(IEnumerable<InferencePipelineRequest> requests, CancellationToken ct = default);
+        Task<T> ExecuteAsync<T>(
+            InferencePipelineRequest request,
+            Func<InferenceResult, T>? converter = null,
+            CancellationToken ct = default);
+
+        Task<BatchResult<T>> ExecuteBatchAsync<T>(
+            IEnumerable<InferencePipelineRequest> requests,
+            Func<InferenceResult, T>? converter = null,
+            CancellationToken ct = default);
+
         InferencePipelineStats GetStats();
         Task<HealthCheckResult> CheckHealthAsync(CancellationToken ct = default);
     }
+
 
 }

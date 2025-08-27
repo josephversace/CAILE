@@ -542,6 +542,7 @@ public class InvestigationQuery
     public double? Temperature { get; set; }
     public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
     public Dictionary<string, object> Context { get; set; }
+    public List<string>? EnabledTools { get; set; }
 }
 
 
@@ -617,6 +618,7 @@ public class InvestigationResponse
     public TimeSpan? ProcessingTime { get; set; }
     public ResponseDisplayType DisplayType { get; set; } = ResponseDisplayType.Auto;
     public Dictionary<string, object>? Metadata { get; set; }
+    public List<Evidence> RelatedEvidence { get; set; }
 }
 
 #endregion
@@ -1505,6 +1507,7 @@ public class ServiceStatus
     public double CpuUsage { get; set; }
     public DateTimeOffset? StartedAt { get; set; }
     public string? Message { get; set; }
+    public DateTimeOffset LastHealthCheck { get; set; }
 }
 
 /// <summary>

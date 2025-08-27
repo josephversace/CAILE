@@ -160,7 +160,7 @@ internal static class Program
                 });
 
                 // UI-specific services
-                services.AddScoped<DataFormattingService>();
+    
                 services.AddScoped<ModelSizeCalculator>();
 
                 // ========================================

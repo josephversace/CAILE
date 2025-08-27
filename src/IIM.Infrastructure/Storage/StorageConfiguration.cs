@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using IIM.Shared.Models;
+using IIM.Shared.Interfaces;
 
 namespace IIM.Infrastructure.Storage;
 

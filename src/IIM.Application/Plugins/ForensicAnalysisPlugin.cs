@@ -213,7 +213,7 @@ namespace IIM.Application.AI
                 EvidenceId = evidenceId,
                 OriginalHash = primaryHash,
                 CurrentHash = primaryHash,
-                IntegrityVerified = evidence.IntegrityValid.GetValueOrDefault(),
+                IntegrityVerified = evidence.IntegrityValid,
                 CustodyEvents = custodyEvents,
                 GeneratedAt = DateTimeOffset.UtcNow
             };

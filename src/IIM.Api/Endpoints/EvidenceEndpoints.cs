@@ -203,28 +203,29 @@ public static class EvidenceEndpoints
         // EVIDENCE MANAGEMENT
         // ========================================
 
-        // Update evidence metadata
-        evidence.MapPut("/{evidenceId}/metadata", async (
-            string evidenceId,
-            [FromBody] UpdateEvidenceMetadataRequest request,
-            [FromServices] IEvidenceManager evidenceManager,
-            HttpContext httpContext,
-            CancellationToken ct) =>
-        {
-            var updated = await evidenceManager.UpdateMetadataAsync(
-                evidenceId,
-                request.Metadata,
-                httpContext.User?.Identity?.Name ?? "Unknown",
-                ct);
+        ////To do : Implement this once we have the schema set
+        //// Update evidence metadata
+        //evidence.MapPut("/{evidenceId}/metadata", async (
+        //    string evidenceId,
+        //    [FromBody] UpdateEvidenceMetadataRequest request,
+        //    [FromServices] IEvidenceManager evidenceManager,
+        //    HttpContext httpContext,
+        //    CancellationToken ct) =>
+        //{
+        //    var updated = await evidenceManager.UpdateMetadataAsync(
+        //        evidenceId,
+        //        request.Metadata,
+        //        httpContext.User?.Identity?.Name ?? "Unknown",
+        //        ct);
 
-            return updated
-                ? Results.NoContent()
-                : Results.NotFound();
-        })
-        .WithName("UpdateEvidenceMetadata")
-        .WithSummary("Update evidence metadata")
-        .RequireAuthorization()
-        .ProducesProblem(StatusCodes.Status404NotFound);
+        //    return updated
+        //        ? Results.NoContent()
+        //        : Results.NotFound();
+        //})
+        //.WithName("UpdateEvidenceMetadata")
+        //.WithSummary("Update evidence metadata")
+        //.RequireAuthorization()
+        //.ProducesProblem(StatusCodes.Status404NotFound);
 
         //// Delete evidence (soft delete with audit trail)
         //evidence.MapDelete("/{evidenceId}", async (

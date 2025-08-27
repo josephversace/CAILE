@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
 
 using IIM.Api.Configuration;
+using IIM.Shared.Models;
 
 namespace IIM.Api.Hubs
 {

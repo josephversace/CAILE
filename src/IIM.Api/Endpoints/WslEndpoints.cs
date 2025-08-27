@@ -45,18 +45,18 @@ public static class WslEndpoints
             CancellationToken ct) =>
         {
             var status = await wslManager.GetStatusAsync(ct);
-            var services = await serviceOrchestrator.GetAllServiceStatusAsync(ct);
+            var services = await serviceOrchestrator.GetAllServicesStatusAsync(ct);
 
             var health = new WslHealthResponse
             {
-                IsHealthy = status.IsRunning && services.Values.All(s => s.IsHealthy),
+                IsHealthy = status.IsReady && services.Values.All(s => s.IsHealthy),
                 Status = status,
                 Services = services,
                 Issues = new List<string>()
             };
 
             // Check for issues
-            if (!status.IsRunning)
+            if (!status.IsReady)
                 health.Issues.Add("WSL is not running");
 
             foreach (var service in services.Where(s => !s.Value.IsHealthy))
@@ -130,37 +130,37 @@ public static class WslEndpoints
         //.ProducesProblem(StatusCodes.Status500InternalServerError);
 
         // Stop WSL
-        wsl.MapPost("/stop", async (
-            [FromServices] IWslManager wslManager,
-            [FromServices] IWslServiceOrchestrator serviceOrchestrator,
-            CancellationToken ct,
-            [FromBody] StopWslCommand? request = null) =>
-        {
-            var distroName = request?.DistroName ?? "IIM-Ubuntu";
+        //wsl.MapPost("/stop", async (
+        //    [FromServices] IWslManager wslManager,
+        //    [FromServices] IWslServiceOrchestrator serviceOrchestrator,
+        //    CancellationToken ct,
+        //    [FromBody] StopWslCommand? request = null) =>
+        //{
+        //    var distroName = request?.DistroName ?? "IIM-Ubuntu";
 
-            // Stop services first if not force stopping
-            if (!(request?.ForceStop ?? false))
-            {
-                await serviceOrchestrator.StopAllServicesAsync(ct);
+        //    // Stop services first if not force stopping
+        //    if (!(request?.ForceStop ?? false))
+        //    {
+        //        await serviceOrchestrator.StopAllServicesAsync(ct);
 
-                // Wait for graceful shutdown
-                if (request?.GracePeriodSeconds > 0)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(request.GracePeriodSeconds.Value), ct);
-                }
-            }
+        //        // Wait for graceful shutdown
+        //        if (request?.GracePeriodSeconds > 0)
+        //        {
+        //            await Task.Delay(TimeSpan.FromSeconds(request.GracePeriodSeconds), ct);
+        //        }
+        //    }
 
-            // Stop WSL
-            var stopped = await wslManager.StopDistroAsync(distroName, ct);
+        //    // Stop WSL
+        //    var stopped = await wslManager.StopDistroAsync(distroName, ct);
 
-            return stopped
-                ? Results.Ok(new { message = "WSL stopped successfully" })
-                : Results.Problem("Failed to stop WSL distribution");
-        })
-        .WithName("StopWsl")
-        .WithSummary("Stop WSL distribution and services")
-        .Produces<object>()
-        .ProducesProblem(StatusCodes.Status500InternalServerError);
+        //    return stopped
+        //        ? Results.Ok(new { message = "WSL stopped successfully" })
+        //        : Results.Problem("Failed to stop WSL distribution");
+        //})
+        //.WithName("StopWsl")
+        //.WithSummary("Stop WSL distribution and services")
+        //.Produces<object>()
+        //.ProducesProblem(StatusCodes.Status500InternalServerError);
 
         //// Restart WSL
         //wsl.MapPost("/restart", async (
@@ -194,25 +194,26 @@ public static class WslEndpoints
         // SERVICE MANAGEMENT
         // ========================================
 
-        // Get all services status
-        wsl.MapGet("/services", async (
-            [FromServices] IWslServiceOrchestrator serviceOrchestrator,
-            CancellationToken ct) =>
-        {
-            var services = await serviceOrchestrator.GetAllServiceStatusAsync(ct);
+        //To do: Implement once we have all the services we will need
+        //// Get all services status
+        //wsl.MapGet("/services", async (
+        //    [FromServices] IWslServiceOrchestrator serviceOrchestrator,
+        //    CancellationToken ct) =>
+        //{
+        //    var services = await serviceOrchestrator.GetAllServiceStatusAsync(ct);
 
-            return Results.Ok(new ServiceStatusListResponse
-            {
-                Services = services,
-                TotalServices = services.Count,
-                HealthyServices = services.Count(s => s.Value.IsHealthy),
-                UnhealthyServices = services.Count(s => !s.Value.IsHealthy),
-                CheckedAt = DateTimeOffset.UtcNow
-            });
-        })
-        .WithName("GetWslServices")
-        .WithSummary("Get status of all WSL services")
-        .Produces<ServiceStatusListResponse>();
+        //    return Results.Ok(new ServiceStatusListResponse
+        //    {
+        //        Services = services,
+        //        TotalServices = services.Count,
+        //        HealthyServices = services.Count(s => s.Value.IsHealthy),
+        //        UnhealthyServices = services.Count(s => !s.Value.IsHealthy),
+        //        CheckedAt = DateTimeOffset.UtcNow
+        //    });
+        //})
+        //.WithName("GetWslServices")
+        //.WithSummary("Get status of all WSL services")
+        //.Produces<ServiceStatusListResponse>();
 
         // Start specific service
         wsl.MapPost("/services/{serviceName}/start", async (
@@ -220,7 +221,7 @@ public static class WslEndpoints
             [FromServices] IWslServiceOrchestrator serviceOrchestrator,
             CancellationToken ct) =>
         {
-            var started = await serviceOrchestrator.StartServiceAsync(serviceName, ct);
+            var started = await serviceOrchestrator.StartServiceAsync(serviceName, null, ct);
 
             return started
                 ? Results.Ok(new { message = $"Service {serviceName} started" })
@@ -353,7 +354,7 @@ public static class WslEndpoints
 
         // Configure proxy (Tor)
         wsl.MapPost("/proxy/configure", async (
-            [FromBody] ProxyConfigDto config,
+            [FromBody] ProxyConfig config,
             [FromServices] IMediator mediator,
             CancellationToken ct) =>
         {

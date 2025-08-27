@@ -126,9 +126,9 @@ app.MapInvestigationEndpoints(); // Investigation endpoints
 app.MapEvidenceEndpoints();      // Evidence management
 app.MapModelEndpoints();         // Model management
 app.MapWslEndpoints();           // WSL management
-app.MapInferenceEndpoints();     // Inference & generation
+
 app.MapRagEndpoints();           // RAG endpoints
-app.MapAuditEndpoints();         // Audit logging
+                                // Audit logging
 app.MapCaseEndpoints();
 
 // Start the application

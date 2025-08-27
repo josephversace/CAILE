@@ -47,7 +47,7 @@ namespace IIM.Core.Services
             {
                 Id = Guid.NewGuid().ToString("N"),
                 CaseNumber = await GenerateCaseNumberAsync(),
-                Name = name,
+                Title = name,
                 Description = description,
                 Type = type,
                 Status = CaseStatus.Open,
@@ -83,7 +83,7 @@ namespace IIM.Core.Services
             {
                 caseEntity.Id,
                 caseEntity.CaseNumber,
-                caseEntity.Name,
+                caseEntity.Title,
                 Type = type.ToString(),
                 Status = caseEntity.Status.ToString(),
                 caseEntity.Description,
@@ -190,7 +190,7 @@ namespace IIM.Core.Services
             var rowsAffected = await connection.ExecuteAsync(sql, new
             {
                 caseEntity.Id,
-                caseEntity.Name,
+                caseEntity.Title,
                 caseEntity.Description,
                 Status = caseEntity.Status.ToString(),
                 caseEntity.UpdatedAt,
@@ -358,7 +358,7 @@ namespace IIM.Core.Services
             {
                 Id = row.Id,
                 CaseNumber = row.CaseNumber,
-                Name = row.Name,
+                Title = row.Name,
                 Type = Enum.Parse<CaseType>(row.Type),
                 Status = Enum.Parse<CaseStatus>(row.Status),
                 Description = row.Description,

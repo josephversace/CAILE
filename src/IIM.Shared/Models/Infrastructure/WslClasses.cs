@@ -466,26 +466,16 @@ namespace IIM.Shared.Models
     /// </summary>
     public sealed class ProxyConfig
     {
-        /// <summary>
-        /// HTTP proxy URL
-        /// </summary>
-        public string? HttpProxy { get; set; }
+    
+            public string? ProxyType { get; set; }
+            public string? Host { get; set; }
+            public int Port { get; set; }
 
-        /// <summary>
-        /// HTTPS proxy URL
-        /// </summary>
-        public string? HttpsProxy { get; set; }
-
-        /// <summary>
-        /// SOCKS proxy URL (for Tor)
-        /// </summary>
-        public string? SocksProxy { get; set; }
-
-        /// <summary>
-        /// No proxy list (comma-separated)
-        /// </summary>
-        public string? NoProxy { get; set; }
-
+            public string? HttpProxy => ProxyType != null && Host != null ? $"{ProxyType}://{Host}:{Port}" : null;
+            public string? HttpsProxy => ProxyType != null && Host != null ? $"{ProxyType}://{Host}:{Port}" : null;
+            public string? NoProxy { get; set; }
+  
+  
         /// <summary>
         /// Whether to install and configure Tor
         /// </summary>

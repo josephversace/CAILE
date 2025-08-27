@@ -8,8 +8,7 @@
 @using IIM.Components.Services
 @using Microsoft.Extensions.Logging
 
-@inject IVisualizationService VisualizationService
-@inject DataFormattingService Formatter
+
 
 <div class="unified-message @GetMessageClass()" data-message-id="@Message.Id">
     <!-- Message Header Row -->
@@ -43,7 +42,7 @@
                 {
                     <span class="model-badge badge bg-secondary">@Message.ModelUsed</span>
                 }
-                <span class="message-timestamp">@Formatter.GetRelativeTime(Message.Timestamp)</span>
+                <span class="message-timestamp">Message.Timestamp</span>
                 @if (ShowConfidence && GetConfidence() > 0)
                 {
                     <ConfidenceIndicator Confidence="@GetConfidence()" ShowIcon="false" />
@@ -80,7 +79,7 @@
                     <div class="tool-results-section mt-3">
                         @foreach (var result in Message.ToolResults)
                         {
-                            @if (VisualizationService.ShouldUseAdvancedDisplay(result))
+                       @*      @if (VisualizationService.ShouldUseAdvancedDisplay(result))
                             {
                                 <!-- Use specialized displays for complex data -->
                                 <div class="advanced-result-display">
@@ -92,7 +91,7 @@
                                 <!-- Standard tool result display -->
                                 <ToolResult Result="@result"
                                             OnExecute="@((parameters) => HandleToolExecute(result.ToolName, parameters))" />
-                            }
+                            } *@
                         }
                     </div>
                 }
@@ -162,8 +161,8 @@
                                     <tr>
                                         <td><strong>@meta.Key</strong></td>
                                         <td>
-                                            <span class="data-type-@Formatter.GetDataType(meta.Value)">
-                                                @Formatter.FormatValue(meta.Value)
+                                            <span class="data-type-meta.Value">
+                                                meta.Value
                                             </span>
                                         </td>
                                     </tr>
@@ -472,61 +471,61 @@
     {
         var response = new InvestigationResponse
         {
-            Id = Guid.NewGuid().ToString(),
-            Message = result.ToolName,
-            DisplayType = result.PreferredDisplayType ?? ResponseDisplayType.Auto,
-            Visualization = result.Visualizations?.FirstOrDefault() != null ?
-                new ResponseVisualization
-                {
-                    Type = result.Visualizations.First().Type,
-                    Title = result.Visualizations.First().Title,
-                    Data = result.Visualizations.First().Data,
-                    Options = result.Visualizations.First().Options
-                } : null,
-            Metadata = result.Metadata
+            // Id = Guid.NewGuid().ToString(),
+            // Message = result.ToolName,
+            // DisplayType = result.PreferredDisplayType ?? ResponseDisplayType.Auto,
+            // Visualization = result.Visualizations?.FirstOrDefault() != null ?
+            //     new ResponseVisualization
+            //     {
+            //         Type = result.Visualizations.First().Type,
+            //         Title = result.Visualizations.First().Title,
+            //         Data = result.Visualizations.First().Data,
+            //         Options = result.Visualizations.First().Options
+            //     } : null,
+            // Metadata = result.Metadata
         };
 
         // Use the service to determine display type
-        var displayType = VisualizationService.DetermineDisplayTypeFromToolResult(result);
+        // var displayType = VisualizationService.DetermineDisplayTypeFromToolResult(result);
 
-        switch (displayType)
-        {
-            case ResponseDisplayType.Table:
-                builder.OpenComponent<TableResponseDisplay>(0);
-                builder.AddAttribute(1, "Response", response);
-                builder.CloseComponent();
-                break;
+        // switch (displayType)
+        // {
+        //     case ResponseDisplayType.Table:
+        //         builder.OpenComponent<TableResponseDisplay>(0);
+        //         builder.AddAttribute(1, "Response", response);
+        //         builder.CloseComponent();
+        //         break;
 
-            case ResponseDisplayType.Timeline:
-                builder.OpenComponent<TimelineResponseDisplay>(0);
-                builder.AddAttribute(1, "Response", response);
-                builder.CloseComponent();
-                break;
+        //     case ResponseDisplayType.Timeline:
+        //         builder.OpenComponent<TimelineResponseDisplay>(0);
+        //         builder.AddAttribute(1, "Response", response);
+        //         builder.CloseComponent();
+        //         break;
 
-            case ResponseDisplayType.Image:
-                builder.OpenComponent<ImageResponseDisplay>(0);
-                builder.AddAttribute(1, "Response", response);
-                builder.CloseComponent();
-                break;
+        //     case ResponseDisplayType.Image:
+        //         builder.OpenComponent<ImageResponseDisplay>(0);
+        //         builder.AddAttribute(1, "Response", response);
+        //         builder.CloseComponent();
+        //         break;
 
-            case ResponseDisplayType.Geospatial:
-                builder.OpenComponent<MapResponseDisplay>(0);
-                builder.AddAttribute(1, "Response", response);
-                builder.CloseComponent();
-                break;
+        //     case ResponseDisplayType.Geospatial:
+        //         builder.OpenComponent<MapResponseDisplay>(0);
+        //         builder.AddAttribute(1, "Response", response);
+        //         builder.CloseComponent();
+        //         break;
 
-            case ResponseDisplayType.MultiModal:
-                builder.OpenComponent<MultiModalResponseDisplay>(0);
-                builder.AddAttribute(1, "Response", response);
-                builder.CloseComponent();
-                break;
+        //     case ResponseDisplayType.MultiModal:
+        //         builder.OpenComponent<MultiModalResponseDisplay>(0);
+        //         builder.AddAttribute(1, "Response", response);
+        //         builder.CloseComponent();
+        //         break;
 
-            default:
-                builder.OpenComponent<StructuredDataDisplay>(0);
-                builder.AddAttribute(1, "Response", response);
-                builder.CloseComponent();
-                break;
-        }
+        //     default:
+        //         builder.OpenComponent<StructuredDataDisplay>(0);
+        //         builder.AddAttribute(1, "Response", response);
+        //         builder.CloseComponent();
+        //         break;
+        //}
     };
 
     private string GetStatusBadgeClass(ToolStatus status) => status switch

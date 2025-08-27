@@ -1,6 +1,5 @@
 using IIM.Core.Configuration;
 using IIM.Core.Models;
-using IIM.Infrastructure.Storage;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
@@ -115,11 +114,20 @@ namespace IIM.Core.AI
                     State = ModelState.Ready,
                     Metadata = new Dictionary<string, object>()
                 };
+
                 var loadedModel = new LoadedModel
                 {
                     Handle = handle,
                     Request = request,
                     ModelPath = modelPath,
+                    Configuration = new ModelConfiguration
+                    {
+                        ModelId = request.ModelId,
+                        Name = Path.GetFileName(modelPath),
+                        ModelPath = modelPath,
+                        Type = request.ModelType,
+                        Provider = request.Provider
+                    },
                     RuntimeOptions = new ModelRuntimeOptions(),
                     Process = Process.GetCurrentProcess(),
                     LastAccessed = DateTimeOffset.UtcNow

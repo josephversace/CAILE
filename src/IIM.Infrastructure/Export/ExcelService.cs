@@ -2,7 +2,7 @@ using ClosedXML.Excel;
 using IIM.Core.Models;
 
 using IIM.Shared.Enums;
-
+using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -129,7 +129,7 @@ public class ExcelService : IExcelService
             worksheet.Cell(1, 1).Value = "Response ID:";
             worksheet.Cell(1, 2).Value = response.Id;
             worksheet.Cell(2, 1).Value = "Created:";
-            worksheet.Cell(2, 2).Value = response.CreatedAt.GetValueOrDefault().ToString();
+            worksheet.Cell(2, 2).Value = response.Timestamp.ToString();
             worksheet.Cell(3, 1).Value = "Confidence:";
             worksheet.Cell(3, 2).Value = response.Confidence;
             

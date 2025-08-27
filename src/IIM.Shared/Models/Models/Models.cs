@@ -83,7 +83,7 @@ public class ModelConfiguration
     public long Size { get; set; }
     public string ModelPath { get; set; } = string.Empty;
     public string Filename { get; set; } = string.Empty;
-    ModelFormat Format { get; set; } = ModelFormat.Unknown;
+    public ModelFormat Format { get; set; } = ModelFormat.Unknown;
     public string Hash { get; set; } = string.Empty;
     public HashType HashType { get; set; } = HashType.SHA256;
     public string Description { get; set; } = string.Empty;
@@ -106,6 +106,7 @@ public class ModelConfiguration
     public Dictionary<string, object> Parameters { get; set; } = new();
     public Dictionary<string, object> Properties { get; set; } = new();
     public string Name { get; set; }
+    public DeviceType DeviceType { get;set; } = DeviceType.CPU;
 }
 
 
@@ -197,8 +198,24 @@ public class ModelLoadRequest
     public int BatchSize { get; set; } = 512;
     public int GpuLayers { get; set; } = -1; //Use all available GPU layers
 
-
 }
+
+
+    /// <summary>
+    /// Represents a named set of parameters for a specific model.
+    /// </summary>
+    public class ModelParameterSet
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString("N");
+        public string ModelId { get; set; } = string.Empty; // FK to ModelConfiguration
+        public string Name { get; set; } = string.Empty;    // "Default", "Low Memory", etc.
+        public string Description { get; set; } = string.Empty;
+        public Dictionary<string, object> Parameters { get; set; } = new();
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; }
+    }
+
+
 
 #endregion
 

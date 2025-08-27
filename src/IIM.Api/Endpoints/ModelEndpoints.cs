@@ -84,7 +84,7 @@ public static class ModelEndpoints
                 LoadedAt = modelInfo?.LoadedAt,
                 MemoryUsage = modelInfo?.RequiredMemory ?? 0,
                 DeviceType = modelInfo?.DeviceType ?? DeviceType.CPU,
-                Metadata = modelInfo?.Metadata
+                Metadata = modelInfo?.Parameters
             };
 
             return Results.Ok(status);
@@ -203,7 +203,7 @@ public static class ModelEndpoints
             {
                 ModelId = modelId,
                 ModelType = modelInfo.Type,
-                Parameters = modelInfo.Metadata
+                Parameters = modelInfo.Parameters
             };
 
             var handle = await mediator.Send(loadCommand, ct);
@@ -245,49 +245,51 @@ public static class ModelEndpoints
         .WithSummary("Get memory usage of all loaded models")
         .Produces<object>();
 
-        // Predict memory requirements
-        models.MapPost("/memory/predict", async (
-            [FromBody] PredictMemoryRequest request,
-            [FromServices] IModelOrchestrator orchestrator,
-            CancellationToken ct) =>
-        {
-            var prediction = await orchestrator.PredictMemoryRequirementsAsync(
-                request.ModelId,
-                request.ModelSize,
-                request.Quantization,
-                ct);
+        //To do: Implement this
+        //// Predict memory requirements
+        //models.MapPost("/memory/predict", async (
+        //    [FromBody] PredictMemoryRequest request,
+        //    [FromServices] IModelOrchestrator orchestrator,
+        //    CancellationToken ct) =>
+        //{
+        //    var prediction = await orchestrator.PredictMemoryRequirementsAsync(
+        //        request.ModelId,
+        //        request.ModelSize,
+        //        request.Quantization,
+        //        ct);
 
-            return Results.Ok(prediction);
-        })
-        .WithName("PredictMemoryRequirements")
-        .WithSummary("Predict memory requirements for a model")
-        .Produces<MemoryPrediction>();
+        //    return Results.Ok(prediction);
+        //})
+        //.WithName("PredictMemoryRequirements")
+        //.WithSummary("Predict memory requirements for a model")
+        //.Produces<MemoryPrediction>();
 
         // ========================================
         // MODEL CONFIGURATION
         // ========================================
 
-        // Update model parameters
-        models.MapPut("/{modelId}/parameters", async (
-            string modelId,
-            [FromBody] Dictionary<string, object> parameters,
-            [FromServices] IModelOrchestrator orchestrator,
-            CancellationToken ct) =>
-        {
-            var updated = await orchestrator.UpdateModelParametersAsync(
-                modelId,
-                parameters,
-                ct);
+        //To do implement this
+        //// Update model parameters
+        //models.MapPut("/{modelId}/parameters", async (
+        //    string modelId,
+        //    [FromBody] Dictionary<string, object> parameters,
+        //    [FromServices] IModelOrchestrator orchestrator,
+        //    CancellationToken ct) =>
+        //{
+        //    var updated = await orchestrator.UpdateModelParametersAsync(
+        //        modelId,
+        //        parameters,
+        //        ct);
 
-            return updated
-                ? Results.Ok(new { message = "Model parameters updated" })
-                : Results.NotFound(new { error = $"Model {modelId} not found or not loaded" });
-        })
-        .WithName("UpdateModelParameters")
-        .WithSummary("Update runtime parameters of a loaded model")
-        .RequireAuthorization()
-        .Produces<object>()
-        .ProducesProblem(StatusCodes.Status404NotFound);
+        //    return updated
+        //        ? Results.Ok(new { message = "Model parameters updated" })
+        //        : Results.NotFound(new { error = $"Model {modelId} not found or not loaded" });
+        //})
+        //.WithName("UpdateModelParameters")
+        //.WithSummary("Update runtime parameters of a loaded model")
+        //.RequireAuthorization()
+        //.Produces<object>()
+        //.ProducesProblem(StatusCodes.Status404NotFound);
 
         // ========================================
         // MODEL TEMPLATES
@@ -298,7 +300,7 @@ public static class ModelEndpoints
             [FromServices] IModelConfigurationTemplateService templateService,
             CancellationToken ct) =>
         {
-            var templates = await templateService.GetTemplatesAsync(ct);
+            var templates = await templateService.GetTemplatesAsync(null, ct);
             return Results.Ok(templates);
         })
         .WithName("GetModelTemplates")
