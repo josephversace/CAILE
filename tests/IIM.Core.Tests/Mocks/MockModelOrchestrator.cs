@@ -2,6 +2,7 @@ using IIM.Core.AI;
 
 using IIM.Core.Models;
 using IIM.Shared.Enums;
+using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.OnnxRuntime;
@@ -245,15 +246,16 @@ public class MockModelOrchestrator : IModelOrchestrator
             var m when m.Contains("rag") => new RagResponse
             {
                 Answer = $"Based on the documents, here's the answer to: {input}",
-                Sources = new[]
-                {
-                new Source
-                {
-                    Document = "case-file-001.pdf",
-                    Page = 5,
-                    Relevance = 0.92f
-                }
-            },
+                Sources = new List<Source>
+{
+    new Source
+    {
+        Document = "case-file-001.pdf",
+        Page = 5,
+        Relevance = 0.92f
+    }
+},
+
                 Confidence = 0.87f,
                 TokensUsed = 250,
                 ProcessingTime = delay
@@ -324,7 +326,17 @@ public class MockInferencePipeline : IInferencePipeline
         throw new NotImplementedException();
     }
 
+    public Task<T> ExecuteAsync<T>(InferencePipelineRequest request, Func<InferenceResult, T>? converter = null, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<BatchResult<T>> ExecuteBatchAsync<T>(IEnumerable<InferencePipelineRequest> requests, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<BatchResult<T>> ExecuteBatchAsync<T>(IEnumerable<InferencePipelineRequest> requests, Func<InferenceResult, T>? converter = null, CancellationToken ct = default)
     {
         throw new NotImplementedException();
     }

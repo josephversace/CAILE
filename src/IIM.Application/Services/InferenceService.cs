@@ -40,7 +40,7 @@ namespace IIM.Application.Services
                 Input = prompt
             };
 
-            return await _pipeline.ExecuteAsync<string>(request, cancellationToken);
+            return await _pipeline.ExecuteAsync<string>(request, null, cancellationToken);
         }
 
         public async Task<T> GenerateAsync<T>(string modelId, object input, CancellationToken cancellationToken = default)
@@ -51,7 +51,7 @@ namespace IIM.Application.Services
                 Input = input
             };
 
-            return await _pipeline.ExecuteAsync<T>(request, cancellationToken);
+            return await _pipeline.ExecuteAsync<T>(request, null, cancellationToken);
         }
 
         /// <summary>
@@ -90,7 +90,8 @@ namespace IIM.Application.Services
 
             try
             {
-                var result = await _pipeline.ExecuteAsync<TranscriptionResult>(request, cancellationToken);
+                var result =  await _pipeline.ExecuteAsync<TranscriptionResult>(request, null, cancellationToken);
+
 
                 // Enrich with processing metadata
                 result.Metadata["model"] = "whisper-base";
@@ -142,7 +143,7 @@ namespace IIM.Application.Services
             try
             {
                 // Get the image analysis which includes similar images
-                var analysis = await _pipeline.ExecuteAsync<ImageAnalysisResult>(request, cancellationToken);
+                var analysis = await _pipeline.ExecuteAsync<ImageAnalysisResult>(request, null, cancellationToken);
 
                 // Convert ImageAnalysisResult to ImageSearchResults for UI compatibility
                 var searchResults = new ImageSearchResults
@@ -220,7 +221,7 @@ namespace IIM.Application.Services
 
             try
             {
-                return await _pipeline.ExecuteAsync<RagResponse>(request, cancellationToken);
+                return await _pipeline.ExecuteAsync<RagResponse>(request, null, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -244,7 +245,7 @@ namespace IIM.Application.Services
             try
             {
                 // Get stats from the orchestrator
-                var stats = await _orchestrator.GetStatsAsync();
+                //var stats = await _orchestrator.GetStatsAsync();
 
                 _cachedDeviceInfo = await Task.Run(() =>
                 {
@@ -252,7 +253,7 @@ namespace IIM.Application.Services
                     {
                         DeviceType = GetDeviceType(),
                         DeviceName = GetDeviceName(),
-                        MemoryAvailable = stats.AvailableMemory,
+                       // MemoryAvailable = stats.AvailableMemory,
                         MemoryTotal = GetTotalMemory(),
                         SupportsDirectML = CheckDirectMLSupport(),
                         SupportsROCm = CheckROCmSupport()

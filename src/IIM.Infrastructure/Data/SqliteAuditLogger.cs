@@ -79,40 +79,40 @@ namespace IIM.Infrastructure.Data
             await LogAuditAsync(evt, ct);
         }
 
-        //public async Task<List<AuditEvent>> GetAuditLogsAsync(AuditLogFilter? filter = null, CancellationToken ct = default)
-        //{
-        //    var query = _context.AuditLogs.AsNoTracking();
+        public async Task<List<AuditEvent>> GetAuditLogsAsync(AuditLogFilter? filter = null, CancellationToken ct = default)
+        {
+            var query = _context.AuditLogs.AsNoTracking();
 
-        //    if (filter != null)
-        //    {
-        //        //if (filter.StartDate.HasValue)
-        //        //    query = query.Where(a => a.Timestamp >= filter.StartDate.Value.UtcDateTime);
+            if (filter != null)
+            {
+                //if (filter.StartDate.HasValue)
+                //    query = query.Where(a => a.Timestamp >= filter.StartDate.Value.UtcDateTime);
 
-        //        //if (filter.EndDate.HasValue)
-        //        //    query = query.Where(a => a.Timestamp <= filter.EndDate.Value.UtcDateTime);
+                //if (filter.EndDate.HasValue)
+                //    query = query.Where(a => a.Timestamp <= filter.EndDate.Value.UtcDateTime);
 
-        //        //if (!string.IsNullOrEmpty(filter.EventType))
-        //        //    query = query.Where(a => a.EventType == filter.EventType);
+                //if (!string.IsNullOrEmpty(filter.EventType))
+                //    query = query.Where(a => a.EventType == filter.EventType);
 
-        //        //if (!string.IsNullOrEmpty(filter.UserId))
-        //        //    query = query.Where(a => a.User == filter.UserId);
+                //if (!string.IsNullOrEmpty(filter.UserId))
+                //    query = query.Where(a => a.User == filter.UserId);
 
-        //        //if (!string.IsNullOrEmpty(filter.EntityId))
-        //        //    query = query.Where(a => a.EntityId == filter.EntityId);
+                //if (!string.IsNullOrEmpty(filter.EntityId))
+                //    query = query.Where(a => a.EntityId == filter.EntityId);
 
-        //        //if (!string.IsNullOrEmpty(filter.EntityType))
-        //        //    query = query.Where(a => a.EntityType == filter.EntityType);
+                //if (!string.IsNullOrEmpty(filter.EntityType))
+                //    query = query.Where(a => a.EntityType == filter.EntityType);
 
-               
-        //    }
-        //    else
-        //    {
-        //        query = query.OrderByDescending(a => a.).Take(100);
-        //    }
 
-        //    var entities = await query.ToListAsync(ct);
-        //    return entities;
-        //}
+            }
+            else
+            {
+                query = query.OrderByDescending(a=>a.Timestamp).Take(100);
+            }
+
+            var entities = await query.ToListAsync(ct);
+            return entities;
+        }
 
 
         public async Task<List<AuditEvent>?> GetAuditLogAsync(long id, CancellationToken ct = default)

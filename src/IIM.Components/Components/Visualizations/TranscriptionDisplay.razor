@@ -13,7 +13,7 @@
                 <span class="badge bg-info">Duration: @FormatDuration(Result.Duration.Value)</span>
             }
         </div>
-        @if (Result.AudioFileId.HasValue)
+        @if (!string.IsNullOrEmpty(Result.AudioFileId))
         {
             <button class="btn btn-sm btn-outline-primary" @onclick="PlayAudio">
                 <i class="fas fa-play"></i> Play
@@ -68,9 +68,13 @@
     
     private async Task PlayAudio()
     {
-        if (Result.AudioFileId.HasValue)
+        if (!string.IsNullOrEmpty(Result.AudioFileId))
         {
-            await OnPlayAudio.InvokeAsync(Result.AudioFileId.Value);
+            if (int.TryParse(Result.AudioFileId, out var audioId))
+            {
+                await OnPlayAudio.InvokeAsync(audioId);
+            }
+   
         }
     }
     

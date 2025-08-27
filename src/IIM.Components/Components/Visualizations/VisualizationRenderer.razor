@@ -13,12 +13,12 @@
         <div class="visualization-container">
             @switch (Visualization.Type)
             {
-                case VisualizationType.Chart:
-                    @ChartVisualization((Visualization.Data!, Visualization.Title ?? "", Visualization.ChartType))
+         @*        case VisualizationType.Chart:
+                    @ChartVisualization((Visualization.Data!, Visualization.Title ?? "", Visualization.))
                     break;
 
                 case VisualizationType.Table:
-                    @TableVisualization((Visualization.Data!, Visualization.Title ?? "", Visualization.Columns))
+                    @TableVisualization((Visualization.Data!, Visualization.Title ?? "", Visualization.Table))
                     break;
 
                 case VisualizationType.Timeline:
@@ -35,7 +35,7 @@
 
                 case VisualizationType.Custom:
                     @CustomVisualization((Visualization.Data!, Visualization.Title ?? "", Visualization.CustomTemplate))
-                    break;
+                    break; *@
 
                 default:
                     <div class="alert alert-info">

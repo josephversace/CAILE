@@ -13,6 +13,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using IIM.Shared.Models;
+using IIM.Shared.Interfaces;
 
 namespace IIM.Application.Queries
 {
@@ -56,10 +57,10 @@ namespace IIM.Application.Queries
                 {
                     documents = ragResponse.Sources.Select((source, index) => new RAGDocument
                     {
-                        Id = source,
+                        Id = ragResponse.Id,
                         Content = ragResponse.Answer,        // Only field you have; replace if you want different content
                         Relevance = 1.0,                     // No relevance value; set default
-                        SourceId = source,
+                 
                         SourceType = "Document",
                         Metadata = new Dictionary<string, object> { ["index"] = index },
                         ChunkIndices = new List<int> { index }

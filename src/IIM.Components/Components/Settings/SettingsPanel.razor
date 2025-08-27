@@ -1,10 +1,11 @@
-﻿// ============================================
+﻿@* // ============================================
 // CREATE: src/IIM.Desktop/Components/Settings/SettingsPanel.razor
 // UI for configuration management
 // ============================================
 
 @page "/settings"
 @using IIM.Shared.Interfaces
+@using IIM.Shared.Models
 @inject IIIMApiClient ApiClient
 @inject INotificationService Notifications
 
@@ -84,17 +85,17 @@
         </button>
       @*   <button class="btn btn-secondary" @onclick="ReloadSettings">
             <i class="fas fa-undo"></i> Reload
-        </button> *@
+        </button>
     </div>
 </div>
 
 @code {
     private string ActiveTab = "storage";
-    private SettingsDto Settings = new();
+    private Setting Settings = new();
 
     protected override async Task OnInitializedAsync()
     {
-        Settings = await ApiClient.GetSettingsAsync();
+       // Setting = await ApiClient.GetSettingsAsync();
     }
 
     private async Task SaveSettings()
@@ -106,4 +107,4 @@
     {
        
     }
-}
+}  *@

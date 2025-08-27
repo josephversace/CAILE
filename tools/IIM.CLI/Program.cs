@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using IIM.Plugin.SDK;
-
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 
 namespace IIM.CLI;
 
@@ -146,7 +146,7 @@ class Program
         services.AddLogging(builder => builder.AddConsole());
         services.AddSingleton<IPluginValidator, MockPluginValidator>();
         services.AddSingleton<IPluginSandbox, MockPluginSandbox>();
-        services.AddSingleton<IPluginManager, SecurePluginManager>();
+        services.AddSingleton<IPluginManager, MockPluginManager>();
         
         var provider = services.BuildServiceProvider();
         var pluginManager = provider.GetRequiredService<IPluginManager>();
@@ -495,4 +495,99 @@ internal class MockEvidenceStore : IEvidenceStore
 
     public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
         => Task.FromResult(false);
+}
+
+
+public class MockPluginManager : IPluginManager
+{
+    private readonly Dictionary<string, IInvestigationPlugin> _plugins = new();
+
+    public Task<IEnumerable<PluginInfo>> DiscoverPluginsAsync(string directory)
+    {
+        // Return an in-memory list of fake plugins for testing
+        return Task.FromResult(_plugins.Select(p => new PluginInfo
+        {
+            Id = p.Key,
+            Name = $"MockPlugin_{p.Key}",
+            Version = "1.0.0",
+            Description = "A mock plugin",
+            Author = "MockAuthor",
+            PackagePath = "mockpath",
+            IsLoaded = true,
+            IsEnabled = true
+        }).AsEnumerable());
+    }
+
+    public Task<bool> LoadPluginAsync(string pluginPath)
+    {
+        // Just add a new mock plugin, ignoring pluginPath
+        var id = $"mock_{_plugins.Count + 1}";
+        _plugins[id] = new MockInvestigationPlugin();
+        return Task.FromResult(true);
+    }
+
+    public Task<bool> UnloadPluginAsync(string pluginId)
+    {
+        _plugins.Remove(pluginId);
+        return Task.FromResult(true);
+    }
+
+    public IInvestigationPlugin? GetPlugin(string pluginId)
+    {
+        return _plugins.TryGetValue(pluginId, out var p) ? p : null;
+    }
+
+    public IEnumerable<IInvestigationPlugin> GetPluginsByIntent(string intent)
+    {
+        // Return all for simplicity
+        return _plugins.Values;
+    }
+
+    public IEnumerable<IInvestigationPlugin> GetAllPlugins()
+    {
+        return _plugins.Values;
+    }
+
+    public Task<PluginManifest?> GetPluginManifestAsync(string pluginPath)
+    {
+        // Return a basic manifest
+        return Task.FromResult<PluginManifest?>(new PluginManifest
+        {
+            Id = "mock",
+            Name = "Mock Plugin",
+            Version = "1.0.0",
+            Description = "A mock plugin for testing"
+        });
+    }
+}
+
+// You'd also need a simple mock implementation of IInvestigationPlugin:
+public class MockInvestigationPlugin : IInvestigationPlugin
+{
+    public PluginCapabilities Capabilities => new PluginCapabilities
+    {
+        SupportedIntents = new[] { "mock" }
+
+    };
+
+    public string Id => throw new NotImplementedException();
+
+    public string Name => throw new NotImplementedException();
+
+    public string Description => throw new NotImplementedException();
+
+    public Task InitializeAsync(PluginContext context) => Task.CompletedTask;
+    public Task<bool> ValidateAsync() => Task.FromResult(true);
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
+    public Task<PluginResult> ExecuteAsync(PluginRequest request, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    Task IInvestigationPlugin.DisposeAsync()
+    {
+        throw new NotImplementedException();
+    }
+    // ... Add other members as required by your interface
 }

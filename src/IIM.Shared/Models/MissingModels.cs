@@ -67,20 +67,21 @@ public class InferencePipelineRequest
         public TimeSpan InferenceTime { get; set; }
         public int TokensGenerated { get; set; }
         public Dictionary<string, object>? Metadata { get; set; }
-    public int TokensProcessed { get; set; }
-    public double TokensPerSecond { get; set; }
+        public int TokensProcessed { get; set; }
+        public double TokensPerSecond { get; set; }
 }
 
-    /// <summary>
-    /// Queued request for pipeline
-    /// </summary>
-    public class QueuedRequest
-    {
+/// <summary>
+/// Queued request for pipeline
+/// </summary>
+public class QueuedRequest
+{
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
-        public InferencePipelineRequest Request { get; set; } = new();
-        public TaskCompletionSource<InferenceResult> CompletionSource { get; set; } = new();
-        public DateTimeOffset QueuedAt { get; set; } = DateTimeOffset.UtcNow;
-        public Priority Priority { get; set; } = Priority.Normal;
+    public InferencePipelineRequest Request { get; set; } = new();
+    public TaskCompletionSource<InferenceResult> CompletionSource { get; set; } = new();
+    public DateTimeOffset QueuedAt { get; set; } = DateTimeOffset.UtcNow;
+    public Priority Priority { get; set; } = Priority.Normal;
+    public CancellationToken CancellationToken { get; set; }
 }
 
     /// <summary>

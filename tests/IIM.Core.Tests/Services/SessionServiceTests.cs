@@ -5,10 +5,11 @@ using IIM.Shared.Models;
 using FluentAssertions;
 using IIM.Core.Services;
 using IIM.Shared.Enums;
-
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
+using IIM.Shared.Interfaces;
+using IIM.Application.Investigation;
 
 namespace IIM.Core.Tests.Services
 {

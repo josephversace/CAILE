@@ -1,6 +1,5 @@
 ﻿using IIM.Api.Configuration;
 using IIM.Core.Services;
-using IIM.Core.Storage;
 using IIM.Infrastructure.Embeddings;
 using IIM.Infrastructure.Platform;
 using IIM.Infrastructure.Storage;
@@ -29,7 +28,7 @@ namespace IIM.Api.Extensions
             }
 
             // Storage Configuration (Singleton - doesn't change)
-            services.AddSingleton<StorageConfiguration>(sp =>
+            services.AddSingleton<IStorageConfiguration, StorageConfiguration>(sp =>
             {
                 var basePath = configuration["Storage:BasePath"] ??
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IIM");

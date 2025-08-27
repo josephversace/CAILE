@@ -20,7 +20,7 @@ namespace IIM.Infrastructure.Data
         {
 
             services.AddDbContext<AuditDbContext>(options =>
-                   options.UseSqlite(configuration.GetConnectionString("AuditDb")));
+                   options.UseSqlite(configuration.GetConnectionString("AuditDb"))); 
             services.AddScoped<IAuditRepository, EfAuditRepository>();
 
 
@@ -32,6 +32,8 @@ namespace IIM.Infrastructure.Data
             services.AddDbContext<ModelDbContext>(options =>
                 options.UseSqlite(configuration.GetConnectionString("ModelDb")));
             services.AddScoped<IModelRepository, EfModelRepository>();
+
+            services.AddScoped<IModelParameterSetRepository, EfModelParameterSetRepository>();
 
 
             return services;

@@ -1,16 +1,11 @@
 ﻿// IIM.Core/Services/ISecurityService.cs
 using Microsoft.Extensions.Logging;
 using IIM.Core.Services;
+using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 
 namespace IIM.Infrastructure.Services;
 
-public class UserInfo
-{
-    public string Id { get; set; } = string.Empty;
-    public string Username { get; set; } = string.Empty;
-    public string DisplayName { get; set; } = string.Empty;
-    public List<string> Roles { get; set; } = new();
-}
 
 // Basic implementation
 public class SecurityService : ISecurityService

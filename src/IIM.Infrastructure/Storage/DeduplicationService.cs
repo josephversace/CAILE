@@ -11,7 +11,7 @@ using IIM.Shared.Models;
 
 
 
-namespace IIM.Core.Services
+namespace IIM.Infrastructure.Storage
 {
     public class DeduplicationService : IDeduplicationService
     {

@@ -106,9 +106,12 @@ namespace IIM.Application.Models
             }
         }
 
+        //To do: Implement this with LibreHardwareMonitor.Hardware;
+
         public async Task<GpuStats> GetGpuStatsAsync(CancellationToken cancellationToken = default)
         {
-            return await _modelOrchestrator.GetGpuStatsAsync(cancellationToken);
+            throw new NotImplementedException();
+            // return await _modelOrchestrator.GetGpuStatsAsync(cancellationToken);
         }
 
         // Helper methods to determine model properties

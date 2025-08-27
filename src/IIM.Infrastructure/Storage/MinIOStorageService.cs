@@ -1,5 +1,4 @@
-﻿using IIM.Core.Configuration;
-using IIM.Shared.Interfaces;
+﻿using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
@@ -11,7 +10,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace IIM.Core.Storage
+namespace IIM.Infrastructure.Storage
 {
     public class MinIOStorageService : IMinIOStorageService
     {

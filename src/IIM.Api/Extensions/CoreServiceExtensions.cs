@@ -9,6 +9,7 @@ using IIM.Core.Mediator;
 using IIM.Core.Services;
 using IIM.Core.Templates;
 using IIM.Infrastructure.AI.DirectML;
+using IIM.Infrastructure.AI.LlamaSharp;
 using IIM.Infrastructure.AI.OnnxRuntime;
 using IIM.Infrastructure.Data;
 using IIM.Infrastructure.Models;
@@ -38,12 +39,14 @@ namespace IIM.Api.Extensions
             // ONNX Runtime Manager as Singleton
             services.AddSingleton<IOnnxRuntimeManager, OnnxRuntimeManager>();
 
+            //LlamaSharp Runtime Manager as Singleton
+            services.AddSingleton<ILlamaSharpManager, LlamaSharpManager>();
 
             // Model Orchestration (Singleton - manages loaded models)
             services.AddSingleton<IModelOrchestrator>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<DefaultModelOrchestrator>>();
-                var storageConfig = sp.GetRequiredService<StorageConfiguration>();
+                var storageConfig = sp.GetRequiredService<IStorageConfiguration>();
                 return new DefaultModelOrchestrator(logger, storageConfig);
             });
 
@@ -62,10 +65,12 @@ namespace IIM.Api.Extensions
                 var orchestrator = sp.GetRequiredService<IModelOrchestrator>();
                 var ModelConfiguration = sp.GetRequiredService<IModelConfigurationService>();
                 var config = sp.GetRequiredService<IOptions<InferencePipelineConfiguration>>();
+                var modelParams = sp.GetRequiredService<IModelParameterSetRepository>();
                 var mediator = sp.GetService<IMediator>();
                 var onnxManager = sp.GetRequiredService<IOnnxRuntimeManager>();
+                var llamaManager = sp.GetRequiredService<ILlamaSharpManager>();
                 var directMLDeviceManager = sp.GetRequiredService<IDirectMLDeviceManager>();
-                return new InferencePipeline(logger, orchestrator, ModelConfiguration, config,  onnxManager, directMLDeviceManager, mediator);
+                return new InferencePipeline(logger, orchestrator, ModelConfiguration, modelParams,  config, onnxManager, llamaManager, directMLDeviceManager, mediator);
             });
 
 

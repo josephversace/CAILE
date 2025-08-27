@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Text.Json;
+using static Microsoft.ML.Transforms.Text.LatentDirichletAllocationTransformer;
 
 namespace IIM.Infrastructure.Data
 {
@@ -11,6 +12,8 @@ namespace IIM.Infrastructure.Data
         public ModelDbContext(DbContextOptions<ModelDbContext> options) : base(options) { }
 
         public DbSet<ModelConfiguration> ModelConfigurations { get; set; }
+
+        public DbSet<ModelParameterSet> ModelParameterSets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -36,7 +39,29 @@ namespace IIM.Infrastructure.Data
             modelBuilder.Entity<ModelConfiguration>()
                 .Property(e => e.Parameters)
                 .HasColumnType("nvarchar(max)");
+
+  
+            modelBuilder.Entity<ModelConfiguration>()
+                .Property(e => e.Properties)
+                .HasConversion(dictionaryConverter)
+                .HasColumnType("nvarchar(max)");
+
+            modelBuilder.Entity<ModelConfiguration>()
+                .Property(e => e.Parameters)
+                .HasConversion(dictionaryConverter)
+                .HasColumnType("nvarchar(max)");
+
+            // Add mapping for ModelParameterSet
+            modelBuilder.Entity<ModelParameterSet>()
+                .Property(e => e.Parameters)
+                .HasConversion(dictionaryConverter)
+                .HasColumnType("nvarchar(max)");
+
+            modelBuilder.Entity<ModelParameterSet>()
+                .HasIndex(e => new { e.ModelId, e.Name }).IsUnique(); // Prevent duplicate set names per model
         }
+
+
     }
 }
 

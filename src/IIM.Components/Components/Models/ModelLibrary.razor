@@ -1,9 +1,8 @@
 
 @using IIM.Components.Services
-@using IIM.Core.Services
 @using IIM.Shared.Enums
 @using IIM.Shared.Models
-@inject IModelManagementService ModelService
+
 
 <div class="model-library">
     <div class="library-header">
@@ -105,20 +104,20 @@
     private async Task LoadModelLibrary()
     {
         // Get available models from the service
-        var availableConfigs = await ModelService.GetAvailableModelsAsync();
+        // var availableConfigs = await ModelService.GetAvailableModelsAsync();
 
-        // Convert to ModelLibraryItem
-        AvailableModels = availableConfigs.Select(config => new ModelLibraryItem
-        {
-            Configuration = config,
-            Description = GetModelDescription(config),
-            IsFineTuned = config.ModelId.Contains("finetuned") || config.ModelId.Contains("custom"),
-            Metrics = GetModelMetrics(config)
-        }).ToList();
+        // // Convert to ModelLibraryItem
+        // AvailableModels = availableConfigs.Select(config => new ModelLibraryItem
+        // {
+        //     Configuration = config,
+        //     Description = GetModelDescription(config),
+        //     IsFineTuned = config.ModelId.Contains("finetuned") || config.ModelId.Contains("custom"),
+        //     Metrics = GetModelMetrics(config)
+        // }).ToList();
 
-        LoadedModels = AvailableModels.Where(m => m.Configuration.Status == ModelStatus.Loaded).ToList();
-        TotalMemoryUsed = LoadedModels.Sum(m => m.Configuration.MemoryUsage);
-        FilterModels();
+        // LoadedModels = AvailableModels.Where(m => m.Configuration.Status == ModelStatus.Loaded).ToList();
+        // TotalMemoryUsed = LoadedModels.Sum(m => m.Configuration.MemoryUsage);
+        // FilterModels();
     }
 
     // Individual methods for each filter to avoid string literals in onclick
@@ -169,13 +168,13 @@
 
     private async Task LoadModel(ModelConfiguration model)
     {
-        await ModelService.LoadModelAsync(model.ModelId);
+        //await ModelService.LoadModelAsync(model.ModelId);
         await LoadModelLibrary();
     }
 
     private async Task UnloadModel(ModelConfiguration model)
     {
-        await ModelService.UnloadModelAsync(model.ModelId);
+        //await ModelService.UnloadModelAsync(model.ModelId);
         await LoadModelLibrary();
     }
 

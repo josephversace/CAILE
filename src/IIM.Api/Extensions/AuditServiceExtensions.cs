@@ -5,6 +5,7 @@
 
 using IIM.Core.Configuration;
 using IIM.Core.Services;
+using IIM.Infrastructure.Data;
 using IIM.Shared.Interfaces;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

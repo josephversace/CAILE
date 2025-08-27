@@ -14,7 +14,7 @@ public interface IExcelService
     Task<byte[]> AddChartAsync(byte[] xlsx, ChartOptions chartOptions);
 }
 
-public record ExcelExportOptions 
+public class ExcelExportOptions :ExportOptions
 {
     public bool AutoFitColumns { get; set; } = true;
     public bool IncludeFilters { get; set; } = true;

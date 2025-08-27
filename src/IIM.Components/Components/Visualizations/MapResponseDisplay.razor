@@ -4,7 +4,7 @@
 @using IIM.Components.Services
 @using IIM.Shared.Models
 @inject IJSRuntime JSRuntime
-@inject DataFormattingService Formatter
+
 
 <div class="map-response-display">
     @if (Response?.Visualization?.Data != null)
@@ -145,7 +145,7 @@
                                     </h6>
                                     @if (location.Timestamp.HasValue)
                                     {
-                                        <small>@Formatter.GetRelativeTime(location.Timestamp.Value)</small>
+                                        <small>location.Timestamp.Value</small>
                                     }
                                 </div>
                                 <p class="mb-1 small">
@@ -208,7 +208,7 @@
                                         <dt class="col-5">Time:</dt>
                                         <dd class="col-7">
                                             @_selectedLocation.Timestamp.Value.ToString("g")<br />
-                                            <small class="text-muted">@Formatter.GetRelativeTime(_selectedLocation.Timestamp.Value)</small>
+                                            <small class="text-muted">_selectedLocation.Timestamp.Value</small>
                                         </dd>
                                     }
                                 </dl>
@@ -222,7 +222,7 @@
                                         @foreach (var meta in _selectedLocation.Metadata)
                                         {
                                             <dt class="col-5">@meta.Key:</dt>
-                                            <dd class="col-7">@Formatter.FormatValue(meta.Value)</dd>
+                                            <dd class="col-7">meta.Value</dd>
                                         }
                                     </dl>
                                 }

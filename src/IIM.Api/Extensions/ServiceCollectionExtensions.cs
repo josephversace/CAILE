@@ -3,6 +3,7 @@ using IIM.Application.Inference;
 using IIM.Core.Configuration;
 
 using IIM.Core.Services;
+using IIM.Infrastructure.Data;
 using IIM.Infrastructure.Models;
 using IIM.Infrastructure.Storage;
 using IIM.Shared.Models;
@@ -33,6 +34,9 @@ namespace IIM.Api.Extensions
 
             // Add HTTP context accessor (Singleton) - only add once
             services.AddHttpContextAccessor();
+
+            //Add DbContext with pooling (Scoped)
+            services.AddIIMDatabases(configuration);
 
             // Add SignalR for real-time updates
             services.AddSignalR(options =>

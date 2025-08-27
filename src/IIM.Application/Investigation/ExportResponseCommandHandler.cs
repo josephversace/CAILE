@@ -44,9 +44,10 @@ namespace IIM.Application.Investigation
             }
 
             // Convert ExportOptions to the DTO version
-            var options = new ExportOptions(
-                IncludeMetadata: request.Options?.IncludeMetadata ?? true,
-                IncludeChainOfCustody: request.Options?.IncludeChainOfCustody ?? true);
+            var options = new ExportOptions {
+                IncludeMetadata= request.Options?.IncludeMetadata ?? true,
+                IncludeChainOfCustody= request.Options?.IncludeChainOfCustody ?? true
+                };
 
             // Use the actual IExportService interface
             var exportResult = await _exportService.ExportResponseAsync(
@@ -133,7 +134,8 @@ namespace IIM.Application.Investigation
                 request.Format,
                 request.Options);
 
-            return report.Data ?? Array.Empty<byte[]>();
+            return report.Data ?? Array.Empty<byte>();
+
 
 
         }

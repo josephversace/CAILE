@@ -2,7 +2,7 @@
 
 public enum ModelFormat
 {
-    Onnx,
+    ONNX,
     GGUF,
     GGML,
     Safetensors,

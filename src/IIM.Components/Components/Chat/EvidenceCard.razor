@@ -14,7 +14,7 @@
             <span class="evidence-date">@Evidence.IngestTimestamp.ToString("MMM dd")</span>
         </div>
 
-        @if (Evidence.IntegrityValid.GetValueOrDefault())
+        @if (Evidence.IntegrityValid)
         {
             <span class="integrity-badge valid">
                 <i class="fas fa-check-circle"></i> Verified
