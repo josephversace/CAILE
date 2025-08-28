@@ -24,6 +24,23 @@ namespace IIM.Shared.Models
     public record UpdateEvidenceMetadataRequest(
         EvidenceMetadata Metadata);
 
+
+    /// <summary>
+    /// Upload confirmation response
+    /// Purpose: Confirm successful upload and integrity
+    /// Used by: Upload UI to show completion status
+    /// </summary>
+    public class ConfirmEvidenceUploadResponse
+    {
+        public bool Success { get; set; }
+        public EvidenceStatus Status { get; set; }
+        public string? ErrorMessage { get; set; }
+        public string? ServerHash { get; set; }
+        public bool HashesMatch { get; set; }
+        public ChainOfCustodyEntry? InitialChainEntry { get; set; }
+        public string? StoragePath { get; set; }
+    }
+
     /// <summary>
     /// Request to add chain of custody entry
     /// </summary>

@@ -54,3 +54,11 @@ public enum ProcessingStatus
     Failed
 }
 
+public enum Classification { 
+
+    Unclassified,
+    ProtectedA,
+    ProtectedB,
+    ProtectedC
+
+}

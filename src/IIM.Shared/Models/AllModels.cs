@@ -313,6 +313,9 @@ public class EvidenceMetadata
     public string? DeviceSource { get; set; }
     public string? Description { get; set; }
     public string? SessionId { get; set; }
+
+    public Classification Classification { get; set; }
+
     public Dictionary<HashType, string> AdditionalHashes { get; set; } = new();
     public Dictionary<string, string> CustomFields { get; set; } = new();
 
@@ -419,21 +422,6 @@ public class ConfirmEvidenceUploadRequest
     public Dictionary<string, string>? AdditionalHashes { get; set; } // MD5, SHA1, etc.
 }
 
-/// <summary>
-/// Upload confirmation response
-/// Purpose: Confirm successful upload and integrity
-/// Used by: Upload UI to show completion status
-/// </summary>
-public class ConfirmEvidenceUploadResponse
-{
-    public bool Success { get; set; }
-    public EvidenceStatus Status { get; set; }
-    public string? ErrorMessage { get; set; }
-    public string? ServerHash { get; set; }
-    public bool HashesMatch { get; set; }
-    public ChainOfCustodyEntry? InitialChainEntry { get; set; }
-    public string? StoragePath { get; set; }
-}
 
 /// <summary>
 /// Evidence context for operations

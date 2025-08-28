@@ -159,9 +159,7 @@ internal static class Program
                     return new HubConnectionService(logger, apiUrl);
                 });
 
-                // UI-specific services
-    
-                services.AddScoped<ModelSizeCalculator>();
+
 
                 // ========================================
                 // Configuration for UI
