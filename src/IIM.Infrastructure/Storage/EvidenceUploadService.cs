@@ -19,7 +19,7 @@ namespace IIM.Infrastructure.Storage
     /// <summary>
     /// Evidence upload service that works with your existing interfaces
     /// </summary>
-    public class EvidenceUploadService : IEvidenceUploadService
+    public class EvidenceUploadService : Shared.Interfaces.IEvidenceUploadService
     {
         private readonly ILogger<EvidenceUploadService> _logger;
         private readonly IMinioClient _minioClient;
