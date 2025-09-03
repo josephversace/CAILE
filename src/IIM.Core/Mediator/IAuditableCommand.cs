@@ -10,7 +10,7 @@ namespace Mediator
     /// </summary>
     public interface IAuditableCommand
     {
-        string? SessionId { get; }
-        string? CaseNumber { get; }
+        //string? SessionId { get; }
+        //string? WorkspaceNumber { get; }
     }
 }

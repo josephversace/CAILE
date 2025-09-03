@@ -7,7 +7,7 @@ namespace IIM.Application.Evidence
     /// <summary>
     /// Command to initiate evidence upload with deduplication check
     /// </summary>
-    public class InitiateEvidenceUploadCommand : IRequest<InitiateEvidenceUploadResponse>, IAuditableCommand
+    public class InitiateFileUploadCommand : IRequest<InitiateFileUploadResponse>, IAuditableCommand
     {
         /// <summary>
         /// SHA-256 hash of the file
@@ -32,7 +32,7 @@ namespace IIM.Application.Evidence
         /// <summary>
         /// Evidence metadata
         /// </summary>
-        public EvidenceMetadata Metadata { get; set; } = new();
+        public FileMetadata Metadata { get; set; } = new();
 
         /// <summary>
         /// User initiating the upload
@@ -40,7 +40,6 @@ namespace IIM.Application.Evidence
         public string UserId { get; set; } = string.Empty;
 
         // IAuditableCommand implementation
-        public string? SessionId => Metadata.SessionId;
-        public string? CaseNumber => Metadata.CaseNumber;
+
     }
 }

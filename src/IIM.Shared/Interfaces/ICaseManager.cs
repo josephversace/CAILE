@@ -10,55 +10,55 @@ using System.Threading;
 namespace IIM.Shared.Models;
 
 /// <summary>
-/// Interface for managing investigation cases
+/// Interface for managing workspaces
 /// </summary>
-public interface ICaseManager
+public interface IWorkspaceManager
 {
     /// <summary>
     /// Creates a new case with the specified details
     /// </summary>
-    Task<Case> CreateCaseAsync(string name, string description, CaseType type,
+    Task<Workspace> CreateWorkspceAsync(string name, string description, CaseType type,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves a case by its unique identifier
     /// </summary>
-    Task<Case?> GetCaseAsync(string caseId, CancellationToken cancellationToken = default);
+    Task<Workspace?> GetWorkspaceAsync(string workspaceId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves all cases, optionally filtered by user
     /// </summary>
-    Task<List<Case>> GetUserCasesAsync(string? userId = null,
+    Task<List<Workspace>> GetUserWorkspacesAsync(string? userId = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates a case with the provided update action
     /// </summary>
-    Task<bool> UpdateCaseAsync(string caseId, Action<Case> updateAction,
+    Task<bool> UpdateWorkspaceAsync(string caseId, Action<Workspace> updateAction,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Links an investigation session to a case
     /// </summary>
-    Task<bool> LinkSessionToCaseAsync(string sessionId, string caseId,
+    Task<bool> LinkSessionToWorkspaceAsync(string sessionId, string caseId,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Links evidence to a case
     /// </summary>
-    Task<bool> LinkEvidenceToCaseAsync(string evidenceId, string caseId,
+    Task<bool> LinkFileToWorkspaceAsync(string fileId, string workspaceId,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets recent cases ordered by update date
     /// </summary>
-    Task<List<Case>> GetRecentCasesAsync(int count = 10,
+    Task<List<Workspace>> GetRecentWorkspacesAsync(int count = 10,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a case (soft delete)
     /// </summary>
-    Task<bool> DeleteCaseAsync(string caseId, CancellationToken cancellationToken = default);
+    Task<bool> DeleteWorkspaceAsync(string caseId, CancellationToken cancellationToken = default);
 
     Task<List<TimelineEvent>> GetCaseTimelineAsync(
             string caseId,

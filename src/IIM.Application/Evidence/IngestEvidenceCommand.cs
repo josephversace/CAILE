@@ -8,10 +8,10 @@ namespace IIM.Application.Evidence
     /// <summary>
     /// Command to ingest evidence with chain of custody tracking
     /// </summary>
-    public class IngestEvidenceCommand : IRequest<EvidenceContext>
+    public class IngestFileCommand : IRequest<FileContext>
     {
         public Stream FileStream { get; set; }
         public string FileName { get; set; }
-        public EvidenceMetadata Metadata { get; set; }
+        public FileMetadata Metadata { get; set; }
     }
 }

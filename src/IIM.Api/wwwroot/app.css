@@ -1,0 +1,104 @@
+﻿.container {
+    max-width: 700px;
+    margin: 60px auto;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 28px #2222;
+    padding: 36px 28px 48px 28px;
+}
+
+.chat-launcher {
+    margin-top: 22px;
+    display: flex;
+    justify-content: center;
+}
+
+.chat-input {
+    width: 370px;
+    padding: 14px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 1.5rem;
+    font-size: 1.1rem;
+    background: #f7f8fa;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+    .chat-input:focus {
+        border-color: #1976d2;
+        background: #fff;
+    }
+
+.main-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.6s cubic-bezier(.68,-0.55,.27,1.55);
+}
+
+    .main-panel.slide-down {
+        max-height: 1800px; /* enough for the content */
+        transition: max-height 0.8s cubic-bezier(.68,-0.55,.27,1.55);
+    }
+
+.flex-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 26px;
+    margin-top: 26px;
+}
+
+@media (max-width: 800px) {
+    .flex-panel {
+        flex-direction: column;
+    }
+}
+
+.chat-panel, .slide-panel {
+    flex: 1 1 340px;
+    min-width: 320px;
+    background: #fafbfc;
+    border-radius: 16px;
+    box-shadow: 0 1px 8px #0001;
+    padding: 22px 18px;
+}
+
+.chatbox {
+    width: 100%;
+    min-height: 100px;
+    border-radius: 14px;
+    background: #f2f3f5;
+    border: 1px solid #eaeaea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slide-content {
+    background: #fff;
+    border-radius: 14px;
+    min-height: 250px;
+    font-size: 1.13rem;
+    padding: 0 10px 10px 10px;
+}
+
+.nav-btn {
+    background: #f6f9fc;
+    border: 1.5px solid #dbe4ea;
+    border-radius: 10px;
+    padding: 6px 18px;
+    font-size: 1.06rem;
+    margin-right: 12px;
+    margin-top: 4px;
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+}
+
+    .nav-btn:disabled {
+        opacity: .6;
+        cursor: default;
+    }
+
+    .nav-btn:not(:disabled):hover {
+        background: #e3f0fb;
+        border-color: #97c2f5;
+    }

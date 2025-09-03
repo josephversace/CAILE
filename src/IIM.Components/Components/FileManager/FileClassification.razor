@@ -1,0 +1,193 @@
+﻿@page "/data-explorer"
+@using Microsoft.FluentUI.AspNetCore.Components
+@inherits FluentComponentBase
+@implements IDisposable
+
+<div class="de-container" data-theme="@(IsDarkMode ? "dark" : "light")">
+    <!-- Toolbar -->
+    <div class="de-toolbar">
+        <div class="de-toolbar-group">
+            <button class="de-btn" @onclick="NavigateBack">
+                <FluentIcon Value="@(new Icons.Regular.Size16.ArrowLeft())" />
+                Back
+            </button>
+            <button class="de-btn" @onclick="NavigateForward">
+                <FluentIcon Value="@(new Icons.Regular.Size16.ArrowRight())" />
+                Forward
+            </button>
+            <button class="de-btn" @onclick="NavigateUp">
+                <FluentIcon Value="@(new Icons.Regular.Size16.ArrowUp())" />
+                Up
+            </button>
+        </div>
+        
+        <div class="de-toolbar-separator"></div>
+        
+        <div class="de-toolbar-group">
+            <button class="de-btn" @onclick="CreateFolder">
+                <FluentIcon Value="@(new Icons.Regular.Size16.FolderAdd())" />
+                New Folder
+            </button>
+            <button class="de-btn" @onclick="ShowUploadDialog">
+                <FluentIcon Value="@(new Icons.Regular.Size16.ArrowUpload())" />
+                Upload
+            </button>
+        </div>
+        
+        <div class="de-toolbar-separator"></div>
+        
+        <div class="de-toolbar-group">
+            <button class="de-btn de-btn-primary" @onclick="QuickClassify" disabled="@(!HasSelection)">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Tag())" />
+                Quick Tag
+            </button>
+            <button class="de-btn" @onclick="BulkClassify" disabled="@(!HasSelection)">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Bot())" />
+                AI Classify
+            </button>
+        </div>
+        
+        <div class="de-toolbar-group" style="margin-left: auto;">
+            <button class="de-btn" @onclick="ToggleTheme">
+                <FluentIcon Value="@(IsDarkMode ? new Icons.Regular.Size16.WeatherSunny() : new Icons.Regular.Size16.WeatherMoon())" />
+            </button>
+        </div>
+    </div>
+    
+    <!-- Breadcrumb Bar -->
+    <div class="de-breadcrumb-bar">
+        <div class="de-breadcrumb">
+            @foreach (var (item, index) in BreadcrumbItems.Select((item, i) => (item, i)))
+            {
+                <span class="de-breadcrumb-item" @onclick="@(() => NavigateToBreadcrumb(index))">
+                    @if (index == 0)
+                    {
+                        <FluentIcon Value="@(new Icons.Regular.Size16.Folder())" />
+                    }
+                    @item.Name
+                </span>
+                @if (index < BreadcrumbItems.Count - 1)
+                {
+                    <span class="de-breadcrumb-separator">›</span>
+                }
+            }
+        </div>
+        
+        <FluentTextField @bind-Value="SearchQuery"
+                        Placeholder="Search files..."
+                        @oninput="OnSearchInput"
+                        style="width: 250px;">
+            <FluentIcon Value="@(new Icons.Regular.Size16.Search())" Slot="start" />
+        </FluentTextField>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="de-main">
+        <!-- Panel 1: Tree View -->
+        <div class="de-panel-tree @(IsTreeCollapsed ? "collapsed" : "")">
+            <CascadingValue Value="this">
+                <DataExplorerTreeView Items="@TreeItems"
+                                     SelectedPath="@CurrentPath"
+                                     OnItemSelected="@OnTreeItemSelected" />
+            </CascadingValue>
+        </div>
+        
+        <!-- Panel 2: Files View -->
+        <div class="de-panel-files">
+            <div class="de-files-toolbar">
+                <div class="de-view-selector">
+                    <button class="de-btn @(ViewMode == ViewMode.Grid ? "active" : "")"
+                            @onclick="@(() => SetViewMode(ViewMode.Grid))">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.Grid())" />
+                    </button>
+                    <button class="de-btn @(ViewMode == ViewMode.List ? "active" : "")"
+                            @onclick="@(() => SetViewMode(ViewMode.List))">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.List())" />
+                    </button>
+                </div>
+                
+                <FluentSelect @bind-Value="SortOrder" Label="Sort by:">
+                    <FluentOption Value="@FileSortOrder.NameAsc">Name (A-Z)</FluentOption>
+                    <FluentOption Value="@FileSortOrder.NameDesc">Name (Z-A)</FluentOption>
+                    <FluentOption Value="@FileSortOrder.DateDesc">Modified (Newest)</FluentOption>
+                    <FluentOption Value="@FileSortOrder.DateAsc">Modified (Oldest)</FluentOption>
+                    <FluentOption Value="@FileSortOrder.ClassificationAsc">Classification</FluentOption>
+                </FluentSelect>
+            </div>
+            
+            @if (IsLoading)
+            {
+                <FluentProgressRing />
+            }
+            else if (ViewMode == ViewMode.Grid)
+            {
+                <div class="de-files-grid">
+                    @foreach (var item in DisplayItems)
+                    {
+                        <DataExplorerFileItem Item="@item"
+                                            IsSelected="@IsSelected(item)"
+                                            OnClick="@(e => OnFileClick(item, e))"
+                                            OnDoubleClick="@(() => OnFileDoubleClick(item))" />
+                    }
+                </div>
+            }
+            else
+            {
+                <DataExplorerListView Items="@DisplayItems"
+                                     SelectedItems="@SelectedItems"
+                                     OnSelectionChanged="@OnSelectionChanged" />
+            }
+        </div>
+        
+        <!-- Panel 3: AI Assistant -->
+        <div class="de-panel-ai @(IsAIPanelCollapsed ? "collapsed" : "")">
+            @if (SelectedItems.Count == 1)
+            {
+                <DataExplorerAIPanel File="@SelectedItems.First()"
+                                    OnClassificationChanged="@OnClassificationChanged"
+                                    OnTagsChanged="@OnTagsChanged" />
+            }
+            else if (SelectedItems.Count > 1)
+            {
+                <DataExplorerBulkActions Items="@SelectedItems"
+                                        OnBulkClassify="@OnBulkClassify" />
+            }
+            else
+            {
+                <div class="de-ai-content">
+                    <div style="text-align: center; padding: 48px 16px;">
+                        <FluentIcon Value="@(new Icons.Regular.Size48.Document())" />
+                        <p style="margin-top: 16px; color: var(--de-text-secondary);">
+                            Select a file to view AI analysis and classification options
+                        </p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <!-- Status Bar -->
+    <div class="de-status-bar">
+        <span class="de-status-section">@TotalItems items</span>
+        <span class="de-status-section">@SelectedItems.Count selected</span>
+        <span class="de-status-section">
+            @ClassifiedCount classified, @PendingCount pending review
+        </span>
+        @if (!string.IsNullOrEmpty(LastOperation))
+        {
+            <span class="de-status-section" style="margin-left: auto;">
+                @LastOperation
+            </span>
+        }
+    </div>
+</div>
+
+<!-- Dialogs -->
+<FluentDialog @ref="uploadDialog" Modal="true">
+    <DataExplorerUploadDialog OnUploadComplete="@OnUploadComplete" />
+</FluentDialog>
+
+<FluentDialog @ref="classificationDialog" Modal="true">
+    <DataExplorerClassificationDialog Items="@SelectedItems"
+                                     OnClassificationComplete="@OnClassificationComplete" />
+</FluentDialog>

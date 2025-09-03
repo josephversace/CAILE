@@ -16,8 +16,8 @@ namespace IIM.Application.Investigation
         private readonly ILogger<ExecuteToolCommandHandler> _logger;
         private readonly ISessionService _sessionService;
         private readonly IInferenceService _inferenceService;
-        private readonly IEvidenceManager _evidenceManager;
-        private readonly ICaseManager _caseManager;
+        private readonly IManagedFileManager _evidenceManager;
+        private readonly IWorkspaceManager _caseManager;
 
         /// <summary>
         /// Initializes a new instance of the ExecuteToolCommandHandler.
@@ -26,8 +26,8 @@ namespace IIM.Application.Investigation
             ILogger<ExecuteToolCommandHandler> logger,
             ISessionService sessionService,
             IInferenceService inferenceService,
-            IEvidenceManager evidenceManager,
-            ICaseManager caseManager)
+            IManagedFileManager evidenceManager,
+            IWorkspaceManager caseManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
@@ -57,19 +57,19 @@ namespace IIM.Application.Investigation
                 var result = request.ToolName.ToLowerInvariant() switch
                 {
                     "image_search" or "clip_search" =>
-                        await ExecuteImageSearchAsync(request.Parameters, session.CaseId, cancellationToken),
+                        await ExecuteImageSearchAsync(request.Parameters, session.WorkspaceId, cancellationToken),
 
                     "transcribe" or "whisper" =>
                         await ExecuteTranscriptionAsync(request.Parameters, cancellationToken),
 
                     "rag_query" or "document_search" =>
-                        await ExecuteDocumentSearchAsync(request.Parameters, session.CaseId, cancellationToken),
+                        await ExecuteDocumentSearchAsync(request.Parameters, session.WorkspaceId, cancellationToken),
 
                     "evidence_analysis" =>
-                        await ExecuteEvidenceAnalysisAsync(request.Parameters, session.CaseId, cancellationToken),
+                        await ExecuteEvidenceAnalysisAsync(request.Parameters, session.WorkspaceId, cancellationToken),
 
                     "timeline_generation" =>
-                        await ExecuteTimelineGenerationAsync(session.CaseId, cancellationToken),
+                        await ExecuteTimelineGenerationAsync(session.WorkspaceId, cancellationToken),
 
                     _ => throw new NotSupportedException($"Tool '{request.ToolName}' is not supported")
                 };
@@ -203,7 +203,7 @@ namespace IIM.Application.Investigation
             string caseId,
             CancellationToken cancellationToken)
         {
-            var evidence = await _evidenceManager.GetEvidenceByCaseAsync(caseId, cancellationToken);
+            var evidence = await _evidenceManager.GetFilesByWorkspaceAsync(caseId, cancellationToken);
 
             return new ToolResult
             {

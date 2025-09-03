@@ -15,13 +15,13 @@ namespace IIM.Application.Investigation
     {
         private readonly ILogger<CreateSessionCommandHandler> _logger;
         private readonly ISessionService _sessionService;
-        private readonly ICaseManager _caseManager;
+        private readonly IWorkspaceManager _caseManager;
         private readonly IModelConfigurationTemplateService _templateService;
 
         public CreateSessionCommandHandler(
             ILogger<CreateSessionCommandHandler> logger,
             ISessionService sessionService,
-            ICaseManager caseManager,
+            IWorkspaceManager caseManager,
             IModelConfigurationTemplateService templateService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -38,7 +38,7 @@ namespace IIM.Application.Investigation
                 request.CaseId, request.Title);
 
             // Verify case exists
-            var caseEntity = await _caseManager.GetCaseAsync(request.CaseId, cancellationToken);
+            var caseEntity = await _caseManager.GetWorkspaceAsync(request.CaseId, cancellationToken);
             if (caseEntity == null)
             {
                 throw new InvalidOperationException($"Case {request.CaseId} not found");

@@ -8,21 +8,21 @@ using System.Threading.Tasks;
 
 namespace IIM.Shared.Interfaces
 {
-    public interface IEvidenceManager
+    public interface IManagedFileManager
     {
-        Task<EvidenceExport> ExportEvidenceAsync(string evidenceId, string exportPath, CancellationToken cancellationToken = default);
-        Task<ChainOfCustodyReport> GenerateChainOfCustodyAsync(string evidenceId, CancellationToken cancellationToken = default);
-        Task<List<AuditEvent>> GetAuditLogAsync(string evidenceId, CancellationToken cancellationToken = default);
-        Task<Evidence?> GetEvidenceAsync(string evidenceId, CancellationToken cancellationToken = default);
-        Task<List<Evidence>> GetEvidenceByCaseAsync(string caseId, CancellationToken cancellationToken = default);
-        Task<Stream> GetEvidenceStreamAsync(string evidenceId, CancellationToken cancellationToken = default);
-        Task<Evidence> IngestEvidenceAsync(Stream stream, string fileName, EvidenceMetadata metadata, CancellationToken cancellationToken = default);
-        Task<Evidence> IngestEvidenceAsync(string filePath, EvidenceMetadata metadata, CancellationToken cancellationToken = default);
-        Task<List<Evidence>> ListEvidenceAsync(string? caseNumber = null, CancellationToken cancellationToken = default);
-        Task LogAccessAsync(string evidenceId, string action, string userId, CancellationToken cancellationToken = default);
-        Task<ProcessedEvidence> ProcessEvidenceAsync(string evidenceId, string processingType, Func<Stream, Task<Stream>> processor, CancellationToken cancellationToken = default);
-        Task<Evidence> RegisterPendingEvidenceAsync(Evidence evidence, CancellationToken cancellationToken = default);
-        Task UpdateEvidenceStatusAsync(string evidenceId, EvidenceStatus status, CancellationToken cancellationToken = default);
-        Task<bool> VerifyIntegrityAsync(string evidenceId, CancellationToken cancellationToken = default);
+        Task<EvidenceExport> ExportFilesAsync(string fileId, string exportPath, CancellationToken cancellationToken = default);
+        Task<ChainOfCustodyReport> GenerateChainOfCustodyAsync(string fileId, CancellationToken cancellationToken = default);
+        Task<List<AuditEvent>> GetAuditLogAsync(string fileId, CancellationToken cancellationToken = default);
+        Task<ManagedFile?> GetFilesAsync(string fileId, CancellationToken cancellationToken = default);
+        Task<List<ManagedFile>> GetFilesByWorkspaceAsync(string workspaceId, CancellationToken cancellationToken = default);
+        Task<Stream> GetFileStreamAsync(string fileId, CancellationToken cancellationToken = default);
+        Task<ManagedFile> IngestFileAsync(Stream stream, string fileName, FileMetadata metadata, CancellationToken cancellationToken = default);
+        Task<ManagedFile> IngestFileAsync(string filePath, FileMetadata metadata, CancellationToken cancellationToken = default);
+        Task<List<ManagedFile>> ListFilesAsync(string? workspaceNumber = null, CancellationToken cancellationToken = default);
+        Task LogAccessAsync(string fileId, string action, string userId, CancellationToken cancellationToken = default);
+        Task<ProcessedFile> ProcessFileAsync(string fileId, string processingType, Func<Stream, Task<Stream>> processor, CancellationToken cancellationToken = default);
+        Task<ManagedFile> RegisterPendingFileAsync(ManagedFile file, CancellationToken cancellationToken = default);
+        Task UpdateFileStatusAsync(string fileId, EvidenceStatus status, CancellationToken cancellationToken = default);
+        Task<bool> VerifyIntegrityAsync(string fileId, CancellationToken cancellationToken = default);
     }
 }

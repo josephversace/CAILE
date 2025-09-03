@@ -16,7 +16,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
 {
     private readonly ILogger<ProcessInvestigationCommandHandler> _logger;
     private readonly ISessionService _sessionService;
-    private readonly ICaseManager _caseManager;
+    private readonly IWorkspaceManager _caseManager;
     private readonly IReasoningService _reasoningService;
     private readonly IInferenceService _inferenceService;
     private readonly IEvidenceManager _evidenceManager;
@@ -25,7 +25,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
     public ProcessInvestigationCommandHandler(
         ILogger<ProcessInvestigationCommandHandler> logger,
         ISessionService sessionService,
-        ICaseManager caseManager,
+        IWorkspaceManager caseManager,
         IReasoningService reasoningService,
         IInferenceService inferenceService,
         IEvidenceManager evidenceManager,

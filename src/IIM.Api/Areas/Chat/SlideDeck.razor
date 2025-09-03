@@ -1,0 +1,99 @@
+﻿<div class="slide-content">
+    @if (CurrentSlide == 1)
+    {
+        <h2>Data Governance & Data Security</h2>
+        <ul>
+            <li><strong>Data Governance:</strong> Policies and processes to ensure data is trustworthy, well-managed, and used responsibly.</li>
+            <li><strong>Data Security:</strong> Safeguards and controls to protect data from unauthorized access, breaches, and misuse.</li>
+        </ul>
+        <p>Venn Diagram of the overlap, with frameworks/rules on both sides.</p>
+        <p>
+            <strong>Why It Matters:</strong>
+            <ul>
+                <li><strong>Trust:</strong> Reliable data supports better decisions.</li>
+                <li><strong>Compliance:</strong> Meets legal and regulatory obligations.</li>
+                <li><strong>Value:</strong> Unlocks data’s full business and societal potential.</li>
+            </ul>
+        </p>
+    }
+    else if (CurrentSlide == 2)
+    {
+        <h2>Key Elements</h2>
+        <h3>Data Governance</h3>
+        <ul>
+            <li>Policies & procedures for quality, accountability, lifecycle</li>
+            <li>Defines who is responsible for every data asset</li>
+            <li>Assigns owners, stewards, and custodians</li>
+        </ul>
+        <h3>Data Security</h3>
+        <ul>
+            <li>Safeguards: access controls, encryption, monitoring, incident response</li>
+            <li>Technical and procedural controls to enforce protection</li>
+        </ul>
+        <h3>Compliance & Accountability</h3>
+        <ul>
+            <li>Who is in charge?</li>
+            <ul>
+                <li>Ultimately: Executive leadership (CIO, CISO, Data Protection Officer, etc.)</li>
+                <li>Day-to-day: Data owners, stewards, IT/security teams</li>
+                <li>Auditing: Internal/external auditors, risk & compliance functions</li>
+            </ul>
+        </ul>
+    }
+    else if (CurrentSlide == 3)
+    {
+        <h2>What does this really mean for you?</h2>
+        <ul>
+            <li>A web of requirements: Policies, legislation, frameworks, and best practices all with a claim on your data.</li>
+            <li>Practical obligations: Document what you do, control access, log activity, audit, and prove compliance.</li>
+            <li>Your role: Making these requirements real—not just paperwork, but operational habits.</li>
+        </ul>
+        <p><strong>Governance and security aren’t abstract</strong>  they shape how you use data every day. Your challenge (and opportunity): turn obligations into effective, streamlined action.</p>
+    }
+    else if (CurrentSlide == 4)
+    {
+        <h2>Which apply to your data?</h2>
+        <ul>
+            <li>Labelled,Segregated</li>
+            <li>Access & Auditing controls</li>
+            <li>On Prem</li>
+            <li>Cloud</li>
+            <li>Hybrid</li>
+            <li>Contains PI/PHI</li>
+
+        </ul>
+        <h2>Have you done an data inventory?</h2>
+        <ul>
+            <li>Confidentiality</li>
+            <li>Integrety</li>
+            <li>Availability</li>
+        </ul>
+    }
+    else if (CurrentSlide == 5)
+    {
+        <h2>Ready to Build Your Data Governance?</h2>
+        <p>
+            To create the right rules for your agency, upload your:<br />
+            • Policy and retention documents<br />
+            • Standard operating procedures (SOPs)<br />
+            • Org charts or staff lists<br />
+            • Compliance frameworks (CJIS, FedRAMP, etc.)<br />
+        </p>
+        <p>
+            The more you provide, the more precisely we can automate compliance and protection.
+        </p>
+        <button>Upload your documents</button>
+
+    
+    }
+    <div style="margin-top:12px;">
+        <button @onclick="OnPrev" disabled="@(CurrentSlide == 1)" class="nav-btn">Previous</button>
+        <button @onclick="OnNext" disabled="@(CurrentSlide == 3)" class="nav-btn">Next</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int CurrentSlide { get; set; }
+    [Parameter] public EventCallback OnNext { get; set; }
+    [Parameter] public EventCallback OnPrev { get; set; }
+}
