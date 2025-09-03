@@ -1,0 +1,46 @@
+﻿@page "/datagov-minimal"
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="container">
+    <h1>Your data</h1>
+    <p>Is the most important data.</p>
+    <p>Let’s discuss it.</p>
+
+    <div class="chat-launcher">
+        <InputText @bind-Value="userInput"
+                   @onfocus="ShowChat"
+                   class="chat-input"
+                   placeholder="Ask a question or start the chat..." />
+    </div>
+
+    <div class="main-panel @(chatIsVisible ? "slide-down" : "")">
+        @if (chatIsVisible)
+        {
+            <div class="flex-panel">
+                <ChatComponent Height="380px" class="chat-panel" />
+                <SlideDeck CurrentSlide="@currentSlide" OnNext="@NextSlide" OnPrev="@PrevSlide" class="slide-panel" />
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private bool chatIsVisible = false;
+    private int currentSlide = 1;
+    private string userInput = "";
+
+    private void ShowChat(FocusEventArgs e)
+    {
+        chatIsVisible = true;
+    }
+
+    private void NextSlide()
+    {
+        if (currentSlide < 3) currentSlide++;
+    }
+    private void PrevSlide()
+    {
+        if (currentSlide > 1) currentSlide--;
+    }
+}

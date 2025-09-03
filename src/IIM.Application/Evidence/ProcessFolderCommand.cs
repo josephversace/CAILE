@@ -60,7 +60,7 @@ namespace IIM.Application.Evidence
     {
         private readonly ILogger<ProcessFolderUploadCommandHandler> _logger;
         private readonly ISessionService _sessionService;
-        private readonly ICaseManager _caseManager;
+        private readonly IWorkspaceManager _caseManager;
         private readonly IFolderOcrService _ocrService;
         private readonly IClassificationService _classificationService;
         private readonly IDeduplicationService _dedupService;
@@ -69,7 +69,7 @@ namespace IIM.Application.Evidence
         public ProcessFolderUploadCommandHandler(
             ILogger<ProcessFolderUploadCommandHandler> logger,
             ISessionService sessionService,
-            ICaseManager caseManager,
+            IWorkspaceManager caseManager,
             IFolderOcrService ocrService,
             IClassificationService classificationService,
             IDeduplicationService dedupService,
@@ -93,7 +93,7 @@ namespace IIM.Application.Evidence
 
             // Retrieve the session and associated case
             var session = await _sessionService.GetSessionAsync(request.SessionId, cancellationToken);
-            var caseEntity = await _caseManager.GetCaseAsync(session.CaseId, cancellationToken);
+            var caseEntity = await _caseManager.GetWorkspaceAsync(session.WorkspaceId, cancellationToken);
 
             // Extract folder structure from each image
             var extractedNodes = new List<VirtualFolderNode>();

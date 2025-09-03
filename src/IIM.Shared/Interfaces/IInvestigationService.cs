@@ -27,9 +27,9 @@ namespace IIM.Shared.Interfaces
         Task<ToolResult> ExecuteToolAsync(string sessionId, string toolName, Dictionary<string, object> parameters, CancellationToken cancellationToken = default);
 
         // Case Management
-        Task<List<IIM.Shared.Models.Case>> GetRecentCasesAsync(int count = 10, CancellationToken cancellationToken = default);
+        Task<List<Models.Case>> GetRecentCasesAsync(int count = 10, CancellationToken cancellationToken = default);
         Task<List<InvestigationSession>> GetCaseSessionsAsync(string caseId, CancellationToken cancellationToken = default);
-        Task<IIM.Shared.Models.Case> GetCaseAsync(string caseId, CancellationToken cancellationToken = default);
+        Task<Models.Case> GetCaseAsync(string caseId, CancellationToken cancellationToken = default);
 
         // Response Management
         Task<InvestigationResponse> EnrichResponseForDisplayAsync(InvestigationResponse response, InvestigationMessage? message = null);

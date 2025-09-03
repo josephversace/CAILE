@@ -1,4 +1,5 @@
 ﻿using IIM.Infrastructure.Data;
+using IIM.Shared.Interfaces;
 using Minio;
 using Minio.DataModel.Args;
 using System;
@@ -6,14 +7,14 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace ForensicIngestDemo
+namespace IIM.Infrastructure.Storage
 {
   
     // The Quarantine Service
     public class QuarantineService
     {
         private readonly MinioClient _minio;
-        private readonly EfAuditRepository _auditLogger;
+        private readonly IAuditRepository _auditLogger;
         private readonly EfEvidenceRepositoy _evidenceRepo;
 
         private const string QuarantineBucket = "iim-quarantine";
@@ -35,7 +36,7 @@ namespace ForensicIngestDemo
                 objectKey,
                 60 * 30 // 30 min validity
             );
-            await _auditLogger.LogAsync("quarantine.presign", caseId, originalFileName, userId, "-", $"key={objectKey}");
+            await _auditLogger.AddEventAsync("quarantine.presign", caseId, originalFileName, userId, "-", $"key={objectKey}");
             return url;
         }
 

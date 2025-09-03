@@ -7,7 +7,7 @@ namespace IIM.Application.Evidence
     /// <summary>
     /// Command to confirm evidence upload completion
     /// </summary>
-    public class ConfirmEvidenceUploadCommand : IRequest<ConfirmEvidenceUploadResponse>, IAuditableCommand
+    public class ConfirmFileUploadCommand : IRequest<ConfirmFileUploadResponse>, IAuditableCommand
     {
         /// <summary>
         /// Evidence ID to confirm

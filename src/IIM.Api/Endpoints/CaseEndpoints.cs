@@ -12,15 +12,15 @@ namespace IIM.Api.Endpoints;
 /// <summary>
 /// Case management endpoints for investigation cases
 /// </summary>
-public static class CaseEndpoints
+public static class WorkspaceEndpoints
 {
     /// <summary>
     /// Maps all case-related endpoints for CRUD operations and management
     /// </summary>
     public static void MapCaseEndpoints(this IEndpointRouteBuilder app)
     {
-        var cases = app.MapGroup("/api/cases")
-            .WithTags("Cases")
+        var cases = app.MapGroup("/api/workspaces")
+            .WithTags("Workspaces")
             .WithOpenApi();
 
         // ========================================
@@ -29,18 +29,18 @@ public static class CaseEndpoints
 
         // Create case
         cases.MapPost("/", async (
-            [FromBody] CreateCaseRequest request,
+            [FromBody] CreateWorspaceRequest request,
             [FromServices] IMediator mediator,
             HttpContext httpContext,
             CancellationToken ct) =>
         {
-            var command = new CreateCaseCommand
+            var command = new CreateWorkspaceCommand
             {
                 CaseNumber = request.CaseNumber,
                 Name = request.Name,
                 Type = request.Type,
                 Description = request.Description,
-                LeadInvestigator = request.LeadInvestigator ?? httpContext.User?.Identity?.Name ?? "Unknown",
+                Owner = request.LeadInvestigator ?? httpContext.User?.Identity?.Name ?? "Unknown",
                 TeamMembers = request.TeamMembers,
                 Classification = request.Classification,
                 Metadata = request.Metadata
@@ -49,14 +49,14 @@ public static class CaseEndpoints
             var caseEntity = await mediator.Send(command, ct);
             return Results.Created($"/api/cases/{caseEntity.Id}", caseEntity);
         })
-        .WithName("CreateCase")
-        .WithSummary("Create a new investigation case")
-        .Produces<Case>(StatusCodes.Status201Created)
+        .WithName("CreateWorkspace")
+        .WithSummary("Create a new workspace")
+        .Produces<Workspace>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest);
 
         // Get case by ID
-        cases.MapGet("/{caseId}", async (
-            string caseId,
+        cases.MapGet("/{workspaceId}", async (
+            string workspaceId,
             [FromServices] IMediator mediator,
             CancellationToken ct,
             [FromQuery] bool includeEvidence = false,
@@ -64,37 +64,37 @@ public static class CaseEndpoints
             [FromQuery] bool includeReports = false,
             [FromQuery] bool includeStatistics = true) =>
         {
-            var query = new GetCaseCommand(
-                caseId,
+            var query = new GetWorkspaceCommand(
+                workspaceId,
                 includeEvidence,
                 includeSessions,
                 includeReports,
                 includeStatistics);
 
-            var caseEntity = await mediator.Send(query, ct);
-            return caseEntity != null
-                ? Results.Ok(caseEntity)
-                : Results.NotFound(new { error = $"Case {caseId} not found" });
+            var workspaceEntity = await mediator.Send(query, ct);
+            return workspaceEntity != null
+                ? Results.Ok(workspaceEntity)
+                : Results.NotFound(new { error = $"Case {workspaceId} not found" });
         })
         .WithName("GetCase")
-        .WithSummary("Get case details by ID")
-        .Produces<Case>()
+        .WithSummary("Get workspace details by ID")
+        .Produces<Workspace>()
         .ProducesProblem(StatusCodes.Status404NotFound);
 
         // Update case
-        cases.MapPut("/{caseId}", async (
+        cases.MapPut("/{workspaceId}", async (
             string caseId,
-            [FromBody] UpdateCaseRequest request,
+            [FromBody] UpdateWorkspaceRequest request,
             [FromServices] IMediator mediator,
             CancellationToken ct) =>
         {
-            var command = new UpdateCaseCommand
+            var command = new UpdateWorkspaceCommand
             {
                 CaseId = caseId,
                 Name = request.Name,
                 Description = request.Description,
                 Status = request.Status,
-                LeadInvestigator = request.LeadInvestigator,
+                Owner = request.Owner,
                 TeamMembers = request.TeamMembers,
                 Classification = request.Classification,
                 Metadata = request.Metadata
@@ -105,26 +105,26 @@ public static class CaseEndpoints
                 ? Results.NoContent()
                 : Results.NotFound(new { error = $"Case {caseId} not found" });
         })
-        .WithName("UpdateCase")
-        .WithSummary("Update case details")
+        .WithName("UpdateWorkspace")
+        .WithSummary("Update workspace details")
         .RequireAuthorization()
         .ProducesProblem(StatusCodes.Status404NotFound);
 
         // Delete case
-        cases.MapDelete("/{caseId}", async (
-            string caseId,
+        cases.MapDelete("/{workspaceId}", async (
+            string workspaceId,
             [FromServices] IMediator mediator,
             HttpContext httpContext,
             CancellationToken ct,
             [FromQuery] string? reason = null,
             [FromQuery] bool archiveOnly = true) =>
         {
-            var command = new DeleteCaseCommand(caseId, reason, archiveOnly);
+            var command = new DeleteWorkspaceCommand(workspaceId, reason, archiveOnly);
             var deleted = await mediator.Send(command, ct);
 
             return deleted
                 ? Results.NoContent()
-                : Results.NotFound(new { error = $"Case {caseId} not found" });
+                : Results.NotFound(new { error = $"Workspace {workspaceId} not found" });
         })
         .WithName("DeleteCase")
         .WithSummary("Delete or archive a case")
@@ -137,11 +137,11 @@ public static class CaseEndpoints
 
         // Search cases
         cases.MapPost("/search", async (
-            [FromBody] SearchCaseRequest request,
+            [FromBody] SearchWorkspacesRequest request,
             [FromServices] IMediator mediator,
             CancellationToken ct) =>
         {
-            var command = new SearchCasesCommand
+            var command = new SearchWorkspacesCommand
             {
                 SearchTerm = request.SearchTerm,
                 CaseNumbers = request.CaseNumbers,
@@ -157,9 +157,9 @@ public static class CaseEndpoints
             var results = await mediator.Send(command, ct);
             return Results.Ok(results);
         })
-        .WithName("SearchCases")
-        .WithSummary("Search cases with filters")
-        .Produces<CaseListResponse>();
+        .WithName("SearchWorkspaces")
+        .WithSummary("Search workspaces with filters")
+        .Produces<WorkspaceListResponse>();
 
         // Get recent cases
         cases.MapGet("/recent", async (
@@ -168,25 +168,25 @@ public static class CaseEndpoints
             CancellationToken ct,
             [FromQuery] int count = 10) =>
         {
-            var query = new GetRecentCasesCommand(count, httpContext.User?.Identity?.Name);
+            var query = new GetRecentWorkspaceCommand(count, httpContext.User?.Identity?.Name);
             var recentCases = await mediator.Send(query, ct);
             return Results.Ok(recentCases);
         })
-        .WithName("GetRecentCases")
-        .WithSummary("Get most recently updated cases")
-        .Produces<List<Case>>();
+        .WithName("GetRecentWorkspaces")
+        .WithSummary("Get most recently updated workspaces")
+        .Produces<List<Workspace>>();
 
         // Get case statistics
-        cases.MapGet("/{caseId}/statistics", async (
-            string caseId,
+        cases.MapGet("/{workspaceId}/statistics", async (
+            string workspaceId,
             [FromServices] IMediator mediator,
             CancellationToken ct,
             [FromQuery] bool includeEvidenceStats = true,
             [FromQuery] bool includeSessionStats = true) =>
         {
-            var query = new GetCaseStatisticsCommand
+            var query = new GetWorkspaceStatisticsCommand
             {
-                CaseId = caseId,
+                WorkspaceId = workspaceId,
                 IncludeEvidenceStats = includeEvidenceStats,
                 IncludeSessionStats = includeSessionStats
             };
@@ -194,23 +194,23 @@ public static class CaseEndpoints
             var stats = await mediator.Send(query, ct);
             return Results.Ok(stats);
         })
-        .WithName("GetCaseStatistics")
-        .WithSummary("Get detailed statistics for a case")
-        .Produces<CaseStatistics>();
+        .WithName("GetWorkspaceStatistics")
+        .WithSummary("Get detailed statistics for a workspace")
+        .Produces<WorkspaceStatistics>();
 
         // ========================================
         // CASE TIMELINE
         // ========================================
 
         // Get case timeline
-        cases.MapGet("/{caseId}/timeline", async (
-            string caseId,
-            [FromServices] ICaseManager caseManager,
+        cases.MapGet("/{workspaceId}/timeline", async (
+            string workspaceId,
+            [FromServices] IWorkspaceManager caseManager,
             CancellationToken ct,
             [FromQuery] DateTimeOffset? startDate = null,
             [FromQuery] DateTimeOffset? endDate = null) =>
         {
-            var events = await caseManager.GetCaseTimelineAsync(caseId, ct);
+            var events = await caseManager.GetWorkspaceTimelineAsync(workspaceId, ct);
 
             // Filter by date range if provided
             if (startDate.HasValue)
@@ -220,14 +220,14 @@ public static class CaseEndpoints
 
             return Results.Ok(new
             {
-                CaseId = caseId,
+                CaseId = workspaceId,
                 Events = events.OrderBy(e => e.Timestamp),
                 TotalEvents = events.Count,
                 StartDate = events.Min(e => e.Timestamp),
                 EndDate = events.Max(e => e.Timestamp)
             });
         })
-        .WithName("GetCaseTimeline")
+        .WithName("GetWorkspaceTimeline")
         .WithSummary("Get timeline of events for a case")
         .Produces<object>();
 
@@ -236,13 +236,13 @@ public static class CaseEndpoints
         // ========================================
 
         // Link session to case
-        cases.MapPost("/{caseId}/sessions/{sessionId}", async (
-            string caseId,
+        cases.MapPost("/{workspaceId}/sessions/{sessionId}", async (
+            string workspaceId,
             string sessionId,
-            [FromServices] ICaseManager caseManager,
+            [FromServices] IWorkspaceManager caseManager,
             CancellationToken ct) =>
         {
-            var linked = await caseManager.LinkSessionToCaseAsync(sessionId, caseId, ct);
+            var linked = await caseManager.LinkSessionToWorkspaceAsync(sessionId, workspaceId, ct);
             return linked
                 ? Results.Ok(new { message = "Session linked to case successfully" })
                 : Results.Problem("Failed to link session to case");
@@ -254,19 +254,19 @@ public static class CaseEndpoints
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         // Link evidence to case
-        cases.MapPost("/{caseId}/evidence/{evidenceId}", async (
-            string caseId,
-            string evidenceId,
-            [FromServices] ICaseManager caseManager,
+        cases.MapPost("/{workspaceId}/evidence/{fileId}", async (
+            string workspaceId,
+            string fileId,
+            [FromServices] IWorkspaceManager caseManager,
             CancellationToken ct) =>
         {
-            var linked = await caseManager.LinkEvidenceToCaseAsync(evidenceId, caseId, ct);
+            var linked = await caseManager.LinkFileToWorkspaceAsync(fileId, workspaceId, ct);
             return linked
-                ? Results.Ok(new { message = "Evidence linked to case successfully" })
-                : Results.Problem("Failed to link evidence to case");
+                ? Results.Ok(new { message = "File linked to workspace successfully" })
+                : Results.Problem("Failed to link file to workspace");
         })
-        .WithName("LinkEvidenceToCase")
-        .WithSummary("Link evidence to a case")
+        .WithName("LinkFileToWorkspace")
+        .WithSummary("Link file to a workspace")
         .RequireAuthorization()
         .Produces<object>()
         .ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -276,10 +276,10 @@ public static class CaseEndpoints
         // ========================================
 
         // Export case
-        cases.MapPost("/{caseId}/export", async (
+        cases.MapPost("/{workspaceId}/export", async (
             string caseId,
             [FromServices] IExportService exportService,
-            [FromServices] ICaseManager caseManager,
+            [FromServices] IWorkspaceManager caseManager,
             CancellationToken ct,
             [FromQuery] ExportFormat format = ExportFormat.Pdf,
             [FromBody] ExportOptions? options = null) =>
@@ -290,7 +290,7 @@ public static class CaseEndpoints
                 return Results.NotFound(new { error = $"Case {caseId} not found" });
             }
 
-            var exportResult = await exportService.ExportCaseAsync(caseEntity, format, options);
+            var exportResult = await exportService.ExportWorkspaceAsync(caseEntity, format, options);
 
             var contentType = format switch
             {
@@ -318,17 +318,17 @@ public static class CaseEndpoints
 
         // Batch update cases
         cases.MapPost("/batch/update", async (
-            [FromBody] BatchUpdateCasesRequest request,
+            [FromBody] BatchUpdateWorkspaceRequest request,
             [FromServices] IMediator mediator,
             CancellationToken ct) =>
         {
             var results = new List<object>();
 
-            foreach (var caseId in request.CaseIds)
+            foreach (var caseId in request.WorkspaceIds)
             {
                 try
                 {
-                    var command = new UpdateCaseCommand
+                    var command = new UpdateWorkspaceCommand
                     {
                         CaseId = caseId,
                         Status = request.Status,
@@ -356,31 +356,31 @@ public static class CaseEndpoints
         // Get user's cases
         cases.MapGet("/user/{userId}", async (
             string userId,
-            [FromServices] ICaseManager caseManager,
+            [FromServices] IWorkspaceManager caseManager,
             CancellationToken ct) =>
         {
-            var userCases = await caseManager.GetUserCasesAsync(userId, ct);
+            var userCases = await caseManager.GetUserWorkspacesAsync(userId, ct);
             return Results.Ok(userCases);
         })
-        .WithName("GetUserCases")
-        .WithSummary("Get all cases for a specific user")
-        .Produces<List<Case>>();
+        .WithName("GetUserWorkspaces")
+        .WithSummary("Get all workspaces for a specific user")
+        .Produces<List<Workspace>>();
 
         // Get case summary
-        cases.MapGet("/{caseId}/summary", async (
-            string caseId,
+        cases.MapGet("/{workspaceId}/summary", async (
+            string workspaceId,
             [FromServices] IMediator mediator,
             CancellationToken ct) =>
         {
-            var query = new GetCaseCommand(caseId, false, false, false, true);
+            var query = new GetWorkspaceCommand(workspaceId, false, false, false, true);
             var caseEntity = await mediator.Send(query, ct);
 
             if (caseEntity == null)
             {
-                return Results.NotFound(new { error = $"Case {caseId} not found" });
+                return Results.NotFound(new { error = $"Workspace {workspaceId} not found" });
             }
 
-            var summary = new CaseSummary
+            var summary = new WorkspaceSummary
             {
                 Id = caseEntity.Id,
                 CaseNumber = caseEntity.CaseNumber,
@@ -389,7 +389,7 @@ public static class CaseEndpoints
                 Status = caseEntity.Status.ToString(),
                 Classification = caseEntity.Classification,
                 UpdatedAt = caseEntity.UpdatedAt,
-                EvidenceCount = caseEntity.Evidence?.Count ?? 0,
+                EvidenceCount = caseEntity.Files?.Count ?? 0,
                 ActiveSessions = caseEntity.Sessions?.Count(s => s.Status == InvestigationStatus.Active) ?? 0
             };
 
@@ -397,7 +397,7 @@ public static class CaseEndpoints
         })
         .WithName("GetCaseSummary")
         .WithSummary("Get summary information for a case")
-        .Produces<CaseSummary>()
+        .Produces<WorkspaceSummary>()
         .ProducesProblem(StatusCodes.Status404NotFound);
     }
 }

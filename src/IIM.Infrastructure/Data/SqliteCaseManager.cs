@@ -17,9 +17,9 @@ using Microsoft.Extensions.Logging;
 namespace IIM.Core.Services
 {
     /// <summary>
-    /// SQLite database implementation of ICaseManager
+    /// SQLite database implementation of IWorkspaceManager
     /// </summary>
-    public class SqliteCaseManager : ICaseManager
+    public class SqliteCaseManager : IWorkspaceManager
     {
         private readonly ILogger<SqliteCaseManager> _logger;
         private readonly StorageConfiguration _config;
@@ -40,13 +40,13 @@ namespace IIM.Core.Services
         /// <summary>
         /// Creates a new case in the SQLite database
         /// </summary>
-        public async Task<Case> CreateCaseAsync(string name, string description, CaseType type,
+        public async Task<Workspace> CreateWorkspaceAsync(string name, string description, CaseType type,
             CancellationToken cancellationToken = default)
         {
-            var caseEntity = new Case
+            var caseEntity = new Workspace
             {
                 Id = Guid.NewGuid().ToString("N"),
-                CaseNumber = await GenerateCaseNumberAsync(),
+                CaseNumber = await GenerateWorkspaceNumberAsync(),
                 Title = name,
                 Description = description,
                 Type = type,
@@ -54,9 +54,9 @@ namespace IIM.Core.Services
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow,
                 Priority = CasePriority.Medium,
-                LeadInvestigator = Environment.UserName,
+                Owner = Environment.UserName,
                 TeamMembers = new List<string> { Environment.UserName },
-                Evidence = new List<Evidence>(),
+                Files = new List<ManagedFile>(),
                 Sessions = new List<InvestigationSession>(),
                 Timelines = new List<Timeline>(),
                 Reports = new List<Report>(),
@@ -69,7 +69,7 @@ namespace IIM.Core.Services
             await connection.OpenAsync(cancellationToken);
 
             const string sql = @"
-                INSERT INTO Cases (
+                INSERT INTO Workspaces (
                     Id, CaseNumber, Name, Type, Status, Description,
                     LeadInvestigator, TeamMembers, CreatedAt, UpdatedAt,
                     Priority, Classification, AccessControlList, Metadata
@@ -87,7 +87,7 @@ namespace IIM.Core.Services
                 Type = type.ToString(),
                 Status = caseEntity.Status.ToString(),
                 caseEntity.Description,
-                caseEntity.LeadInvestigator,
+                caseEntity.Owner,
                 TeamMembersJson = JsonSerializer.Serialize(caseEntity.TeamMembers),
                 caseEntity.CreatedAt,
                 caseEntity.UpdatedAt,
@@ -97,7 +97,7 @@ namespace IIM.Core.Services
                 MetadataJson = JsonSerializer.Serialize(caseEntity.Metadata)
             });
 
-            _logger.LogInformation("Created case {CaseId} with number {CaseNumber}",
+            _logger.LogInformation("Created workspace {CaseId} with number {CaseNumber}",
                 caseEntity.Id, caseEntity.CaseNumber);
 
             return caseEntity;
@@ -106,35 +106,35 @@ namespace IIM.Core.Services
         /// <summary>
         /// Retrieves a case from the SQLite database
         /// </summary>
-        public async Task<Case?> GetCaseAsync(string caseId, CancellationToken cancellationToken = default)
+        public async Task<Workspace?> GetWorkspaceAsync(string workspaceId, CancellationToken cancellationToken = default)
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync(cancellationToken);
 
             const string sql = @"
-                SELECT * FROM Cases WHERE Id = @CaseId AND IsDeleted = 0";
+                SELECT * FROM Workspaces WHERE Id = @WorkspaceId AND IsDeleted = 0";
 
-            var row = await connection.QueryFirstOrDefaultAsync(sql, new { CaseId = caseId });
+            var row = await connection.QueryFirstOrDefaultAsync(sql, new { WorkspaceId = workspaceId });
 
             if (row == null)
             {
                 return null;
             }
 
-            return MapRowToCase(row);
+            return MapRowToWorkspace(row);
         }
 
         /// <summary>
         /// Retrieves all cases from the SQLite database
         /// </summary>
-        public async Task<List<Case>> GetUserCasesAsync(string? userId = null,
+        public async Task<List<Workspace>> GetUserWorkspacesAsync(string? userId = null,
             CancellationToken cancellationToken = default)
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync(cancellationToken);
 
             string sql = @"
-                SELECT * FROM Cases 
+                SELECT * FROM Workspaces 
                 WHERE IsDeleted = 0";
 
             if (!string.IsNullOrEmpty(userId))
@@ -152,16 +152,16 @@ namespace IIM.Core.Services
                 UserPattern = $"%\"{userId}\"%"
             });
 
-            return rows.Select(MapRowToCase).ToList();
+            return rows.Select(MapRowToWorkspace).ToList();
         }
 
         /// <summary>
         /// Updates a case in the SQLite database
         /// </summary>
-        public async Task<bool> UpdateCaseAsync(string caseId, Action<Case> updateAction,
+        public async Task<bool> UpdateWorkspaceAsync(string caseId, Action<Workspace> updateAction,
             CancellationToken cancellationToken = default)
         {
-            var caseEntity = await GetCaseAsync(caseId, cancellationToken);
+            var caseEntity = await GetWorkspaceAsync(caseId, cancellationToken);
             if (caseEntity == null)
             {
                 return false;
@@ -174,7 +174,7 @@ namespace IIM.Core.Services
             await connection.OpenAsync(cancellationToken);
 
             const string sql = @"
-                UPDATE Cases SET
+                UPDATE Workspaces SET
                     Name = @Name,
                     Description = @Description,
                     Status = @Status,
@@ -195,7 +195,7 @@ namespace IIM.Core.Services
                 Status = caseEntity.Status.ToString(),
                 caseEntity.UpdatedAt,
                 Priority = caseEntity.Priority.ToString(),
-                caseEntity.LeadInvestigator,
+                caseEntity.Owner,
                 TeamMembersJson = JsonSerializer.Serialize(caseEntity.TeamMembers),
                 caseEntity.Classification,
                 AccessControlListJson = JsonSerializer.Serialize(caseEntity.AccessControlList),
@@ -208,19 +208,19 @@ namespace IIM.Core.Services
         /// <summary>
         /// Links a session to a case
         /// </summary>
-        public async Task<bool> LinkSessionToCaseAsync(string sessionId, string caseId,
+        public async Task<bool> LinkSessionToWorkspaceAsync(string sessionId, string workspaceId,
             CancellationToken cancellationToken = default)
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync(cancellationToken);
 
             const string sql = @"
-                INSERT INTO CaseSessions (CaseId, SessionId, LinkedAt)
-                VALUES (@CaseId, @SessionId, @LinkedAt)";
+                INSERT INTO WorkspaceSessions (WorkspaceId, SessionId, LinkedAt)
+                VALUES (@WorkspaceId, @SessionId, @LinkedAt)";
 
             var rowsAffected = await connection.ExecuteAsync(sql, new
             {
-                CaseId = caseId,
+                WorkspaceId = workspaceId,
                 SessionId = sessionId,
                 LinkedAt = DateTimeOffset.UtcNow
             });
@@ -231,20 +231,20 @@ namespace IIM.Core.Services
         /// <summary>
         /// Links evidence to a case
         /// </summary>
-        public async Task<bool> LinkEvidenceToCaseAsync(string evidenceId, string caseId,
+        public async Task<bool> LinkFileToWorkspaceAsync(string fileId, string workspaceId,
             CancellationToken cancellationToken = default)
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync(cancellationToken);
 
             const string sql = @"
-                INSERT INTO CaseEvidence (CaseId, EvidenceId, LinkedAt)
-                VALUES (@CaseId, @EvidenceId, @LinkedAt)";
+                INSERT INTO WorkspaceFile (WorkspaceId, FileId, LinkedAt)
+                VALUES (@WorkspaceId, @FileId, @LinkedAt)";
 
             var rowsAffected = await connection.ExecuteAsync(sql, new
             {
-                CaseId = caseId,
-                EvidenceId = evidenceId,
+                WorkspaceId = workspaceId,
+                FileId = workspaceId,
                 LinkedAt = DateTimeOffset.UtcNow
             });
 
@@ -254,38 +254,38 @@ namespace IIM.Core.Services
         /// <summary>
         /// Gets recent cases
         /// </summary>
-        public async Task<List<Case>> GetRecentCasesAsync(int count = 10,
+        public async Task<List<Workspace>> GetRecentWorkspacesAsync(int count = 10,
             CancellationToken cancellationToken = default)
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync(cancellationToken);
 
             const string sql = @"
-                SELECT * FROM Cases 
+                SELECT * FROM Workspaces
                 WHERE IsDeleted = 0
                 ORDER BY UpdatedAt DESC
                 LIMIT @Count";
 
             var rows = await connection.QueryAsync(sql, new { Count = count });
-            return rows.Select(MapRowToCase).ToList();
+            return rows.Select(MapRowToWorkspace).ToList();
         }
 
         /// <summary>
         /// Soft deletes a case
         /// </summary>
-        public async Task<bool> DeleteCaseAsync(string caseId, CancellationToken cancellationToken = default)
+        public async Task<bool> DeleteWorkspaceAsync(string workspaceId, CancellationToken cancellationToken = default)
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync(cancellationToken);
 
             const string sql = @"
-                UPDATE Cases 
+                UPDATE Workspaces 
                 SET IsDeleted = 1, UpdatedAt = @UpdatedAt
-                WHERE Id = @CaseId";
+                WHERE Id = @WorkspaceId";
 
             var rowsAffected = await connection.ExecuteAsync(sql, new
             {
-                CaseId = caseId,
+                WorkspaceId = workspaceId,
                 UpdatedAt = DateTimeOffset.UtcNow
             });
 
@@ -303,14 +303,14 @@ namespace IIM.Core.Services
             await connection.OpenAsync();
 
             const string createCasesTable = @"
-                CREATE TABLE IF NOT EXISTS Cases (
+                CREATE TABLE IF NOT EXISTS Workspaces (
                     Id TEXT PRIMARY KEY,
-                    CaseNumber TEXT NOT NULL UNIQUE,
+                    WorkspaceNumber TEXT NOT NULL UNIQUE,
                     Name TEXT NOT NULL,
                     Type TEXT NOT NULL,
                     Status TEXT NOT NULL,
                     Description TEXT,
-                    LeadInvestigator TEXT,
+                    Owner TEXT,
                     TeamMembers TEXT,
                     CreatedAt TEXT NOT NULL,
                     UpdatedAt TEXT NOT NULL,
@@ -321,27 +321,27 @@ namespace IIM.Core.Services
                     IsDeleted INTEGER DEFAULT 0
                 );
 
-                CREATE INDEX IF NOT EXISTS idx_cases_status ON Cases(Status);
-                CREATE INDEX IF NOT EXISTS idx_cases_updated ON Cases(UpdatedAt);
-                CREATE INDEX IF NOT EXISTS idx_cases_lead ON Cases(LeadInvestigator);";
+                CREATE INDEX IF NOT EXISTS idx_workspaces_status ON Workspaces(Status);
+                CREATE INDEX IF NOT EXISTS idx_workspaces_updated ON Workspaces(UpdatedAt);
+                CREATE INDEX IF NOT EXISTS idx_workspaces_owner ON Workspaces(Owner);";
 
             await connection.ExecuteAsync(createCasesTable);
 
             const string createLinkTables = @"
-                CREATE TABLE IF NOT EXISTS CaseSessions (
-                    CaseId TEXT NOT NULL,
+                CREATE TABLE IF NOT EXISTS WorkspaceSessions (
+                    WorkspaceId TEXT NOT NULL,
                     SessionId TEXT NOT NULL,
                     LinkedAt TEXT NOT NULL,
                     PRIMARY KEY (CaseId, SessionId),
-                    FOREIGN KEY (CaseId) REFERENCES Cases(Id)
+                    FOREIGN KEY (CaseId) REFERENCES Workspaces(Id)
                 );
 
-                CREATE TABLE IF NOT EXISTS CaseEvidence (
-                    CaseId TEXT NOT NULL,
-                    EvidenceId TEXT NOT NULL,
+                CREATE TABLE IF NOT EXISTS WorkspaceFiles (
+                    WorkspaceId TEXT NOT NULL,
+                    FileId TEXT NOT NULL,
                     LinkedAt TEXT NOT NULL,
-                    PRIMARY KEY (CaseId, EvidenceId),
-                    FOREIGN KEY (CaseId) REFERENCES Cases(Id)
+                    PRIMARY KEY (WorkspaceId, FileId),
+                    FOREIGN KEY (WorkspaceId) REFERENCES Workspaces(Id)
                 );";
 
             await connection.ExecuteAsync(createLinkTables);
@@ -352,9 +352,9 @@ namespace IIM.Core.Services
         /// <summary>
         /// Maps a database row to a Case object
         /// </summary>
-        private Case MapRowToCase(dynamic row)
+        private Workspace MapRowToWorkspace(dynamic row)
         {
-            return new Case
+            return new Workspace
             {
                 Id = row.Id,
                 CaseNumber = row.CaseNumber,
@@ -362,7 +362,7 @@ namespace IIM.Core.Services
                 Type = Enum.Parse<CaseType>(row.Type),
                 Status = Enum.Parse<CaseStatus>(row.Status),
                 Description = row.Description,
-                LeadInvestigator = row.LeadInvestigator,
+                Owner = row.LeadInvestigator,
                 TeamMembers = string.IsNullOrEmpty(row.TeamMembers)
                     ? new List<string>()
                     : JsonSerializer.Deserialize<List<string>>(row.TeamMembers) ?? new List<string>(),
@@ -377,7 +377,7 @@ namespace IIM.Core.Services
                     ? new Dictionary<string, object>()
                     : JsonSerializer.Deserialize<Dictionary<string, object>>(row.Metadata) ?? new Dictionary<string, object>(),
                 // These would be loaded separately as needed
-                Evidence = new List<Evidence>(),
+                Files = new List<ManagedFile>(),
                 Sessions = new List<InvestigationSession>(),
                 Timelines = new List<Timeline>(),
                 Reports = new List<Report>()
@@ -387,13 +387,13 @@ namespace IIM.Core.Services
         /// <summary>
         /// Generates a unique case number
         /// </summary>
-        private async Task<string> GenerateCaseNumberAsync()
+        private async Task<string> GenerateWorkspaceNumberAsync()
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
             var count = await connection.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM Cases");
+                "SELECT COUNT(*) FROM Workspaces");
 
             var year = DateTime.UtcNow.Year;
             var month = DateTime.UtcNow.Month;
@@ -402,17 +402,17 @@ namespace IIM.Core.Services
 
         /// <summary>
         /// Gets the timeline of events for a case.
-        /// This is an extension method to avoid breaking existing ICaseManager implementations.
+        /// This is an extension method to avoid breaking existing IWorkspaceManager implementations.
         /// </summary>
         /// <param name="caseManager">The case manager instance</param>
-        /// <param name="caseId">ID of the case</param>
+        /// <param name="workspaceId">ID of the case</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>List of timeline events</returns>
      
-        public async Task<List<TimelineEvent>> GetCaseTimelineAsync(string caseId, CancellationToken cancellationToken = default)
+        public async Task<List<TimelineEvent>> GetWorkspaceTimelineAsync(string workspaceId, CancellationToken cancellationToken = default)
         {
             // Get the case
-            var caseEntity = await GetCaseAsync(caseId, cancellationToken);
+            var caseEntity = await GetWorkspaceAsync(workspaceId, cancellationToken);
             if (caseEntity == null)
             {
                 return new List<TimelineEvent>();

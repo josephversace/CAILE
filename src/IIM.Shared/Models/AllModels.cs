@@ -13,9 +13,9 @@ namespace IIM.Shared.Models;
 #region Cases
 
 /// <summary>
-/// Investigation case - the primary aggregate root for investigations
+/// Workspace case - the primary aggregate root for investigations
 /// </summary>
-public class Case
+public class Workspace
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string CaseNumber { get; set; } = string.Empty;
@@ -25,7 +25,7 @@ public class Case
     public CaseStatus Status { get; set; }
     public CasePriority Priority { get; set; }
     public string Classification { get; set; } = "Unclassified";
-    public string LeadInvestigator { get; set; } = string.Empty;
+    public string Owner { get; set; } = string.Empty;
     public List<string> TeamMembers { get; set; } = new();
     public List<string> AccessControlList { get; set; } = new();
 
@@ -40,7 +40,7 @@ public class Case
 
     // Navigation properties
     public List<InvestigationSession> Sessions { get; set; } = new();
-    public List<Evidence> Evidence { get; set; } = new();
+    public List<ManagedFile> Files { get; set; } = new();
     public List<Report> Reports { get; set; } = new();
     public List<Timeline> Timelines { get; set; } = new();
     public List<Finding> Findings { get; set; } = new();
@@ -49,7 +49,7 @@ public class Case
 // <summary>
 /// Create case request model
 /// </summary>
-public class CreateCaseRequest
+public class CreateWorspaceRequest
 {
     public string CaseNumber { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
@@ -64,12 +64,12 @@ public class CreateCaseRequest
 /// <summary>
 /// Update case request model
 /// </summary>
-public class UpdateCaseRequest
+public class UpdateWorkspaceRequest
 {
     public string? Name { get; set; }
     public string? Description { get; set; }
     public string? Status { get; set; }
-    public string? LeadInvestigator { get; set; }
+    public string? Owner { get; set; }
     public List<string>? TeamMembers { get; set; }
     public string? Classification { get; set; }
     public Dictionary<string, object>? Metadata { get; set; }
@@ -78,7 +78,7 @@ public class UpdateCaseRequest
 /// <summary>
 /// Search cases request model
 /// </summary>
-public class SearchCaseRequest
+public class SearchWorspaceRequest
 {
     public string? SearchTerm { get; set; }
     public List<string>? CaseNumbers { get; set; }
@@ -94,9 +94,9 @@ public class SearchCaseRequest
 /// <summary>
 /// Get case query model
 /// </summary>
-public class GetCaseQuery
+public class GetWorkspaceQuery
 {
-    public string CaseId { get; set; } = string.Empty;
+    public string WorkspaceId { get; set; } = string.Empty;
     public bool IncludeEvidence { get; set; } = false;
     public bool IncludeSessions { get; set; } = false;
     public bool IncludeReports { get; set; } = false;
@@ -106,9 +106,9 @@ public class GetCaseQuery
 /// <summary>
 /// Get case statistics query model
 /// </summary>
-public class GetCaseStatisticsQuery
+public class GetWorkspaceStatisticsQuery
 {
-    public string? CaseId { get; set; }
+    public string? WorkspaceId { get; set; }
     public DateTimeOffset? StartDate { get; set; }
     public DateTimeOffset? EndDate { get; set; }
     public bool IncludeEvidenceStats { get; set; } = true;
@@ -118,15 +118,15 @@ public class GetCaseStatisticsQuery
 /// <summary>
 /// Case response model
 /// </summary>
-public class CaseResponse
+public class WorkspaceResponse
 {
     public string Id { get; set; } = string.Empty;
-    public string CaseNumber { get; set; } = string.Empty;
+    public string WorkspaceNumber { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public string LeadInvestigator { get; set; } = string.Empty;
+    public string Owner { get; set; } = string.Empty;
     public List<string> TeamMembers { get; set; } = new();
     public string Classification { get; set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; set; }
@@ -140,9 +140,9 @@ public class CaseResponse
 /// <summary>
 /// Case list response model
 /// </summary>
-public class CaseListResponse
+public class WorkspaceListResponse
 {
-    public List<CaseSummary> Cases { get; set; } = new();
+    public List<WorkspaceSummary> Cases { get; set; } = new();
     public int TotalCount { get; set; }
     public int Page { get; set; }
     public int PageSize { get; set; }
@@ -151,7 +151,7 @@ public class CaseListResponse
 /// <summary>
 /// Case summary model
 /// </summary>
-public class CaseSummary
+public class WorkspaceSummary
 {
     public string Id { get; set; } = string.Empty;
     public string CaseNumber { get; set; } = string.Empty;
@@ -167,17 +167,17 @@ public class CaseSummary
 /// <summary>
 /// Case statistics model
 /// </summary>
-public class CaseStatistics
+public class WorkspaceStatistics
 {
-    public int TotalEvidence { get; set; }
-    public long TotalEvidenceSize { get; set; }
+    public int TotalFiles { get; set; }
+    public long TotalFileSize { get; set; }
     public int TotalSessions { get; set; }
     public int ActiveSessions { get; set; }
     public int TotalReports { get; set; }
     public int TotalFindings { get; set; }
-    public TimeSpan TotalInvestigationTime { get; set; }
-    public Dictionary<string, int> EvidenceByType { get; set; } = new();
-    public Dictionary<string, int> FindingsBySeverity { get; set; } = new();
+    public TimeSpan TotalTime { get; set; }
+    public Dictionary<string, int> FilesByType { get; set; } = new();
+    public Dictionary<string, int> FilesBySeverity { get; set; } = new();
 }
 
 
@@ -256,7 +256,7 @@ public class Settings
 /// <summary>
 /// Digital evidence item with chain of custody
 /// </summary>
-public class Evidence
+public class ManagedFile
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string CaseId { get; set; } = string.Empty;
@@ -284,13 +284,13 @@ public class Evidence
     public DateTimeOffset? UpdatedAt { get; set; }
 
     // Metadata
-    public EvidenceMetadata Metadata { get; set; } = new();
+    public FileMetadata Metadata { get; set; } = new();
 
     // Chain of custody
     public List<ChainOfCustodyEntry> ChainOfCustody { get; set; } = new();
 
     // Processing
-    public List<ProcessedEvidence> ProcessedVersions { get; set; } = new();
+    public List<ProcessedFile> ProcessedVersions { get; set; } = new();
 
     public string CreatedBy { get; set; } = string.Empty;
 
@@ -301,26 +301,8 @@ public class Evidence
     public DateTimeOffset CollectionDate { get; set; } = DateTimeOffset.UtcNow;
 }
 
-/// <summary>
-/// Evidence metadata for collection context
-/// </summary>
-public class EvidenceMetadata
-{
-    public string CaseNumber { get; set; } = string.Empty;
-    public string CollectedBy { get; set; } = string.Empty;
-    public DateTimeOffset CollectionDate { get; set; } = DateTimeOffset.UtcNow;
-    public string? CollectionLocation { get; set; }
-    public string? DeviceSource { get; set; }
-    public string? Description { get; set; }
-    public string? SessionId { get; set; }
 
-    public Classification Classification { get; set; }
 
-    public Dictionary<HashType, string> AdditionalHashes { get; set; } = new();
-    public Dictionary<string, string> CustomFields { get; set; } = new();
-
-   
-}
 
 /// <summary>
 /// Chain of custody entry for evidence tracking
@@ -341,10 +323,10 @@ public class ChainOfCustodyEntry
 /// <summary>
 /// Processed evidence version tracking
 /// </summary>
-public class ProcessedEvidence
+public class ProcessedFile
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string OriginalEvidenceId { get; set; } = string.Empty;
+    public string OriginalFileId { get; set; } = string.Empty;
     public string ProcessingType { get; set; } = string.Empty;
     public DateTimeOffset ProcessedTimestamp { get; set; } = DateTimeOffset.UtcNow;
     public string ProcessedBy { get; set; } = string.Empty;
@@ -359,17 +341,17 @@ public class ProcessedEvidence
 #region Evidence Upload Models
 
 /// <summary>
-/// Request to initiate evidence upload
+/// Request to initiate upload
 /// Purpose: Start upload process with pre-flight checks
 /// Used by: Evidence upload UI, API endpoints, batch importers
 /// </summary>
-public class InitiateEvidenceUploadRequest
+public class InitiateFileUploadRequest
 {
     public string FileHash { get; set; } = string.Empty; // SHA-256 from client
     public string FileName { get; set; } = string.Empty;
     public long FileSize { get; set; }
     public string ContentType { get; set; } = "application/octet-stream";
-    public EvidenceMetadata Metadata { get; set; } = new();
+    public FileMetadata Metadata { get; set; } = new();
     public bool CheckDuplicates { get; set; } = true;
     public string? ChunkingStrategy { get; set; } // For deduplication
 }
@@ -379,10 +361,10 @@ public class InitiateEvidenceUploadRequest
 /// Purpose: Provide upload URL or duplicate info
 /// Used by: Upload client to proceed with actual upload
 /// </summary>
-public class InitiateEvidenceUploadResponse
+public class InitiateFileUploadResponse
 {
-    public string EvidenceId { get; set; } = string.Empty;
-    public EvidenceUploadStatus Status { get; set; }
+    public string FileId { get; set; } = string.Empty;
+    public FileUploadStatus Status { get; set; }
     public string? UploadUrl { get; set; } // Pre-signed URL for MinIO
     public DateTimeOffset? UploadUrlExpires { get; set; }
     public string? DuplicateEvidenceId { get; set; }
@@ -398,7 +380,7 @@ public class InitiateEvidenceUploadResponse
 /// </summary>
 public class DuplicateInfo
 {
-    public string OriginalEvidenceId { get; set; } = string.Empty;
+    public string OriginalFileId { get; set; } = string.Empty;
     public DateTimeOffset OriginalUploadDate { get; set; }
     public string OriginalUploadedBy { get; set; } = string.Empty;
     public string OriginalCaseNumber { get; set; } = string.Empty;
@@ -413,7 +395,7 @@ public class DuplicateInfo
 /// Purpose: Verify upload and update chain of custody
 /// Used by: Upload completion handler
 /// </summary>
-public class ConfirmEvidenceUploadRequest
+public class ConfirmFileUploadRequest
 {
     public string EvidenceId { get; set; } = string.Empty;
     public string? ETag { get; set; } // From MinIO
@@ -428,7 +410,7 @@ public class ConfirmEvidenceUploadRequest
 /// Purpose: Track context of evidence operations
 /// Used by: Chain of custody, audit trail
 /// </summary>
-public class EvidenceContext
+public class FileContext
 {
     public string CaseId { get; set; } = string.Empty;
     public string UserId { get; set; } = string.Empty;
@@ -455,7 +437,7 @@ public class EvidenceContext
 public class InvestigationSession
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string CaseId { get; set; } = string.Empty;
+    public string WorkspaceId { get; set; } = string.Empty;
     public string Title { get; set; } = "New Investigation";
     public string Icon { get; set; } = "🔍";
     public InvestigationType Type { get; set; } = InvestigationType.GeneralInquiry;
@@ -504,8 +486,8 @@ public class CreateSessionRequest
     /// </summary>
     public class SessionContext
     {
-        public string CaseId { get; set; } = string.Empty;
-        public List<string>? RelevantEvidenceIds { get; set; }
+        public string WorkspaceId { get; set; } = string.Empty;
+        public List<string>? RelevantFileIds { get; set; }
         public Dictionary<string, object>? Variables { get; set; }
         public TimeRange? FocusTimeRange { get; set; }
         public List<string>? FocusEntityIds { get; set; }
@@ -593,7 +575,7 @@ public class InvestigationResponse
     public Visualization Visualization { get; set; }
 
     // References
-    public List<string>? EvidenceIds { get; set; }
+    public List<string>? FileIds { get; set; }
     public List<string>? EntityIds { get; set; }
 
     public string Hash { get; set; } = string.Empty;
@@ -606,7 +588,7 @@ public class InvestigationResponse
     public TimeSpan? ProcessingTime { get; set; }
     public ResponseDisplayType DisplayType { get; set; } = ResponseDisplayType.Auto;
     public Dictionary<string, object>? Metadata { get; set; }
-    public List<Evidence> RelatedEvidence { get; set; }
+    public List<ManagedFile> RelatedFiles { get; set; }
 }
 
 #endregion
@@ -663,7 +645,7 @@ public class ProcessResult
 public class ProcessingResult
 {
     public string ProcessingId { get; set; } = Guid.NewGuid().ToString();
-    public string EvidenceId { get; set; } = string.Empty;
+    public string FileId { get; set; } = string.Empty;
     public ProcessingStatus Status { get; set; }
     public string ProcessingType { get; set; } = string.Empty;
     public Dictionary<string, object>? Results { get; set; }
@@ -753,7 +735,7 @@ public class TranscriptionSegment
 /// </summary>
 public class TranscribeAudioCommand
 {
-    public string EvidenceId { get; set; } = string.Empty;
+    public string FileId { get; set; } = string.Empty;
     public string? AudioPath { get; set; }
     public byte[]? AudioData { get; set; }
     public string? Language { get; set; }
@@ -768,7 +750,7 @@ public class TranscribeAudioCommand
 public class TranscriptionResponse
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string EvidenceId { get; set; } = string.Empty;
+    public string FileId { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
     public string Language { get; set; } = string.Empty;
     public double Confidence { get; set; }
@@ -848,7 +830,7 @@ public class BoundingBox
 /// </summary>
 public class SimilarImage
 {
-    public string EvidenceId { get; set; } = string.Empty;
+    public string FileId { get; set; } = string.Empty;
     public string FileName { get; set; } = string.Empty;
     public double Similarity { get; set; }
 }
