@@ -61,7 +61,7 @@
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
     <PackageReference Include="System.Text.Json" Version="9.0.8" />
     <PackageReference Include="Tesseract" Version="5.2.0" />
-    <PackageReference Include="Minio" Version="6.0.1" />   
+
     <PackageReference Include="LLamaSharp" Version="0.25.0" />
     <PackageReference Include="LLamaSharp.Backend.Cuda12" Version="0.25.0" />
   <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.8" />

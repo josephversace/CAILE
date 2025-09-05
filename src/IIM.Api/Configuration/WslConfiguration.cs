@@ -10,10 +10,13 @@
         public int ServiceCheckIntervalSeconds { get; set; } = 30;
         public int StartupTimeoutSeconds { get; set; } = 60;
         public List<string> AutoStartServices { get; set; } = new()
-        {
-            "docker",
-            "qdrant",
-            "embeddings"
-        };
+    {
+        "docker",
+        "qdrant",
+        "embeddings",
+        "seaweedfs",     // ← ADD: SeaweedFS service
+        "kafka"          // ← ADD: Kafka for events (optional)
+    
+    };
     }
 }

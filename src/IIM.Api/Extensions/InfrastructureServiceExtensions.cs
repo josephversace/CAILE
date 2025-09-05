@@ -50,13 +50,13 @@ namespace IIM.Api.Extensions
             // Deduplication Service (Scoped - uses DB context)
             services.AddScoped<IDeduplicationService, DeduplicationService>();
 
-            // MinIO Object Storage (Scoped - transaction boundary)
-            services.AddScoped<IMinIOStorageService>(sp =>
+            // S3 Object Storage (Scoped - transaction boundary)
+            services.AddScoped<IS3StorageService>(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<MinIOStorageService>>();
-                var config = sp.GetRequiredService<IOptions<MinIOConfiguration>>();
+                var logger = sp.GetRequiredService<ILogger<SeaweedFSStorageService>>();
+                var config = sp.GetRequiredService<IOptions<S3StorageConfiguration>>();
                 var deduplicationService = sp.GetRequiredService<IDeduplicationService>();
-                return new MinIOStorageService(logger, config, deduplicationService);
+                return new SeaweedFSStorageService(logger, config, deduplicationService);
             });
 
             // ========================================

@@ -219,26 +219,7 @@ public class IIMApiClient : IIIMApiClient
         response.EnsureSuccessStatusCode();
     }
 
-    /// <summary>
-    /// Tests MinIO connection
-    /// </summary>
-    public async Task<TestConnectionResult> TestMinIOConnectionAsync(string endpoint)
-    {
-        var request = new { Endpoint = endpoint };
-        var response = await _httpClient.PostAsJsonAsync("/api/settings/test/minio", request);
 
-        if (response.IsSuccessStatusCode)
-        {
-            return await response.Content.ReadFromJsonAsync<TestConnectionResult>()
-                ?? new TestConnectionResult { Success = false, Error = "Unknown error" };
-        }
-
-        return new TestConnectionResult
-        {
-            Success = false,
-            Error = "Connection test failed"
-        };
-    }
 
     Task<Settings> IIIMApiClient.GetSettingsAsync()
     {
