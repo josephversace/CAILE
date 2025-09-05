@@ -46,6 +46,7 @@ namespace IIM.Api.Extensions
 
             // Add services in dependency order
             services.AddHttpClients(configuration);
+           
             services.AddInfrastructureServices(configuration, deploymentConfig);
             services.AddCoreServices(configuration, deploymentConfig);
             services.AddApplicationServices(configuration, deploymentConfig);
@@ -83,7 +84,7 @@ namespace IIM.Api.Extensions
             services.Configure<ModelTemplateConfiguration>(configuration.GetSection("ModelTemplates"));
             services.Configure<InferencePipelineConfiguration>(configuration.GetSection("InferencePipeline"));
             services.Configure<ModelConfigurationConfiguration>(configuration.GetSection("ModelConfiguration"));
-            services.Configure<MinIOConfiguration>(configuration.GetSection("Storage:MinIO"));
+            services.Configure<S3StorageConfiguration>(configuration.GetSection("Storage:S3"));
 
             return services;
         }

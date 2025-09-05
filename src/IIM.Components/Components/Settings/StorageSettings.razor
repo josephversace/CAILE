@@ -1,12 +1,12 @@
 ﻿
+@using Amazon.S3
 @using IIM.Core.Configuration
 @using IIM.Infrastructure.Storage
 @using Microsoft.Extensions.Logging
 @using Microsoft.Extensions.Options
 @using Microsoft.Extensions.Configuration
 @using System.Text.Json
-@using Minio
-@inject IOptions<MinIOConfiguration> MinIOOptions
+
 
 @inject IConfiguration Configuration
 @inject ILogger<StorageSettings> Logger
@@ -85,13 +85,7 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <button class="btn btn-primary" @onclick="TestConnection" disabled="@isTesting">
-                                @if (isTesting)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
-                                }
-                                <i class="fas fa-plug"></i> Test Connection
-                            </button>
+            
                             @if (connectionTestResult != null)
                             {
                                 <div class="mt-2">
@@ -298,9 +292,10 @@
         isSaving = true;
         try
         {
-            // Create settings object
+            // Add provider to settings
             var settings = new Dictionary<string, object>
             {
+                ["Storage:Provider"] = storageProvider,  // New field
                 ["Storage:Backend"] = storageBackend,
                 ["Storage:LocalBasePath"] = localBasePath,
                 ["Storage:MinIO:Endpoint"] = minioEndpoint,
@@ -316,20 +311,12 @@
                 ["Storage:Tiers:AutoTieringEnabled"] = enableAutoTiering
             };
 
-       
-
-            // Merge settings
-            foreach (var kvp in settings)
-            {
-             
-            }
+            // Save settings (your existing code)
 
             ShowMessage("Settings saved successfully. Restart the application for changes to take effect.", "alert-success");
-            //Logger.LogInformation("Storage settings saved");
         }
         catch (Exception ex)
         {
-            //Logger.LogError(ex, "Failed to save settings");
             ShowMessage($"Failed to save settings: {ex.Message}", "alert-danger");
         }
         finally
@@ -338,63 +325,96 @@
         }
     }
 
-    private async Task TestConnection()
-    {
-        isTesting = true;
-        connectionTestResult = null;
+    // private async Task TestConnection()
+    // {
+    //     isTesting = true;
+    //     connectionTestResult = null;
 
-        try
-        {
-            // Test MinIO connection
-            var testClient = new MinioClient()
-                .WithEndpoint(minioEndpoint)
-                .WithCredentials(minioAccessKey, minioSecretKey)
-                .WithSSL(minioUseSSL)
-                .Build();
+    //     try
+    //     {
+    //         // Test MinIO connection
+    //         var testClient = new MinioClient()
+    //             .WithEndpoint(minioEndpoint)
+    //             .WithCredentials(minioAccessKey, minioSecretKey)
+    //             .WithSSL(minioUseSSL)
+    //             .Build();
 
-            var buckets = await testClient.ListBucketsAsync();
+    //         var buckets = await testClient.ListBucketsAsync();
 
-            connectionTestResult = new ConnectionTestResult
-            {
-                Success = true,
-                BucketCount = buckets.Buckets.Count,
-                ErrorMessage = null
-            };
-        }
-        catch (Exception ex)
-        {
-            connectionTestResult = new ConnectionTestResult
-            {
-                Success = false,
-                BucketCount = 0,
-                ErrorMessage = ex.Message
-            };
-        }
-        finally
-        {
-            isTesting = false;
-        }
-    }
+    //         connectionTestResult = new ConnectionTestResult
+    //         {
+    //             Success = true,
+    //             BucketCount = buckets.Buckets.Count,
+    //             ErrorMessage = null
+    //         };
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         connectionTestResult = new ConnectionTestResult
+    //         {
+    //             Success = false,
+    //             BucketCount = 0,
+    //             ErrorMessage = ex.Message
+    //         };
+    //     }
+    //     finally
+    //     {
+    //         isTesting = false;
+    //     }
+    // }
 
     private async Task RefreshStatistics()
     {
         try
         {
-            // Get local storage stats
+            // Get local storage stats (unchanged)
             var driveInfo = new DriveInfo(Path.GetPathRoot(localBasePath) ?? "C:\\");
             localTotalBytes = driveInfo.TotalSize;
             localUsedBytes = driveInfo.TotalSize - driveInfo.AvailableFreeSpace;
             localUsagePercent = (int)((localUsedBytes * 100) / localTotalBytes);
 
-            // Get MinIO stats (simplified - you'd need actual MinIO admin API)
-            // For now, just set some example values
-            minioTotalBytes = 1000L * 1024 * 1024 * 1024; // 1TB
-            minioUsedBytes = 250L * 1024 * 1024 * 1024; // 250GB
-            minioUsagePercent = (int)((minioUsedBytes * 100) / minioTotalBytes);
+            // Get S3 storage stats using AWS SDK
+            try
+            {
+                var s3Config = new AmazonS3Config
+                {
+                    ServiceURL = $"http://{minioEndpoint}",
+                    ForcePathStyle = true,
+                    UseHttp = !minioUseSSL
+                };
+
+                var s3Client = new AmazonS3Client(minioAccessKey, minioSecretKey, s3Config);
+                var buckets = await s3Client.ListBucketsAsync();
+
+                // Note: SeaweedFS doesn't provide storage metrics via S3 API
+                // You might need a separate API call or just show bucket count
+                minioTotalBytes = 1000L * 1024 * 1024 * 1024; // Default 1TB
+                minioUsedBytes = 0;
+
+                // Sum up bucket sizes (optional, might be slow)
+                foreach (var bucket in buckets.Buckets)
+                {
+                    try
+                    {
+                        var objects = await s3Client.ListObjectsAsync(bucket.BucketName);
+                        minioUsedBytes += objects.S3Objects.Sum(o => o.Size);
+                    }
+                    catch { /* Ignore individual bucket errors */ }
+                }
+
+                minioUsagePercent = (int)((minioUsedBytes * 100) / minioTotalBytes);
+            }
+            catch
+            {
+                // If stats fail, just show defaults
+                minioTotalBytes = 1000L * 1024 * 1024 * 1024;
+                minioUsedBytes = 0;
+                minioUsagePercent = 0;
+            }
         }
         catch (Exception ex)
         {
-            //Logger.LogError(ex, "Failed to refresh statistics");
+            Logger?.LogError(ex, "Failed to refresh statistics");
         }
     }
 

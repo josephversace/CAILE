@@ -19,7 +19,7 @@ namespace IIM.Application.Services
     {
         private readonly SqliteConnection _db;
         private readonly ILogger<VirtualFilesystemService> _logger;
-        private readonly IMinIOStorageService _storage;
+        private readonly IS3StorageService _storage;
 
         /// <summary>
         /// Constructs a complete folder tree for a case from flat file records.
