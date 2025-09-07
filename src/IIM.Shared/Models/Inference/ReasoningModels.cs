@@ -22,7 +22,7 @@ namespace IIM.Shared.Models
         public List<string>? RequiredTools { get; set; }  // Tools needed
         public Dictionary<string, double>? ModelScores { get; set; }  // Model confidence scores
         public bool? RequiresRAG { get; set; }  // Needs document search
-        public List<string>? RelevantEvidenceIds { get; set; }  // Related evidence
+        public List<string>? RelevantFileIds { get; set; }  // Related evidence
     }
 
 

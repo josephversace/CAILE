@@ -41,7 +41,7 @@ namespace IIM.Shared.Models
         public long TotalSize { get; set; }
         public long ModelsSize { get; set; }
         public long CasesSize { get; set; }
-        public long EvidenceSize { get; set; }
+        public long FilesSize { get; set; }
         public long VectorStoreSize { get; set; }
         public int TemplatesCount { get; set; }
         public int ModelsCount { get; set; }

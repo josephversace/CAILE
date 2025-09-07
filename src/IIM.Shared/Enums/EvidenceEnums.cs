@@ -1,6 +1,6 @@
 ﻿namespace IIM.Shared.Enums;
 
-public enum EvidenceType
+public enum FileType
 {
     Document,
     Image,
@@ -16,7 +16,7 @@ public enum EvidenceType
     Other
 }
 
-public enum EvidenceStatus
+public enum FileProcessingStatus
 {
     Pending,
     Ingested,

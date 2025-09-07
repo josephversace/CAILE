@@ -42,7 +42,7 @@ public class PluginContext : IAsyncDisposable
     /// <summary>
     /// Evidence store for chain of custody
     /// </summary>
-    public required IEvidenceStore EvidenceStore { get; init; }
+    public required IFileStore FileStore { get; init; }
     
     /// <summary>
     /// Information about the current plugin

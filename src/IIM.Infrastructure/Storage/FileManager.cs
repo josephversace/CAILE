@@ -23,12 +23,12 @@ namespace IIM.Infrastructure.Storage
     public class FileManager 
     {
         private readonly ILogger<FileManager> _logger;
-        private readonly EvidenceConfiguration _config;
+        private readonly FilesConfiguration _config;
         private readonly AuditDbContext _audit;
         private readonly Dictionary<string, ManagedFile> _fileStore = new();
         private readonly object _lock = new();
 
-        public FileManager(ILogger<FileManager> logger, EvidenceConfiguration config, AuditDbContext audit)
+        public FileManager(ILogger<FileManager> logger, FilesConfiguration config, AuditDbContext audit)
         {
             _logger = logger;
             _config = config;

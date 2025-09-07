@@ -19,7 +19,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
     private readonly IWorkspaceManager _caseManager;
     private readonly IReasoningService _reasoningService;
     private readonly IInferenceService _inferenceService;
-    private readonly IEvidenceManager _evidenceManager;
+    private readonly IManagedFileManager _fileManager;
     private readonly IVisualizationService _visualizationService;
 
     public ProcessInvestigationCommandHandler(
@@ -28,7 +28,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         IWorkspaceManager caseManager,
         IReasoningService reasoningService,
         IInferenceService inferenceService,
-        IEvidenceManager evidenceManager,
+        IManagedFileManager fileManager,
         IVisualizationService visualizationService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -36,7 +36,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         _caseManager = caseManager ?? throw new ArgumentNullException(nameof(caseManager));
         _reasoningService = reasoningService ?? throw new ArgumentNullException(nameof(reasoningService));
         _inferenceService = inferenceService ?? throw new ArgumentNullException(nameof(inferenceService));
-        _evidenceManager = evidenceManager ?? throw new ArgumentNullException(nameof(evidenceManager));
+        _fileManager = fileManager ?? throw new ArgumentNullException(nameof(fileManager));
         _visualizationService = visualizationService ?? throw new ArgumentNullException(nameof(visualizationService));
     }
 
@@ -47,7 +47,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         _logger.LogInformation("Processing query for session {SessionId}", request.SessionId);
 
         var session = await _sessionService.GetSessionAsync(request.SessionId, cancellationToken);
-        var caseEntity = await _caseManager.GetCaseAsync(session.CaseId, cancellationToken);
+        var workspaceEntity = await _caseManager.GetWorkspaceAsync(session.WorkspaceId, cancellationToken);
 
         // Build InvestigationQuery
         var query = new InvestigationQuery
@@ -73,7 +73,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         // Process attachments - adapt to actual Attachment model
         if (query.Attachments?.Any() == true)
         {
-            await ProcessAttachmentsAsync(session.CaseId, query.Attachments, cancellationToken);
+            await ProcessAttachmentsAsync(session.WorkspaceId, query.Attachments, cancellationToken);
         }
 
         // Use reasoning service
@@ -87,7 +87,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
             reasoningResult,
             query,
             session,
-            caseEntity,
+            workspaceEntity,
             cancellationToken);
 
         // Build response - adapt to actual InvestigationResponse model
@@ -111,7 +111,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         {
             var ragResponse = await _inferenceService.QueryDocumentsAsync(
                 query.Text,
-                session.CaseId,
+                session.WorkspaceId,
                 cancellationToken);
 
             // Map to actual Citation structure (no Index property)
@@ -130,8 +130,8 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         }
 
         // Get related evidence
-        response.RelatedEvidence = await GetRelatedEvidenceAsync(
-            session.CaseId,
+        response.RelatedFiles = await GetRelatedFilesAsync(
+            session.WorkspaceId,
             query.Text,
             5,
             cancellationToken);
@@ -159,8 +159,8 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
     {
         foreach (var attachment in attachments)
         {
-            // Create Evidence record from Attachment
-            var evidence = new Evidence
+            // Create file record from Attachment
+            var file = new ManagedFile
             {
                 Id = Guid.NewGuid().ToString(),
                 CaseId = caseId,
@@ -172,20 +172,20 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
                 StoragePath = attachment.StoragePath ?? "",
                 Hash = "", // Will be computed during ingestion
                 IngestTimestamp = DateTimeOffset.UtcNow,
-                Metadata = new EvidenceMetadata
+                Metadata = new FileMetadata
                 {
-                    CaseNumber = caseId,
-                    CollectedBy = Environment.UserName,
-                    CollectionDate = DateTimeOffset.UtcNow
+                    //CaseNumber = caseId,
+                    //CollectedBy = Environment.UserName,
+                    //CollectionDate = DateTimeOffset.UtcNow
                 }
             };
 
             // Note: AddEvidenceAsync doesn't exist, use IngestEvidenceAsync
             using var stream = new MemoryStream();
-            await _evidenceManager.IngestEvidenceAsync(
+            await _fileManager.IngestFileAsync(
                 stream,
                 attachment.FileName,
-                evidence.Metadata,
+                file.Metadata,
                 cancellationToken);
         }
     }
@@ -207,7 +207,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         ReasoningResult reasoningResult,
         InvestigationQuery query,
         InvestigationSession session,
-        Case caseEntity,
+        Workspace workspaceEntity,
         CancellationToken cancellationToken)
     {
         try
@@ -217,7 +217,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
                 Query = query.Text,
                 Context = reasoningResult.ExtractedEntities,
                 SessionId = session.Id,
-                CaseId = caseEntity.Id
+                WorkspaceId = workspaceEntity.Id
             };
 
             var responseText = await _inferenceService.InferAsync(
@@ -233,13 +233,13 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         }
     }
 
-    private async Task<List<Evidence>> GetRelatedEvidenceAsync(
+    private async Task<List<ManagedFile>> GetRelatedFilesAsync(
         string caseId,
         string queryText,
         int maxResults,
         CancellationToken cancellationToken)
     {
-        var evidence = await _evidenceManager.GetEvidenceByCaseAsync(caseId, cancellationToken);
+        var evidence = await _fileManager.GetFilesByWorkspaceAsync(caseId, cancellationToken);
         return evidence.Take(maxResults).ToList();
     }
 }

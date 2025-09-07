@@ -389,7 +389,7 @@ public class QueuedRequest
     /// </summary>
     public class ChainOfCustodyReport
     {
-        public string EvidenceId { get; set; } = string.Empty;
+        public string FileId { get; set; } = string.Empty;
         public string OriginalFileName { get; set; } = string.Empty;
         public string CaseNumber { get; set; } = string.Empty;
         public List<ChainOfCustodyEntry> ChainEntries { get; set; } = new();
@@ -406,12 +406,12 @@ public class QueuedRequest
     }
 
     /// <summary>
-    /// Evidence export
+    /// File export
     /// </summary>
     public class FileExport
     {
         public string ExportId { get; set; } = Guid.NewGuid().ToString();
-        public string EvidenceId { get; set; } = string.Empty;
+        public string FileId { get; set; } = string.Empty;
         public string ExportPath { get; set; } = string.Empty;
         public List<string> Files { get; set; } = new();
         public bool IntegrityValid { get; set; }

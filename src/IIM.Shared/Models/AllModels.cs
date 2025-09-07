@@ -160,7 +160,7 @@ public class WorkspaceSummary
     public string Status { get; set; } = string.Empty;
     public string Classification { get; set; } = string.Empty;
     public DateTimeOffset UpdatedAt { get; set; }
-    public int EvidenceCount { get; set; }
+    public int FileCount { get; set; }
     public int ActiveSessions { get; set; }
 }
 

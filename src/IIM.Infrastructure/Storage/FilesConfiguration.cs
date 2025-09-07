@@ -10,7 +10,7 @@ namespace IIM.Infrastructure.Storage
     /// Configuration for evidence storage, security, and chain of custody requirements.
     /// This is the single source of truth for evidence configuration across the platform.
     /// </summary>
-    public class EvidenceConfiguration
+    public class FilesConfiguration
     {
         // Storage Settings
         public string StorePath { get; set; } = GetDefaultStorePath();

@@ -5,14 +5,14 @@ using Mediator;
 namespace IIM.Application.Files
 {
     /// <summary>
-    /// Command to confirm evidence upload completion
+    /// Command to confirm file upload completion
     /// </summary>
     public class ConfirmFileUploadCommand : IRequest<ConfirmFileUploadResponse>, IAuditableCommand
     {
         /// <summary>
-        /// Evidence ID to confirm
+        /// File ID to confirm
         /// </summary>
-        public string EvidenceId { get; set; } = string.Empty;
+        public string FileId { get; set; } = string.Empty;
 
       
 

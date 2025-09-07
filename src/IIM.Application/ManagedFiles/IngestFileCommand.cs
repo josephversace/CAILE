@@ -6,7 +6,7 @@ using IIM.Shared.Models;
 namespace IIM.Application.Files
 {
     /// <summary>
-    /// Command to ingest evidence with chain of custody tracking
+    /// Command to ingest file with chain of custody tracking
     /// </summary>
     public class IngestFileCommand : IRequest<FileContext>
     {

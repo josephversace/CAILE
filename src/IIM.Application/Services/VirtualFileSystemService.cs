@@ -6,13 +6,14 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace IIM.Application.Services
 {
     /// <summary>
-    /// Service for managing the virtual filesystem view of evidence files.
+    /// Service for managing the virtual filesystem view of managed files.
     /// Provides folder structure navigation while maintaining hash-based storage.
     /// </summary>
     public class VirtualFilesystemService
@@ -25,7 +26,7 @@ namespace IIM.Application.Services
         /// Constructs a complete folder tree for a case from flat file records.
         /// This method builds the virtual folder structure that users see in the UI.
         /// </summary>
-        /// <param name="caseId">The case to build folder structure for</param>
+        /// <param name="workspaceId">The workspace to build folder structure for</param>
         /// <returns>Root folder containing entire tree structure</returns>
         /// <remarks>
         /// This method:
@@ -35,20 +36,20 @@ namespace IIM.Application.Services
         /// 4. Links folders and files into tree structure
         /// 5. Calculates aggregate statistics (file counts, sizes)
         /// </remarks>
-        public async Task<VirtualFolder> GetCaseFolderStructureAsync(string caseId)
+        public async Task<VirtualFolder> GetCaseFolderStructureAsync(string workspaceId)
         {
             // Query all files for this case, ordered by path for efficient tree building
             var files = await _db.QueryAsync<ManagedFile>(@"
-            SELECT * FROM EvidenceFiles 
-            WHERE CaseId = @CaseId 
+            SELECT * FROM ManagedFiles 
+            WHERE WorkspaceId = @WorkspaceId 
             ORDER BY VirtualPath", //Ordering helps with folder creation
     
-                new { CaseId = caseId });
+                new { WorkspaceId = workspaceId });
 
             // Create root folder that will contain everything
             var root = new VirtualFolder
             {
-                CaseId = caseId,
+                WorkspaceId = workspaceId,
                 Path = "/",
                 Name = "Root",
                 ParentPath = null  // Root has no parent
@@ -84,7 +85,7 @@ namespace IIM.Application.Services
                     {
                         var folder = new VirtualFolder
                         {
-                            CaseId = caseId,
+                            WorkspaceId = workspaceId,
                             Path = currentPath,
                             Name = pathParts[i],  // Just the folder name, not full path
                             ParentPath = parentFolder.Path
@@ -116,8 +117,8 @@ namespace IIM.Application.Services
             }
 
             _logger.LogInformation(
-                "Built folder structure for case {CaseId}: {FolderCount} folders, {FileCount} files",
-                caseId, folderMap.Count, files.Count());
+                "Built folder structure for workspace {WorkspaceId}: {FolderCount} folders, {FileCount} files",
+                workspaceId, folderMap.Count, files.Count());
 
             return root;
         }
@@ -126,7 +127,7 @@ namespace IIM.Application.Services
         /// Uploads a file while preserving its virtual path in the folder structure.
         /// Handles deduplication automatically - if file exists, creates virtual reference only.
         /// </summary>
-        /// <param name="caseId">Case to upload file to</param>
+        /// <param name="workspaceId">Case to upload file to</param>
         /// <param name="fileStream">File content stream</param>
         /// <param name="virtualPath">Full path where file should appear (e.g., "/Evidence/Photos/img.jpg")</param>
         /// <param name="uploadedBy">User performing the upload</param>
@@ -140,14 +141,14 @@ namespace IIM.Application.Services
         /// This ensures each unique file is only stored once, saving space
         /// </remarks>
         public async Task<ManagedFile> UploadWithPathAsync(
-            string caseId,
+            string workspaceId,
             Stream fileStream,
             string virtualPath,
             string uploadedBy)
         {
             _logger.LogInformation(
-                "Starting upload for {Path} in case {CaseId}",
-                virtualPath, caseId);
+                "Starting upload for {Path} in workspace {CaseId}",
+                virtualPath, workspaceId);
 
             // Calculate SHA-256 hash for deduplication
             // This reads the entire stream, so we reset position after
@@ -171,7 +172,7 @@ namespace IIM.Application.Services
                 new { Hash = hash });
 
             // Create evidence record
-            var evidence = new ManagedFile
+            var file = new ManagedFile
             {
                 Id = Guid.NewGuid().ToString(),
                 CaseId = caseId,
@@ -193,34 +194,34 @@ namespace IIM.Application.Services
                 // File already exists in storage, just create a virtual reference
                 // This saves storage space by not storing the same file twice
 
-                evidence.StoragePath = existing.StoragePath;
+                file.StoragePath = existing.StoragePath;
 
                 _logger.LogInformation(
                     "File {Hash} already exists at {StoragePath}, creating virtual reference at {Path}",
                     hash, existing.StoragePath, virtualPath);
 
                 // Log for audit trail
-                await LogDeduplicationEventAsync(evidence, existing);
+                await LogDeduplicationEventAsync(file, existing);
             }
             else
             {
-                // === NEW FILE CASE ===
+                // === NEW FILE  ===
                 // File doesn't exist yet, need to actually store it
 
-                evidence.StoragePath = $"quarantine/{caseId}/{hash}";
+                file.StoragePath = $"quarantine/{workspaceId}/{hash}";
 
                 _logger.LogInformation(
                     "Uploading new file {Hash} to {StoragePath}",
-                    hash, evidence.StoragePath);
+                    hash, file.StoragePath);
 
                 // Upload to MinIO with metadata
                 await _storage.PutObjectAsync(
                     "iim-quarantine",  // Bucket name - all new files go to quarantine
-                    evidence.StoragePath,
+                    file.StoragePath,
                     fileStream,
                     new Dictionary<string, string>
                     {
-                        ["case-id"] = caseId,
+                        ["workspace-id"] = workspaceId,
                         ["virtual-path"] = virtualPath,
                         ["original-name"] = fileName,
                         ["hash"] = hash,
@@ -240,20 +241,20 @@ namespace IIM.Application.Services
                 @Id, @CaseId, @FileName, @Hash, @FileSize, @MimeType,
                 @VirtualPath, @ParentFolder, @Depth, @Status,
                 @UploadedAt, @UploadedBy, @StoragePath
-            )", evidence);
+            )", file);
 
             _logger.LogInformation(
                 "Successfully created evidence record {Id} for file {Path}",
-                evidence.Id, virtualPath);
+                file.Id, virtualPath);
 
-            return evidence;
+            return file;
         }
 
         /// <summary>
         /// Performs bulk upload of multiple files while preserving folder structure.
         /// Optimized for forensic tools that extract thousands of files.
         /// </summary>
-        /// <param name="caseId">Case to upload files to</param>
+        /// <param name="workspaceId">Workspace to upload files to</param>
         /// <param name="files">Collection of files with their relative paths</param>
         /// <param name="basePath">Base path to prepend to all files (e.g., "/Forensic Extract")</param>
         /// <returns>Number of files successfully uploaded</returns>
@@ -266,7 +267,7 @@ namespace IIM.Application.Services
         /// Typical use: Uploading entire forensic image extracts
         /// </remarks>
         public async Task<int> BulkUploadWithStructureAsync(
-            string caseId,
+            string workspaceId,
             IEnumerable<FileUploadInfo> files,
             string basePath = "/")
         {
@@ -282,7 +283,7 @@ namespace IIM.Application.Services
 
             _logger.LogInformation(
                 "Starting bulk upload to case {CaseId} with base path {BasePath}",
-                caseId, basePath);
+                workspaceId, basePath);
 
             foreach (var file in files)
             {
@@ -302,7 +303,7 @@ namespace IIM.Application.Services
                         _logger.LogDebug("Uploading {Path}", virtualPath);
 
                         var result = await UploadWithPathAsync(
-                            caseId,
+                            workspaceId,
                             file.Stream,
                             virtualPath,
                             file.UploadedBy);
@@ -360,28 +361,28 @@ namespace IIM.Application.Services
         /// <summary>
         /// Retrieves all files in a specific virtual folder (non-recursive).
         /// </summary>
-        /// <param name="caseId">Case ID to search in</param>
+        /// <param name="workspaceId">Workspace ID to search in</param>
         /// <param name="folderPath">Virtual folder path (e.g., "/Evidence/Photos")</param>
         /// <returns>List of files directly in the specified folder</returns>
         /// <remarks>
         /// Does not include files in subfolders. For recursive listing, use GetFolderContentsRecursiveAsync
         /// </remarks>
-        public async Task<List<EvidenceFile>> GetFolderContentsAsync(string caseId, string folderPath)
+        public async Task<List<ManagedFile>> GetFolderContentsAsync(string workspaceId, string folderPath)
         {
             // Normalize folder path (ensure it starts with /)
             if (!folderPath.StartsWith("/"))
                 folderPath = "/" + folderPath;
 
-            _logger.LogDebug("Getting contents of folder {Path} in case {Case}",
-                folderPath, caseId);
+            _logger.LogDebug("Getting contents of folder {Path} in workspace {Workspace}",
+                folderPath, workspaceId);
 
             // Query files where ParentFolder matches exactly
-            var files = await _db.QueryAsync<EvidenceFile>(@"
+            var files = await _db.QueryAsync<ManagedFile>(@"
             SELECT * FROM EvidenceFiles 
             WHERE CaseId = @CaseId 
               AND ParentFolder = @FolderPath
             ORDER BY FileName",
-                new { CaseId = caseId, FolderPath = folderPath });
+                new { WorkspaceId = workspaceId, FolderPath = folderPath });
 
             return files.ToList();
         }
@@ -400,8 +401,8 @@ namespace IIM.Application.Services
         public async Task<bool> MoveFileVirtuallyAsync(string fileId, string newFolderPath)
         {
             // Get the existing file
-            var file = await _db.QueryFirstOrDefaultAsync<EvidenceFile>(
-                "SELECT * FROM EvidenceFiles WHERE Id = @Id",
+            var file = await _db.QueryFirstOrDefaultAsync<ManagedFile>(
+                "SELECT * FROM ManagedFiles WHERE Id = @Id",
                 new { Id = fileId });
 
             if (file == null)
@@ -420,7 +421,7 @@ namespace IIM.Application.Services
 
             // Update database (virtual move only)
             var rowsAffected = await _db.ExecuteAsync(@"
-            UPDATE EvidenceFiles 
+            UPDATE ManagedFiles 
             SET VirtualPath = @NewPath,
                 ParentFolder = @NewFolder,
                 Depth = @NewDepth
@@ -442,7 +443,7 @@ namespace IIM.Application.Services
         /// <summary>
         /// Creates a virtual folder (just a database entry, no physical folder).
         /// </summary>
-        /// <param name="caseId">Case to create folder in</param>
+        /// <param name="workspaceId">Case to create folder in</param>
         /// <param name="folderPath">Full path of new folder</param>
         /// <param name="createdBy">User creating the folder</param>
         /// <returns>True if created successfully</returns>
@@ -452,7 +453,7 @@ namespace IIM.Application.Services
         /// for organizational purposes before files are added.
         /// </remarks>
         public async Task<bool> CreateVirtualFolderAsync(
-            string caseId,
+            string workspaceId,
             string folderPath,
             string createdBy)
         {
@@ -463,14 +464,14 @@ namespace IIM.Application.Services
             // Check if folder already exists
             var existing = await _db.QueryFirstOrDefaultAsync<int>(@"
             SELECT COUNT(*) FROM VirtualFolders 
-            WHERE CaseId = @CaseId AND Path = @Path",
-                new { CaseId = caseId, Path = folderPath });
+            WHERE WorkspaceId = @WorkspaceId AND Path = @Path",
+                new { WorkspaceId = workspaceId, Path = folderPath });
 
             if (existing > 0)
             {
                 _logger.LogWarning(
-                    "Folder {Path} already exists in case {Case}",
-                    folderPath, caseId);
+                    "Folder {Path} already exists in workspace {Case}",
+                    folderPath, workspaceId);
                 return false;
             }
 
@@ -480,12 +481,12 @@ namespace IIM.Application.Services
 
             // Insert folder record
             await _db.ExecuteAsync(@"
-            INSERT INTO VirtualFolders (Id, CaseId, Path, Name, ParentPath, CreatedAt, CreatedBy)
-            VALUES (@Id, @CaseId, @Path, @Name, @ParentPath, @CreatedAt, @CreatedBy)",
+            INSERT INTO VirtualFolders (Id, WorkspaceId, Path, Name, ParentPath, CreatedAt, CreatedBy)
+            VALUES (@Id, @WorkspaceId, @Path, @Name, @ParentPath, @CreatedAt, @CreatedBy)",
                 new
                 {
                     Id = Guid.NewGuid().ToString(),
-                    CaseId = caseId,
+                    WorkspaceId = workspaceId,
                     Path = folderPath,
                     Name = folderName,
                     ParentPath = parentPath,
@@ -494,8 +495,8 @@ namespace IIM.Application.Services
                 });
 
             _logger.LogInformation(
-                "Created virtual folder {Path} in case {Case}",
-                folderPath, caseId);
+                "Created virtual folder {Path} in workspace {Workspace}",
+                folderPath, workspaceId);
 
             return true;
         }
@@ -619,8 +620,8 @@ namespace IIM.Application.Services
         /// Records when a duplicate file is detected and linked.
         /// </summary>
         private async Task LogDeduplicationEventAsync(
-            EvidenceFile newReference,
-            EvidenceFile existingFile)
+            ManagedFile newReference,
+            ManagedFile existingFile)
         {
             await _db.ExecuteAsync(@"
             INSERT INTO AuditLog (Id, EventType, EntityType, EntityId, Details, Timestamp, UserId)
