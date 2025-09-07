@@ -77,7 +77,7 @@ namespace IIM.Desktop.Services
                     Percentage = 10
                 });
 
-                var initiateRequest = new InitiateEvidenceUploadRequest
+                var initiateRequest = new InitiateFileUploadRequest
                 {
                     FileHash = fileHash,
                     FileName = fileName,
@@ -91,15 +91,15 @@ namespace IIM.Desktop.Services
                     cancellationToken);
 
                 // Step 3: Handle duplicate
-                if (initiateResponse.Status == EvidenceUploadStatus.Duplicate)
+                if (initiateResponse.Status == FileUploadStatus.Duplicate)
                 {
                     _logger.LogInformation(
-                        "File is duplicate of evidence {EvidenceId}",
+                        "File is duplicate of file {EvidenceId}",
                         initiateResponse.DuplicateEvidenceId);
 
                     progress?.Report(new UploadProgress
                     {
-                        Status = $"File already exists (Evidence ID: {initiateResponse.DuplicateEvidenceId})",
+                        Status = $"File already exists (File ID: {initiateResponse.DuplicateEvidenceId})",
                         Percentage = 100,
                         IsDuplicate = true
                     });
@@ -107,7 +107,7 @@ namespace IIM.Desktop.Services
                     return null; // Or return the existing evidence reference
                 }
 
-                // Step 4: Upload to MinIO using pre-signed URL
+                // Step 4: Upload to S3 bucket using pre-signed URL
                 if (string.IsNullOrEmpty(initiateResponse.UploadUrl))
                 {
                     throw new InvalidOperationException("No upload URL provided");
@@ -133,13 +133,13 @@ namespace IIM.Desktop.Services
                     Percentage = 90
                 });
 
-                var confirmRequest = new ConfirmEvidenceUploadRequest
+                var confirmRequest = new ConfirmFileUploadRequest
                 {
-                    EvidenceId = initiateResponse.EvidenceId,
+                    EvidenceId = initiateResponse.FileId,
                     ClientHash = fileHash
                 };
 
-                var confirmResponse = await _apiClient.ConfirmEvidenceUploadAsync(
+                var confirmResponse = await _apiClient.ConfirmFileUploadAsync(
                     confirmRequest,
                     cancellationToken);
 
@@ -156,7 +156,7 @@ namespace IIM.Desktop.Services
                 });
 
                 // Return the evidence object
-                return new Evidence
+                return new ManagedFile
                 {
                     Id = initiateResponse.EvidenceId,
                     OriginalFileName = fileName,

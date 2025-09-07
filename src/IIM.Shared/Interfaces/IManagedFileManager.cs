@@ -22,7 +22,7 @@ namespace IIM.Shared.Interfaces
         Task LogAccessAsync(string fileId, string action, string userId, CancellationToken cancellationToken = default);
         Task<ProcessedFile> ProcessFileAsync(string fileId, string processingType, Func<Stream, Task<Stream>> processor, CancellationToken cancellationToken = default);
         Task<ManagedFile> RegisterPendingFileAsync(ManagedFile file, CancellationToken cancellationToken = default);
-        Task UpdateFileStatusAsync(string fileId, EvidenceStatus status, CancellationToken cancellationToken = default);
+        Task UpdateFileStatusAsync(string fileId, FileProcessingStatus status, CancellationToken cancellationToken = default);
         Task<bool> VerifyIntegrityAsync(string fileId, CancellationToken cancellationToken = default);
     }
 }

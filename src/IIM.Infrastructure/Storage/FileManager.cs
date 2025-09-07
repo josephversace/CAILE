@@ -20,7 +20,7 @@ namespace IIM.Infrastructure.Storage
     /// <summary>
     /// Evidence manager implementation - uses existing Models, no duplicates!
     /// </summary>
-    public class FileManager 
+    public class FileManager: IManagedFileManager
     {
         private readonly ILogger<FileManager> _logger;
         private readonly FilesConfiguration _config;
@@ -36,7 +36,7 @@ namespace IIM.Infrastructure.Storage
             _audit = audit;
         }
 
-        public async Task<ManagedFile> IngestEvidenceAsync(Stream stream, string fileName, FileMetadata metadata, CancellationToken cancellationToken = default)
+        public async Task<ManagedFile> IngestFileAsync(Stream stream, string fileName, FileMetadata metadata, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Ingesting file: {FileName} for workspace {CaseNumber}", fileName, metadata.);
 
@@ -48,14 +48,14 @@ namespace IIM.Infrastructure.Storage
             var evidenceId = Guid.NewGuid().ToString("N");
             var storagePath = GetStoragePath(evidenceId, metadata.CustomFields.GetValueOrDefault("Classification", "UNCLASSIFIED"));
 
-            var evidence = new ManagedFile
+            var file = new ManagedFile
             {
                 Id = evidenceId,
                 CaseNumber = metadata.CaseNumber,
                 OriginalFileName = fileName,
                 StoragePath = storagePath,
                 Metadata = metadata,
-                Status = EvidenceStatus.Pending,
+                Status = FileUploadStatus.Pending,
                 Type = DetermineEvidenceType(fileName)
             };
 
@@ -63,25 +63,25 @@ namespace IIM.Infrastructure.Storage
             {
                 // Calculate hashes
                 var hashes = await CalculateHashesAsync(stream, cancellationToken);
-                evidence.Hashes = hashes;
+                file.Hashes = hashes;
                 stream.Position = 0;
 
                 // Save file
                 using (var fileStream = new FileStream(storagePath, FileMode.Create, FileAccess.Write))
                 {
                     await stream.CopyToAsync(fileStream, cancellationToken);
-                    evidence.FileSize = fileStream.Length;
+                    file.FileSize = fileStream.Length;
                 }
 
                 // Check size limit
-                if (evidence.FileSize > _config.MaxFileSizeMb * 1024 * 1024)
+                if (file.FileSize > _config.MaxFileSizeMb * 1024 * 1024)
                 {
                     File.Delete(storagePath);
                     throw new ArgumentException($"File exceeds maximum size of {_config.MaxFileSizeMb} MB");
                 }
 
                 // Add initial chain of custody entry
-                evidence.ChainOfCustody.Add(new ChainOfCustodyEntry
+                file.ChainOfCustody.Add(new ChainOfCustodyEntry
                 {
                     Action = "INGESTED",
                     Actor = metadata.CollectedBy,
@@ -91,18 +91,18 @@ namespace IIM.Infrastructure.Storage
                 });
 
                 // Generate signature
-                evidence.Signature = GenerateSignature(evidence);
-                evidence.Status = EvidenceStatus.Ingested;
-                evidence.IntegrityValid = true;
+                file.Signature = GenerateSignature(evidence);
+                file.Status = FileUploadStatus.Completed;
+                file.IntegrityValid = true;
 
                 // Store
                 lock (_lock)
                 {
-                    _fileStore[evidenceId] = evidence;
+                    _fileStore[fileId] = file;
                 }
 
-                _logger.LogInformation("Evidence ingested successfully: {EvidenceId}", evidenceId);
-                return evidence;
+                _logger.LogInformation("File ingested successfully: {EvidenceId}", fileId);
+                return file;
             }
             catch (Exception ex)
             {
@@ -118,7 +118,7 @@ namespace IIM.Infrastructure.Storage
         public Task<ManagedFile> IngestFileAsync(string filePath, FileMetadata metadata, CancellationToken cancellationToken = default)
         {
             using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            return IngestEvidenceAsync(stream, Path.GetFileName(filePath), metadata, cancellationToken);
+            return IngestFileAsync(stream, Path.GetFileName(filePath), metadata, cancellationToken);
         }
 
         public async Task<ProcessedFile> ProcessfileAsync(string fileId, string processingType, Func<Stream, Task<Stream>> processor, CancellationToken cancellationToken = default)

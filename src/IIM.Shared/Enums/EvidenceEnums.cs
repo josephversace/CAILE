@@ -31,7 +31,7 @@ public enum FileProcessingStatus
     Archived
 }
 
-public enum EvidenceUploadStatus
+public enum FileUploadStatus
 {
     Pending,
     Approved,
