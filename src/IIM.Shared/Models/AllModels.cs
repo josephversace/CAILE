@@ -264,8 +264,8 @@ public class ManagedFile
     public string OriginalFileName { get; set; } = string.Empty;
     public string FileType { get; set; } = string.Empty; // MIME type
     public long FileSize { get; set; }
-    public EvidenceType Type { get; set; }
-    public EvidenceStatus Status { get; set; }
+    public FileType Type { get; set; }
+    public FileUploadStatus Status { get; set; }
 
     public HashType HashAlgorithm { get; set; } = HashType.SHA256;
     
@@ -397,7 +397,7 @@ public class DuplicateInfo
 /// </summary>
 public class ConfirmFileUploadRequest
 {
-    public string EvidenceId { get; set; } = string.Empty;
+    public string FileId { get; set; } = string.Empty;
     public string? ETag { get; set; } // From MinIO
     public string? ClientHash { get; set; } // Re-verify
     public long? ActualSize { get; set; }

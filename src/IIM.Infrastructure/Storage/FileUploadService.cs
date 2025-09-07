@@ -18,7 +18,7 @@ namespace IIM.Infrastructure.Storage
     /// <summary>
     /// Evidence upload service that works with your existing interfaces
     /// </summary>
-    public class FileUploadService : IEvidenceUploadService
+    public class FileUploadService : IFileUploadService
     {
         private readonly ILogger<FileUploadService> _logger;
         private readonly IS3StorageService _s3Client;
@@ -31,25 +31,25 @@ namespace IIM.Infrastructure.Storage
 
         public FileUploadService(
             ILogger<FileUploadService> logger,
-            IMinioClient minioClient,
-            IEvidenceManager evidenceManager,
+            IS3StorageService s3Client,
+            IManagedFileManager fileManager,
             IDeduplicationService deduplicationService,
             IAuditService auditLogger, // Using your existing interface
             ISessionService sessionService,
             StorageConfiguration storageConfig)
         {
             _logger = logger;
-            _minioClient = minioClient;
-            _evidenceManager = evidenceManager;
+            _s3Client = s3Client;
+            _fileManager = fileManager;
             _deduplicationService = deduplicationService;
             _auditLogger = auditLogger;
             _sessionService = sessionService;
             _storageConfig = storageConfig;
-            _bucketName = storageConfig.EvidencePath ?? "evidence"; // Use existing property
+            _bucketName = storageConfig.EvidencePath ?? "files"; // Use existing property
         }
 
-        public async Task<InitiateEvidenceUploadResponse> InitiateUploadAsync(
-            InitiateEvidenceUploadRequest request,
+        public async Task<InitiateFileUploadResponse> InitiateUploadAsync(
+            InitiateFileUploadRequest request,
             string userId,
             CancellationToken cancellationToken = default)
         {
@@ -69,23 +69,22 @@ namespace IIM.Infrastructure.Storage
                     // Log duplicate detection using your existing audit logger
                     var auditEvent = new AuditEvent
                     {
-                        EventType = "EVIDENCE_DUPLICATE_DETECTED",
+                        EventType = "FILE_DUPLICATE_DETECTED",
                         EntityId = existingEvidence.Id,
                         UserId = userId,
                         Timestamp = DateTimeOffset.UtcNow,
                         Details = JsonSerializer.Serialize(new
                         {
                             OriginalFileName = request.FileName,
-                            Hash = request.FileHash,
-                            CaseNumber = request.Metadata.CaseNumber
+                            Hash = request.FileHash
                         })
                     };
 
 
-                    return new InitiateEvidenceUploadResponse
+                    return new InitiateFileUploadResponse
                     {
-                        EvidenceId = existingEvidence.Id,
-                        Status = EvidenceUploadStatus.Duplicate,
+                        FileId = existingEvidence.Id,
+                        Status = FileUploadStatus.Duplicate,
                         DuplicateEvidenceId = existingEvidence.Id,
                         DuplicateInfo = new DuplicateInfo
                         {
@@ -103,7 +102,7 @@ namespace IIM.Infrastructure.Storage
                 var evidenceId = Guid.NewGuid().ToString("N");
                 var objectName = $"{request.Metadata.CaseNumber}/{evidenceId}/{request.FileName}";
 
-                var evidence = new ManagedFile
+                var file = new ManagedFile
                 {
                     Id = evidenceId,
                     CaseNumber = request.Metadata.CaseNumber,
@@ -114,14 +113,14 @@ namespace IIM.Infrastructure.Storage
                     HashAlgorithm = HashType.SHA256,
                    
                     Metadata = request.Metadata,
-                    Status = EvidenceStatus.Pending,
+                    Status = FileUploadStatus.Pending,
                     Type = DetermineEvidenceType(request.FileName),
                     UpdatedAt = DateTimeOffset.UtcNow.Date,
                     CreatedBy = userId
                 };
 
                 // Register pending evidence
-                await _evidenceManager.RegisterPendingEvidenceAsync(evidence, cancellationToken);
+                await _fileManager.RegisterPendingFileAsync(file, cancellationToken);
 
                 // Generate pre-signed URL
                 var presignedUrl = await GeneratePresignedUploadUrlAsync(
@@ -132,7 +131,7 @@ namespace IIM.Infrastructure.Storage
                 // Log upload initiation
                 _auditLogger.LogAudit(new AuditEvent
                 {
-                    EventType = "EVIDENCE_UPLOAD_INITIATED",
+                    EventType = "FILE_UPLOAD_INITIATED",
                     EntityId = evidenceId,
                     UserId = userId,
                     Timestamp = DateTimeOffset.UtcNow,
@@ -144,10 +143,10 @@ namespace IIM.Infrastructure.Storage
                     })
                 });
 
-                return new InitiateEvidenceUploadResponse
+                return new InitiateFileUploadResponse
                 {
-                    EvidenceId = evidenceId,
-                    Status = EvidenceUploadStatus.Pending,
+                    FileId = evidenceId,
+                    Status = FileUploadStatus.Pending,
                     UploadUrl = presignedUrl.Item1,
                     UploadUrlExpires = DateTimeOffset.UtcNow.AddMinutes(30),
                     RequiredHeaders = presignedUrl.Item2
@@ -156,31 +155,31 @@ namespace IIM.Infrastructure.Storage
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to initiate evidence upload");
-                return new InitiateEvidenceUploadResponse
+                return new InitiateFileUploadResponse
                 {
-                    Status = EvidenceUploadStatus.Failed
+                    Status = FileUploadStatus.Failed
                 };
             }
         }
 
-        public async Task<ConfirmEvidenceUploadResponse> ConfirmUploadAsync(
-            ConfirmEvidenceUploadRequest request,
+        public async Task<ConfirmFileUploadResponse> ConfirmUploadAsync(
+            ConfirmFileUploadRequest request,
             CancellationToken cancellationToken = default)
         {
             // Implementation continues with same pattern...
             // Using _auditLogger.LogAuditEvent() instead of _auditService.LogAsync()
 
-            var evidence = await _evidenceManager.GetEvidenceAsync(
-                request.EvidenceId,
+            var evidence = await _fileManager.GetFilesAsync(
+                request.FileId,
                 cancellationToken);
 
             if (evidence == null)
             {
-                return new ConfirmEvidenceUploadResponse
+                return new ConfirmFileUploadResponse
                 {
                     Success = false,
-                    Status = EvidenceStatus.Failed,
-                    ErrorMessage = "Evidence not found"
+                    Status = FileUploadStatus.Failed,
+                    ErrorMessage = "File not found"
                 };
             }
 
@@ -191,35 +190,35 @@ namespace IIM.Infrastructure.Storage
 
             if (!exists)
             {
-                await _evidenceManager.UpdateEvidenceStatusAsync(
-                    request.EvidenceId,
-                    EvidenceStatus.Failed,
+                await _fileManager.UpdateFileStatusAsync(
+                    request.FileId,
+                    FileUploadStatus.Failed,
                     cancellationToken);
 
-                return new ConfirmEvidenceUploadResponse
+                return new ConfirmFileUploadResponse
                 {
                     Success = false,
-                    Status = EvidenceStatus.Failed,
+                    Status = FileProcessingStatus.Failed,
                     ErrorMessage = "File not found in storage"
                 };
             }
 
             // Update status to active
-            await _evidenceManager.UpdateEvidenceStatusAsync(
-                request.EvidenceId,
-                EvidenceStatus.Active,
+            await _fileManager.UpdateFileStatusAsync(
+                request.FileId,
+                FileProcessingStatus.Active,
                 cancellationToken);
 
             // Register with deduplication
             await _deduplicationService.RegisterHashAsync(
                 evidence.Hash,
-                request.EvidenceId,
+                request.FileId,
                 cancellationToken);
 
-            return new ConfirmEvidenceUploadResponse
+            return new ConfirmFileUploadResponse
             {
                 Success = true,
-                Status = EvidenceStatus.Active
+                Status = FileProcessingStatus.Active
             };
         }
 
@@ -246,7 +245,7 @@ namespace IIM.Infrastructure.Storage
                 .WithObject(objectName)
                 .WithExpiry(1800); // 30 minutes
 
-            var url = await _minioClient.PresignedPutObjectAsync(args);
+            var url = await _s3Client.PresignedPutObjectAsync(args);
 
             var headers = new Dictionary<string, string>
             {
