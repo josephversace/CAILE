@@ -158,7 +158,7 @@ namespace IIM.Desktop.Services
                 // Return the evidence object
                 return new ManagedFile
                 {
-                    Id = initiateResponse.EvidenceId,
+                    Id = initiateResponse.FileId,
                     OriginalFileName = fileName,
                     Hash = fileHash,
                     FileSize = fileInfo.Length,
