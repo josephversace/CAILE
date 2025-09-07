@@ -14,8 +14,8 @@
         "docker",
         "qdrant",
         "embeddings",
-        "seaweedfs",     // ← ADD: SeaweedFS service
-        "kafka"          // ← ADD: Kafka for events (optional)
+        "seaweedfs",    
+        "postgres"        
     
     };
     }

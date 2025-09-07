@@ -637,6 +637,8 @@ namespace IIM.Shared.Models
         public string? DockerImage { get; init; }
         public int RequiredMemoryMb { get; init; } = 512;
         public ServicePriority Priority { get; init; } = ServicePriority.Normal;
+
+        public Dictionary<string, string> EnvironmentVariables { get; set; } = new();
     }
 
     public sealed class ServiceInstance

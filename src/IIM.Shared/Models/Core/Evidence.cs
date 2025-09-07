@@ -22,7 +22,7 @@ namespace IIM.Shared.Models
     /// Request to update evidence metadata
     /// </summary>
     public record UpdateEvidenceMetadataRequest(
-        EvidenceMetadata Metadata);
+        FileMetadata Metadata);
 
 
     /// <summary>

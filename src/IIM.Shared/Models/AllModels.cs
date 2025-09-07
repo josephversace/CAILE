@@ -1478,6 +1478,11 @@ public class ServiceStatus
     public DateTimeOffset? StartedAt { get; set; }
     public string? Message { get; set; }
     public DateTimeOffset LastHealthCheck { get; set; }
+    public string Service { get; set; } = string.Empty;
+    public bool IsRunning { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string? IpAddress { get; set; }
+    public string? Ports { get; set; }
 }
 
 /// <summary>

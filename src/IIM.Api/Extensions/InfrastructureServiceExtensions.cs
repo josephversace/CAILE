@@ -24,24 +24,28 @@ namespace IIM.Api.Extensions
             if (deployment.Mode != DeploymentMode.Client && OperatingSystem.IsWindows())
             {
                 services.AddSingleton<IWslManager, WslManager>();
-                services.AddSingleton<IWslServiceOrchestrator, WslServiceOrchestrator>();
+                services.AddSingleton<IApplianceServiceOrchestrator, WslServiceOrchestrator>();
+            }
+            else if (OperatingSystem.IsLinux())
+            {  
+            
             }
 
             // Storage Configuration (Singleton - doesn't change)
-            services.AddSingleton<IStorageConfiguration, StorageConfiguration>(sp =>
-            {
-                var basePath = configuration["Storage:BasePath"] ??
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IIM");
-
-                var config = new StorageConfiguration { BasePath = basePath };
-
-                if (deployment.Mode != DeploymentMode.Client)
+             services.AddSingleton<IStorageConfiguration, StorageConfiguration>(sp =>
                 {
-                    config.EnsureDirectoriesExist();
-                }
+                    var basePath = configuration["Storage:BasePath"] ??
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IIM");
 
-                return config;
-            });
+                    var config = new StorageConfiguration { BasePath = basePath };
+
+                    if (deployment.Mode != DeploymentMode.Client)
+                    {
+                        config.EnsureDirectoriesExist();
+                    }
+
+                    return config;
+                });
 
             // ========================================
             // Storage Services (Scoped for transaction support)

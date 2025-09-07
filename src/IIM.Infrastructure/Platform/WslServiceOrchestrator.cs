@@ -24,7 +24,7 @@ namespace IIM.Infrastructure.Platform;
 /// Orchestrates service lifecycle within WSL2 distributions
 /// Manages Docker containers and Python services for AI workloads
 /// </summary>
-public sealed class WslServiceOrchestrator : IWslServiceOrchestrator, IHostedService, IDisposable
+public sealed class WslServiceOrchestrator : IApplianceServiceOrchestrator, IHostedService, IDisposable
 {
     private readonly ILogger<WslServiceOrchestrator> _logger;
     private readonly IWslManager _wslManager;
