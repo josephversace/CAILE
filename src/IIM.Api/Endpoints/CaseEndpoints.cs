@@ -46,8 +46,8 @@ public static class WorkspaceEndpoints
                 Metadata = request.Metadata
             };
 
-            var caseEntity = await mediator.Send(command, ct);
-            return Results.Created($"/api/cases/{caseEntity.Id}", caseEntity);
+            var workspaceEntity = await mediator.Send(command, ct);
+            return Results.Created($"/api/cases/{workspaceEntity.Id}", workspaceEntity);
         })
         .WithName("CreateWorkspace")
         .WithSummary("Create a new workspace")
@@ -74,7 +74,7 @@ public static class WorkspaceEndpoints
             var workspaceEntity = await mediator.Send(query, ct);
             return workspaceEntity != null
                 ? Results.Ok(workspaceEntity)
-                : Results.NotFound(new { error = $"Case {workspaceId} not found" });
+                : Results.NotFound(new { error = $"Workspace {workspaceId} not found" });
         })
         .WithName("GetCase")
         .WithSummary("Get workspace details by ID")
@@ -83,14 +83,14 @@ public static class WorkspaceEndpoints
 
         // Update case
         cases.MapPut("/{workspaceId}", async (
-            string caseId,
+            string workspaceId,
             [FromBody] UpdateWorkspaceRequest request,
             [FromServices] IMediator mediator,
             CancellationToken ct) =>
         {
             var command = new UpdateWorkspaceCommand
             {
-                CaseId = caseId,
+                WorkspaceId = workspaceId,
                 Name = request.Name,
                 Description = request.Description,
                 Status = request.Status,
@@ -103,7 +103,7 @@ public static class WorkspaceEndpoints
             var updated = await mediator.Send(command, ct);
             return updated
                 ? Results.NoContent()
-                : Results.NotFound(new { error = $"Case {caseId} not found" });
+                : Results.NotFound(new { error = $"Workspace {workspaceId} not found" });
         })
         .WithName("UpdateWorkspace")
         .WithSummary("Update workspace details")
@@ -126,13 +126,13 @@ public static class WorkspaceEndpoints
                 ? Results.NoContent()
                 : Results.NotFound(new { error = $"Workspace {workspaceId} not found" });
         })
-        .WithName("DeleteCase")
-        .WithSummary("Delete or archive a case")
+        .WithName("DeleteWorkspace")
+        .WithSummary("Delete or archive a workspace")
         .RequireAuthorization()
         .ProducesProblem(StatusCodes.Status404NotFound);
 
         // ========================================
-        // CASE QUERIES
+        // Workspace QUERIES
         // ========================================
 
         // Search cases
@@ -277,20 +277,20 @@ public static class WorkspaceEndpoints
 
         // Export case
         cases.MapPost("/{workspaceId}/export", async (
-            string caseId,
+            string workspaceId,
             [FromServices] IExportService exportService,
-            [FromServices] IWorkspaceManager caseManager,
+            [FromServices] IWorkspaceManager workspaceManager,
             CancellationToken ct,
             [FromQuery] ExportFormat format = ExportFormat.Pdf,
             [FromBody] ExportOptions? options = null) =>
         {
-            var caseEntity = await caseManager.GetCaseAsync(caseId, ct);
-            if (caseEntity == null)
+            var workspaceEntity = await workspaceManager.GetWorkspaceAsync(workspaceId, ct);
+            if (workspaceEntity == null)
             {
-                return Results.NotFound(new { error = $"Case {caseId} not found" });
+                return Results.NotFound(new { error = $"Case {workspaceId} not found" });
             }
 
-            var exportResult = await exportService.ExportWorkspaceAsync(caseEntity, format, options);
+            var exportResult = await exportService.ExportWorkspaceAsync(workspaceEntity, format, options);
 
             var contentType = format switch
             {
@@ -304,7 +304,7 @@ public static class WorkspaceEndpoints
             return Results.File(
                 exportResult.Data ?? Array.Empty<byte>(),
                 contentType,
-                $"case_{caseId}_{DateTimeOffset.UtcNow:yyyyMMdd}.{format.ToString().ToLower()}");
+                $"case_{workspaceId}_{DateTimeOffset.UtcNow:yyyyMMdd}.{format.ToString().ToLower()}");
         })
         .WithName("ExportCase")
         .WithSummary("Export case data in various formats")
@@ -348,8 +348,8 @@ public static class WorkspaceEndpoints
 
             return Results.Ok(results);
         })
-        .WithName("BatchUpdateCases")
-        .WithSummary("Update multiple cases in batch")
+        .WithName("BatchUpdateWorkspaces")
+        .WithSummary("Update multiple workspaces in batch")
         .RequireAuthorization()
         .Produces<List<object>>();
 
@@ -373,24 +373,24 @@ public static class WorkspaceEndpoints
             CancellationToken ct) =>
         {
             var query = new GetWorkspaceCommand(workspaceId, false, false, false, true);
-            var caseEntity = await mediator.Send(query, ct);
+            var workspaceEntity = await mediator.Send(query, ct);
 
-            if (caseEntity == null)
+            if (workspaceEntity == null)
             {
                 return Results.NotFound(new { error = $"Workspace {workspaceId} not found" });
             }
 
             var summary = new WorkspaceSummary
             {
-                Id = caseEntity.Id,
-                CaseNumber = caseEntity.CaseNumber,
-                Name = caseEntity.Title,
-                Type = caseEntity.Type.ToString(),
-                Status = caseEntity.Status.ToString(),
-                Classification = caseEntity.Classification,
-                UpdatedAt = caseEntity.UpdatedAt,
-                EvidenceCount = caseEntity.Files?.Count ?? 0,
-                ActiveSessions = caseEntity.Sessions?.Count(s => s.Status == InvestigationStatus.Active) ?? 0
+                Id = workspaceEntity.Id,
+                CaseNumber = workspaceEntity.CaseNumber,
+                Name = workspaceEntity.Title,
+                Type = workspaceEntity.Type.ToString(),
+                Status = workspaceEntity.Status.ToString(),
+                Classification = workspaceEntity.Classification,
+                UpdatedAt = workspaceEntity.UpdatedAt,
+                EvidenceCount = workspaceEntity.Files?.Count ?? 0,
+                ActiveSessions = workspaceEntity.Sessions?.Count(s => s.Status == InvestigationStatus.Active) ?? 0
             };
 
             return Results.Ok(summary);

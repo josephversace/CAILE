@@ -8,8 +8,7 @@ using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
 
 using Microsoft.Extensions.Logging;
-using Minio;
-using Minio.DataModel.Args;
+
 using Moq;
 using System;
 using System.Threading;
@@ -25,8 +24,8 @@ namespace IIM.Application.Tests.Services
     public class EvidenceUploadServiceTests
     {
         private readonly Mock<ILogger<EvidenceUploadService>> _loggerMock;
-        private readonly Mock<IMinioClient> _minioClientMock;
-        private readonly Mock<IEvidenceManager> _evidenceManagerMock;
+        private readonly Mock<IS3StorageService> _minioClientMock;
+        private readonly Mock<IManagedFileManager> _evidenceManagerMock;
         private readonly Mock<IDeduplicationService> _deduplicationServiceMock;
         private readonly Mock<IAuditService> _auditServiceMock;
         private readonly Mock<ISessionService> _sessionServiceMock;
@@ -36,8 +35,8 @@ namespace IIM.Application.Tests.Services
         public EvidenceUploadServiceTests()
         {
             _loggerMock = new Mock<ILogger<EvidenceUploadService>>();
-            _minioClientMock = new Mock<IMinioClient>();
-            _evidenceManagerMock = new Mock<IEvidenceManager>();
+            _minioClientMock = new Mock<IS3StorageService>();
+            _evidenceManagerMock = new Mock<IManagedFileManager>();
             _deduplicationServiceMock = new Mock<IDeduplicationService>();
             _auditServiceMock = new Mock<IAuditService>();
             _sessionServiceMock = new Mock<ISessionService>();
@@ -47,7 +46,7 @@ namespace IIM.Application.Tests.Services
                 VerifyHashOnUpload = true
             };
 
-            _service = new EvidenceUploadService(
+            _service = new FileUploadService(
                 _loggerMock.Object,
                 _minioClientMock.Object,
                 _evidenceManagerMock.Object,

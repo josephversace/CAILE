@@ -20,15 +20,15 @@ namespace IIM.Infrastructure.Storage
     /// <summary>
     /// Evidence manager implementation - uses existing Models, no duplicates!
     /// </summary>
-    public class EvidenceManager : IEvidenceManager
+    public class FileManager 
     {
-        private readonly ILogger<EvidenceManager> _logger;
+        private readonly ILogger<FileManager> _logger;
         private readonly EvidenceConfiguration _config;
         private readonly AuditDbContext _audit;
-        private readonly Dictionary<string, Evidence> _evidenceStore = new();
+        private readonly Dictionary<string, ManagedFile> _fileStore = new();
         private readonly object _lock = new();
 
-        public EvidenceManager(ILogger<EvidenceManager> logger, EvidenceConfiguration config, AuditDbContext audit)
+        public FileManager(ILogger<FileManager> logger, EvidenceConfiguration config, AuditDbContext audit)
         {
             _logger = logger;
             _config = config;
@@ -36,9 +36,9 @@ namespace IIM.Infrastructure.Storage
             _audit = audit;
         }
 
-        public async Task<Evidence> IngestEvidenceAsync(Stream stream, string fileName, EvidenceMetadata metadata, CancellationToken cancellationToken = default)
+        public async Task<ManagedFile> IngestEvidenceAsync(Stream stream, string fileName, FileMetadata metadata, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Ingesting evidence: {FileName} for case {CaseNumber}", fileName, metadata.CaseNumber);
+            _logger.LogInformation("Ingesting file: {FileName} for workspace {CaseNumber}", fileName, metadata.);
 
             if (!_config.IsFileTypeAllowed(fileName))
             {
@@ -48,7 +48,7 @@ namespace IIM.Infrastructure.Storage
             var evidenceId = Guid.NewGuid().ToString("N");
             var storagePath = GetStoragePath(evidenceId, metadata.CustomFields.GetValueOrDefault("Classification", "UNCLASSIFIED"));
 
-            var evidence = new Evidence
+            var evidence = new ManagedFile
             {
                 Id = evidenceId,
                 CaseNumber = metadata.CaseNumber,
@@ -98,7 +98,7 @@ namespace IIM.Infrastructure.Storage
                 // Store
                 lock (_lock)
                 {
-                    _evidenceStore[evidenceId] = evidence;
+                    _fileStore[evidenceId] = evidence;
                 }
 
                 _logger.LogInformation("Evidence ingested successfully: {EvidenceId}", evidenceId);
@@ -115,20 +115,20 @@ namespace IIM.Infrastructure.Storage
             }
         }
 
-        public Task<Evidence> IngestEvidenceAsync(string filePath, EvidenceMetadata metadata, CancellationToken cancellationToken = default)
+        public Task<ManagedFile> IngestFileAsync(string filePath, FileMetadata metadata, CancellationToken cancellationToken = default)
         {
             using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
             return IngestEvidenceAsync(stream, Path.GetFileName(filePath), metadata, cancellationToken);
         }
 
-        public async Task<ProcessedEvidence> ProcessEvidenceAsync(string evidenceId, string processingType, Func<Stream, Task<Stream>> processor, CancellationToken cancellationToken = default)
+        public async Task<ProcessedFile> ProcessfileAsync(string fileId, string processingType, Func<Stream, Task<Stream>> processor, CancellationToken cancellationToken = default)
         {
-            var evidence = await GetEvidenceAsync(evidenceId, cancellationToken);
+            var evidence = await GetEvidenceAsync(fileId, cancellationToken);
             if (evidence == null)
-                throw new EvidenceNotFoundException($"Evidence {evidenceId} not found");
+                throw new ManagedFileNotFoundException($"File {fileId} not found");
 
-            if (!await VerifyIntegrityAsync(evidenceId, cancellationToken))
-                throw new IntegrityException($"Evidence {evidenceId} failed integrity check");
+            if (!await VerifyIntegrityAsync(fileId, cancellationToken))
+                throw new IntegrityException($"File {fileId} failed integrity check");
 
             var processedId = Guid.NewGuid().ToString("N");
             var processedPath = Path.Combine(_config.StorePath, "Processed", $"{processedId}_{Path.GetFileName(evidence.OriginalFileName)}");
@@ -149,7 +149,7 @@ namespace IIM.Infrastructure.Storage
                 processedHash = hashes["SHA256"];
             }
 
-            var processed = new ProcessedEvidence
+            var processed = new ProcessedFile
             {
                 Id = processedId,
                 OriginalEvidenceId = evidenceId,
@@ -175,26 +175,26 @@ namespace IIM.Infrastructure.Storage
             return processed;
         }
 
-        public async Task<bool> VerifyIntegrityAsync(string evidenceId, CancellationToken cancellationToken = default)
+        public async Task<bool> VerifyIntegrityAsync(string fileId, CancellationToken cancellationToken = default)
         {
-            var evidence = await GetEvidenceAsync(evidenceId, cancellationToken);
-            if (evidence == null)
-                throw new EvidenceNotFoundException($"Evidence {evidenceId} not found");
+            var _file = await GetEvidenceAsync(fileId, cancellationToken);
+            if (_file == null)
+                throw new ManagedFileNotFoundException($"File {fileId} not found");
 
-            if (!File.Exists(evidence.StoragePath))
+            if (!File.Exists(_file.StoragePath))
             {
-                _logger.LogError("Evidence file not found: {Path}", evidence.StoragePath);
+                _logger.LogError("Managed file not found: {Path}", _file.StoragePath);
                 return false;
             }
 
-            using var stream = new FileStream(evidence.StoragePath, FileMode.Open, FileAccess.Read);
+            using var stream = new FileStream(_file.StoragePath, FileMode.Open, FileAccess.Read);
             var currentHashes = await CalculateHashesAsync(stream, cancellationToken);
 
-            foreach (var (algorithm, originalHash) in evidence.Hashes)
+            foreach (var (algorithm, originalHash) in _file.Hashes)
             {
                 if (!currentHashes.TryGetValue(algorithm, out var currentHash) || currentHash != originalHash)
                 {
-                    _logger.LogError("Integrity check failed for {EvidenceId}. {Algorithm} mismatch", evidenceId, algorithm);
+                    _logger.LogError("Integrity check failed for {EvidenceId}. {Algorithm} mismatch", fileId, algorithm);
                     return false;
                 }
             }
@@ -202,17 +202,17 @@ namespace IIM.Infrastructure.Storage
             return true;
         }
 
-        public async Task<ChainOfCustodyReport> GenerateChainOfCustodyAsync(string evidenceId, CancellationToken cancellationToken = default)
+        public async Task<ChainOfCustodyReport> GenerateChainOfCustodyAsync(string fileId, CancellationToken cancellationToken = default)
         {
-            var evidence = await GetEvidenceAsync(evidenceId, cancellationToken);
+            var evidence = await GetEvidenceAsync(fileId, cancellationToken);
             if (evidence == null)
-                throw new EvidenceNotFoundException($"Evidence {evidenceId} not found");
+                throw new ManagedFileNotFoundException($"File {fileId} not found");
 
-            var integrityValid = await VerifyIntegrityAsync(evidenceId, cancellationToken);
+            var integrityValid = await VerifyIntegrityAsync(fileId, cancellationToken);
 
             return new ChainOfCustodyReport
             {
-                EvidenceId = evidenceId,
+                EvidenceId = fileId,
                 OriginalFileName = evidence.OriginalFileName,
                 CaseNumber = evidence.CaseNumber,
                 ChainEntries = evidence.ChainOfCustody.OrderBy(e => e.Timestamp).ToList(),
@@ -224,7 +224,7 @@ namespace IIM.Infrastructure.Storage
             };
         }
 
-        public async Task<EvidenceExport> ExportEvidenceAsync(string evidenceId, string exportPath, CancellationToken cancellationToken = default)
+        public async Task<FileExport> ExportEvidenceAsync(string evidenceId, string exportPath, CancellationToken cancellationToken = default)
         {
             var evidence = await GetEvidenceAsync(evidenceId, cancellationToken);
             if (evidence == null)
@@ -232,7 +232,7 @@ namespace IIM.Infrastructure.Storage
 
             Directory.CreateDirectory(exportPath);
 
-            var export = new EvidenceExport
+            var export = new FileExport
             {
                 EvidenceId = evidenceId,
                 ExportPath = exportPath,
@@ -290,29 +290,29 @@ namespace IIM.Infrastructure.Storage
             return Task.CompletedTask;
         }
 
-        public Task<Evidence?> GetEvidenceAsync(string evidenceId, CancellationToken cancellationToken = default)
+        public Task<ManagedFile?> GetEvidenceAsync(string evidenceId, CancellationToken cancellationToken = default)
         {
             lock (_lock)
             {
-                _evidenceStore.TryGetValue(evidenceId, out var evidence);
+                _fileStore.TryGetValue(evidenceId, out var evidence);
                 return Task.FromResult(evidence);
             }
         }
 
         public Task<Stream> GetEvidenceStreamAsync(string evidenceId, CancellationToken cancellationToken = default)
         {
-            var evidence = _evidenceStore.GetValueOrDefault(evidenceId);
+            var evidence = _fileStore.GetValueOrDefault(evidenceId);
             if (evidence == null)
-                throw new EvidenceNotFoundException($"Evidence {evidenceId} not found");
+                throw new ManagedFileNotFoundException($"Evidence {evidenceId} not found");
 
             return Task.FromResult<Stream>(new FileStream(evidence.StoragePath, FileMode.Open, FileAccess.Read));
         }
 
-        public Task<List<Evidence>> ListEvidenceAsync(string? caseNumber = null, CancellationToken cancellationToken = default)
+        public Task<List<ManagedFile>> ListEvidenceAsync(string? caseNumber = null, CancellationToken cancellationToken = default)
         {
             lock (_lock)
             {
-                var query = _evidenceStore.Values.AsEnumerable();
+                var query = _fileStore.Values.AsEnumerable();
                 if (!string.IsNullOrEmpty(caseNumber))
                     query = query.Where(e => e.CaseNumber == caseNumber);
 
@@ -345,7 +345,7 @@ namespace IIM.Infrastructure.Storage
             return hashes;
         }
 
-        private string GenerateSignature(Evidence evidence)
+        private string GenerateSignature(ManagedFile evidence)
         {
             var data = $"{evidence.Id}{evidence.OriginalFileName}{evidence.FileSize}{string.Join("", evidence.Hashes.Values)}";
             using var sha = SHA256.Create();
@@ -388,12 +388,12 @@ namespace IIM.Infrastructure.Storage
             };
         }
 
-        public Task<List<Evidence>> GetEvidenceByCaseAsync(string caseId, CancellationToken cancellationToken = default)
+        public Task<List<ManagedFile>> GetFilesByWorkspaceAsync(string workspaceId, CancellationToken cancellationToken = default)
         {
             lock (_lock)
             {
-                var evidence = _evidenceStore.Values
-                    .Where(e => e.CaseId == caseId)
+                var evidence = _fileStore.Values
+                    .Where(e => e.CaseId == workspaceId)
                     .ToList();
                 return Task.FromResult(evidence);
             }
@@ -402,24 +402,24 @@ namespace IIM.Infrastructure.Storage
         /// <summary>
         /// Registers evidence in pending state before upload completes
         /// </summary>
-        public async Task<Evidence> RegisterPendingEvidenceAsync(
-            Evidence evidence,
+        public async Task<ManagedFile> RegisterPendingEvidenceAsync(
+            ManagedFile managedFile,
             CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Registering pending evidence {Id} for case {CaseNumber}",
-                evidence.Id, evidence.CaseNumber);
+                managedFile.Id, managedFile.CaseNumber);
 
             // Store in memory dictionary (or database if you have one)
             lock (_lock)
             {
-                _evidenceStore[evidence.Id] = evidence;
+                _fileStore[managedFile.Id] = managedFile;
             }
 
             // If you have a database context, save it here:
             // await _dbContext.Evidence.AddAsync(evidence, cancellationToken);
             // await _dbContext.SaveChangesAsync(cancellationToken);
 
-            return await Task.FromResult(evidence);
+            return await Task.FromResult(managedFile);
         }
 
         /// <summary>
@@ -435,7 +435,7 @@ namespace IIM.Infrastructure.Storage
 
             lock (_lock)
             {
-                if (_evidenceStore.TryGetValue(evidenceId, out var evidence))
+                if (_fileStore.TryGetValue(evidenceId, out var evidence))
                 {
                     evidence.Status = status;
                     evidence.UpdatedAt = DateTimeOffset.UtcNow;

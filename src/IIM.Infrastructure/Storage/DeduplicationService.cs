@@ -16,7 +16,7 @@ namespace IIM.Infrastructure.Storage
     public class DeduplicationService : IDeduplicationService
     {
         private readonly Dictionary<string, List<string>> _hashToEvidenceIds = new();
-        private readonly Dictionary<string, Evidence> _evidenceStore = new();
+        private readonly Dictionary<string, ManagedFile> _evidenceStore = new();
         private readonly ILogger<DeduplicationService> _logger;
         private readonly Dictionary<string, int> _chunkRefCount = new();
 
@@ -103,7 +103,7 @@ namespace IIM.Infrastructure.Storage
         /// <summary>
         /// Check if a hash already exists and return the evidence
         /// </summary>
-        public async Task<Evidence?> CheckDuplicateAsync(string hash, CancellationToken cancellationToken = default)
+        public async Task<ManagedFile?> CheckDuplicateAsync(string hash, CancellationToken cancellationToken = default)
         {
             if (_hashToEvidenceIds.TryGetValue(hash, out var evidenceIds) && evidenceIds.Any())
             {

@@ -21,16 +21,16 @@ namespace IIM.Application.AI
     public class ForensicAnalysisPlugin
     {
         private readonly ILogger<ForensicAnalysisPlugin> _logger;
-        private readonly IEvidenceManager _evidenceManager;
+        private readonly IManagedFileManager _fileManager;
         private readonly IFileService _fileService;
 
         public ForensicAnalysisPlugin(
             ILogger<ForensicAnalysisPlugin> logger,
-            IEvidenceManager evidenceManager,
+            IManagedFileManager evidenceManager,
             IFileService fileService)
         {
             _logger = logger;
-            _evidenceManager = evidenceManager;
+            _fileManager = evidenceManager;
             _fileService = fileService;
         }
 
@@ -81,7 +81,7 @@ namespace IIM.Application.AI
         {
             _logger.LogInformation("Extracting metadata for evidence {EvidenceId}", evidenceId);
 
-            var evidence = await _evidenceManager.GetEvidenceAsync(evidenceId);
+            var evidence = await _fileManager.GetEvidenceAsync(evidenceId);
 
             return new FileMetadata
             {
@@ -103,7 +103,7 @@ namespace IIM.Application.AI
         {
             _logger.LogInformation("Building timeline for case {CaseId}", caseId);
 
-            var evidenceList = await _evidenceManager.GetEvidenceByCaseAsync(caseId);
+            var evidenceList = await _fileManager.GetEvidenceByCaseAsync(caseId);
 
             var events = new List<TimelineEvent>();
 
@@ -193,7 +193,7 @@ namespace IIM.Application.AI
         {
             _logger.LogInformation("Generating chain of custody for {EvidenceId}", evidenceId);
 
-            var evidence = await _evidenceManager.GetEvidenceAsync(evidenceId);
+            var evidence = await _fileManager.GetEvidenceAsync(evidenceId);
 
             // Use the chain of custody from the evidence object
             var custodyEvents = evidence.ChainOfCustody.Select(entry => new CustodyEvent

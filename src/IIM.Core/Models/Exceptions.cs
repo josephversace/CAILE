@@ -22,12 +22,12 @@ public class IIMException : Exception
     }
 }
 
-public class EvidenceNotFoundException : IIMException
+public class ManagedFileNotFoundException : IIMException
 {
-    public EvidenceNotFoundException(string evidenceId)
-        : base($"Evidence with ID {evidenceId} not found", "EVIDENCE_NOT_FOUND")
+    public ManagedFileNotFoundException(string evidenceId)
+        : base($"File with ID {evidenceId} not found", "FILE_NOT_FOUND")
     {
-        Context = new Dictionary<string, object> { ["evidenceId"] = evidenceId };
+        Context = new Dictionary<string, object> { ["fileId"] = fileId };
     }
 }
 

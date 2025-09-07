@@ -27,7 +27,7 @@ namespace IIM.Shared.Interfaces
         /// <summary>
         /// Check if a hash already exists and return the evidence
         /// </summary>
-        Task<Evidence?> CheckDuplicateAsync(string hash, CancellationToken cancellationToken = default);
+        Task<ManagedFile?> CheckDuplicateAsync(string hash, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get count of how many times this hash has been seen

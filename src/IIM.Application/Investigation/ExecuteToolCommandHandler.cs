@@ -16,8 +16,8 @@ namespace IIM.Application.Investigation
         private readonly ILogger<ExecuteToolCommandHandler> _logger;
         private readonly ISessionService _sessionService;
         private readonly IInferenceService _inferenceService;
-        private readonly IManagedFileManager _evidenceManager;
-        private readonly IWorkspaceManager _caseManager;
+        private readonly IManagedFileManager _fileManager;
+        private readonly IWorkspaceManager _workspaceManager;
 
         /// <summary>
         /// Initializes a new instance of the ExecuteToolCommandHandler.
@@ -26,14 +26,14 @@ namespace IIM.Application.Investigation
             ILogger<ExecuteToolCommandHandler> logger,
             ISessionService sessionService,
             IInferenceService inferenceService,
-            IManagedFileManager evidenceManager,
-            IWorkspaceManager caseManager)
+            IManagedFileManager fileManager,
+            IWorkspaceManager workspaceManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
             _inferenceService = inferenceService ?? throw new ArgumentNullException(nameof(inferenceService));
-            _evidenceManager = evidenceManager ?? throw new ArgumentNullException(nameof(evidenceManager));
-            _caseManager = caseManager ?? throw new ArgumentNullException(nameof(caseManager));
+            _fileManager = fileManager ?? throw new ArgumentNullException(nameof(fileManager));
+            _workspaceManager = workspaceManager ?? throw new ArgumentNullException(nameof(workspaceManager));
         }
 
         /// <summary>

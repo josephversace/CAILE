@@ -8,7 +8,7 @@ namespace IIM.Shared.Interfaces
     /// <summary>
     /// Service interface for managing evidence uploads with MinIO
     /// </summary>
-    public interface IEvidenceUploadService
+    public interface IManagedFileUploadService
     {
         /// <summary>
         /// Initiates evidence upload by checking for duplicates and generating pre-signed URL
@@ -17,8 +17,8 @@ namespace IIM.Shared.Interfaces
         /// <param name="userId">ID of user initiating upload</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Response with upload URL or duplicate information</returns>
-        Task<InitiateEvidenceUploadResponse> InitiateUploadAsync(
-            InitiateEvidenceUploadRequest request,
+        Task<InitiateFileUploadResponse> InitiateUploadAsync(
+            InitiateFileUploadRequest request,
             string userId,
             CancellationToken cancellationToken = default);
 
@@ -28,22 +28,10 @@ namespace IIM.Shared.Interfaces
         /// <param name="request">Confirmation request with evidence ID</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Response with verification results</returns>
-        Task<ConfirmEvidenceUploadResponse> ConfirmUploadAsync(
-            ConfirmEvidenceUploadRequest request,
+        Task<ConfirmFileUploadResponse> ConfirmUploadAsync(
+            ConfirmFileUploadRequest request,
             CancellationToken cancellationToken = default);
 
-        /// <summary>
-        /// Handles MinIO webhook for upload completion (alternative to client confirmation)
-        /// </summary>
-        /// <param name="bucketName">MinIO bucket name</param>
-        /// <param name="objectName">Object key in bucket</param>
-        /// <param name="eventType">MinIO event type</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Success indicator</returns>
-        Task<bool> HandleMinIOWebhookAsync(
-            string bucketName,
-            string objectName,
-            string eventType,
-            CancellationToken cancellationToken = default);
+ 
     }
 }

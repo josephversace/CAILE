@@ -2,7 +2,7 @@ using IIM.Core.Mediator;
 using IIM.Shared.Models;
 using Mediator;
 
-namespace IIM.Application.Evidence
+namespace IIM.Application.Files
 {
     /// <summary>
     /// Command to initiate evidence upload with deduplication check

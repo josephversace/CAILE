@@ -11,19 +11,18 @@ using IIM.Infrastructure.Storage;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Logging;
-using Minio;
-using Minio.DataModel.Args;
+
 
 namespace IIM.Infrastructure.Storage
 {
     /// <summary>
     /// Evidence upload service that works with your existing interfaces
     /// </summary>
-    public class EvidenceUploadService : Shared.Interfaces.IEvidenceUploadService
+    public class EvidenceUploadService : IEvidenceUploadService
     {
         private readonly ILogger<EvidenceUploadService> _logger;
-        private readonly IMinioClient _minioClient;
-        private readonly IEvidenceManager _evidenceManager;
+        private readonly IS3StorageService _s3Client;
+        private readonly IManagedFileManager _fileManager;
         private readonly IDeduplicationService _deduplicationService;
         private readonly IAuditService _auditLogger; // Your existing audit logger
         private readonly ISessionService _sessionService;
@@ -104,7 +103,7 @@ namespace IIM.Infrastructure.Storage
                 var evidenceId = Guid.NewGuid().ToString("N");
                 var objectName = $"{request.Metadata.CaseNumber}/{evidenceId}/{request.FileName}";
 
-                var evidence = new Evidence
+                var evidence = new ManagedFile
                 {
                     Id = evidenceId,
                     CaseNumber = request.Metadata.CaseNumber,
