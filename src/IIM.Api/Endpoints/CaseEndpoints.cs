@@ -59,14 +59,14 @@ public static class WorkspaceEndpoints
             string workspaceId,
             [FromServices] IMediator mediator,
             CancellationToken ct,
-            [FromQuery] bool includeEvidence = false,
+            [FromQuery] bool includeFiles = false,
             [FromQuery] bool includeSessions = false,
             [FromQuery] bool includeReports = false,
             [FromQuery] bool includeStatistics = true) =>
         {
             var query = new GetWorkspaceCommand(
                 workspaceId,
-                includeEvidence,
+                includeFiles,
                 includeSessions,
                 includeReports,
                 includeStatistics);
@@ -247,14 +247,14 @@ public static class WorkspaceEndpoints
                 ? Results.Ok(new { message = "Session linked to case successfully" })
                 : Results.Problem("Failed to link session to case");
         })
-        .WithName("LinkSessionToCase")
-        .WithSummary("Link an investigation session to a case")
+        .WithName("LinkSessionToWorkspace")
+        .WithSummary("Link an ai session to a case")
         .RequireAuthorization()
         .Produces<object>()
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-        // Link evidence to case
-        cases.MapPost("/{workspaceId}/evidence/{fileId}", async (
+        // Link files to workspace
+        cases.MapPost("/{workspaceId}/files/{fileId}", async (
             string workspaceId,
             string fileId,
             [FromServices] IWorkspaceManager caseManager,
@@ -389,7 +389,7 @@ public static class WorkspaceEndpoints
                 Status = workspaceEntity.Status.ToString(),
                 Classification = workspaceEntity.Classification,
                 UpdatedAt = workspaceEntity.UpdatedAt,
-                EvidenceCount = workspaceEntity.Files?.Count ?? 0,
+                FileCount = workspaceEntity.Files?.Count ?? 0,
                 ActiveSessions = workspaceEntity.Sessions?.Count(s => s.Status == InvestigationStatus.Active) ?? 0
             };
 

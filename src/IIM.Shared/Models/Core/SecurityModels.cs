@@ -25,5 +25,5 @@ public class Role
 public class Permission
 {
     public int Id { get; set; }
-    public string Name { get; set; } // e.g., "case.create", "evidence.view.sensitive"
+    public string Name { get; set; } // e.g., "case.create", "files.view.sensitive"
 }

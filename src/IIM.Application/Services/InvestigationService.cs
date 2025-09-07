@@ -32,7 +32,7 @@ namespace IIM.Application.Services
         private readonly IVisualizationService _visualizationService;
 
         private readonly Dictionary<string, SessionModelTracking> _sessionModelTracking = new();
-        private readonly Dictionary<string, IIM.Shared.Models.Case> _cases = new();
+        private readonly Dictionary<string, Workspace> _workspaces = new();
         private readonly Dictionary<string, InvestigationResponse> _responses = new();
         private readonly SemaphoreSlim _trackingLock = new(1, 1);
 
@@ -139,7 +139,7 @@ namespace IIM.Application.Services
                 Message = $"Processing: {query.Text}",
                 ToolResults = new List<ToolResult>(),
                 Citations = new List<Citation>(),
-                EvidenceIds = new List<string>(),
+                FileIds = new List<string>(),
                 Metadata = new Dictionary<string, object>
                 {
                     ["sessionId"] = sessionId,
@@ -223,11 +223,11 @@ namespace IIM.Application.Services
 
         #endregion
 
-        #region Case Management
+        #region Workspace Management
 
-        public Task<List<IIM.Shared.Models.Case>> GetRecentCasesAsync(int count = 10, CancellationToken cancellationToken = default)
+        public Task<List<Workspace>> GetRecentWorkspacesAsync(int count = 10, CancellationToken cancellationToken = default)
         {
-            var recentCases = _cases.Values
+            var recentWorkspaces = _cases.Values
                 .OrderByDescending(c => c.UpdatedAt)
                 .Take(count)
                 .ToList();
@@ -242,14 +242,14 @@ namespace IIM.Application.Services
             return GetSessionsByCaseAsync(caseId, cancellationToken);
         }
 
-        public Task<IIM.Shared.Models.Case> GetCaseAsync(string caseId, CancellationToken cancellationToken = default)
+        public Task<Workspace> GetWorkspace(string workspaceId, CancellationToken cancellationToken = default)
         {
-            if (_cases.TryGetValue(caseId, out var caseEntity))
+            if (_workspaces.TryGetValue(workspaceId, out var workspaceEntity))
             {
-                return Task.FromResult(caseEntity);
+                return Task.FromResult(workspaceEntity);
             }
 
-            throw new KeyNotFoundException($"Case {caseId} not found");
+            throw new KeyNotFoundException($"Workspace {workspaceId} not found");
         }
 
         #endregion
@@ -264,7 +264,7 @@ namespace IIM.Application.Services
             {
                 ["hasToolResults"] = response.ToolResults?.Any() ?? false,
                 ["hasCitations"] = response.Citations?.Any() ?? false,
-                ["hasEvidence"] = response.EvidenceIds?.Any() ?? false,
+                ["hasEvidence"] = response.FileIds?.Any() ?? false,
                 ["confidence"] = response.Confidence ?? 0
             };
 

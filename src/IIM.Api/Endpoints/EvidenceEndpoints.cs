@@ -10,16 +10,16 @@ using IIM.Application.Files;
 namespace IIM.Api.Endpoints;
 
 /// <summary>
-/// Evidence management endpoints for handling digital evidence with chain of custody
+/// File management endpoints for handling digital files with chain of custody
 /// </summary>
 public static class FileEndpoints
 {
     /// <summary>
-    /// Maps all evidence-related endpoints for upload, retrieval, and management
+    /// Maps all file-related endpoints for upload, retrieval, and management
     /// </summary>
     public static void MapFileEndpoints(this IEndpointRouteBuilder app)
     {
-        var evidence = app.MapGroup("/api/files")
+        var files = app.MapGroup("/api/files")
             .WithTags("ManagedFiles")
             .WithOpenApi();
 
@@ -28,7 +28,7 @@ public static class FileEndpoints
         // ========================================
 
         // Initiate evidence upload - checks for duplicates and gets upload URL
-        evidence.MapPost("/initiate-upload", async (
+        files.MapPost("/initiate-upload", async (
             [FromBody] InitiateFileUploadRequest request,
             [FromServices] IMediator mediator,
             HttpContext httpContext,
@@ -52,8 +52,8 @@ public static class FileEndpoints
         .Produces<InitiateFileUploadResponse>()
         .ProducesProblem(StatusCodes.Status400BadRequest);
 
-        // Confirm evidence upload completion
-        evidence.MapPost("/confirm-upload", async (
+        // Confirm file upload completion
+        files.MapPost("/confirm-upload", async (
             [FromBody] ConfirmFileUploadRequest request,
             [FromServices] IMediator mediator,
             CancellationToken ct) =>
@@ -70,13 +70,13 @@ public static class FileEndpoints
                 ? Results.Ok(response)
                 : Results.BadRequest(response);
         })
-        .WithName("ConfirmEvidenceUpload")
-        .WithSummary("Confirm evidence upload and verify integrity")
+        .WithName("ConfirmFileUpload")
+        .WithSummary("Confirm file upload and verify integrity")
         .Produces<ConfirmEvidenceUploadResponse>()
         .ProducesProblem(StatusCodes.Status400BadRequest);
 
         // Direct evidence ingestion (for smaller files)
-        evidence.MapPost("/ingest", async (
+        files.MapPost("/ingest", async (
             HttpRequest request,
             [FromServices] IMediator mediator,
             [FromServices] IManagedFileManager evidenceManager,
@@ -105,14 +105,14 @@ public static class FileEndpoints
             // Extract metadata from form
             var metadata = new FileMetadata
             {
-                CaseNumber = form["caseNumber"].ToString(),
-                CollectedBy = form["collectedBy"].ToString() ?? request.HttpContext.User?.Identity?.Name ?? "Unknown",
-                CollectionDate = DateTimeOffset.TryParse(form["collectionDate"], out var date)
-                    ? date
-                    : DateTimeOffset.UtcNow,
-                CollectionLocation = form["collectionLocation"].ToString(),
-                Description = form["description"].ToString(),
-                SessionId = form["sessionId"].ToString()
+                //CaseNumber = form["caseNumber"].ToString(),
+                //CollectedBy = form["collectedBy"].ToString() ?? request.HttpContext.User?.Identity?.Name ?? "Unknown",
+                //CollectionDate = DateTimeOffset.TryParse(form["collectionDate"], out var date)
+                //    ? date
+                //    : DateTimeOffset.UtcNow,
+                //CollectionLocation = form["collectionLocation"].ToString(),
+                //Description = form["description"].ToString(),
+                //SessionId = form["sessionId"].ToString()
             };
 
             // Ingest evidence
@@ -132,19 +132,19 @@ public static class FileEndpoints
         .DisableAntiforgery(); // Required for file uploads
 
         // ========================================
-        // EVIDENCE RETRIEVAL
+        // FILE RETRIEVAL
         // ========================================
 
         // Get evidence by ID
-        evidence.MapGet("/{fileId}", async (
+        files.MapGet("/{fileId}", async (
             string fileId,
             [FromServices] IManagedFileManager fileManager,
             CancellationToken ct) =>
         {
-            var fileItem = await fileManager.GetFileAsync(evidenceId, ct);
+            var fileItem = await fileManager.GetFilesAsync(fileId, ct);
             return fileItem != null
                 ? Results.Ok(fileItem)
-                : Results.NotFound(new { error = $"Evidence {evidenceId} not found" });
+                : Results.NotFound(new { error = $"File {fileId} not found" });
         })
         .WithName("GetFile")
         .WithSummary("Get file details by ID")
@@ -152,7 +152,7 @@ public static class FileEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound);
 
         // Get evidence by case
-        evidence.MapGet("/workspace/{workspaceId}", async (
+        files.MapGet("/workspace/{workspaceId}", async (
             string workspaceId,
             [FromServices] IManagedFileManager evidenceManager,
             CancellationToken ct,
@@ -179,8 +179,8 @@ public static class FileEndpoints
         .WithSummary("Get all files for a specific workspace")
         .Produces<object>();
 
-        //// Search evidence
-        //evidence.MapPost("/search", async (
+        //// Search files
+        //files.MapPost("/search", async (
         //    [FromBody] SearchEvidenceRequest request,
         //    [FromServices] IEvidenceManager evidenceManager,
         //    CancellationToken ct) =>
@@ -200,12 +200,12 @@ public static class FileEndpoints
         //.Produces<List<Evidence>>();
 
         // ========================================
-        // EVIDENCE MANAGEMENT
+        // FILE MANAGEMENT
         // ========================================
 
         ////To do : Implement this once we have the schema set
         //// Update evidence metadata
-        //evidence.MapPut("/{evidenceId}/metadata", async (
+        //files.MapPut("/{evidenceId}/metadata", async (
         //    string evidenceId,
         //    [FromBody] UpdateEvidenceMetadataRequest request,
         //    [FromServices] IEvidenceManager evidenceManager,
@@ -255,7 +255,7 @@ public static class FileEndpoints
         // ========================================
 
         // Get chain of custody
-        evidence.MapGet("/{fileId}/chain-of-custody", async (
+        files.MapGet("/{fileId}/chain-of-custody", async (
             string fileId,
             [FromServices] IManagedFileManager fileManager,
             CancellationToken ct) =>
@@ -306,11 +306,11 @@ public static class FileEndpoints
         //.ProducesProblem(StatusCodes.Status404NotFound);
 
         // ========================================
-        // EVIDENCE PROCESSING
+        // FILE PROCESSING
         // ========================================
 
         // Get processed versions
-        evidence.MapGet("/{fileId}/processed", async (
+        files.MapGet("/{fileId}/processed", async (
             string fileId,
             [FromServices] IManagedFileManager fileManager,
             CancellationToken ct) =>
@@ -329,7 +329,7 @@ public static class FileEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound);
 
         // Verify evidence integrity
-        evidence.MapPost("/{evidenceId}/verify", async (
+        files.MapPost("/{evidenceId}/verify", async (
             string fileId,
             [FromServices] IManagedFileManager fileManager,
             CancellationToken ct) =>
@@ -337,8 +337,8 @@ public static class FileEndpoints
             var result = await fileManager.GetFilesAsync(fileId, ct);
             return Results.Ok(result);
         })
-        .WithName("VerifyEvidenceIntegrity")
-        .WithSummary("Verify evidence integrity using stored hashes")
+        .WithName("VerifyFileIntegrity")
+        .WithSummary("Verify file integrity using stored hashes")
         .Produces<IntegrityVerificationResult>();
     }
 }

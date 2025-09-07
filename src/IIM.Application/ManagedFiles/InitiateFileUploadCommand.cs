@@ -5,7 +5,7 @@ using Mediator;
 namespace IIM.Application.Files
 {
     /// <summary>
-    /// Command to initiate evidence upload with deduplication check
+    /// Command to initiate file upload with deduplication check
     /// </summary>
     public class InitiateFileUploadCommand : IRequest<InitiateFileUploadResponse>, IAuditableCommand
     {
@@ -30,7 +30,7 @@ namespace IIM.Application.Files
         public string ContentType { get; set; } = "application/octet-stream";
 
         /// <summary>
-        /// Evidence metadata
+        /// file metadata
         /// </summary>
         public FileMetadata Metadata { get; set; } = new();
 

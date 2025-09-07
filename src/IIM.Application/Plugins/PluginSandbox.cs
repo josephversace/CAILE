@@ -26,17 +26,17 @@ public class PluginSandbox : IPluginSandbox
 {
     private readonly ILoggerFactory _loggerFactory;
     private readonly IConfiguration _configuration;
-    private readonly IEvidenceManager _evidenceManager;
+    private readonly IManagedFileManager _fileManager;
     private readonly Dictionary<string, PluginContext> _contexts = new();
 
     public PluginSandbox(
         ILoggerFactory loggerFactory,
         IConfiguration configuration,
-        IEvidenceManager evidenceManager)
+        IManagedFileManager fileManager)
     {
         _loggerFactory = loggerFactory;
         _configuration = configuration;
-        _evidenceManager = evidenceManager;
+        _fileManager = fileManager;
     }
 
     public async Task<PluginContext> CreateContextAsync(PluginManifest plugin)
@@ -83,7 +83,7 @@ public class PluginSandbox : IPluginSandbox
             FileSystem = fileSystem,
             HttpClient = httpClient,
             ProcessRunner = processRunner,
-            EvidenceStore = evidenceStore,
+            EvidenceStore = fileStore,
             PluginInfo = new PluginInfo
             {
                 Id = plugin.Id,

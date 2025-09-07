@@ -154,7 +154,7 @@ namespace IIM.Application.Services
                         Score = (float)sim.Similarity,
                         Metadata = new Dictionary<string, string>
                         {
-                            ["EvidenceId"] = sim.EvidenceId,
+                            ["FileId"] = sim.FileId,
                             ["FileName"] = sim.FileName,
                             ["Similarity"] = sim.Similarity.ToString("F3")
                         }

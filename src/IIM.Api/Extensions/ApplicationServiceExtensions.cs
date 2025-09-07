@@ -26,13 +26,13 @@ namespace IIM.Api.Extensions
             services.AddScoped<IInvestigationService, InvestigationService>();
 
             // Evidence Manager (Scoped - uses DB context)
-            services.AddScoped<IEvidenceManager>(sp =>
+            services.AddScoped<IFileManager>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<EvidenceManager>>();
                 var storageConfig = sp.GetRequiredService<StorageConfiguration>();
                 var auditContext = sp.GetRequiredService<AuditDbContext>();
 
-                var config = new EvidenceConfiguration
+                var config = new FilesConfiguration
                 {
                     StorePath = storageConfig.EvidencePath,
                     EnableEncryption = configuration.GetValue<bool>("Evidence:EnableEncryption", false),

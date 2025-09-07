@@ -81,7 +81,7 @@ namespace IIM.Api.Extensions
             services.Configure<QdrantConfiguration>(configuration.GetSection("Qdrant"));
             services.Configure<InferenceConfiguration>(configuration.GetSection("Inference"));
             services.Configure<WslConfiguration>(configuration.GetSection("Wsl"));
-            services.Configure<EvidenceConfiguration>(configuration.GetSection("Evidence"));
+            services.Configure<FilesConfiguration>(configuration.GetSection("Evidence"));
             services.Configure<AuditConfiguration>(configuration.GetSection("Audit"));
             services.Configure<ModelTemplateConfiguration>(configuration.GetSection("ModelTemplates"));
             services.Configure<InferencePipelineConfiguration>(configuration.GetSection("InferencePipeline"));

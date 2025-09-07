@@ -23,16 +23,16 @@ namespace IIM.Application.Queries
     public class SearchDocumentsQueryHandler : IRequestHandler<SearchDocumentsQuery, RAGSearchResult>
     {
         private readonly IInferenceService _inferenceService;
-        private readonly IEvidenceManager _evidenceManager;
+        private readonly IManagedFileManager _fileManager;
         private readonly ILogger<SearchDocumentsQueryHandler> _logger;
 
         public SearchDocumentsQueryHandler(
             IInferenceService inferenceService,
-            IEvidenceManager evidenceManager,
+            IManagedFileManager fileManager,
             ILogger<SearchDocumentsQueryHandler> logger)
         {
             _inferenceService = inferenceService;
-            _evidenceManager = evidenceManager;
+            _fileManager = fileManager;
             _logger = logger;
         }
 
@@ -207,7 +207,7 @@ namespace IIM.Application.Queries
             return new Dictionary<string, object>
             {
                 ["case_id"] = caseId,
-                ["total_evidence"] = 42,
+                ["total_files"] = 42,
                 ["investigation_stage"] = "analysis"
             };
         }

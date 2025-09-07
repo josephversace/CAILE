@@ -11,17 +11,17 @@ namespace IIM.Shared.Models
     /// <summary>
     /// Request to search evidence
     /// </summary>
-    public record SearchEvidenceRequest(
+    public record SearchFileRequest(
         string? SearchTerm,
-        string? CaseId,
-        EvidenceType? EvidenceType,
+        string? WorkspaceId,
+        FileType? FileType,
         DateTimeOffset? StartDate,
         DateTimeOffset? EndDate);
 
     /// <summary>
-    /// Request to update evidence metadata
+    /// Request to update file metadata
     /// </summary>
-    public record UpdateEvidenceMetadataRequest(
+    public record UpdateFileMetadataRequest(
         FileMetadata Metadata);
 
 
@@ -30,10 +30,10 @@ namespace IIM.Shared.Models
     /// Purpose: Confirm successful upload and integrity
     /// Used by: Upload UI to show completion status
     /// </summary>
-    public class ConfirmEvidenceUploadResponse
+    public class ConfirmFileUploadResponse
     {
         public bool Success { get; set; }
-        public EvidenceStatus Status { get; set; }
+        public FileProcessingStatus Status { get; set; }
         public string? ErrorMessage { get; set; }
         public string? ServerHash { get; set; }
         public bool HashesMatch { get; set; }
@@ -51,7 +51,7 @@ namespace IIM.Shared.Models
         Dictionary<string, object>? Metadata);
 
     /// <summary>
-    /// Evidence integrity verification result
+    /// File integrity verification result
     /// </summary>
     public record IntegrityVerificationResult(
         bool IsValid,

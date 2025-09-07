@@ -18,9 +18,9 @@ namespace IIM.Infrastructure.Storage
     /// <summary>
     /// Evidence upload service that works with your existing interfaces
     /// </summary>
-    public class EvidenceUploadService : IEvidenceUploadService
+    public class FileUploadService : IEvidenceUploadService
     {
-        private readonly ILogger<EvidenceUploadService> _logger;
+        private readonly ILogger<FileUploadService> _logger;
         private readonly IS3StorageService _s3Client;
         private readonly IManagedFileManager _fileManager;
         private readonly IDeduplicationService _deduplicationService;
@@ -29,8 +29,8 @@ namespace IIM.Infrastructure.Storage
         private readonly StorageConfiguration _storageConfig;
         private readonly string _bucketName;
 
-        public EvidenceUploadService(
-            ILogger<EvidenceUploadService> logger,
+        public FileUploadService(
+            ILogger<FileUploadService> logger,
             IMinioClient minioClient,
             IEvidenceManager evidenceManager,
             IDeduplicationService deduplicationService,

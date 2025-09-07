@@ -113,7 +113,7 @@ public class HashAnalyzerPlugin : InvestigationPlugin
             results.CheckedDatabases.Add("ThreatIntel");
         }
         
-        // Store in evidence
+        // Store in files
         await Evidence.StoreAsync($"hash_analysis_{hash}", results);
         
         return PluginResult.CreateSuccess(results, 

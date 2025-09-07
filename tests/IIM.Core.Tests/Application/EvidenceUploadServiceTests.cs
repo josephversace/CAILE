@@ -23,18 +23,18 @@ namespace IIM.Application.Tests.Services
     /// </summary>
     public class EvidenceUploadServiceTests
     {
-        private readonly Mock<ILogger<EvidenceUploadService>> _loggerMock;
+        private readonly Mock<ILogger<FileUploadService>> _loggerMock;
         private readonly Mock<IS3StorageService> _minioClientMock;
         private readonly Mock<IManagedFileManager> _evidenceManagerMock;
         private readonly Mock<IDeduplicationService> _deduplicationServiceMock;
         private readonly Mock<IAuditService> _auditServiceMock;
         private readonly Mock<ISessionService> _sessionServiceMock;
         private readonly StorageConfiguration _storageConfig;
-        private readonly EvidenceUploadService _service;
+        private readonly FileUploadService _service;
 
         public EvidenceUploadServiceTests()
         {
-            _loggerMock = new Mock<ILogger<EvidenceUploadService>>();
+            _loggerMock = new Mock<ILogger<FileUploadService>>();
             _minioClientMock = new Mock<IS3StorageService>();
             _evidenceManagerMock = new Mock<IManagedFileManager>();
             _deduplicationServiceMock = new Mock<IDeduplicationService>();
