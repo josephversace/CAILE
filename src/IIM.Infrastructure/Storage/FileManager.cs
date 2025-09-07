@@ -123,8 +123,8 @@ namespace IIM.Infrastructure.Storage
 
         public async Task<ProcessedFile> ProcessfileAsync(string fileId, string processingType, Func<Stream, Task<Stream>> processor, CancellationToken cancellationToken = default)
         {
-            var evidence = await GetEvidenceAsync(fileId, cancellationToken);
-            if (evidence == null)
+            var file = await GetEvidenceAsync(fileId, cancellationToken);
+            if (file == null)
                 throw new ManagedFileNotFoundException($"File {fileId} not found");
 
             if (!await VerifyIntegrityAsync(fileId, cancellationToken))
@@ -152,7 +152,7 @@ namespace IIM.Infrastructure.Storage
             var processed = new ProcessedFile
             {
                 Id = processedId,
-                OriginalEvidenceId = evidenceId,
+                OriginalEvidenceId = fileId,
                 ProcessingType = processingType,
                 ProcessedBy = Environment.UserName,
                 ProcessedHash = processedHash,
@@ -228,13 +228,13 @@ namespace IIM.Infrastructure.Storage
         {
             var evidence = await GetEvidenceAsync(evidenceId, cancellationToken);
             if (evidence == null)
-                throw new EvidenceNotFoundException($"Evidence {evidenceId} not found");
+                throw new ManagedFileNotFoundException($"Evidence {evidenceId} not found");
 
             Directory.CreateDirectory(exportPath);
 
             var export = new FileExport
             {
-                EvidenceId = evidenceId,
+                FileId = evidenceId,
                 ExportPath = exportPath,
                 ExportedBy = Environment.UserName
             };
@@ -290,25 +290,25 @@ namespace IIM.Infrastructure.Storage
             return Task.CompletedTask;
         }
 
-        public Task<ManagedFile?> GetEvidenceAsync(string evidenceId, CancellationToken cancellationToken = default)
+        public Task<ManagedFile?> GetFileAsync(string fileId, CancellationToken cancellationToken = default)
         {
             lock (_lock)
             {
-                _fileStore.TryGetValue(evidenceId, out var evidence);
-                return Task.FromResult(evidence);
+                _fileStore.TryGetValue(fileId, out var file);
+                return Task.FromResult(file);
             }
         }
 
-        public Task<Stream> GetEvidenceStreamAsync(string evidenceId, CancellationToken cancellationToken = default)
+        public Task<Stream> GetFileStreamAsync(string fileId, CancellationToken cancellationToken = default)
         {
-            var evidence = _fileStore.GetValueOrDefault(evidenceId);
-            if (evidence == null)
-                throw new ManagedFileNotFoundException($"Evidence {evidenceId} not found");
+            var file = _fileStore.GetValueOrDefault(fileId);
+            if (file == null)
+                throw new ManagedFileNotFoundException($"Evidence {fileId} not found");
 
-            return Task.FromResult<Stream>(new FileStream(evidence.StoragePath, FileMode.Open, FileAccess.Read));
+            return Task.FromResult<Stream>(new FileStream(file.StoragePath, FileMode.Open, FileAccess.Read));
         }
 
-        public Task<List<ManagedFile>> ListEvidenceAsync(string? caseNumber = null, CancellationToken cancellationToken = default)
+        public Task<List<ManagedFile>> ListFilesAsync(string? caseNumber = null, CancellationToken cancellationToken = default)
         {
             lock (_lock)
             {
@@ -368,23 +368,23 @@ namespace IIM.Infrastructure.Storage
             Directory.CreateDirectory(Path.Combine(_config.StorePath, "Processed"));
         }
 
-        private EvidenceType DetermineEvidenceType(string fileName)
+        private FileType DetermineFileType(string fileName)
         {
             var ext = Path.GetExtension(fileName)?.ToLowerInvariant();
             return ext switch
             {
-                ".pdf" or ".doc" or ".docx" or ".txt" => EvidenceType.Document,
-                ".jpg" or ".jpeg" or ".png" or ".gif" => EvidenceType.Image,
-                ".mp4" or ".avi" or ".mkv" or ".mov" => EvidenceType.Video,
-                ".mp3" or ".wav" or ".flac" => EvidenceType.Audio,
-                ".eml" or ".msg" or ".pst" => EvidenceType.Email,
-                ".db" or ".sqlite" or ".mdb" => EvidenceType.Database,
-                ".dd" or ".e01" or ".img" => EvidenceType.DiskImage,
-                ".dmp" or ".mdmp" => EvidenceType.MemoryDump,
-                ".pcap" or ".pcapng" => EvidenceType.NetworkCapture,
-                ".log" or ".evtx" => EvidenceType.LogFile,
-                ".zip" or ".rar" or ".7z" => EvidenceType.Archive,
-                _ => EvidenceType.Other
+                ".pdf" or ".doc" or ".docx" or ".txt" => FileType.Document,
+                ".jpg" or ".jpeg" or ".png" or ".gif" => FileType.Image,
+                ".mp4" or ".avi" or ".mkv" or ".mov" => FileType.Video,
+                ".mp3" or ".wav" or ".flac" => FileType.Audio,
+                ".eml" or ".msg" or ".pst" => FileType.Email,
+                ".db" or ".sqlite" or ".mdb" => FileType.Database,
+                ".dd" or ".e01" or ".img" => FileType.DiskImage,
+                ".dmp" or ".mdmp" => FileType.MemoryDump,
+                ".pcap" or ".pcapng" => FileType.NetworkCapture,
+                ".log" or ".evtx" => FileType.LogFile,
+                ".zip" or ".rar" or ".7z" => FileType.Archive,
+                _ => FileType.Other
             };
         }
 
@@ -402,7 +402,7 @@ namespace IIM.Infrastructure.Storage
         /// <summary>
         /// Registers evidence in pending state before upload completes
         /// </summary>
-        public async Task<ManagedFile> RegisterPendingEvidenceAsync(
+        public async Task<ManagedFile> RegisterPendingFileAsync(
             ManagedFile managedFile,
             CancellationToken cancellationToken = default)
         {
@@ -423,26 +423,26 @@ namespace IIM.Infrastructure.Storage
         }
 
         /// <summary>
-        /// Updates the status of existing evidence
+        /// Updates the status of existing file
         /// </summary>
         public async Task UpdateEvidenceStatusAsync(
-            string evidenceId,
-            EvidenceStatus status,
+            string fileId,
+            FileUploadStatus status,
             CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Updating evidence {Id} status to {Status}",
-                evidenceId, status);
+                fileId, status);
 
             lock (_lock)
             {
-                if (_fileStore.TryGetValue(evidenceId, out var evidence))
+                if (_fileStore.TryGetValue(fileId, out var file))
                 {
-                    evidence.Status = status;
-                    evidence.UpdatedAt = DateTimeOffset.UtcNow;
+                    file.Status = status;
+                    file.UpdatedAt = DateTimeOffset.UtcNow;
                 }
                 else
                 {
-                    _logger.LogWarning("Evidence {Id} not found for status update", evidenceId);
+                    _logger.LogWarning("File {Id} not found for status update", fileId);
                 }
             }
 
