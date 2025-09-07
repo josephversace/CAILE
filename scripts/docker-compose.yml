@@ -1,0 +1,148 @@
+version: '3.8'
+
+# This section defines the persistent storage volumes for our services.
+# Using named volumes allows Docker to manage the storage, making it easier
+# to back up, migrate, and inspect the data.
+volumes:
+  postgres-data:
+  qdrant-data:
+  redis-data:
+  seaweedfs-master-data:
+  seaweedfs-volume-data:
+  seaweedfs-filer-data:
+
+# This section defines the shared network that all our containers will connect to.
+# This creates a private network, allowing containers to communicate with each other
+# using their service names as hostnames (e.g., http://postgres:5432).
+networks:
+  iim-net:
+    driver: bridge
+
+services:
+  # --- DATABASE SERVICES ---
+  postgres:
+    image: postgres:16
+    container_name: iim-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=iim_user
+      - POSTGRES_PASSWORD=iim_password
+      # These variables are used by the init script to create the separate databases on first run.
+      - POSTGRES_DB_CONFIG=configdb
+      - POSTGRES_DB_MODEL=modeldb
+      - POSTGRES_DB_AUDIT=auditdb
+      - POSTGRES_DB_AUTH=authdb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # This script runs on startup to create the databases defined above.
+      - ./scripts/postgres-init.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh
+    ports:
+      # Binds the database port to localhost ONLY on the host machine.
+      - "127.0.0.1:5432:5432"
+    networks:
+      - iim-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iim_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: iim-qdrant
+    restart: unless-stopped
+    ports:
+      # Binds the gRPC and Web UI ports to localhost ONLY.
+      - "127.0.0.1:6333:6333" # gRPC port
+      - "127.0.0.1:6334:6334" # Web UI / HTTP port
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      - iim-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: iim-redis
+    restart: unless-stopped
+    ports:
+      # Binds the Redis port to localhost ONLY.
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - iim-net
+
+  # --- STORAGE SERVICES (SeaweedFS Cluster) ---
+  seaweedfs-master:
+    image: chrislusf/seaweedfs:3.64
+    container_name: iim-seaweed-master
+    restart: unless-stopped
+    command: "master -ip=seaweedfs-master"
+    ports:
+      # Binds the master API/UI port to localhost ONLY.
+      - "127.0.0.1:9333:9333"
+    volumes:
+      - seaweedfs-master-data:/data
+    networks:
+      - iim-net
+
+  seaweedfs-volume:
+    image: chrislusf/seaweedfs:3.64
+    container_name: iim-seaweed-volume
+    restart: unless-stopped
+    command: 'volume -mserver="seaweedfs-master:9333" -ip=seaweedfs-volume -port=8080'
+    # No host port mapping is needed for the volume server itself,
+    # as it only needs to be accessible by the other SeaweedFS containers.
+    networks:
+      - iim-net
+    depends_on:
+      - seaweedfs-master
+
+  seaweedfs-filer:
+    image: chrislusf/seaweedfs:3.64
+    container_name: iim-seaweed-filer
+    restart: unless-stopped
+    command: "filer -master=seaweedfs-master:9333"
+    ports:
+      # Binds the Filer UI to localhost ONLY.
+      - "127.0.0.1:8888:8888"
+      # EXPOSES the S3 Gateway port to the network for direct uploads.
+      - "8333:8333"
+    volumes:
+      # This mounts the configuration file for enabling webhooks.
+      - ./config/filer.toml:/etc/seaweedfs/filer.toml
+      - seaweedfs-filer-data:/data
+    networks:
+      - iim-net
+    depends_on:
+      - seaweedfs-master
+      - seaweedfs-volume
+
+  # --- APPLICATION SERVICES ---
+  iim-api:
+    container_name: iim-api
+    # This tells Docker Compose to build the image from the Dockerfile in the specified directory.
+    build:
+      context: .
+      dockerfile: src/IIM.Api/Dockerfile
+    restart: unless-stopped
+    ports:
+      # EXPOSES the main application API ports to the network.
+      - "8080:8080" # HTTP
+      - "8443:8443" # HTTPS
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:8443;http://+:8080
+      # The application's appsettings.json will use the service names (e.g., "postgres", "qdrant") for connection strings.
+    networks:
+      - iim-net
+    depends_on:
+      postgres:
+        condition: service_healthy # Waits for Postgres to be ready before starting.
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_started
+      seaweedfs-filer:
+        condition: service_started
+

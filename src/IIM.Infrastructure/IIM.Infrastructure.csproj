@@ -14,7 +14,6 @@
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.22.1" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.22.1" />
     <PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
-    <PackageReference Include="Minio" Version="6.0.1" />
     <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="Vortice.DirectML" Version="3.6.2" />
   </ItemGroup>

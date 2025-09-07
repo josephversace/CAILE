@@ -1,0 +1,22 @@
+# This is the primary configuration file for the SeaweedFS Filer service.
+# It controls the S3 gateway, metadata storage, and notification systems.
+
+# This section configures the filer's ability to send notifications for various events (create, delete, etc.).
+[notification]
+
+  # This subsection is specifically for the webhook "sink". A sink is a destination for notifications.
+  [notification.webhook]
+  # We explicitly enable this notification sink.
+  enabled = true
+
+  # This is the URL of the endpoint in your C# API that will receive the HTTP POST request.
+  # The "iim-api" hostname will be resolved by Docker's internal DNS to the correct container.
+  # The port must match the HTTP port your C# application is listening on inside the container.
+  url = "http://iim-api:8080/api/v1/files/notify"
+
+# This section tells the filer where to store its own metadata (e.g., file paths, S3 bucket info).
+# We are pointing it to the "/data" directory inside the container, which is mapped
+# to the persistent "seaweedfs-filer-data" Docker volume in docker-compose.yml.
+[leveldb2]
+path = "/data"
+

@@ -25,7 +25,6 @@ namespace IIM.Api.Extensions
             services.AddSingleton(deploymentConfig);
 
       
-
             // Add memory cache (Singleton)
             services.AddMemoryCache();
 
@@ -48,8 +47,11 @@ namespace IIM.Api.Extensions
             services.AddHttpClients(configuration);
            
             services.AddInfrastructureServices(configuration, deploymentConfig);
+            
             services.AddCoreServices(configuration, deploymentConfig);
+            
             services.AddApplicationServices(configuration, deploymentConfig);
+            
             services.AddBackgroundServices(configuration, deploymentConfig);
 
             // Add authentication based on deployment mode

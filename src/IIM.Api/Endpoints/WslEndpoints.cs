@@ -41,7 +41,7 @@ public static class WslEndpoints
         // Get WSL health with service status
         wsl.MapGet("/health", async (
             [FromServices] IWslManager wslManager,
-            [FromServices] IWslServiceOrchestrator serviceOrchestrator,
+            [FromServices] IApplianceServiceOrchestrator serviceOrchestrator,
             CancellationToken ct) =>
         {
             var status = await wslManager.GetStatusAsync(ct);
@@ -96,7 +96,7 @@ public static class WslEndpoints
         //// Start WSL
         //wsl.MapPost("/start", async (
         //    [FromServices] IWslManager wslManager,
-        //    [FromServices] IWslServiceOrchestrator serviceOrchestrator,
+        //    [FromServices] IApplianceServiceOrchestrator serviceOrchestrator,
         //    CancellationToken ct,
         //    [FromBody] StartWslCommand? request = null) =>
         //{
@@ -132,7 +132,7 @@ public static class WslEndpoints
         // Stop WSL
         //wsl.MapPost("/stop", async (
         //    [FromServices] IWslManager wslManager,
-        //    [FromServices] IWslServiceOrchestrator serviceOrchestrator,
+        //    [FromServices] IApplianceServiceOrchestrator serviceOrchestrator,
         //    CancellationToken ct,
         //    [FromBody] StopWslCommand? request = null) =>
         //{
@@ -165,7 +165,7 @@ public static class WslEndpoints
         //// Restart WSL
         //wsl.MapPost("/restart", async (
         //    [FromServices] IWslManager wslManager,
-        //    [FromServices] IWslServiceOrchestrator serviceOrchestrator,
+        //    [FromServices] IApplianceServiceOrchestrator serviceOrchestrator,
         //    CancellationToken ct) =>
         //{
         //    // Stop all services
@@ -197,7 +197,7 @@ public static class WslEndpoints
         //To do: Implement once we have all the services we will need
         //// Get all services status
         //wsl.MapGet("/services", async (
-        //    [FromServices] IWslServiceOrchestrator serviceOrchestrator,
+        //    [FromServices] IApplianceServiceOrchestrator serviceOrchestrator,
         //    CancellationToken ct) =>
         //{
         //    var services = await serviceOrchestrator.GetAllServiceStatusAsync(ct);
@@ -218,7 +218,7 @@ public static class WslEndpoints
         // Start specific service
         wsl.MapPost("/services/{serviceName}/start", async (
             string serviceName,
-            [FromServices] IWslServiceOrchestrator serviceOrchestrator,
+            [FromServices] IApplianceServiceOrchestrator serviceOrchestrator,
             CancellationToken ct) =>
         {
             var started = await serviceOrchestrator.StartServiceAsync(serviceName, null, ct);
@@ -235,7 +235,7 @@ public static class WslEndpoints
         // Stop specific service
         wsl.MapPost("/services/{serviceName}/stop", async (
             string serviceName,
-            [FromServices] IWslServiceOrchestrator serviceOrchestrator,
+            [FromServices] IApplianceServiceOrchestrator serviceOrchestrator,
             CancellationToken ct) =>
         {
             var stopped = await serviceOrchestrator.StopServiceAsync(serviceName, ct);
@@ -252,7 +252,7 @@ public static class WslEndpoints
         // Restart specific service
         wsl.MapPost("/services/{serviceName}/restart", async (
             string serviceName,
-            [FromServices] IWslServiceOrchestrator serviceOrchestrator,
+            [FromServices] IApplianceServiceOrchestrator serviceOrchestrator,
             CancellationToken ct) =>
         {
             var restarted = await serviceOrchestrator.RestartServiceAsync(serviceName, ct);

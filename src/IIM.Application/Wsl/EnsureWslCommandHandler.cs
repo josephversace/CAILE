@@ -17,13 +17,13 @@ namespace IIM.Application.Wsl
     public class EnsureWslCommandHandler : IRequestHandler<EnsureWslCommand, Unit>
     {
         private readonly IWslManager _wslManager;
-        private readonly IWslServiceOrchestrator _serviceOrchestrator;
+        private readonly IApplianceServiceOrchestrator _serviceOrchestrator;
         private readonly IMediator _mediator;
         private readonly ILogger<EnsureWslCommandHandler> _logger;
 
         public EnsureWslCommandHandler(
             IWslManager wslManager,
-            IWslServiceOrchestrator serviceOrchestrator,
+            IApplianceServiceOrchestrator serviceOrchestrator,
             IMediator mediator,
             ILogger<EnsureWslCommandHandler> logger)
         {

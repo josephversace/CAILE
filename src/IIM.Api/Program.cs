@@ -38,7 +38,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "IIM API",
         Version = "v1",
-        Description = "Intelligent Investigation Machine API",
+        Description = "Intelligent Data Governance Machine API",
         Contact = new OpenApiContact
         {
             Name = "IIM Team",
