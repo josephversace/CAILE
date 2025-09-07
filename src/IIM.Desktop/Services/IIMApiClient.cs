@@ -72,20 +72,19 @@ public class IIMApiClient : IIIMApiClient
     /// <param name="metadata">Evidence metadata including case number and collection details</param>
     /// <returns>Evidence record with generated ID and hash</returns>
     /// <exception cref="HttpRequestException">Thrown when upload fails</exception>
-    public async Task<Evidence> IngestEvidenceAsync(Stream file, string fileName, EvidenceMetadata metadata)
+    public async Task<ManagedFile> IngestFileAsync(Stream file, string fileName, FileMetadata metadata)
     {
         using var content = new MultipartFormDataContent();
         content.Add(new StreamContent(file), "file", fileName);
-        content.Add(new StringContent(metadata.CaseNumber), "caseNumber");
-        content.Add(new StringContent(metadata.CollectedBy), "collectedBy");
+    
 
-        var response = await _httpClient.PostAsync("/api/evidence/ingest", content);
+        var response = await _httpClient.PostAsync("/api/file/ingest", content);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<Evidence>();
+        return await response.Content.ReadFromJsonAsync<ManagedFile>();
     }
 
-    public async Task<InitiateEvidenceUploadResponse> InitiateEvidenceUploadAsync(
-       InitiateEvidenceUploadRequest request,
+    public async Task<InitiateFileUploadResponse> InitiateEvidenceUploadAsync(
+       InitiateFileUploadRequest request,
        CancellationToken cancellationToken = default)
     {
         var response = await _httpClient.PostAsJsonAsync(
@@ -94,20 +93,20 @@ public class IIMApiClient : IIIMApiClient
             cancellationToken);
 
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<InitiateEvidenceUploadResponse>();
+        return await response.Content.ReadFromJsonAsync<InitiateFileUploadResponse>();
     }
 
     public async Task<ConfirmEvidenceUploadResponse> ConfirmEvidenceUploadAsync(
-        ConfirmEvidenceUploadRequest request,
+        ConfirmFileUploadRequest request,
         CancellationToken cancellationToken = default)
     {
         var response = await _httpClient.PostAsJsonAsync(
-            "/api/evidence/confirm",
+            "/api/file/confirm",
             request,
             cancellationToken);
 
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<ConfirmEvidenceUploadResponse>();
+        return await response.Content.ReadFromJsonAsync<ConfirmFileUploadResponse>();
     }
 
     // ========================================

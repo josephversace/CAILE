@@ -6,13 +6,13 @@ using System.Text;
 
 namespace IIM.Infrastructure.Data
 {
-    public class EvidenceDbContext : DbContext
+    public class FileDbContext : DbContext
     {
-        public EvidenceDbContext(DbContextOptions<EvidenceDbContext> options) : base(options) { }
+        public FileDbContext(DbContextOptions<FileDbContext> options) : base(options) { }
 
         // Example audit entity:
-        public DbSet<Evidence> Evidence { get; set; }
-        public DbSet<EvidenceMetadata> Metadata { get; set; }
+        public DbSet<ManagedFile> ManagedFiles { get; set; }
+        public DbSet<FileMetadata> FileMetadatas { get; set; }
 
         public DbSet<ChainOfCustodyEntry> CustodyChains { get; set; }
 

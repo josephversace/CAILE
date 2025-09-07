@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace IIM.Shared.Interfaces;
 
-public interface IEvidenceStore
+public interface IManagedFileStore
 {
     Task StoreAsync(string key, object data, CancellationToken cancellationToken = default);
     Task<T?> RetrieveAsync<T>(string key, CancellationToken cancellationToken = default);

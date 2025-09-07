@@ -11,7 +11,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace IIM.Application.Evidence
+namespace IIM.Application.Files
 {
     // Command carrying the session ID and image attachments
     public class ProcessFolderUploadCommand : IRequest<ProcessFolderUploadResponse>

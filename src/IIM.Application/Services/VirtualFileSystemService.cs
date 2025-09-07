@@ -17,7 +17,7 @@ namespace IIM.Application.Services
     /// </summary>
     public class VirtualFilesystemService
     {
-        private readonly SqliteConnection _db;
+  
         private readonly ILogger<VirtualFilesystemService> _logger;
         private readonly IS3StorageService _storage;
 

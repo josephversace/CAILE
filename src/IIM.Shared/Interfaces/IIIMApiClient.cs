@@ -17,17 +17,17 @@ namespace IIM.Shared.Interfaces
         Task<ModelInfo[]> GetAvailableModelsAsync();
         Task<SystemStatus> GetSystemStatusAsync();
         Task<WslStatus> GetWslStatusAsync();
-        Task<Evidence> IngestEvidenceAsync(Stream file, string fileName, EvidenceMetadata metadata);
+        Task<ManagedFile> IngestFileAsync(Stream file, string fileName, FileMetadata metadata);
         Task<bool> IsApiAvailableAsync();
         Task<bool> LoadModelAsync(string modelId);
         Task<InvestigationResponse> ProcessQueryAsync(string sessionId, string query);
 
-        Task<InitiateEvidenceUploadResponse> InitiateEvidenceUploadAsync(
-        InitiateEvidenceUploadRequest request,
+        Task<InitiateFileUploadResponse> InitiateEvidenceUploadAsync(
+        InitiateFileUploadRequest request,
         CancellationToken cancellationToken = default);
 
         Task<ConfirmEvidenceUploadResponse> ConfirmEvidenceUploadAsync(
-        ConfirmEvidenceUploadRequest request,
+        ConfirmFileUploadRequest request,
         CancellationToken cancellationToken = default);
 
         Task<Settings> GetSettingsAsync();

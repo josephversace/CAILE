@@ -7,15 +7,15 @@ namespace IIM.Api.Services
 {
     public class EvidenceIntegrityMonitor : BackgroundService
     {
-        private readonly IEvidenceManager _evidenceManager;
+        private readonly IManagedFileManager _fileManager;
         private readonly ILogger<EvidenceIntegrityMonitor> _logger;
         private readonly TimeSpan _checkInterval = TimeSpan.FromHours(6);
 
         public EvidenceIntegrityMonitor(
-            IEvidenceManager evidenceManager,
+            IManagedFileManager fileManager,
             ILogger<EvidenceIntegrityMonitor> logger)
         {
-            _evidenceManager = evidenceManager;
+            _fileManager = fileManager;
             _logger = logger;
         }
 
@@ -35,7 +35,7 @@ namespace IIM.Api.Services
                     {
                         try
                         {
-                            var isValid = await _evidenceManager.VerifyIntegrityAsync(evidenceId, stoppingToken);
+                            var isValid = await _fileManager.VerifyIntegrityAsync(evidenceId, stoppingToken);
 
                             if (!isValid)
                             {

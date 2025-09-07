@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace IIM.Infrastructure.Data
 {
-    public class EfEvidenceRepository
+    public class EfFileRepository
     {
-        private readonly EvidenceDbContext _db;
+        private readonly FileDbContext _db;
 
-        public EfEvidenceRepository(EvidenceDbContext db)
+        public EfFileRepository(FileDbContext db)
         {
             _db = db;
         }

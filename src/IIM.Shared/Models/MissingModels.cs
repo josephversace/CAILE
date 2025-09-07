@@ -393,7 +393,7 @@ public class QueuedRequest
         public string OriginalFileName { get; set; } = string.Empty;
         public string CaseNumber { get; set; } = string.Empty;
         public List<ChainOfCustodyEntry> ChainEntries { get; set; } = new();
-        public List<ProcessedEvidence> ProcessedVersions { get; set; } = new();
+        public List<ProcessedFile> ProcessedVersions { get; set; } = new();
         public bool IntegrityValid { get; set; }
         public string Signature { get; set; } = string.Empty;
         public DateTimeOffset GeneratedAt { get; set; } = DateTimeOffset.UtcNow;
@@ -408,7 +408,7 @@ public class QueuedRequest
     /// <summary>
     /// Evidence export
     /// </summary>
-    public class EvidenceExport
+    public class FileExport
     {
         public string ExportId { get; set; } = Guid.NewGuid().ToString();
         public string EvidenceId { get; set; } = string.Empty;
@@ -439,18 +439,6 @@ public class QueuedRequest
 #endregion
 
 
-#region Secuirity
-
-public class UserInfo
-{
-    public string Id { get; set; } = string.Empty;
-    public string Username { get; set; } = string.Empty;
-    public string DisplayName { get; set; } = string.Empty;
-    public List<string> Roles { get; set; } = new();
-}
-
-
-#endregion
 
 // ========================================
 // INTERFACES

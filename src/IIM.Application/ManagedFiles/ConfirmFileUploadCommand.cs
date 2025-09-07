@@ -2,7 +2,7 @@
 using IIM.Shared.Models;
 using Mediator;
 
-namespace IIM.Application.Evidence
+namespace IIM.Application.Files
 {
     /// <summary>
     /// Command to confirm evidence upload completion

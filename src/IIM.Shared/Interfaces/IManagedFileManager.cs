@@ -10,7 +10,7 @@ namespace IIM.Shared.Interfaces
 {
     public interface IManagedFileManager
     {
-        Task<EvidenceExport> ExportFilesAsync(string fileId, string exportPath, CancellationToken cancellationToken = default);
+        Task<FileExport> ExportFilesAsync(string fileId, string exportPath, CancellationToken cancellationToken = default);
         Task<ChainOfCustodyReport> GenerateChainOfCustodyAsync(string fileId, CancellationToken cancellationToken = default);
         Task<List<AuditEvent>> GetAuditLogAsync(string fileId, CancellationToken cancellationToken = default);
         Task<ManagedFile?> GetFilesAsync(string fileId, CancellationToken cancellationToken = default);

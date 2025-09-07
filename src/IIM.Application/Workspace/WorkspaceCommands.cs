@@ -104,11 +104,11 @@ namespace IIM.Application.Case
     }
 
     // ========================================
-    // GET CASE COMMAND
+    // GET Workspace COMMAND
     // ========================================
 
     /// <summary>
-    /// Command to retrieve a case by ID
+    /// Command to retrieve a workspace by ID
     /// </summary>
     public class GetWorkspaceCommand : IRequest<IIM.Shared.Models.Workspace?>
     {
@@ -206,7 +206,7 @@ namespace IIM.Application.Case
     public class UpdateWorkspaceCommand : IRequest<bool>
     {
         [Required]
-        public string CaseId { get; set; } = string.Empty;
+        public string WorkspaceId { get; set; } = string.Empty;
 
         public string? Name { get; set; }
         public string? Description { get; set; }
