@@ -40,9 +40,9 @@ public class PluginContext : IAsyncDisposable
     public required ISecureProcessRunner ProcessRunner { get; init; }
     
     /// <summary>
-    /// Evidence store for chain of custody
+    /// File store for chain of custody
     /// </summary>
-    public required IFileStore FileStore { get; init; }
+    public required IManagedFileStore FileStore { get; init; }
     
     /// <summary>
     /// Information about the current plugin

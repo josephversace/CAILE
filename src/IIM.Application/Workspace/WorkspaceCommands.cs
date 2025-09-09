@@ -44,16 +44,16 @@ namespace IIM.Application.Case
     public class CreateWorkspaceCommandHandler : IRequestHandler<CreateWorkspaceCommand, Workspace>
     {
         private readonly ILogger<CreateWorkspaceCommandHandler> _logger;
-        private readonly IWorkspaceManager _caseManager;
+        private readonly IWorkspaceManager _workspaceManager;
         private readonly IMediator _mediator;
 
         public CreateWorkspaceCommandHandler(
             ILogger<CreateWorkspaceCommandHandler> logger,
-            IWorkspaceManager caseManager,
+            IWorkspaceManager workspaceManager,
             IMediator mediator)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _caseManager = caseManager ?? throw new ArgumentNullException(nameof(caseManager));
+            _workspaceManager = workspaceManager ?? throw new ArgumentNullException(nameof(workspaceManager));
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         }
 
@@ -63,42 +63,42 @@ namespace IIM.Application.Case
                 request.CaseNumber, request.Name);
 
             // Parse case type
-            if (!Enum.TryParse<CaseType>(request.Type, true, out var caseType))
+            if (!Enum.TryParse<WorkspaceType>(request.Type, true, out var caseType))
             {
-                caseType = CaseType.Other;
+                caseType = WorkspaceType.Other;
             }
 
             // Create the case
-            var caseEntity = await _caseManager.CreateWorkspceAsync(
+            var workspaceEntity = await _workspaceManager.CreateWorkspaceAsync(
                 request.Name,
                 request.Description,
                 caseType,
                 cancellationToken);
 
             // Update additional properties
-            await _caseManager.UpdateWorkspaceAsync(caseEntity.Id, c =>
+            await _workspaceManager.UpdateWorkspaceAsync(workspaceEntity.Id, c =>
             {
                 c.CaseNumber = request.CaseNumber;
                 c.Owner = request.Owner;
                 c.TeamMembers = request.TeamMembers ?? new List<string>();
                 c.Classification = request.Classification ?? "Unclassified";
                 c.Metadata = request.Metadata ?? new Dictionary<string, object>();
-                c.Status = CaseStatus.Open;
-                c.Priority = CasePriority.Medium;
+                c.Status = WorkspaceStatus.Open;
+                c.Priority = WorkspacePriority.Medium;
             }, cancellationToken);
 
             // Get updated case
-            var updatedCase = await _caseManager.GetWorkspaceAsync(caseEntity.Id, cancellationToken);
+            var updatedCase = await _workspaceManager.GetWorkspaceAsync(workspaceEntity.Id, cancellationToken);
 
             // Publish notification
             await _mediator.Publish(new WorkspaceCreatedNotification
             {
-                CaseId = updatedCase!.Id,
-                CaseNumber = updatedCase.CaseNumber,
+                WorkspaceId = updatedCase!.Id,
+                WorkspaceNumber = updatedCase.CaseNumber,
                 Timestamp = DateTimeOffset.UtcNow
             }, cancellationToken);
 
-            _logger.LogInformation("Case {CaseId} created successfully", updatedCase.Id);
+            _logger.LogInformation("Workspace {CaseId} created successfully", updatedCase.Id);
             return updatedCase;
         }
     }
@@ -141,63 +141,63 @@ namespace IIM.Application.Case
     public class GetWorkspaceCommandHandler : IRequestHandler<GetWorkspaceCommand, IIM.Shared.Models.Workspace?>
     {
         private readonly ILogger<GetWorkspaceCommandHandler> _logger;
-        private readonly IWorkspaceManager _caseManager;
+        private readonly IWorkspaceManager _workspaceManager;
         private readonly ISessionService _sessionService;
-        private readonly IManagedFileManager _evidenceManager;
+        private readonly IManagedFileManager _fileManager;
 
         public GetWorkspaceCommandHandler(
             ILogger<GetWorkspaceCommandHandler> logger,
-            IWorkspaceManager caseManager,
+            IWorkspaceManager workspaceManager,
             ISessionService sessionService,
-            IManagedFileManager evidenceManager)
+            IManagedFileManager fileManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _caseManager = caseManager ?? throw new ArgumentNullException(nameof(caseManager));
+            _workspaceManager = workspaceManager ?? throw new ArgumentNullException(nameof(workspaceManager));
             _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
-            _evidenceManager = evidenceManager ?? throw new ArgumentNullException(nameof(evidenceManager));
+            _fileManager = fileManager ?? throw new ArgumentNullException(nameof(fileManager));
         }
 
         public async Task<IIM.Shared.Models.Workspace?> Handle(GetWorkspaceCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogDebug("Getting workspace {CaseId}", request.WorkspaceId);
+            _logger.LogDebug("Getting workspace {WorkspaceId}", request.WorkspaceId);
 
-            var caseEntity = await _caseManager.GetWorkspaceAsync(request.WorkspaceId, cancellationToken);
-            if (caseEntity == null)
+            var workspaceEntity = await _workspaceManager.GetWorkspaceAsync(request.WorkspaceId, cancellationToken);
+            if (workspaceEntity == null)
             {
-                _logger.LogWarning("Workspace {CaseId} not found", request.WorkspaceId);
+                _logger.LogWarning("Workspace {WorkspaceId} not found", request.WorkspaceId);
                 return null;
             }
 
             // Include related data if requested
             if (request.IncludeSessions)
             {
-                caseEntity.Sessions = await _sessionService.GetSessionsByCaseAsync(
+                workspaceEntity.Sessions = await _sessionService.GetSessionsByCaseAsync(
                     request.WorkspaceId, cancellationToken);
             }
 
             if (request.IncludeEvidence)
             {
-                caseEntity.Files = await _evidenceManager.GetFilesByWorkspaceAsync(
+                workspaceEntity.Files = await _fileManager.GetFilesByWorkspaceAsync(
                     request.WorkspaceId, cancellationToken);
             }
 
             if (request.IncludeStatistics)
             {
-                caseEntity.Statistics = new Dictionary<string, object>
+                workspaceEntity.Statistics = new Dictionary<string, object>
                 {
-                    ["SessionCount"] = caseEntity.Sessions?.Count ?? 0,
-                    ["EvidenceCount"] = caseEntity.Files?.Count ?? 0,
-                    ["ReportCount"] = caseEntity.Reports?.Count ?? 0,
-                    ["LastActivity"] = caseEntity.UpdatedAt
+                    ["SessionCount"] = workspaceEntity.Sessions?.Count ?? 0,
+                    ["EvidenceCount"] = workspaceEntity.Files?.Count ?? 0,
+                    ["ReportCount"] = workspaceEntity.Reports?.Count ?? 0,
+                    ["LastActivity"] = workspaceEntity.UpdatedAt
                 };
             }
 
-            return caseEntity;
+            return workspaceEntity;
         }
     }
 
     // ========================================
-    // UPDATE CASE COMMAND
+    // UPDATE Workspace COMMAND
     // ========================================
 
     /// <summary>
@@ -224,72 +224,72 @@ namespace IIM.Application.Case
     public class UpdateWorkspaceCommandHandler : IRequestHandler<UpdateWorkspaceCommand, bool>
     {
         private readonly ILogger<UpdateWorkspaceCommandHandler> _logger;
-        private readonly IWorkspaceManager _caseManager;
+        private readonly IWorkspaceManager _workspaceManager;
         private readonly IMediator _mediator;
 
         public UpdateWorkspaceCommandHandler(
             ILogger<UpdateWorkspaceCommandHandler> logger,
-            IWorkspaceManager caseManager,
+            IWorkspaceManager workspaceManager,
             IMediator mediator)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _caseManager = caseManager ?? throw new ArgumentNullException(nameof(caseManager));
+            _workspaceManager = workspaceManager ?? throw new ArgumentNullException(nameof(workspaceManager));
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         }
 
         public async Task<bool> Handle(UpdateWorkspaceCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Updating case {CaseId}", request.CaseId);
+            _logger.LogInformation("Updating case {WorkspaceId}", request.WorkspaceId);
 
-            var result = await _caseManager.UpdateWorkspaceAsync(request.CaseId, caseEntity =>
+            var result = await _workspaceManager.UpdateWorkspaceAsync(request.WorkspaceId, workspaceEntity =>
             {
                 if (!string.IsNullOrEmpty(request.Name))
-                    caseEntity.Title = request.Name;
+                    workspaceEntity.Title = request.Name;
 
                 if (!string.IsNullOrEmpty(request.Description))
-                    caseEntity.Description = request.Description;
+                    workspaceEntity.Description = request.Description;
 
                 if (!string.IsNullOrEmpty(request.Status) &&
-                    Enum.TryParse<CaseStatus>(request.Status, true, out var status))
+                    Enum.TryParse<WorkspaceStatus>(request.Status, true, out var status))
                 {
-                    caseEntity.Status = status;
-                    if (status == CaseStatus.Closed)
+                    workspaceEntity.Status = status;
+                    if (status == WorkspaceStatus.Closed)
                     {
-                        caseEntity.ClosedAt = DateTimeOffset.UtcNow;
+                        workspaceEntity.ClosedAt = DateTimeOffset.UtcNow;
                     }
                 }
 
                 if (!string.IsNullOrEmpty(request.Priority) &&
-                    Enum.TryParse<CasePriority>(request.Priority, true, out var priority))
+                    Enum.TryParse<WorkspacePriority>(request.Priority, true, out var priority))
                 {
-                    caseEntity.Priority = priority;
+                    workspaceEntity.Priority = priority;
                 }
 
                 if (!string.IsNullOrEmpty(request.Owner))
-                    caseEntity.Owner = request.Owner;
+                    workspaceEntity.Owner = request.Owner;
 
                 if (request.TeamMembers != null)
-                    caseEntity.TeamMembers = request.TeamMembers;
+                    workspaceEntity.TeamMembers = request.TeamMembers;
 
                 if (!string.IsNullOrEmpty(request.Classification))
-                    caseEntity.Classification = request.Classification;
+                    workspaceEntity.Classification = request.Classification;
 
                 if (request.Metadata != null)
                 {
                     foreach (var kvp in request.Metadata)
                     {
-                        caseEntity.Metadata[kvp.Key] = kvp.Value;
+                        workspaceEntity.Metadata[kvp.Key] = kvp.Value;
                     }
                 }
 
-                caseEntity.UpdatedAt = DateTimeOffset.UtcNow;
+                workspaceEntity.UpdatedAt = DateTimeOffset.UtcNow;
             }, cancellationToken);
 
             if (result)
             {
                 await _mediator.Publish(new WorkspaceUpdatedNotification
                 {
-                    CaseId = request.CaseId,
+                    WorkspaceId = request.WorkspaceId,
                     Timestamp = DateTimeOffset.UtcNow
                 }, cancellationToken);
             }
@@ -299,7 +299,7 @@ namespace IIM.Application.Case
     }
 
     // ========================================
-    // DELETE CASE COMMAND
+    // DELETE Workspace COMMAND
     // ========================================
 
     /// <summary>
@@ -308,14 +308,14 @@ namespace IIM.Application.Case
     public class DeleteWorkspaceCommand : IRequest<bool>
     {
         [Required]
-        public string CaseId { get; }
+        public string WorkspaceId { get; }
 
         public string? Reason { get; }
         public bool ArchiveOnly { get; }
 
-        public DeleteWorkspaceCommand(string caseId, string? reason = null, bool archiveOnly = true)
+        public DeleteWorkspaceCommand(string workspaceId, string? reason = null, bool archiveOnly = true)
         {
-            CaseId = caseId ?? throw new ArgumentNullException(nameof(caseId));
+            WorkspaceId = workspaceId ?? throw new ArgumentNullException(nameof(workspaceId));
             Reason = reason;
             ArchiveOnly = archiveOnly;
         }
@@ -327,31 +327,31 @@ namespace IIM.Application.Case
     public class DeleteWorkspaceCommandHandler : IRequestHandler<DeleteWorkspaceCommand, bool>
     {
         private readonly ILogger<DeleteWorkspaceCommandHandler> _logger;
-        private readonly IWorkspaceManager _caseManager;
+        private readonly IWorkspaceManager _workspaceManager;
         private readonly IMediator _mediator;
 
         public DeleteWorkspaceCommandHandler(
             ILogger<DeleteWorkspaceCommandHandler> logger,
-            IWorkspaceManager caseManager,
+            IWorkspaceManager workspaceManager,
             IMediator mediator)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _caseManager = caseManager ?? throw new ArgumentNullException(nameof(caseManager));
+            _workspaceManager = workspaceManager ?? throw new ArgumentNullException(nameof(workspaceManager));
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         }
 
         public async Task<bool> Handle(DeleteWorkspaceCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Deleting case {CaseId}. Archive only: {ArchiveOnly}",
-                request.CaseId, request.ArchiveOnly);
+            _logger.LogInformation("Deleting workspace {WorkspaceId}. Archive only: {ArchiveOnly}",
+                request.WorkspaceId, request.ArchiveOnly);
 
             bool result;
             if (request.ArchiveOnly)
             {
                 // Archive by updating status
-                result = await _caseManager.UpdateWorkspaceAsync(request.CaseId, c =>
+                result = await _workspaceManager.UpdateWorkspaceAsync(request.WorkspaceId, c =>
                 {
-                    c.Status = CaseStatus.Archived;
+                    c.Status = WorkspaceStatus.Archived;
                     c.ClosedAt = DateTimeOffset.UtcNow;
                     c.ClosedBy = "System";
                 }, cancellationToken);
@@ -359,21 +359,21 @@ namespace IIM.Application.Case
             else
             {
                 // Soft delete
-                result = await _caseManager.DeleteWorkspaceAsync(request.CaseId, cancellationToken);
+                result = await _workspaceManager.DeleteWorkspaceAsync(request.WorkspaceId, cancellationToken);
             }
 
             if (result)
             {
                 await _mediator.Publish(new WorkspaceDeletedNotification
                 {
-                    WorkspaceId = request.CaseId,
+                    WorkspaceId = request.WorkspaceId,
                     Reason = request.Reason,
                     ArchiveOnly = request.ArchiveOnly,
                     Timestamp = DateTimeOffset.UtcNow
                 }, cancellationToken);
 
-                _logger.LogInformation("Case {CaseId} deleted/archived. Reason: {Reason}",
-                    request.CaseId, request.Reason ?? "Not specified");
+                _logger.LogInformation("Workspace {WorkspaceId} deleted/archived. Reason: {Reason}",
+                    request.WorkspaceId, request.Reason ?? "Not specified");
             }
 
             return result;
@@ -381,7 +381,7 @@ namespace IIM.Application.Case
     }
 
     // ========================================
-    // SEARCH CASES COMMAND
+    // SEARCH Workspaces COMMAND
     // ========================================
 
     /// <summary>
@@ -406,14 +406,14 @@ namespace IIM.Application.Case
     public class SearchWorkspacesCommandHandler : IRequestHandler<SearchWorkspacesCommand, WorkspaceListResponse>
     {
         private readonly ILogger<SearchWorkspacesCommandHandler> _logger;
-        private readonly IWorkspaceManager _caseManager;
+        private readonly IWorkspaceManager _workspaceManager;
 
         public SearchWorkspacesCommandHandler(
             ILogger<SearchWorkspacesCommandHandler> logger,
-            IWorkspaceManager caseManager)
+            IWorkspaceManager workspaceManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _caseManager = caseManager ?? throw new ArgumentNullException(nameof(caseManager));
+            _workspaceManager = workspaceManager ?? throw new ArgumentNullException(nameof(workspaceManager));
         }
 
         public async Task<WorkspaceListResponse> Handle(SearchWorkspacesCommand request, CancellationToken cancellationToken)
@@ -421,7 +421,7 @@ namespace IIM.Application.Case
             _logger.LogDebug("Searching workspaces with term: {SearchTerm}", request.SearchTerm);
 
             // Get all cases (in a real implementation, this would be filtered at the database level)
-            var allCases = await _caseManager.GetUserWorkspacesAsync(null, cancellationToken);
+            var allCases = await _workspaceManager.GetUserWorkspacesAsync(null, cancellationToken);
 
             // Apply filters
             var query = allCases.AsQueryable();
@@ -443,7 +443,7 @@ namespace IIM.Application.Case
             if (request.Statuses?.Any() == true)
             {
                 var statusEnums = request.Statuses
-                    .Select(s => Enum.TryParse<CaseStatus>(s, true, out var status) ? status : (CaseStatus?)null)
+                    .Select(s => Enum.TryParse<WorkspaceStatus>(s, true, out var status) ? status : (WorkspaceStatus?)null)
                     .Where(s => s.HasValue)
                     .Select(s => s!.Value)
                     .ToList();
@@ -497,7 +497,7 @@ namespace IIM.Application.Case
                 Status = c.Status.ToString(),
                 Classification = c.Classification,
                 UpdatedAt = c.UpdatedAt,
-                EvidenceCount = c.Files?.Count ?? 0,
+                FileCount = c.Files?.Count ?? 0,
                 ActiveSessions = c.Sessions?.Count(s => s.Status == InvestigationStatus.Active) ?? 0
             }).ToList();
 
@@ -532,16 +532,16 @@ namespace IIM.Application.Case
     /// </summary>
     public class GetWorkspaceStatisticsCommandHandler : IRequestHandler<GetWorkspaceStatisticsCommand, WorkspaceStatistics>
     {
-        private readonly IWorkspaceManager _caseManager;
+        private readonly IWorkspaceManager _workspaceManager;
         private readonly ISessionService _sessionService;
         private readonly IManagedFileManager _evidenceManager;
 
         public GetWorkspaceStatisticsCommandHandler(
-            IWorkspaceManager caseManager,
+            IWorkspaceManager workspaceManager,
             ISessionService sessionService,
             IManagedFileManager evidenceManager)
         {
-            _caseManager = caseManager ?? throw new ArgumentNullException(nameof(caseManager));
+            _workspaceManager = workspaceManager ?? throw new ArgumentNullException(nameof(workspaceManager));
             _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
             _evidenceManager = evidenceManager ?? throw new ArgumentNullException(nameof(evidenceManager));
         }
@@ -553,8 +553,8 @@ namespace IIM.Application.Case
             if (!string.IsNullOrEmpty(request.WorkspaceId))
             {
                 // Get stats for specific case
-                var caseEntity = await _caseManager.GetWorkspaceAsync(request.WorkspaceId, cancellationToken);
-                if (caseEntity != null)
+                var workspaceEntity = await _workspaceManager.GetWorkspaceAsync(request.WorkspaceId, cancellationToken);
+                if (workspaceEntity != null)
                 {
                     var sessions = await _sessionService.GetSessionsByCaseAsync(request.WorkspaceId, cancellationToken);
                     var evidence = await _evidenceManager.GetFilesByWorkspaceAsync(request.WorkspaceId, cancellationToken);
@@ -563,8 +563,8 @@ namespace IIM.Application.Case
                     stats.TotalFileSize = evidence.Sum(e => e.FileSize);
                     stats.TotalSessions = sessions.Count;
                     stats.ActiveSessions = sessions.Count(s => s.Status == InvestigationStatus.Active);
-                    stats.TotalReports = caseEntity.Reports?.Count ?? 0;
-                    stats.TotalFindings = caseEntity.Findings?.Count ?? 0;
+                    stats.TotalReports = workspaceEntity.Reports?.Count ?? 0;
+                    stats.TotalFindings = workspaceEntity.Findings?.Count ?? 0;
 
                     // Evidence by type
                     stats.FilesByType = evidence
@@ -572,9 +572,9 @@ namespace IIM.Application.Case
                         .ToDictionary(g => g.Key, g => g.Count());
 
                     // Findings by severity
-                    if (caseEntity.Findings?.Any() == true)
+                    if (workspaceEntity.Findings?.Any() == true)
                     {
-                        stats.FilesBySeverity = caseEntity.Findings
+                        stats.FilesBySeverity = workspaceEntity.Findings
                             .GroupBy(f => f.Severity.ToString())
                             .ToDictionary(g => g.Key, g => g.Count());
                     }
@@ -594,30 +594,30 @@ namespace IIM.Application.Case
     }
 
     // ========================================
-    // CASE NOTIFICATIONS
+    // Workspace NOTIFICATIONS
     // ========================================
 
     /// <summary>
-    /// Notification when a case is created
+    /// Notification when a workspace is created
     /// </summary>
     public class WorkspaceCreatedNotification : INotification
     {
-        public string CaseId { get; set; } = string.Empty;
-        public string CaseNumber { get; set; } = string.Empty;
+        public string WorkspaceId { get; set; } = string.Empty;
+        public string WorkspaceNumber { get; set; } = string.Empty;
         public DateTimeOffset Timestamp { get; set; }
     }
 
     /// <summary>
-    /// Notification when a case is updated
+    /// Notification when a workspace is updated
     /// </summary>
     public class WorkspaceUpdatedNotification : INotification
     {
-        public string CaseId { get; set; } = string.Empty;
+        public string WorkspaceId { get; set; } = string.Empty;
         public DateTimeOffset Timestamp { get; set; }
     }
 
     /// <summary>
-    /// Notification when a case is deleted
+    /// Notification when a workspace is deleted
     /// </summary>
     public class WorkspaceDeletedNotification : INotification
     {
@@ -628,11 +628,11 @@ namespace IIM.Application.Case
     }
 
     // ========================================
-    // GET RECENT CASES COMMAND
+    // GET RECENT Workspaces COMMAND
     // ========================================
 
     /// <summary>
-    /// Command to get recent cases
+    /// Command to get recent workspaces
     /// </summary>
     public class GetRecentWorspacesCommand : IRequest<List<Workspace>>
     {
@@ -651,16 +651,16 @@ namespace IIM.Application.Case
     /// </summary>
     public class GetRecentWorkspacesCommandHandler : IRequestHandler<GetRecentWorspacesCommand, List<IIM.Shared.Models.Workspace>>
     {
-        private readonly IWorkspaceManager _caseManager;
+        private readonly IWorkspaceManager _workspaceManager;
 
-        public GetRecentWorkspacesCommandHandler(IWorkspaceManager caseManager)
+        public GetRecentWorkspacesCommandHandler(IWorkspaceManager workspaceManager)
         {
-            _caseManager = caseManager ?? throw new ArgumentNullException(nameof(caseManager));
+            _workspaceManager = workspaceManager ?? throw new ArgumentNullException(nameof(workspaceManager));
         }
 
         public async Task<List<IIM.Shared.Models.Workspace>> Handle(GetRecentWorspacesCommand request, CancellationToken cancellationToken)
         {
-            return await _caseManager.GetRecentWorkspacesAsync(request.Count, cancellationToken);
+            return await _workspaceManager.GetRecentWorkspacesAsync(request.Count, cancellationToken);
         }
     }
 }

@@ -51,12 +51,11 @@ namespace IIM.Infrastructure.Storage
             var file = new ManagedFile
             {
                 Id = evidenceId,
-                CaseNumber = metadata.CaseNumber,
                 OriginalFileName = fileName,
                 StoragePath = storagePath,
                 Metadata = metadata,
                 Status = FileUploadStatus.Pending,
-                Type = DetermineEvidenceType(fileName)
+                Type = DetermineFileType(fileName)
             };
 
             try
@@ -91,22 +90,22 @@ namespace IIM.Infrastructure.Storage
                 });
 
                 // Generate signature
-                file.Signature = GenerateSignature(evidence);
+                file.Signature = GenerateSignature(file);
                 file.Status = FileUploadStatus.Completed;
                 file.IntegrityValid = true;
 
                 // Store
                 lock (_lock)
                 {
-                    _fileStore[fileId] = file;
+                    _fileStore[file.Id] = file;
                 }
 
-                _logger.LogInformation("File ingested successfully: {EvidenceId}", fileId);
+                _logger.LogInformation("File ingested successfully: {FileId}", file.Id);
                 return file;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to ingest evidence");
+                _logger.LogError(ex, "Failed to ingest file");
                 if (File.Exists(storagePath))
                 {
                     File.Delete(storagePath);
@@ -123,7 +122,7 @@ namespace IIM.Infrastructure.Storage
 
         public async Task<ProcessedFile> ProcessfileAsync(string fileId, string processingType, Func<Stream, Task<Stream>> processor, CancellationToken cancellationToken = default)
         {
-            var file = await GetEvidenceAsync(fileId, cancellationToken);
+            var file = await GetFileAsync(fileId, cancellationToken);
             if (file == null)
                 throw new ManagedFileNotFoundException($"File {fileId} not found");
 
@@ -131,10 +130,10 @@ namespace IIM.Infrastructure.Storage
                 throw new IntegrityException($"File {fileId} failed integrity check");
 
             var processedId = Guid.NewGuid().ToString("N");
-            var processedPath = Path.Combine(_config.StorePath, "Processed", $"{processedId}_{Path.GetFileName(evidence.OriginalFileName)}");
+            var processedPath = Path.Combine(_config.StorePath, "Processed", $"{processedId}_{Path.GetFileName(file.OriginalFileName)}");
             Directory.CreateDirectory(Path.GetDirectoryName(processedPath)!);
 
-            using (var inputStream = new FileStream(evidence.StoragePath, FileMode.Open, FileAccess.Read))
+            using (var inputStream = new FileStream(file.StoragePath, FileMode.Open, FileAccess.Read))
             using (var processedStream = await processor(inputStream))
             using (var outputStream = new FileStream(processedPath, FileMode.Create, FileAccess.Write))
             {
@@ -152,18 +151,18 @@ namespace IIM.Infrastructure.Storage
             var processed = new ProcessedFile
             {
                 Id = processedId,
-                OriginalEvidenceId = fileId,
+                OriginalFileId = fileId,
                 ProcessingType = processingType,
                 ProcessedBy = Environment.UserName,
                 ProcessedHash = processedHash,
                 StoragePath = processedPath
             };
 
-            evidence.ProcessedVersions.Add(processed);
-            evidence.Status = EvidenceStatus.Analyzed;
+            file.ProcessedVersions.Add(processed);
+            file.Status = FileUploadStatus.Uploaded;
 
             // Add chain of custody entry
-            evidence.ChainOfCustody.Add(new ChainOfCustodyEntry
+            file.ChainOfCustody.Add(new ChainOfCustodyEntry
             {
                 Action = $"PROCESSED_{processingType.ToUpper()}",
                 Actor = Environment.UserName,
@@ -177,7 +176,7 @@ namespace IIM.Infrastructure.Storage
 
         public async Task<bool> VerifyIntegrityAsync(string fileId, CancellationToken cancellationToken = default)
         {
-            var _file = await GetEvidenceAsync(fileId, cancellationToken);
+            var _file = await GetFileAsync(fileId, cancellationToken);
             if (_file == null)
                 throw new ManagedFileNotFoundException($"File {fileId} not found");
 
@@ -204,48 +203,48 @@ namespace IIM.Infrastructure.Storage
 
         public async Task<ChainOfCustodyReport> GenerateChainOfCustodyAsync(string fileId, CancellationToken cancellationToken = default)
         {
-            var evidence = await GetEvidenceAsync(fileId, cancellationToken);
-            if (evidence == null)
+            var managedFile = await GetFileAsync(fileId, cancellationToken);
+            if (managedFile == null)
                 throw new ManagedFileNotFoundException($"File {fileId} not found");
 
             var integrityValid = await VerifyIntegrityAsync(fileId, cancellationToken);
 
             return new ChainOfCustodyReport
             {
-                EvidenceId = fileId,
-                OriginalFileName = evidence.OriginalFileName,
-                CaseNumber = evidence.CaseNumber,
-                ChainEntries = evidence.ChainOfCustody.OrderBy(e => e.Timestamp).ToList(),
-                ProcessedVersions = evidence.ProcessedVersions,
+                FileId = fileId,
+                OriginalFileName = managedFile.OriginalFileName,
+                CaseNumber = managedFile.CaseNumber,
+                ChainEntries = managedFile.ChainOfCustody.OrderBy(e => e.Timestamp).ToList(),
+                ProcessedVersions = managedFile.ProcessedVersions,
                 IntegrityValid = integrityValid,
-                OriginalHashes = evidence.Hashes,
-                Signature = evidence.Signature,
-                IngestTimestamp = evidence.IngestTimestamp.DateTime
+                OriginalHashes = managedFile.Hashes,
+                Signature = managedFile.Signature,
+                IngestTimestamp = managedFile.IngestTimestamp.DateTime
             };
         }
 
-        public async Task<FileExport> ExportEvidenceAsync(string evidenceId, string exportPath, CancellationToken cancellationToken = default)
+        public async Task<FileExport> ExportEvidenceAsync(string fileId, string exportPath, CancellationToken cancellationToken = default)
         {
-            var evidence = await GetEvidenceAsync(evidenceId, cancellationToken);
-            if (evidence == null)
-                throw new ManagedFileNotFoundException($"Evidence {evidenceId} not found");
+            var managedFile = await GetFileAsync(fileId, cancellationToken);
+            if (managedFile == null)
+                throw new ManagedFileNotFoundException($"Evidence {fileId} not found");
 
             Directory.CreateDirectory(exportPath);
 
             var export = new FileExport
             {
-                FileId = evidenceId,
+                FileId = fileId,
                 ExportPath = exportPath,
                 ExportedBy = Environment.UserName
             };
 
             // Copy original evidence
-            var destPath = Path.Combine(exportPath, evidence.OriginalFileName);
-            File.Copy(evidence.StoragePath, destPath, true);
+            var destPath = Path.Combine(exportPath, managedFile.OriginalFileName);
+            File.Copy(managedFile.StoragePath, destPath, true);
             export.Files.Add(destPath);
 
             // Copy processed versions
-            foreach (var processed in evidence.ProcessedVersions)
+            foreach (var processed in managedFile.ProcessedVersions)
             {
                 if (File.Exists(processed.StoragePath))
                 {
@@ -256,8 +255,8 @@ namespace IIM.Infrastructure.Storage
             }
 
             // Generate chain of custody report
-            var report = await GenerateChainOfCustodyAsync(evidenceId, cancellationToken);
-            var reportPath = Path.Combine(exportPath, $"chain_of_custody_{evidenceId}.json");
+            var report = await GenerateChainOfCustodyAsync(fileId, cancellationToken);
+            var reportPath = Path.Combine(exportPath, $"chain_of_custody_{fileId}.json");
             await File.WriteAllTextAsync(reportPath, System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }), cancellationToken);
             export.Files.Add(reportPath);
 
@@ -393,7 +392,7 @@ namespace IIM.Infrastructure.Storage
             lock (_lock)
             {
                 var evidence = _fileStore.Values
-                    .Where(e => e.CaseId == workspaceId)
+                    .Where(e => e.WorkspaceId == workspaceId)
                     .ToList();
                 return Task.FromResult(evidence);
             }

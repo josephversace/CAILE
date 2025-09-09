@@ -163,12 +163,12 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
             var file = new ManagedFile
             {
                 Id = Guid.NewGuid().ToString(),
-                CaseId = caseId,
+                WorkspaceId = caseId,
                 CaseNumber = caseId, // Assuming caseId is the case number
                 OriginalFileName = attachment.FileName,
                 FileSize = attachment.Size,
                 Type = MapAttachmentTypeToEvidenceType(attachment.Type),
-                Status = EvidenceStatus.Pending,
+                Status = FileUploadStatus.Pending,
                 StoragePath = attachment.StoragePath ?? "",
                 Hash = "", // Will be computed during ingestion
                 IngestTimestamp = DateTimeOffset.UtcNow,
@@ -190,16 +190,16 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         }
     }
 
-    private EvidenceType MapAttachmentTypeToEvidenceType(AttachmentType attachmentType)
+    private FileType MapAttachmentTypeToEvidenceType(AttachmentType attachmentType)
     {
         return attachmentType switch
         {
-            AttachmentType.Image => EvidenceType.Image,
-            AttachmentType.Document => EvidenceType.Document,
-            AttachmentType.Audio => EvidenceType.Audio,
-            AttachmentType.Video => EvidenceType.Video,
-            AttachmentType.Archive => EvidenceType.Archive,
-            _ => EvidenceType.Other
+            AttachmentType.Image => FileType.Image,
+            AttachmentType.Document => FileType.Document,
+            AttachmentType.Audio => FileType.Audio,
+            AttachmentType.Video => FileType.Video,
+            AttachmentType.Archive => FileType.Archive,
+            _ => FileType.Other
         };
     }
 

@@ -83,7 +83,7 @@ public class IIMApiClient : IIIMApiClient
         return await response.Content.ReadFromJsonAsync<ManagedFile>();
     }
 
-    public async Task<InitiateFileUploadResponse> InitiateEvidenceUploadAsync(
+    public async Task<InitiateFileUploadResponse> InitiateFileUploadAsync(
        InitiateFileUploadRequest request,
        CancellationToken cancellationToken = default)
     {
@@ -96,7 +96,7 @@ public class IIMApiClient : IIIMApiClient
         return await response.Content.ReadFromJsonAsync<InitiateFileUploadResponse>();
     }
 
-    public async Task<ConfirmEvidenceUploadResponse> ConfirmEvidenceUploadAsync(
+    public async Task<ConfirmFileUploadResponse> ConfirmEvidenceUploadAsync(
         ConfirmFileUploadRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -221,6 +221,21 @@ public class IIMApiClient : IIIMApiClient
 
 
     Task<Settings> IIIMApiClient.GetSettingsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<InitiateFileUploadResponse> InitiateEvidenceUploadAsync(InitiateFileUploadRequest request, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ConfirmFileUploadResponse> ConfirmFileUploadAsync(ConfirmFileUploadRequest request, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<TestConnectionResult> TestMinIOConnectionAsync(string endpoint)
     {
         throw new NotImplementedException();
     }

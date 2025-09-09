@@ -26,8 +26,8 @@ public interface IExportService
         ExportFormat format,
         ExportOptions? options = null);
 
-    Task<ExportResult> ExportCaseAsync(
-        Case caseEntity,
+    Task<ExportResult> ExportWorkspaceAsync(
+        Workspace workspaceEntity,
         ExportFormat format,
         ExportOptions? options = null);
 

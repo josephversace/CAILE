@@ -26,7 +26,7 @@ namespace IIM.Shared.Interfaces
         InitiateFileUploadRequest request,
         CancellationToken cancellationToken = default);
 
-        Task<ConfirmEvidenceUploadResponse> ConfirmEvidenceUploadAsync(
+        Task<ConfirmFileUploadResponse> ConfirmFileUploadAsync(
         ConfirmFileUploadRequest request,
         CancellationToken cancellationToken = default);
 

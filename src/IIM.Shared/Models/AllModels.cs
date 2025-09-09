@@ -21,9 +21,9 @@ public class Workspace
     public string CaseNumber { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public CaseType Type { get; set; }
-    public CaseStatus Status { get; set; }
-    public CasePriority Priority { get; set; }
+    public WorkspaceType Type { get; set; }
+    public WorkspaceStatus Status { get; set; }
+    public WorkspacePriority Priority { get; set; }
     public string Classification { get; set; } = "Unclassified";
     public string Owner { get; set; } = string.Empty;
     public List<string> TeamMembers { get; set; } = new();
@@ -251,15 +251,15 @@ public class Settings
 
 #endregion
 
-#region Evidence
+#region ManagedFiles
 
 /// <summary>
-/// Digital evidence item with chain of custody
+/// Digital file item with chain of custody
 /// </summary>
 public class ManagedFile
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string CaseId { get; set; } = string.Empty;
+    public string WorkspaceId { get; set; } = string.Empty;
     public string CaseNumber { get; set; } = string.Empty;
     public string OriginalFileName { get; set; } = string.Empty;
     public string FileType { get; set; } = string.Empty; // MIME type

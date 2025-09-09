@@ -14,7 +14,7 @@ namespace IIM.Shared.Interfaces
         Task<InvestigationSession> CreateSessionAsync(CreateSessionRequest request, CancellationToken cancellationToken = default);
 
         Task<InvestigationSession> GetSessionAsync(string sessionId, CancellationToken cancellationToken = default);
-        Task<List<InvestigationSession>> GetSessionsByCaseAsync(string caseId, CancellationToken cancellationToken = default);
+        Task<List<InvestigationSession>> GetSessionsByWorkspaceAsync(string workspaceId, CancellationToken cancellationToken = default);
         Task<bool> DeleteSessionAsync(string sessionId, CancellationToken cancellationToken = default);
 
         // Query Processing
@@ -26,10 +26,10 @@ namespace IIM.Shared.Interfaces
         // Tool Execution
         Task<ToolResult> ExecuteToolAsync(string sessionId, string toolName, Dictionary<string, object> parameters, CancellationToken cancellationToken = default);
 
-        // Case Management
-        Task<List<Models.Case>> GetRecentCasesAsync(int count = 10, CancellationToken cancellationToken = default);
+        // Workspace Management
+        Task<List<Workspace>> GetRecentCasesAsync(int count = 10, CancellationToken cancellationToken = default);
         Task<List<InvestigationSession>> GetCaseSessionsAsync(string caseId, CancellationToken cancellationToken = default);
-        Task<Models.Case> GetCaseAsync(string caseId, CancellationToken cancellationToken = default);
+        Task<Workspace> GetCaseAsync(string workspaceId, CancellationToken cancellationToken = default);
 
         // Response Management
         Task<InvestigationResponse> EnrichResponseForDisplayAsync(InvestigationResponse response, InvestigationMessage? message = null);

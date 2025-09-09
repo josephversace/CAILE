@@ -200,10 +200,10 @@ namespace IIM.Application.Investigation
         /// </summary>
         private async Task<ToolResult> ExecuteEvidenceAnalysisAsync(
             Dictionary<string, object> parameters,
-            string caseId,
+            string workspaceId,
             CancellationToken cancellationToken)
         {
-            var evidence = await _evidenceManager.GetFilesByWorkspaceAsync(caseId, cancellationToken);
+            var managedFile = await _fileManager.GetFilesByWorkspaceAsync(workspaceId, cancellationToken);
 
             return new ToolResult
             {
@@ -212,14 +212,14 @@ namespace IIM.Application.Investigation
                 Status = ToolStatus.Success,
                 Data = new
                 {
-                    TotalEvidence = evidence.Count,
-                    FileTypes = evidence.GroupBy(e => e.FileType)
+                    TotalEvidence = managedFile.Count,
+                    FileTypes = managedFile.GroupBy(e => e.FileType)
                         .Select(g => new { Type = g.Key, Count = g.Count() }),
-                    TotalSize = evidence.Sum(e => e.FileSize),
+                    TotalSize = managedFile.Sum(e => e.FileSize),
                     DateRange = new
                     {
-                        Earliest = evidence.Min(e => e.IngestTimestamp),
-                        Latest = evidence.Max(e => e.IngestTimestamp)
+                        Earliest = managedFile.Min(e => e.IngestTimestamp),
+                        Latest = managedFile.Max(e => e.IngestTimestamp)
                     }
                 },
                 Visualizations = new List<Visualization>
@@ -228,7 +228,7 @@ namespace IIM.Application.Investigation
                     {
                         Type = VisualizationType.Chart,
                         Title = "Evidence Distribution",
-                        Data = evidence.GroupBy(e => e.FileType)
+                        Data = managedFile.GroupBy(e => e.FileType)
                     }
                 }
             };
@@ -238,10 +238,10 @@ namespace IIM.Application.Investigation
         /// Executes timeline generation for a case.
         /// </summary>
         private async Task<ToolResult> ExecuteTimelineGenerationAsync(
-            string caseId,
+            string workspaceId,
             CancellationToken cancellationToken)
         {
-            var events = await _caseManager.GetCaseTimelineAsync(caseId, cancellationToken);
+            var events = await _workspaceManager.GetCaseTimelineAsync(workspaceId, cancellationToken);
 
             return new ToolResult
             {

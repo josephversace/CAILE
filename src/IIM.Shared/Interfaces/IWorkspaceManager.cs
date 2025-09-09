@@ -17,7 +17,7 @@ public interface IWorkspaceManager
     /// <summary>
     /// Creates a new case with the specified details
     /// </summary>
-    Task<Workspace> CreateWorkspceAsync(string name, string description, CaseType type,
+    Task<Workspace> CreateWorkspaceAsync(string name, string description, WorkspaceType type,
         CancellationToken cancellationToken = default);
 
     /// <summary>
