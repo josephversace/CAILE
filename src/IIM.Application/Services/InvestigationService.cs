@@ -227,12 +227,12 @@ namespace IIM.Application.Services
 
         public Task<List<Workspace>> GetRecentWorkspacesAsync(int count = 10, CancellationToken cancellationToken = default)
         {
-            var recentWorkspaces = _cases.Values
+            var recentWorkspaces = _workspaces.Values
                 .OrderByDescending(c => c.UpdatedAt)
                 .Take(count)
                 .ToList();
 
-            return Task.FromResult(recentCases);
+            return Task.FromResult(recentWorkspaces);
         }
 
         public Task<List<InvestigationSession>> GetCaseSessionsAsync(
@@ -355,16 +355,16 @@ namespace IIM.Application.Services
 
         private void InitializeSampleData()
         {
-            var sampleCase = new IIM.Shared.Models.Case
+            var sampleWorkspace = new Workspace
             {
                 Id = "case-001",
                 Title = "Sample Investigation",
                 Description = "Initial test case",
-                Status = CaseStatus.Active,
+                Status = WorkspaceStatus.Active,
                 CreatedAt = DateTimeOffset.UtcNow.AddDays(-7),
                 UpdatedAt = DateTimeOffset.UtcNow,
-                Priority = CasePriority.High,
-                LeadInvestigator = Environment.UserName,
+                Priority = WorkspacePriority.High,
+                Owner = Environment.UserName,
                 TeamMembers = new List<string> { Environment.UserName },
                 Metadata = new Dictionary<string, object>
                 {
@@ -373,7 +373,7 @@ namespace IIM.Application.Services
                 }
             };
 
-            _cases[sampleCase.Id] = sampleCase;
+            _workspaces[sampleWorkspace.Id] = sampleWorkspace;
         }
 
         private List<string> GetDefaultTools()

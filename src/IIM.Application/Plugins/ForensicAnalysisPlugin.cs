@@ -162,7 +162,7 @@ namespace IIM.Application.AI
             [Description("Workspace ID")] string workspaceId,
             [Description("Pattern type to look for")] string patternType)
         {
-            _logger.LogInformation("Analyzing {PatternType} patterns for case {CaseId}", patternType, caseId);
+            _logger.LogInformation("Analyzing {PatternType} patterns for workspace {CaseId}", patternType, workspaceId);
 
             // This would integrate with more sophisticated pattern analysis
             // For now, return mock results

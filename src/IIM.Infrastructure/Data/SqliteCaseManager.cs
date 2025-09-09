@@ -40,7 +40,7 @@ namespace IIM.Core.Services
         /// <summary>
         /// Creates a new case in the SQLite database
         /// </summary>
-        public async Task<Workspace> CreateWorkspaceAsync(string name, string description, CaseType type,
+        public async Task<Workspace> CreateWorkspaceAsync(string name, string description, WorkspaceType type,
             CancellationToken cancellationToken = default)
         {
             var caseEntity = new Workspace
@@ -50,10 +50,10 @@ namespace IIM.Core.Services
                 Title = name,
                 Description = description,
                 Type = type,
-                Status = CaseStatus.Open,
+                Status = WorkspaceStatus.Open,
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow,
-                Priority = CasePriority.Medium,
+                Priority = WorkspacePriority.Medium,
                 Owner = Environment.UserName,
                 TeamMembers = new List<string> { Environment.UserName },
                 Files = new List<ManagedFile>(),
@@ -158,17 +158,17 @@ namespace IIM.Core.Services
         /// <summary>
         /// Updates a case in the SQLite database
         /// </summary>
-        public async Task<bool> UpdateWorkspaceAsync(string caseId, Action<Workspace> updateAction,
+        public async Task<bool> UpdateWorkspaceAsync(string workspaceId, Action<Workspace> updateAction,
             CancellationToken cancellationToken = default)
         {
-            var caseEntity = await GetWorkspaceAsync(caseId, cancellationToken);
-            if (caseEntity == null)
+            var workspaceEntity = await GetWorkspaceAsync(workspaceId, cancellationToken);
+            if (workspaceEntity == null)
             {
                 return false;
             }
 
-            updateAction(caseEntity);
-            caseEntity.UpdatedAt = DateTimeOffset.UtcNow;
+            updateAction(workspaceEntity);
+            workspaceEntity.UpdatedAt = DateTimeOffset.UtcNow;
 
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync(cancellationToken);
@@ -189,17 +189,17 @@ namespace IIM.Core.Services
 
             var rowsAffected = await connection.ExecuteAsync(sql, new
             {
-                caseEntity.Id,
-                caseEntity.Title,
-                caseEntity.Description,
-                Status = caseEntity.Status.ToString(),
-                caseEntity.UpdatedAt,
-                Priority = caseEntity.Priority.ToString(),
-                caseEntity.Owner,
-                TeamMembersJson = JsonSerializer.Serialize(caseEntity.TeamMembers),
-                caseEntity.Classification,
-                AccessControlListJson = JsonSerializer.Serialize(caseEntity.AccessControlList),
-                MetadataJson = JsonSerializer.Serialize(caseEntity.Metadata)
+                workspaceEntity.Id,
+                workspaceEntity.Title,
+                workspaceEntity.Description,
+                Status = workspaceEntity.Status.ToString(),
+                workspaceEntity.UpdatedAt,
+                Priority = workspaceEntity.Priority.ToString(),
+                workspaceEntity.Owner,
+                TeamMembersJson = JsonSerializer.Serialize(workspaceEntity.TeamMembers),
+                workspaceEntity.Classification,
+                AccessControlListJson = JsonSerializer.Serialize(workspaceEntity.AccessControlList),
+                MetadataJson = JsonSerializer.Serialize(workspaceEntity.Metadata)
             });
 
             return rowsAffected > 0;
@@ -350,7 +350,7 @@ namespace IIM.Core.Services
         }
 
         /// <summary>
-        /// Maps a database row to a Case object
+        /// Maps a database row to a workspace object
         /// </summary>
         private Workspace MapRowToWorkspace(dynamic row)
         {
@@ -359,8 +359,8 @@ namespace IIM.Core.Services
                 Id = row.Id,
                 CaseNumber = row.CaseNumber,
                 Title = row.Name,
-                Type = Enum.Parse<CaseType>(row.Type),
-                Status = Enum.Parse<CaseStatus>(row.Status),
+                Type = Enum.Parse<WorkspaceType>(row.Type),
+                Status = Enum.Parse<WorkspaceStatus>(row.Status),
                 Description = row.Description,
                 Owner = row.LeadInvestigator,
                 TeamMembers = string.IsNullOrEmpty(row.TeamMembers)
@@ -368,7 +368,7 @@ namespace IIM.Core.Services
                     : JsonSerializer.Deserialize<List<string>>(row.TeamMembers) ?? new List<string>(),
                 CreatedAt = DateTimeOffset.Parse(row.CreatedAt),
                 UpdatedAt = DateTimeOffset.Parse(row.UpdatedAt),
-                Priority = Enum.Parse<CasePriority>(row.Priority),
+                Priority = Enum.Parse<WorkspacePriority>(row.Priority),
                 Classification = row.Classification,
                 AccessControlList = string.IsNullOrEmpty(row.AccessControlList)
                     ? new List<string>()
@@ -385,7 +385,7 @@ namespace IIM.Core.Services
         }
 
         /// <summary>
-        /// Generates a unique case number
+        /// Generates a unique workspace number
         /// </summary>
         private async Task<string> GenerateWorkspaceNumberAsync()
         {
@@ -404,16 +404,16 @@ namespace IIM.Core.Services
         /// Gets the timeline of events for a case.
         /// This is an extension method to avoid breaking existing IWorkspaceManager implementations.
         /// </summary>
-        /// <param name="caseManager">The case manager instance</param>
-        /// <param name="workspaceId">ID of the case</param>
+        /// <param name="workspaceManager">The workspace manager instance</param>
+        /// <param name="workspaceId">ID of the workspace</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>List of timeline events</returns>
      
         public async Task<List<TimelineEvent>> GetWorkspaceTimelineAsync(string workspaceId, CancellationToken cancellationToken = default)
         {
             // Get the case
-            var caseEntity = await GetWorkspaceAsync(workspaceId, cancellationToken);
-            if (caseEntity == null)
+            var workspaceEntity = await GetWorkspaceAsync(workspaceId, cancellationToken);
+            if (workspaceEntity == null)
             {
                 return new List<TimelineEvent>();
             }
@@ -424,25 +424,25 @@ namespace IIM.Core.Services
 
 
             // Add evidence events if available
-            if (caseEntity.Id != null)
+            if (workspaceEntity.Id != null)
             {
 
             }
 
             // Add session events if available
-            if (caseEntity.Sessions != null)
+            if (workspaceEntity.Sessions != null)
             {
 
             }
 
             // Add case update event
-            if (caseEntity.UpdatedAt > caseEntity.CreatedAt)
+            if (workspaceEntity.UpdatedAt > workspaceEntity.CreatedAt)
             {
 
             }
 
             // Add case closure event if closed
-            if (caseEntity.ClosedAt.HasValue)
+            if (workspaceEntity.ClosedAt.HasValue)
             {
 
             }

@@ -6,9 +6,18 @@ using System.Threading.Tasks;
 
 namespace IIM.Shared.Models
 {
+    public class WorkspaceFolder
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public string Path { get; set; }
 
-        // Base file item model
-        public class FileItem
+    }
+
+    public record FileReference(string Id, string Name, string Path, long Size, string StorageKey);
+    public record FolderReference(string Id, string Name, string Path);
+    // Base file item model
+    public class FileItem
         {
             public string Id { get; set; } // Unique identifier (could be S3 ETag or custom)
             public string Name { get; set; }

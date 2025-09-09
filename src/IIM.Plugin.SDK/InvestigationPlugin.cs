@@ -53,7 +53,7 @@ public abstract class InvestigationPlugin : IInvestigationPlugin
     /// <summary>
     /// Evidence store access
     /// </summary>
-    protected IManagedFileStore Evidence => _context?.EvidenceStore ?? throw new InvalidOperationException("Plugin not initialized");
+    protected IManagedFileStore Evidence => _context?.FileStore ?? throw new InvalidOperationException("Plugin not initialized");
     
     /// <summary>
     /// Initialize the plugin

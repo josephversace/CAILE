@@ -16,9 +16,9 @@ namespace IIM.Desktop.Services
     /// <summary>
     /// Client-side service for handling evidence uploads
     /// </summary>
-    public class EvidenceUploadClient
+    public class FileUploadClient
     {
-        private readonly ILogger<EvidenceUploadClient> _logger;
+        private readonly ILogger<FileUploadClient> _logger;
         private readonly IIIMApiClient _apiClient;
         private readonly HttpClient _httpClient;
 
@@ -28,8 +28,8 @@ namespace IIM.Desktop.Services
         /// <param name="logger">Logger for diagnostics</param>
         /// <param name="apiClient">API client for backend communication</param>
         /// <param name="httpClient">HTTP client for direct MinIO uploads</param>
-        public EvidenceUploadClient(
-            ILogger<EvidenceUploadClient> logger,
+        public FileUploadClient(
+            ILogger<FileUploadClient> logger,
             IIIMApiClient apiClient,
             HttpClient httpClient)
         {
@@ -46,9 +46,9 @@ namespace IIM.Desktop.Services
         /// <param name="progress">Progress reporter for upload status</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Evidence object if successful, null if duplicate</returns>
-        public async Task<Evidence?> UploadEvidenceAsync(
+        public async Task<ManagedFile?> UploadFileAsync(
             string filePath,
-            EvidenceMetadata metadata,
+            FileMetadata metadata,
             IProgress<UploadProgress>? progress = null,
             CancellationToken cancellationToken = default)
         {
@@ -86,7 +86,7 @@ namespace IIM.Desktop.Services
                     Metadata = metadata
                 };
 
-                var initiateResponse = await _apiClient.InitiateEvidenceUploadAsync(
+                var initiateResponse = await _apiClient.InitiateFileUploadAsync(
                     initiateRequest,
                     cancellationToken);
 
@@ -135,7 +135,7 @@ namespace IIM.Desktop.Services
 
                 var confirmRequest = new ConfirmFileUploadRequest
                 {
-                    EvidenceId = initiateResponse.FileId,
+                    FileId = initiateResponse.FileId,
                     ClientHash = fileHash
                 };
 
@@ -155,7 +155,7 @@ namespace IIM.Desktop.Services
                     Percentage = 100
                 });
 
-                // Return the evidence object
+                // Return the file object
                 return new ManagedFile
                 {
                     Id = initiateResponse.FileId,
@@ -168,7 +168,7 @@ namespace IIM.Desktop.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to upload evidence file {FilePath}", filePath);
+                _logger.LogError(ex, "Failed to upload file {FilePath}", filePath);
 
                 progress?.Report(new UploadProgress
                 {

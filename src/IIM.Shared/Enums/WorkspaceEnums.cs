@@ -1,6 +1,6 @@
 ﻿namespace IIM.Shared.Enums;
 
-public enum CaseStatus
+public enum WorkspaceStatus
 {
     Active,
     Open,
@@ -16,7 +16,7 @@ public enum CaseStatus
 
 
 
-public enum CaseType
+public enum WorkspaceType
 {
     Investigation,
     Intelligence,
@@ -37,7 +37,7 @@ public enum CaseType
 
 
 
-public enum CasePriority
+public enum WorkspacePriority
 {
     Low,
     Medium,

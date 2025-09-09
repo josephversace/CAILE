@@ -1,97 +1,79 @@
-﻿using IIM.Infrastructure.Data;
-using IIM.Shared.Interfaces;
-using Minio;
-using Minio.DataModel.Args;
+﻿using IIM.Shared.Interfaces;
 using System;
-using System.Collections.Concurrent;
-using System.IO;
 using System.Threading.Tasks;
 
-namespace IIM.Infrastructure.Storage
+namespace IIM.Application.Services
 {
-  
-    // The Quarantine Service
+    /// <summary>
+    /// Manages the business logic for the file quarantine process.
+    /// This service orchestrates interactions between storage, metadata, and auditing.
+    /// </summary>
     public class QuarantineService
     {
-        private readonly IS3StorageService _s3Client;
-        private readonly IAuditRepository _auditLogger;
-        private readonly EfFileRepositoy _evidenceRepo;
+        private readonly IObjectStorageProvider _storageProvider;
+        private readonly IAuditRepository _auditRepository;
+        private readonly IWorkspaceProvider _workspaceProvider;
 
         private const string QuarantineBucket = "iim-quarantine";
-        private const string EvidenceBucket = "evidence-bucket"; // Replace with your real bucket
+        private const string EvidenceBucket = "iim-evidence"; // Your main, trusted bucket
 
-        public QuarantineService(IS3StorageService s3Client, EfAuditRepository auditLogger, EfEvidenceRepositoy evidenceRepo)
+        public QuarantineService(
+            IObjectStorageProvider storageProvider,
+            IAuditRepository auditRepository,
+            IWorkspaceProvider workspaceProvider)
         {
-            _s3Client = s3Client;
-            _auditLogger = auditLogger;
-            _evidenceRepo = evidenceRepo;
+            _storageProvider = storageProvider;
+            _auditRepository = auditRepository;
+            _workspaceProvider = workspaceProvider;
         }
 
-        // Generate a presigned upload link for quarantine
+        /// <summary>
+        /// Generates a pre-signed URL for a client to upload a file directly to the quarantine area.
+        /// </summary>
         public async Task<string> GenerateUploadLinkAsync(string workspaceId, string originalFileName, string userId)
         {
             var objectKey = $"{workspaceId}/{Guid.NewGuid()}_{originalFileName}";
-            var url = await _s3Client.PresignedPutObjectAsync(
+            var url = await _storageProvider.GetPresignedUploadUrlAsync(
                 QuarantineBucket,
                 objectKey,
-                60 * 30 // 30 min validity
+                TimeSpan.FromMinutes(30)
             );
-            await _auditLogger.AddEventAsync("quarantine.presign", workspaceId, originalFileName, userId, "-", $"key={objectKey}");
+
+            // It is important to audit the generation of the link itself.
+            await _auditRepository.AddEventAsync("quarantine.upload.initiated", workspaceId, originalFileName, userId, "-", $"Generated presigned URL for key: {objectKey}");
+
             return url;
         }
 
-        // Promote a file from quarantine to evidence bucket (copy+delete)
-        public async Task PromoteFromQuarantineAsync(string caseId, string sha256Hash, string originalFileName, string classification, string approverId)
+        /// <summary>
+        /// Promotes a file from quarantine to the main evidence bucket. This involves copying the object
+        /// and then creating a permanent metadata record for it in the workspace.
+        /// </summary>
+        public async Task PromoteFromQuarantineAsync(string sourceObjectKey, string newPath, string newFileName, long fileSize, string approverId)
         {
-            var srcKey = $"{caseId}/{sha256Hash}/{originalFileName}";
-            var destKey = $"{classification}/{caseId}/{sha256Hash}/{originalFileName}";
+            var destObjectKey = $"{newPath}/{Guid.NewGuid()}_{newFileName}";
 
-            // Copy from quarantine to evidence
-            await _s3Client.CopyObjectAsync(new CopyObjectArgs()
-                .WithBucket(EvidenceBucket)
-                .WithObject(destKey)
-                .WithCopySource($"{QuarantineBucket}/{srcKey}"));
+            // 1. Copy the file from the quarantine bucket to the final evidence bucket.
+            await _storageProvider.CopyObjectAsync(QuarantineBucket, sourceObjectKey, EvidenceBucket, destObjectKey);
 
-            // Remove from quarantine
-            await _s3Client.RemoveObjectAsync(QuarantineBucket, srcKey);
+            // 2. Create the official file reference in our database.
+            await _workspaceProvider.CreateFileReferenceAsync(newPath, newFileName, fileSize, destObjectKey);
 
-            // Register evidence
-            await _evidenceRepo.RegisterEvidenceAsync(sha256Hash, caseId, originalFileName, classification);
+            // 3. Delete the original file from quarantine.
+            await _storageProvider.DeleteObjectAsync(QuarantineBucket, sourceObjectKey);
 
-            // Audit
-            await _auditLogger.LogAsync("quarantine.promote", caseId, originalFileName, approverId, sha256Hash);
+            // 4. Log this important event.
+            await _auditRepository.AddEventAsync("quarantine.promote", newPath, newFileName, approverId, "-", $"Promoted from {sourceObjectKey} to {destObjectKey}");
         }
 
-        // Reject a file (delete from quarantine)
-        public async Task RejectAndDeleteFromQuarantineAsync(string caseId, string sha256Hash, string originalFileName, string reviewerId, string reason)
+        /// <summary>
+        /// Rejects a file and deletes it from the quarantine bucket.
+        /// </summary>
+        public async Task RejectFromQuarantineAsync(string objectKey, string reviewerId, string reason)
         {
-            var key = $"{caseId}/{sha256Hash}/{originalFileName}";
-            await _s3Client.RemoveObjectAsync(QuarantineBucket, key);
+            await _storageProvider.DeleteObjectAsync(QuarantineBucket, objectKey);
 
-            await _auditLogger.LogAsync("quarantine.reject", caseId, originalFileName, reviewerId, sha256Hash, reason);
-        }
-
-        // (Optional) Upload a file to quarantine (with deduplication check)
-        public async Task<string> UploadToQuarantineAsync(Stream fileStream, string originalFileName, string caseId, string sha256Hash, string uploaderId)
-        {
-            if (await _evidenceRepo.ExistsByHashAsync(sha256Hash))
-            {
-                await _auditLogger.LogAsync("quarantine.upload.duplicate", caseId, originalFileName, uploaderId, sha256Hash);
-                return "DUPLICATE";
-            }
-
-            var key = $"{caseId}/{sha256Hash}/{originalFileName}";
-            await _s3Client.PutObjectAsync(new PutObjectArgs()
-                .WithBucket(QuarantineBucket)
-                .WithObject(key)
-                .WithStreamData(fileStream)
-                .WithObjectSize(fileStream.Length)
-                .WithContentType("application/octet-stream"));
-
-            await _auditLogger.LogAsync("quarantine.upload", caseId, originalFileName, uploaderId, sha256Hash);
-            return key;
+            await _auditRepository.AddEventAsync("quarantine.reject", "-", objectKey, reviewerId, "-", $"Reason: {reason}");
         }
     }
-
-  
 }

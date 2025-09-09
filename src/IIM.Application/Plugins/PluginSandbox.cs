@@ -71,7 +71,7 @@ public class PluginSandbox : IPluginSandbox
             _loggerFactory.CreateLogger<SandboxedProcessRunner>()
         );
 
-        var evidenceStore = new NamespacedEvidenceStore(
+        var fileStore = new NamespacedEvidenceStore(
             plugin.Id,
             _loggerFactory.CreateLogger<NamespacedEvidenceStore>()
         );
@@ -83,7 +83,7 @@ public class PluginSandbox : IPluginSandbox
             FileSystem = fileSystem,
             HttpClient = httpClient,
             ProcessRunner = processRunner,
-            EvidenceStore = fileStore,
+            FileStore = fileStore,
             PluginInfo = new PluginInfo
             {
                 Id = plugin.Id,

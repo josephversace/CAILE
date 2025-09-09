@@ -14,6 +14,7 @@ namespace IIM.Infrastructure.Data
         public DbSet<ManagedFile> ManagedFiles { get; set; }
         public DbSet<FileMetadata> FileMetadatas { get; set; }
 
+        public DbSet<WorkspaceFolder> Folders { get; set; }
         public DbSet<ChainOfCustodyEntry> CustodyChains { get; set; }
 
     }

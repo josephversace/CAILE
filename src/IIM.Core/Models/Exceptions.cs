@@ -24,8 +24,8 @@ public class IIMException : Exception
 
 public class ManagedFileNotFoundException : IIMException
 {
-    public ManagedFileNotFoundException(string evidenceId)
-        : base($"File with ID {evidenceId} not found", "FILE_NOT_FOUND")
+    public ManagedFileNotFoundException(string fileId)
+        : base($"File with ID {fileId} not found", "FILE_NOT_FOUND")
     {
         Context = new Dictionary<string, object> { ["fileId"] = fileId };
     }
