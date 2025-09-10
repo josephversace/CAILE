@@ -81,8 +81,8 @@ namespace IIM.Application.Services
             session.EnabledTools = GetDefaultTools();
             session.Models = GetDefaultModels();
 
-            _logger.LogInformation("Created investigation session {SessionId} for case {CaseId}",
-                session.Id, request.CaseId);
+            _logger.LogInformation("Created chat session {SessionId} for workspace {WorkspaceId}",
+                session.Id, request.WorkspaceId);
 
             return session;
         }

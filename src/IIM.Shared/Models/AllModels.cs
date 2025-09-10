@@ -463,7 +463,7 @@ public class InvestigationSession
 /// </summary>
 public class CreateSessionRequest
 {
-    public string CaseId { get; set; } = string.Empty;
+    public string WorkspaceId { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string InvestigationType { get; set; } = string.Empty;
     public Dictionary<string, ModelConfiguration>? Models { get; set; }
