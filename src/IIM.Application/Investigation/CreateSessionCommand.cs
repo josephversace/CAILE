@@ -12,10 +12,10 @@ namespace IIM.Application.Investigation
     public class CreateSessionCommand : IRequest<InvestigationSession>
     {
         /// <summary>
-        /// Gets the unique identifier of the case this session belongs to.
+        /// Gets the unique identifier of the workspace this session belongs to.
         /// </summary>
         [Required]
-        public string CaseId { get; }
+        public string WorkspaceId { get; }
 
         /// <summary>
         /// Gets the title or description of the session.
