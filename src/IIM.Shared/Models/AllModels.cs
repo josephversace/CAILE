@@ -253,55 +253,58 @@ public class Settings
 
 #region ManagedFiles
 
-/// <summary>
-/// Digital file item with chain of custody
-/// </summary>
-public class ManagedFile
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string CaseNumber { get; set; } = string.Empty;
-    public string OriginalFileName { get; set; } = string.Empty;
-    public string FileType { get; set; } = string.Empty; // MIME type
-    public long FileSize { get; set; }
-    public FileType Type { get; set; }
-    public FileUploadStatus Status { get; set; }
+    /// <summary>
+    /// Represents a single, managed file within the agnostic storage system.
+    /// This is the central entity for all file operations.
+    /// </summary>
+    public class ManagedFile
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string WorkspaceId { get; set; } = string.Empty;
+        public string Path { get; set; } = string.Empty;
+        public string FileName { get; set; } = string.Empty;
+        public string FileType { get; set; } = string.Empty; // MIME type
+        public long FileSize { get; set; }
 
-    public HashType HashAlgorithm { get; set; } = HashType.SHA256;
-    
-    public string Hash { get; set; } = string.Empty; // Primary hash (e.g., SHA256)
+        /// <summary>
+        /// The primary hash (SHA256) of the file content, used as the storage key for deduplication.
+        /// </summary>
+        public string Hash { get; set; } = string.Empty;
 
-    // Hashing and integrity
-    public Dictionary<string, string> Hashes { get; set; } = new(); // SHA256, MD5, etc.
-    public bool IntegrityValid { get; set; } = true;
-    public string? Signature { get; set; }
+        // Hashing and integrity
+        public Dictionary<string, string> Hashes { get; set; } = new();
+        public bool IntegrityValid { get; set; } = true;
+        public string? Signature { get; set; }
 
-    // Storage
-    public string StoragePath { get; set; } = string.Empty;
+        // Storage
+        public string StoragePath { get; set; } = string.Empty; // Now represents the object key/hash
 
-    // Timestamps
-    public DateTimeOffset IngestTimestamp { get; set; } = DateTimeOffset.UtcNow;
-    public DateTimeOffset? UpdatedAt { get; set; }
+        // Timestamps
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset? UpdatedAt { get; set; }
+        public string CreatedBy { get; set; } = string.Empty;
 
-    // Metadata
-    public FileMetadata Metadata { get; set; } = new();
+        // Domain-specific metadata for forensic context
+        public string? CollectedBy { get; set; }
+        public string? CollectionLocation { get; set; }
+        public DateTimeOffset? CollectionDate { get; set; }
+        public string? Description { get; set; }
 
-    // Chain of custody
-    public List<ChainOfCustodyEntry> ChainOfCustody { get; set; } = new();
+        /// <summary>
+        /// A flexible dictionary to store any other source-specific metadata 
+        /// (e.g., "EmailSubject", "OriginalAuthor").
+        /// </summary>
+        public Dictionary<string, string> CustomMetadata { get; set; } = new();
 
-    // Processing
-    public List<ProcessedFile> ProcessedVersions { get; set; } = new();
+        // Chain of custody
+        public List<ChainOfCustodyEntry> ChainOfCustody { get; set; } = new();
 
-    public string CreatedBy { get; set; } = string.Empty;
+        // Processing
+        public FileProcessingStatus Status { get; set; }
+        public List<ProcessedFile> ProcessedVersions { get; set; } = new();
+    }
 
-    public string CollectedBy { get; set; } = string.Empty;
-
-    public string CollectedLocation { get; set; } = string.Empty;
-
-    public DateTimeOffset CollectionDate { get; set; } = DateTimeOffset.UtcNow;
-}
-
-
+    // Note: The old FileMetadata class is now fully consolidated into ManagedFile.
 
 
 /// <summary>
@@ -338,7 +341,7 @@ public class ProcessedFile
     public Dictionary<string, object>? ProcessingResults { get; set; }
 }
 
-#region Evidence Upload Models
+#region File Upload Models
 
 /// <summary>
 /// Request to initiate upload

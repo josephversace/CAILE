@@ -6,6 +6,51 @@ using System.Threading.Tasks;
 
 namespace IIM.Shared.Models.Core;
 
+    /// <summary>
+    /// Represents a versioned, approvable instance of the entire data governance framework.
+    /// This acts as a container for the collection of rules at a specific point in time.
+    /// </summary>
+    public class GovernanceFramework
+    {
+        public Guid Id { get; set; }
+        /// <summary>
+        /// The version of this framework, typically an integer that increments.
+        /// </summary>
+        public int Version { get; set; }
+
+        /// <summary>
+        /// A description of what changed in this version.
+        /// </summary>
+        public string Description { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Indicates if this framework is the currently active and approved version.
+        /// </summary>
+        public bool IsApproved { get; set; }
+
+        /// <summary>
+        /// The ID of the user who approved this framework.
+        /// </summary>
+        public string? ApprovedBy { get; set; }
+
+        /// <summary>
+        /// The timestamp when this framework was approved.
+        /// </summary>
+        public DateTime? ApprovedAt { get; set; }
+
+        /// <summary>
+        /// The timestamp when this framework version was created.
+        /// </summary>
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Note: The actual rules (Tags, Tiers, etc.) are linked by convention
+        // or could be explicitly linked via collections if needed in the future.
+        // For now, this entity just tracks the state of the overall framework version.
+    }
+
+
+
+
 /// <summary>
 /// Represents the central rule that links a data classification to its required storage tier and policies.
 /// This is the output of the "Asset Classification Workshop" and drives the routing logic.

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using static LLama.Common.ChatHistory;
 
 namespace IIM.Application.Files
 {
@@ -127,7 +128,14 @@ namespace IIM.Application.Files
                 }
 
                 var classification = classifiedNodes.FirstOrDefault()?.Classification ?? "Unclassified";
-                using var stream = await attachment.OpenReadStreamAsync(cancellationToken);
+                using var stream = attachment.Stream;
+
+                if (stream == null || stream.Length == 0)
+                {
+                    _logger.LogWarning("Attachment {FileName} in message {MessageId} has no content.", attachment.FileName, message.Id);
+                    continue;
+                }
+
                 var storageKey = await _storageService.StoreAsync(
                     stream, attachment.FileName, classification, cancellationToken);
 

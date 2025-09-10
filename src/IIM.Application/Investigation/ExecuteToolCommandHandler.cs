@@ -212,15 +212,11 @@ namespace IIM.Application.Investigation
                 Status = ToolStatus.Success,
                 Data = new
                 {
-                    TotalEvidence = managedFile.Count,
+                
                     FileTypes = managedFile.GroupBy(e => e.FileType)
                         .Select(g => new { Type = g.Key, Count = g.Count() }),
                     TotalSize = managedFile.Sum(e => e.FileSize),
-                    DateRange = new
-                    {
-                        Earliest = managedFile.Min(e => e.IngestTimestamp),
-                        Latest = managedFile.Max(e => e.IngestTimestamp)
-                    }
+                   
                 },
                 Visualizations = new List<Visualization>
                 {
