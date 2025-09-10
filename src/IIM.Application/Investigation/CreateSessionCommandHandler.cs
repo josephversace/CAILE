@@ -35,18 +35,18 @@ namespace IIM.Application.Investigation
             CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating session for case {CaseId}: {Title}",
-                request.CaseId, request.Title);
+                request.WorkspaceId, request.Title);
 
             // Verify case exists
-            var caseEntity = await _caseManager.GetWorkspaceAsync(request.CaseId, cancellationToken);
+            var caseEntity = await _caseManager.GetWorkspaceAsync(request.WorkspaceId, cancellationToken);
             if (caseEntity == null)
             {
-                throw new InvalidOperationException($"Case {request.CaseId} not found");
+                throw new InvalidOperationException($"Case {request.WorkspaceId} not found");
             }
 
             // Create session request - use only properties that exist
-            var createRequest = new CreateSessionRequest { CaseId = 
-                request.CaseId, Title = request.Title, InvestigationType = request.InvestigationType };
+            var createRequest = new CreateSessionRequest { WorkspaceId = 
+                request.WorkspaceId, Title = request.Title, InvestigationType = request.InvestigationType };
             // Note: Description, UserId, Metadata don't exist on CreateSessionRequest
 
             // Create session

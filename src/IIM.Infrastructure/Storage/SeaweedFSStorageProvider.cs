@@ -4,15 +4,12 @@ using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace IIM.Infrastructure.Storage
 {
-    /// <summary>
-    /// Implements the IObjectStorageProvider for a SeaweedFS instance using its S3 compatible API.
-    /// This class is a lean adapter, responsible only for generating pre-signed URLs and deleting objects.
-    /// It does not contain business logic like deduplication or bucket creation on startup.
-    /// </summary>
     public class SeaweedFSStorageProvider : IObjectStorageProvider
     {
         private readonly ILogger<SeaweedFSStorageProvider> _logger;
@@ -20,79 +17,95 @@ namespace IIM.Infrastructure.Storage
 
         public SeaweedFSStorageProvider(
             ILogger<SeaweedFSStorageProvider> logger,
-            IOptions<S3StorageConfiguration> configOptions)
+            IOptions<S3StorageConfiguration> config)
         {
             _logger = logger;
-            var config = configOptions.Value;
+            var s3Config = config.Value;
 
-            // Configure the S3 client to connect to the SeaweedFS endpoint.
-            var s3Config = new AmazonS3Config
+            var amazonS3Config = new AmazonS3Config
             {
-                ServiceURL = $"http://{config.Endpoint}",
-                ForcePathStyle = true, // This is crucial for SeaweedFS and other S3 compatibles.
-                UseHttp = !config.UseSSL,
-                SignatureVersion = "4" // V4 is the modern standard and is supported.
+                ServiceURL = $"http://{s3Config.Endpoint}",
+                ForcePathStyle = true,
+                UseHttp = !s3Config.UseSSL,
+                SignatureVersion = "4"
             };
 
-            _s3Client = new AmazonS3Client(config.AccessKey, config.SecretKey, s3Config);
-            _logger.LogInformation("SeaweedFS Storage Provider initialized for endpoint {Endpoint}", config.Endpoint);
+            _s3Client = new AmazonS3Client(
+                s3Config.AccessKey,
+                s3Config.SecretKey,
+                amazonS3Config);
         }
 
-        /// <summary>
-        /// Generates a temporary, pre-signed URL that can be used to upload a file directly to storage.
-        /// </summary>
         public Task<string> GetPresignedUploadUrlAsync(string bucketName, string objectKey, TimeSpan expiry)
         {
-            try
+            var request = new GetPreSignedUrlRequest
             {
-                var request = new GetPreSignedUrlRequest
-                {
-                    BucketName = bucketName,
-                    Key = objectKey,
-                    Verb = HttpVerb.PUT,
-                    Expires = DateTime.UtcNow.Add(expiry)
-                };
-
-                var url = _s3Client.GetPreSignedURL(request);
-                _logger.LogDebug("Generated pre-signed upload URL for {Bucket}/{Key}", bucketName, objectKey);
-                return Task.FromResult(url);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to generate pre-signed upload URL for {Bucket}/{Key}", bucketName, objectKey);
-                throw;
-            }
+                BucketName = bucketName,
+                Key = objectKey,
+                Verb = HttpVerb.PUT,
+                Expires = DateTime.UtcNow.Add(expiry)
+            };
+            var url = _s3Client.GetPreSignedURL(request);
+            return Task.FromResult(url);
         }
 
-        /// <summary>
-        /// Generates a temporary, pre-signed URL that can be used to download a file directly from storage.
-        /// </summary>
         public Task<string> GetPresignedDownloadUrlAsync(string bucketName, string objectKey, TimeSpan expiry)
+        {
+            var request = new GetPreSignedUrlRequest
+            {
+                BucketName = bucketName,
+                Key = objectKey,
+                Verb = HttpVerb.GET,
+                Expires = DateTime.UtcNow.Add(expiry)
+            };
+            var url = _s3Client.GetPreSignedURL(request);
+            return Task.FromResult(url);
+        }
+
+        public async Task PutObjectAsync(string bucketName, string objectKey, Stream data, CancellationToken cancellationToken = default)
         {
             try
             {
-                var request = new GetPreSignedUrlRequest
+                var request = new PutObjectRequest
                 {
                     BucketName = bucketName,
                     Key = objectKey,
-                    Verb = HttpVerb.GET,
-                    Expires = DateTime.UtcNow.Add(expiry)
+                    InputStream = data,
                 };
-
-                var url = _s3Client.GetPreSignedURL(request);
-                _logger.LogDebug("Generated pre-signed download URL for {Bucket}/{Key}", bucketName, objectKey);
-                return Task.FromResult(url);
+                await _s3Client.PutObjectAsync(request, cancellationToken);
+                _logger.LogInformation("Successfully stored object {ObjectKey} in bucket {BucketName}", objectKey, bucketName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to generate pre-signed download URL for {Bucket}/{Key}", bucketName, objectKey);
+                _logger.LogError(ex, "Failed to store object {ObjectKey} in bucket {BucketName}", objectKey, bucketName);
                 throw;
             }
         }
 
-        /// <summary>
-        /// Performs an efficient, server-side copy of an object from one location to another.
-        /// </summary>
+        public async Task<Stream> GetObjectAsync(string bucketName, string objectKey, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var request = new GetObjectRequest
+                {
+                    BucketName = bucketName,
+                    Key = objectKey
+                };
+                var response = await _s3Client.GetObjectAsync(request, cancellationToken);
+                return response.ResponseStream;
+            }
+            catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning("Object not found: {ObjectKey} in bucket {BucketName}", objectKey, bucketName);
+                throw new FileNotFoundException($"Object {objectKey} not found in bucket {bucketName}", ex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to retrieve object {ObjectKey} from bucket {BucketName}", objectKey, bucketName);
+                throw;
+            }
+        }
+
         public async Task CopyObjectAsync(string sourceBucket, string sourceKey, string destBucket, string destKey)
         {
             try
@@ -105,20 +118,16 @@ namespace IIM.Infrastructure.Storage
                     DestinationKey = destKey
                 };
                 await _s3Client.CopyObjectAsync(request);
-                _logger.LogInformation("Copied object from {SourceBucket}/{SourceKey} to {DestBucket}/{DestKey}",
-                    sourceBucket, sourceKey, destBucket, destKey);
+                _logger.LogInformation("Successfully copied {SourceKey} from {SourceBucket} to {DestKey} in {DestBucket}",
+                    sourceKey, sourceBucket, destKey, destBucket);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to copy object from {SourceBucket}/{SourceKey} to {DestBucket}/{DestKey}",
-                    sourceBucket, sourceKey, destBucket, destKey);
+                _logger.LogError(ex, "Failed to copy object from {SourceKey} to {DestKey}", sourceKey, destKey);
                 throw;
             }
         }
 
-        /// <summary>
-        /// Deletes an object from the specified bucket.
-        /// </summary>
         public async Task DeleteObjectAsync(string bucketName, string objectKey)
         {
             try
@@ -128,13 +137,12 @@ namespace IIM.Infrastructure.Storage
                     BucketName = bucketName,
                     Key = objectKey
                 };
-
                 await _s3Client.DeleteObjectAsync(request);
-                _logger.LogInformation("Deleted object {Object} from bucket {Bucket}", objectKey, bucketName);
+                _logger.LogInformation("Successfully deleted object {ObjectKey} from bucket {BucketName}", objectKey, bucketName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete object: {Object} from bucket: {Bucket}", objectKey, bucketName);
+                _logger.LogError(ex, "Failed to delete object {ObjectKey} from bucket {BucketName}", objectKey, bucketName);
                 throw;
             }
         }
