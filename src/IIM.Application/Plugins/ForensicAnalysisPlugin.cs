@@ -110,27 +110,27 @@ namespace IIM.Application.AI
             foreach (var file in fileList)
             {
                 // Add collection event
-                events.Add(new TimelineEvent
-                {
-                    Timestamp = file.IngestTimestamp.DateTime,
-                    Type = "File Collected",
-                    Description = $"Evidence '{file.OriginalFileName}' collected",
-                    EvidenceId = file.Id,
-                    Source = file.Metadata?.CollectionLocation ?? "Unknown"
-                });
+                //events.Add(new TimelineEvent
+                //{
+                //    Timestamp = file.IngestTimestamp.DateTime,
+                //    Type = "File Collected",
+                //    Description = $"Evidence '{file.OriginalFileName}' collected",
+                //    EvidenceId = file.Id,
+                //    Source = file.Metadata?.CollectionLocation ?? "Unknown"
+                //});
 
                 // Add metadata collection date if available
-                if (file.Metadata?.CollectionDate != null)
-                {
-                    events.Add(new TimelineEvent
-                    {
-                        Timestamp = file.Metadata.CollectionDate.DateTime,
-                        Type = "Original Collection",
-                        Description = $"Original collection of '{file.OriginalFileName}'",
-                        EvidenceId = file.Id,
-                        Source = file.Metadata.CollectionLocation ?? "Field"
-                    });
-                }
+                //if (file.Metadata?.CollectionDate != null)
+                //{
+                //    events.Add(new TimelineEvent
+                //    {
+                //        Timestamp = file.Metadata.CollectionDate.DateTime,
+                //        Type = "Original Collection",
+                //        Description = $"Original collection of '{file.OriginalFileName}'",
+                //        EvidenceId = file.Id,
+                //        Source = file.Metadata.CollectionLocation ?? "Field"
+                //    });
+                //}
             }
 
             // Filter by date range if provided

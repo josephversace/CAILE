@@ -164,7 +164,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
             {
                 Id = Guid.NewGuid().ToString(),
                 WorkspaceId = caseId,
-                CaseNumber = caseId, // Assuming caseId is the case number
+            
                 OriginalFileName = attachment.FileName,
                 FileSize = attachment.Size,
                 Type = MapAttachmentTypeToEvidenceType(attachment.Type),

@@ -91,6 +91,32 @@ namespace IIM.Infrastructure.Storage
         }
 
         /// <summary>
+        /// Performs an efficient, server-side copy of an object from one location to another.
+        /// </summary>
+        public async Task CopyObjectAsync(string sourceBucket, string sourceKey, string destBucket, string destKey)
+        {
+            try
+            {
+                var request = new CopyObjectRequest
+                {
+                    SourceBucket = sourceBucket,
+                    SourceKey = sourceKey,
+                    DestinationBucket = destBucket,
+                    DestinationKey = destKey
+                };
+                await _s3Client.CopyObjectAsync(request);
+                _logger.LogInformation("Copied object from {SourceBucket}/{SourceKey} to {DestBucket}/{DestKey}",
+                    sourceBucket, sourceKey, destBucket, destKey);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to copy object from {SourceBucket}/{SourceKey} to {DestBucket}/{DestKey}",
+                    sourceBucket, sourceKey, destBucket, destKey);
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Deletes an object from the specified bucket.
         /// </summary>
         public async Task DeleteObjectAsync(string bucketName, string objectKey)
@@ -114,3 +140,4 @@ namespace IIM.Infrastructure.Storage
         }
     }
 }
+

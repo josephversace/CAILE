@@ -83,7 +83,7 @@ public class PluginSandbox : IPluginSandbox
             FileSystem = fileSystem,
             HttpClient = httpClient,
             ProcessRunner = processRunner,
-            FileStore = fileStore,
+       
             PluginInfo = new PluginInfo
             {
                 Id = plugin.Id,

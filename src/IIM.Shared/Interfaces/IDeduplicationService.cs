@@ -21,9 +21,7 @@ namespace IIM.Shared.Interfaces
             Task<string> ComputeHashAsync(
                 Stream stream,
                 CancellationToken cancellationToken = default);
-        
-
-
+  
         /// <summary>
         /// Check if a hash already exists and return the evidence
         /// </summary>

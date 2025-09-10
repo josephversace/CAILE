@@ -1,42 +1,55 @@
-﻿using IIM.Core.Mediator;
-using IIM.Core.Services;
-using IIM.Shared.Models;
-using IIM.Shared.Enums;
-using Microsoft.Extensions.Logging;
-using System.ComponentModel.DataAnnotations;
-using Mediator;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using IIM.Core.Mediator;
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 
-namespace IIM.Application.Governance;
-
-/// <summary>
-/// Handles the ApproveGovernanceFrameworkCommand, persisting the new framework to the database.
-/// This class will need to be registered with your custom simple mediator.
-/// </summary>
-public class ApproveGovernanceFrameworkCommandHandler :IRequestHandler<ApproveGovernanceFrameworkCommand>
+namespace IIM.Application.Governance
 {
-    private readonly IGovernanceRepository _governanceRepository;
-    private readonly IAuditLogger _auditLogger;
-
-    public ApproveGovernanceFrameworkCommandHandler(IGovernanceRepository governanceRepository, IAuditLogger auditLogger)
+    /// <summary>
+    /// Handles the approval of a specific governance framework version.
+    /// </summary>
+    public class ApproveGovernanceFrameworkCommandHandler : IRequestHandler<ApproveGovernanceFrameworkCommand, Unit>
     {
-        _governanceRepository = governanceRepository;
-        _auditLogger = auditLogger;
-    }
+        private readonly IGovernanceRepository _governanceRepository;
+        private readonly IAuditRepository _auditRepository;
 
-    public async Task Handle(ApproveGovernanceFrameworkCommand command)
-    {
-        // In a real implementation, you would add validation here to ensure the framework is consistent.
-        // For example, ensuring that all Rule IDs link to existing Tags and Tiers.
+        public ApproveGovernanceFrameworkCommandHandler(IGovernanceRepository governanceRepository, IAuditRepository auditRepository)
+        {
+            _governanceRepository = governanceRepository;
+            _auditRepository = auditRepository;
+        }
 
-        await _governanceRepository.SaveGovernanceFrameworkAsync(
-            command.ClassificationTags,
-            command.StorageTiers,
-            command.DataHandlingRules,
-            command.AccessRoles,
-            command.AccessControlRules);
+        public async Task<Unit> Handle(ApproveGovernanceFrameworkCommand request, CancellationToken cancellationToken)
+        {
+            var framework = await _governanceRepository.GetCurrentGovernanceFrameworkAsync(cancellationToken);
+            if (framework == null || framework.Version != request.Version)
+            {
+                // In a real application, you might throw a more specific exception
+                // for better error handling on the client side.
+                throw new InvalidOperationException("The governance framework to be approved does not match the current version.");
+            }
 
-        // Log this critical event to the chain of custody.
-        await _auditLogger.LogAsync("SYSTEM", "Governance Framework Updated", "The global data governance and access control framework has been approved and updated by an administrator.");
+            framework.IsApproved = true;
+            framework.ApprovedBy = request.UserId;
+            framework.ApprovedAt = DateTime.UtcNow;
+
+            await _governanceRepository.UpdateAsync(framework, cancellationToken);
+
+            var auditEvent = new AuditEvent
+            {
+                EventType = "governance.framework.approved",
+                UserId = request.UserId,
+                EntityType = "GovernanceFramework",
+                EntityId = framework.Id.ToString(),
+                Details = $"Framework version {framework.Version} was approved."
+            };
+            await _auditRepository.AddEventAsync(auditEvent, cancellationToken);
+
+            return Unit.Value;
+        }
     }
 }
+

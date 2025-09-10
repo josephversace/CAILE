@@ -39,10 +39,7 @@ public class PluginContext : IAsyncDisposable
     /// </summary>
     public required ISecureProcessRunner ProcessRunner { get; init; }
     
-    /// <summary>
-    /// File store for chain of custody
-    /// </summary>
-    public required IManagedFileStore FileStore { get; init; }
+
     
     /// <summary>
     /// Information about the current plugin
