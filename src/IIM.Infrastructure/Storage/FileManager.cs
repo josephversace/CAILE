@@ -47,8 +47,8 @@ namespace IIM.Infrastructure.Storage
 
             try
             {
-                var hashes = await _deduplicationService.ComputeHashesAsync(stream, cancellationToken);
-                var primaryHash = hashes["SHA256"];
+                var primaryHash = await _deduplicationService.ComputeHashAsync(stream, cancellationToken);
+       
                 virtualFile.StoredFileHash = primaryHash;
 
                 var existingStoredFile = await _workspaceProvider.GetStoredFileByHashAsync(primaryHash, cancellationToken);
@@ -126,7 +126,7 @@ namespace IIM.Infrastructure.Storage
             {
                 Id = Guid.NewGuid(),
                 OriginalVirtualFileId = originalFile.Id,
-                ProcessedVirtualFileId = createdProcessedFile.Id,
+           
                 ProcessingType = processingType,
                 ProcessedAt = DateTimeOffset.UtcNow,
                 ProcessedBy = "System"
@@ -148,10 +148,10 @@ namespace IIM.Infrastructure.Storage
             try
             {
                 using var stream = await _storageProvider.GetObjectAsync(EvidenceBucketName, virtualFile.StoredFileHash, cancellationToken);
-                var currentHashes = await _deduplicationService.ComputeHashesAsync(stream, cancellationToken);
+                var currentHash = await _deduplicationService.ComputeHashAsync(stream, cancellationToken);
 
                 var storedHash = virtualFile.StoredFileHash;
-                var currentHash = currentHashes.GetValueOrDefault("SHA256");
+
 
                 bool isValid = storedHash.Equals(currentHash, StringComparison.OrdinalIgnoreCase);
 

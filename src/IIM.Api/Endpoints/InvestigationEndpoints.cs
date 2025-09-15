@@ -1,4 +1,4 @@
-﻿using IIM.Core.Mediator;
+﻿using IIM.Shared.Mediator;
 using IIM.Shared.Models;
 using IIM.Shared.Enums;
 using Microsoft.AspNetCore.Mvc;

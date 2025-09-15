@@ -10,8 +10,8 @@ namespace IIM.Shared.Models
     /// <summary>
     /// Request for batch case updates
     /// </summary>
-    public record BatchUpdateCasesRequest(
-        List<string> CaseIds,
+    public record BatchUpdateWorkspacesRequest(
+        List<string> WorkspaceIds,
         string? Status,
         string? Priority,
         string? Classification,

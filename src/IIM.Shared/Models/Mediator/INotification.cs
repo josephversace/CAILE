@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace IIM.Core.Mediator
+namespace IIM.Shared.Mediator
 {
 
     #region Interfaces

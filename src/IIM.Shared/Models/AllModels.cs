@@ -214,22 +214,6 @@ public class InitiateFileUploadRequest
     public string? ChunkingStrategy { get; set; } // For deduplication
 }
 
-/// <summary>
-/// Response from upload initiation
-/// Purpose: Provide upload URL or duplicate info
-/// Used by: Upload client to proceed with actual upload
-/// </summary>
-public class InitiateFileUploadResponse
-{
-    public string FileId { get; set; } = string.Empty;
-    public FileUploadStatus Status { get; set; }
-    public string? UploadUrl { get; set; } // Pre-signed URL for MinIO
-    public DateTimeOffset? UploadUrlExpires { get; set; }
-    public string? DuplicateEvidenceId { get; set; }
-    public DuplicateInfo? DuplicateInfo { get; set; }
-    public Dictionary<string, string>? RequiredHeaders { get; set; }
-    public string? UploadToken { get; set; } // For auth
-}
 
 /// <summary>
 /// Information about duplicate evidence

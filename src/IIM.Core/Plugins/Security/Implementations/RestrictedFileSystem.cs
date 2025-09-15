@@ -49,24 +49,6 @@ public class RestrictedFileSystem : ISecureFileSystem
         return Task.FromResult(File.Exists(fullPath));
     }
 
-    public Task<FileMetadata?> GetFileMetadataAsync(string path, CancellationToken cancellationToken = default)
-    {
-        var fullPath = GetSafePath(path);
-        if (!File.Exists(fullPath))
-            return Task.FromResult<FileMetadata?>(null);
-
-        var info = new FileInfo(fullPath);
-        return Task.FromResult<FileMetadata?>(new FileMetadata
-        {
-            FilePath = path,
-            Size = info.Length,
-            CreatedAt = info.CreationTime,
-            ModifiedAt = info.LastWriteTime,
-            Hash = string.Empty,
-            MimeType = "application/octet-stream"
-        });
-    }
-
     public Task<string[]> ListFilesAsync(string directory, string searchPattern = "*", CancellationToken cancellationToken = default)
     {
         var fullPath = GetSafePath(directory);

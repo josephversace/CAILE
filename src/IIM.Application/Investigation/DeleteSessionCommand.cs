@@ -1,4 +1,4 @@
-﻿using IIM.Core.Mediator;
+﻿using IIM.Shared.Mediator;
 using System.ComponentModel.DataAnnotations;
 
 namespace IIM.Application.Investigation

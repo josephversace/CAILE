@@ -1,7 +1,7 @@
 using IIM.Application.Handlers;
 using IIM.Application.Inference;
 using IIM.Application.Services;
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Core.Services;
 using IIM.Infrastructure.Platform;
 using IIM.Shared.Interfaces;

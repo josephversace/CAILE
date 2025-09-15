@@ -41,6 +41,7 @@ namespace IIM.Shared.Models.Core
         public string SourceName { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
+        public double Relevance { get; set; }
     }
 
     /// <summary>

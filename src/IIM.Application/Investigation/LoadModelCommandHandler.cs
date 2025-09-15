@@ -1,6 +1,6 @@
 using IIM.Application.Models;
 using IIM.Core.AI;
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Shared.Enums;
 using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;

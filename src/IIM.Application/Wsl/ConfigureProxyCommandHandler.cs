@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Shared.Interfaces;
 
 namespace IIM.Application.Wsl

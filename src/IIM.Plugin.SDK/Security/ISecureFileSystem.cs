@@ -36,11 +36,7 @@ public interface ISecureFileSystem
     /// </summary>
     Task<bool> FileExistsAsync(string path, CancellationToken cancellationToken = default);
     
-    /// <summary>
-    /// Get file metadata
-    /// </summary>
-    Task<FileMetadata?> GetFileMetadataAsync(string path, CancellationToken cancellationToken = default);
-    
+ 
     /// <summary>
     /// List files in a directory
     /// </summary>

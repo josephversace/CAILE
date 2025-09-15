@@ -1,6 +1,7 @@
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Shared.Models;
-using Mediator;
+using IIM.Shared.Models.Core;
+
 
 namespace IIM.Application.Files
 {

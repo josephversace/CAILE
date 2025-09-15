@@ -49,8 +49,7 @@ namespace IIM.Desktop.Services
                     virtualPath,
                     fileName,
                     fileInfo.Length,
-                    fileHash,
-                    cancellationToken);
+                    fileHash);
 
                 if (initiateResponse.IsDuplicate)
                 {
@@ -72,6 +71,11 @@ namespace IIM.Desktop.Services
                     cancellationToken);
 
                 progress?.Report(new UploadProgress { Status = "Verifying upload...", Percentage = 90 });
+
+                if (string.IsNullOrEmpty(initiateResponse.TransactionId))
+                {
+                    throw new InvalidOperationException("API did not provide a transaction ID for confirmation.");
+                }
 
                 var confirmedFile = await _apiClient.ConfirmFileUploadAsync(initiateResponse.TransactionId, cancellationToken);
 

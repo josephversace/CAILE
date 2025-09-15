@@ -1,5 +1,5 @@
 ﻿using IIM.Application.Case;
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models.Core;
 using Microsoft.AspNetCore.Builder;

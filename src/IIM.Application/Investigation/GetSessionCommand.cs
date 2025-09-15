@@ -1,4 +1,4 @@
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Core.Services;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;

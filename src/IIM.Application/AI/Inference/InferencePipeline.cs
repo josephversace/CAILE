@@ -1,6 +1,6 @@
 using IIM.Core.AI;
 using IIM.Core.Collections; 
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Core.Models;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;

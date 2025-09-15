@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using IIM.Shared.Models;
 
-namespace Mediator
+namespace IIM.Shared.Mediator
 {
     /// <summary>
     /// Interface for commands that should be audited
