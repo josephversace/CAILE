@@ -1,6 +1,5 @@
 ﻿using IIM.Api.Services;
 using IIM.Application.Behaviors;
-using IIM.Application.Behaviours;
 using IIM.Core.Mediator;
 using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Configuration;
@@ -9,7 +8,7 @@ using System.Reflection;
 
 namespace IIM.Api.Extensions
 {
-	public static class ServiceCollectionExtensions
+	public static class ApplicationServiceExtensions
 	{
 		public static IServiceCollection AddApplicationServices(this IServiceCollection services)
 		{

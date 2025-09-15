@@ -23,5 +23,6 @@
   <ItemGroup>
     <ProjectReference Include="../../src/IIM.Core/IIM.Core.csproj" />
     <ProjectReference Include="../../src/IIM.Plugin.SDK/IIM.Plugin.SDK.csproj" />
+    <ProjectReference Include="..\..\src\IIM.Infrastructure\IIM.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

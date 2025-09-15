@@ -8,6 +8,11 @@ public interface IInvestigationPlugin
     string Id { get; }
     string Name { get; }
     string Description { get; }
+
+    string Version { get; }
+
+    bool IsPluginLoaded { get; }
+
     PluginCapabilities Capabilities { get; }
 
     Task InitializeAsync(PluginContext context);

@@ -16,7 +16,6 @@ namespace IIM.Application.AI
     public partial class SemanticKernelOrchestrator : IReasoningService
     {
  
-
         /// <summary>
         /// Executes a single reasoning step in the chain.
         /// </summary>
@@ -33,7 +32,7 @@ namespace IIM.Application.AI
 
             try
             {
-                _logger.LogDebug("Executing step {StepId}: {Name}", step.StepId, step.Name);
+               // _logger.LogDebug("Executing step {StepId}: {Name}", step.StepId, step.Name);
 
                 // Simulate step execution
                 await Task.Delay(100, cancellationToken);
@@ -51,7 +50,7 @@ namespace IIM.Application.AI
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error executing step {StepId}", step.StepId);
+              //  _logger.LogError(ex, "Error executing step {StepId}", step.StepId);
 
                 return new StepResult
                 {

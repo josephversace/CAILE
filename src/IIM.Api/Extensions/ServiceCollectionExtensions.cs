@@ -50,7 +50,7 @@ namespace IIM.Api.Extensions
             
             services.AddCoreServices(configuration, deploymentConfig);
             
-            services.AddApplicationServices(configuration, deploymentConfig);
+            services.AddApplicationServices();
             
             services.AddBackgroundServices(configuration, deploymentConfig);
 
