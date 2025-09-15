@@ -1,21 +1,34 @@
-﻿using IIM.Shared.Models;
+﻿using IIM.Shared.Models.Core;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace IIM.Infrastructure.Data
+namespace IIM.Infrastructure.Data;
+
+public class FileDbContext : DbContext
 {
-    public class FileDbContext : DbContext
+    public FileDbContext(DbContextOptions<FileDbContext> options) : base(options) { }
+
+    // Remove the old DbSet<ManagedFile>
+    // public DbSet<ManagedFile> Files { get; set; }
+
+    // Add the new DbSets for our corrected architecture
+    public DbSet<StoredFile> StoredFiles { get; set; }
+    public DbSet<VirtualFile> VirtualFiles { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        public FileDbContext(DbContextOptions<FileDbContext> options) : base(options) { }
+        base.OnModelCreating(modelBuilder);
 
-        // Example audit entity:
-        public DbSet<ManagedFile> ManagedFiles { get; set; }
-        public DbSet<FileMetadata> FileMetadatas { get; set; }
+        // Configure the relationship between VirtualFile and StoredFile
+        modelBuilder.Entity<VirtualFile>()
+            .HasOne(vf => vf.StoredFile)
+            .WithMany(sf => sf.VirtualFiles)
+            .HasForeignKey(vf => vf.StoredFileHash);
 
-        public DbSet<WorkspaceFolder> Folders { get; set; }
-        public DbSet<ChainOfCustodyEntry> CustodyChains { get; set; }
-
+        // Configure the many-to-many relationship between StoredFile and ClassificationTag
+        // EF Core will automatically create a join table called "ClassificationTagStoredFile"
+        modelBuilder.Entity<StoredFile>()
+            .HasMany(sf => sf.ClassificationTags)
+            .WithMany(); // If ClassificationTag does not need a navigation property back to StoredFile.
+                         // If it does, you would add `WithMany(ct => ct.StoredFiles)`
     }
 }
