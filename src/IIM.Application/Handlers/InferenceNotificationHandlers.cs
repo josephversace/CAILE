@@ -1,5 +1,5 @@
 
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Core.Services;
 
 using Microsoft.Extensions.Logging;

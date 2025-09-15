@@ -1,6 +1,6 @@
 ﻿using IIM.Api.Services;
 using IIM.Application.Behaviors;
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,7 +25,7 @@ namespace IIM.Api.Extensions
 		public static IServiceCollection AddBackgroundServices(this IServiceCollection services, IConfiguration configuration)
 		{
 			// Background service for monitoring evidence integrity
-			services.AddHostedService<EvidenceIntegrityMonitor>();
+			services.AddHostedService<FileIntegrityMonitor>();
 
 			// Add other background services here...
 

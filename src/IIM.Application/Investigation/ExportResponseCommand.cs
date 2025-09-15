@@ -1,4 +1,4 @@
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 
 using IIM.Shared.Enums;
 using IIM.Shared.Models;

@@ -5,7 +5,7 @@ using IIM.Application.Investigation;
 using IIM.Core.AI;
 using IIM.Core.Configuration;
 
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Core.Services;
 using IIM.Core.Templates;
 using IIM.Infrastructure.AI.DirectML;

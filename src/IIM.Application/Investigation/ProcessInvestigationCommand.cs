@@ -1,5 +1,5 @@
 // File: IIM.Application/Commands/Investigation/ProcessInvestigationCommand.cs
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Shared.Enums;
 using IIM.Shared.Models;
 using System.ComponentModel.DataAnnotations;
@@ -17,7 +17,7 @@ namespace IIM.Application.Investigation
         /// Property setter needed for model binding from HTTP POST.
         /// </summary>
         [Required]
-        public string SessionId { get; set; } = string.Empty;
+        public Guid SessionId { get; set; }
 
         /// <summary>
         /// Gets or sets the query text to process.
@@ -48,7 +48,8 @@ namespace IIM.Application.Investigation
         /// <param name="query">Query text to process</param>
         public ProcessInvestigationCommand(string sessionId, string query)
         {
-            SessionId = sessionId ?? throw new ArgumentNullException(nameof(sessionId));
+            var parsed = Guid.TryParse(sessionId, out var guid);
+            SessionId = guid;
             Query = query ?? throw new ArgumentNullException(nameof(query));
         }
     }

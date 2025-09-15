@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IIM.Shared.Mediator;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -48,7 +49,29 @@ namespace IIM.Shared.Models.Core;
         // For now, this entity just tracks the state of the overall framework version.
     }
 
+public record ApproveGovernanceFrameworkCommand : ICommand
+{
+    /// <summary>
+    /// The new version number for this framework.
+    /// </summary>
+    public int Version { get; init; }
 
+    /// <summary>
+    /// The ID of the user approving this framework.
+    /// </summary>
+    public string UserId { get; init; } = string.Empty;
+
+    /// <summary>
+    /// A description for this new version of the framework.
+    /// </summary>
+    public string Description { get; init; } = "New framework version.";
+
+    public IEnumerable<ClassificationTag> ClassificationTags { get; init; } = new List<ClassificationTag>();
+    public IEnumerable<StorageTier> StorageTiers { get; init; } = new List<StorageTier>();
+    public IEnumerable<DataHandlingRule> DataHandlingRules { get; init; } = new List<DataHandlingRule>();
+    public IEnumerable<AccessRole> AccessRoles { get; init; } = new List<AccessRole>();
+    public IEnumerable<AccessControlRule> AccessControlRules { get; init; } = new List<AccessControlRule>();
+}
 
 
 /// <summary>

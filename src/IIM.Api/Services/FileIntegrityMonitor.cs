@@ -5,15 +5,15 @@ using Microsoft.Extensions.Logging;
 
 namespace IIM.Api.Services
 {
-    public class EvidenceIntegrityMonitor : BackgroundService
+    public class FileIntegrityMonitor : BackgroundService
     {
         private readonly IManagedFileManager _fileManager;
-        private readonly ILogger<EvidenceIntegrityMonitor> _logger;
+        private readonly ILogger<FileIntegrityMonitor> _logger;
         private readonly TimeSpan _checkInterval = TimeSpan.FromHours(6);
 
-        public EvidenceIntegrityMonitor(
+        public FileIntegrityMonitor(
             IManagedFileManager fileManager,
-            ILogger<EvidenceIntegrityMonitor> logger)
+            ILogger<FileIntegrityMonitor> logger)
         {
             _fileManager = fileManager;
             _logger = logger;
@@ -29,23 +29,23 @@ namespace IIM.Api.Services
 
                     // In production, get list of evidence IDs from database
                     // For now, this is a placeholder
-                    var evidenceIds = new List<string>();
+                    var fileIds = new List<string>();
 
-                    foreach (var evidenceId in evidenceIds)
+                    foreach (var fileId in fileIds)
                     {
                         try
                         {
-                            var isValid = await _fileManager.VerifyIntegrityAsync(evidenceId, stoppingToken);
+                            //var isValid = await _fileManager.VerifyIntegrityAsync(fileId, stoppingToken);
 
-                            if (!isValid)
-                            {
-                                _logger.LogError("Integrity check failed for evidence {EvidenceId}", evidenceId);
-                                // Send alert to administrators
-                            }
+                            //if (!isValid)
+                            //{
+                            //    _logger.LogError("Integrity check failed for evidence {EvidenceId}", evidenceId);
+                            //    // Send alert to administrators
+                            //}
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, "Error checking evidence {EvidenceId}", evidenceId);
+                            _logger.LogError(ex, "Error checking file {EvidenceId}", fileId);
                         }
                     }
 

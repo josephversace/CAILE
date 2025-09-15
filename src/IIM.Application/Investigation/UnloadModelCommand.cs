@@ -1,4 +1,4 @@
-﻿using IIM.Core.Mediator;
+﻿using IIM.Shared.Mediator;
 
 /// <summary>
 /// Command to unload a model from memory

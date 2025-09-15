@@ -80,5 +80,10 @@ namespace IIM.Application.Services
             _logger.LogInformation("Adding message to session {SessionId}", sessionId);
             return _sessionService.AddMessageAsync(sessionId, message, cancellationToken);
         }
+
+        Task<IEnumerable<InvestigationSession>> IInvestigationService.GetSessionsByWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -60,7 +60,7 @@ namespace IIM.Application.AI.SemanticKernel
             session.UpdatedAt = DateTimeOffset.UtcNow;
 
             // Save the updated session state
-            await _sessionService.UpdateSessionAsync(session, cancellationToken);
+        //    await _sessionService.UpdateSessionAsync(session, cancellationToken);
 
             _logger.LogInformation("Finished processing message for session {SessionId}", sessionId);
         }

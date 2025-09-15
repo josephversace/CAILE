@@ -1,4 +1,4 @@
-﻿using IIM.Core.Mediator;
+﻿using IIM.Shared.Mediator;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

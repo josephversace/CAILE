@@ -1,6 +1,6 @@
 ﻿
 using IIM.Application.Wsl;
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Infrastructure.Platform;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;

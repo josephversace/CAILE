@@ -1,4 +1,4 @@
-﻿using IIM.Core.Mediator;
+﻿using IIM.Shared.Mediator;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using static LLama.Common.ChatHistory;
+using IIM.Shared.Models.Core;
 
 namespace IIM.Application.Files
 {

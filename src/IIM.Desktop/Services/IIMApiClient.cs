@@ -22,31 +22,31 @@ namespace IIM.Desktop.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<Workspace>> GetWorkspacesAsync()
+        public async Task<List<Workspace>> GetWorkspacesAsync(CancellationToken ct)
         {
             // Assuming an endpoint like GET /api/workspaces
             return await _httpClient.GetFromJsonAsync<List<Workspace>>("api/workspaces");
         }
 
-        public async Task<Workspace> GetWorkspaceAsync(Guid workspaceId)
+        public async Task<Workspace> GetWorkspaceAsync(Guid workspaceId, CancellationToken ct)
         {
             // Assuming an endpoint like GET /api/workspaces/{id}
             return await _httpClient.GetFromJsonAsync<Workspace>($"api/workspaces/{workspaceId}");
         }
 
-        public async Task<List<VirtualFile>> GetFilesAsync(Guid workspaceId)
+        public async Task<List<VirtualFile>> GetFilesAsync(Guid workspaceId, CancellationToken ct)
         {
             // Assuming an endpoint like GET /api/workspaces/{id}/files
             return await _httpClient.GetFromJsonAsync<List<VirtualFile>>($"api/workspaces/{workspaceId}/files");
         }
 
-        public async Task<VirtualFile> GetFileAsync(Guid fileId)
+        public async Task<VirtualFile> GetFileAsync(Guid fileId, CancellationToken ct)
         {
             // Assuming an endpoint like GET /api/files/{id}
             return await _httpClient.GetFromJsonAsync<VirtualFile>($"api/files/{fileId}");
         }
 
-        public async Task<string> InitiateFileUploadAsync(Guid workspaceId, string fileName, string path, long fileSize, string fileHash)
+        public async Task<InitiateFileUploadResponse> InitiateFileUploadAsync(Guid workspaceId, string fileName, string path, long fileSize, string fileHash, CancellationToken ct)
         {
             var request = new
             {
@@ -54,15 +54,21 @@ namespace IIM.Desktop.Services
                 FileName = fileName,
                 Path = path,
                 FileSize = fileSize,
-                FileHash = fileHash
+                FileHash = fileHash,
+                CancellationToken = ct
             };
 
             // Assuming an endpoint like POST /api/files/initiate-upload
             var response = await _httpClient.PostAsJsonAsync("api/files/initiate-upload", request);
             response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<UploadInitiationResponse>();
-            return result?.UploadUrl ?? string.Empty;
+            var result = await response.Content.ReadFromJsonAsync<InitiateFileUploadResponse>();
+            return result;
+        }
+
+        public Task<VirtualFile?> ConfirmFileUploadAsync(string transactionId, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
         }
     }
 

@@ -1,10 +1,11 @@
 using IIM.Core.Configuration;
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Core.Services;
 using IIM.Core.Templates;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
+using IIM.Shared.Models.Core;
 
 namespace IIM.Application.Investigation
 {

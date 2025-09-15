@@ -6,6 +6,14 @@ namespace IIM.Shared.Models.Core
 {
     // These models are used as Data Transfer Objects (DTOs) for API endpoints.
 
+    public class InitiateFileUploadResponse
+    {
+        public bool IsDuplicate { get; set; }
+        public string? TransactionId { get; set; } // A unique ID for this upload transaction
+        public string? UploadUrl { get; set; }
+        public VirtualFile? VirtualFile { get; set; } // The created VirtualFile if it's a duplicate
+    }
+
     public class CreateWorkspaceRequest
     {
         public string Name { get; set; } = string.Empty;

@@ -1,8 +1,3 @@
-// ============================================
-// File: src/IIM.Core/Mediator/IMediator.cs
-// Custom lightweight mediator implementation
-// ============================================
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,11 +5,10 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using IIM.Shared.Models;
-using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace IIM.Core.Mediator
+namespace IIM.Shared.Mediator
 {
     /// <summary>
     /// Marker interface for requests that return a response

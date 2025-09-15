@@ -8,6 +8,7 @@ using IIM.Core.Models;
 using IIM.Shared.Enums;
 using Microsoft.Extensions.Logging;
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models.Core;
 
 namespace IIM.Application.Investigation
 {

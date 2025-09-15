@@ -1,6 +1,6 @@
 
 using IIM.Core.AI;
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Core.Services;
 using IIM.Shared.Enums;
 using Microsoft.Extensions.Logging;
@@ -68,13 +68,13 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
             // Note: SessionId doesn't exist on InvestigationMessage
         };
 
-        await _sessionService.AddMessageAsync(request.SessionId, userMessage, cancellationToken);
+        //await _sessionService.AddMessageAsync(request.SessionId, userMessage, cancellationToken);
 
-        // Process attachments - adapt to actual Attachment model
-        if (query.Attachments?.Any() == true)
-        {
-            await ProcessAttachmentsAsync(session.WorkspaceId, query.Attachments, cancellationToken);
-        }
+        //// Process attachments - adapt to actual Attachment model
+        //if (query.Attachments?.Any() == true)
+        //{
+        //    await ProcessAttachmentsAsync(session.WorkspaceId, query.Attachments, cancellationToken);
+        //}
 
         // Use reasoning service
         var reasoningResult = await _reasoningService.ProcessQueryAsync(
@@ -111,7 +111,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         {
             var ragResponse = await _inferenceService.QueryDocumentsAsync(
                 query.Text,
-                session.WorkspaceId,
+                session.WorkspaceId.ToString(),
                 cancellationToken);
 
             // Map to actual Citation structure (no Index property)
@@ -120,9 +120,9 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
             {
                 citations.Add(new Citation
                 {
-                    SourceId = Guid.NewGuid().ToString(),
-                    SourceType = "Document",
-                    Text = chunk.ToString() ?? "",
+                    Id = Guid.NewGuid(),
+                    SourceName = "Document",
+                    Content = chunk.ToString() ?? "",
                     Relevance = 0.85
                 });
             }
@@ -130,11 +130,11 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         }
 
         // Get related evidence
-        response.RelatedFiles = await GetRelatedFilesAsync(
-            session.WorkspaceId,
-            query.Text,
-            5,
-            cancellationToken);
+        //response.RelatedFiles = await GetRelatedFilesAsync(
+        //    session.WorkspaceId,
+        //    query.Text,
+        //    5,
+        //    cancellationToken);
 
         // Persist assistant message
         var assistantMessage = new InvestigationMessage
@@ -147,7 +147,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
             ModelUsed = reasoningResult.RecommendedModel ?? "default"
         };
 
-        await _sessionService.AddMessageAsync(request.SessionId, assistantMessage, cancellationToken);
+      //  await _sessionService.AddMessageAsync(request.SessionId, assistantMessage, cancellationToken);
 
         return response;
     }
@@ -197,13 +197,13 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         }
     }
 
-    private async Task<List<VirtualFile>> GetRelatedFilesAsync(
-        string caseId,
-        string queryText,
-        int maxResults,
-        CancellationToken cancellationToken)
-    {
-        var evidence = await _fileManager.(caseId, cancellationToken);
-        return evidence.Take(maxResults).ToList();
-    }
+    //private async Task<List<VirtualFile>> GetRelatedFilesAsync(
+    //    Guid workspaceId,
+    //    string queryText,
+    //    int maxResults,
+    //    CancellationToken cancellationToken)
+    //{
+    //    var evidence = await _fileManager.(caseId, cancellationToken);
+    //    return evidence.Take(maxResults).ToList();
+    //}
 }

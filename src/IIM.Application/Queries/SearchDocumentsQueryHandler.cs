@@ -1,5 +1,5 @@
 
-using IIM.Core.Mediator;
+using IIM.Shared.Mediator;
 using IIM.Core.Models;
 using IIM.Core.Services;
 
