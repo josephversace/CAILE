@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace IIM.Shared.Interfaces
 {
     /// <summary>
-    /// Service interface for managing evidence uploads with MinIO
+    /// Service interface for managing file uploads
     /// </summary>
     public interface IManagedFileUploadService
     {

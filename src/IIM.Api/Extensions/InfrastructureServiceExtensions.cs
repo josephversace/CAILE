@@ -1,98 +1,44 @@
-﻿using IIM.Api.Configuration;
-using IIM.Core.Services;
-using IIM.Infrastructure.Embeddings;
-using IIM.Infrastructure.Platform;
+﻿using IIM.Application.Services;
+using IIM.Infrastructure.Data;
 using IIM.Infrastructure.Storage;
-using IIM.Infrastructure.VectorStore;
 using IIM.Shared.Interfaces;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace IIM.Api.Extensions
 {
     public static class InfrastructureServiceExtensions
     {
-        public static IServiceCollection AddInfrastructureServices(
-            this IServiceCollection services,
-            IConfiguration configuration,
-            DeploymentConfiguration deployment)
+        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
-            // ========================================
-            // Platform Services (Singleton)
-            // ========================================
+            // Register Core Infrastructure Services
+            services.AddSingleton<IDeduplicationService, DeduplicationService>();
 
-            // WSL Management (Windows only, Singleton)
-            if (deployment.Mode != DeploymentMode.Client && OperatingSystem.IsWindows())
-            {
-                services.AddSingleton<IWslManager, WslManager>();
-                services.AddSingleton<IApplianceServiceOrchestrator, WslServiceOrchestrator>();
-            }
-            else if (OperatingSystem.IsLinux())
-            {  
-            
-            }
+            // Register Storage Providers based on the new abstractions
+            // This reads the S3Storage section from your appsettings.json
+            services.AddSingleton(sp =>
+                configuration.GetSection("S3Storage").Get<S3StorageConfiguration>() ?? new S3StorageConfiguration());
 
-            // Storage Configuration (Singleton - doesn't change)
-             services.AddSingleton<IStorageConfiguration, StorageConfiguration>(sp =>
-                {
-                    var basePath = configuration["Storage:BasePath"] ??
-                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IIM");
+            // This is our single, agnostic storage provider
+            services.AddSingleton<IObjectStorageProvider, SeaweedFSStorageProvider>();
 
-                    var config = new StorageConfiguration { BasePath = basePath };
+            // Register Repositories (Data Access Layer)
+            services.AddScoped<IAuditRepository, EfAuditRepository>();
+            services.AddScoped<IWorkspaceProvider, PostgresWorkspaceProvider>();
+            services.AddScoped<IGovernanceRepository, EfGovernanceRepository>();
+           /// services.AddScoped<IWorkspaceManager, EfWorkspaceManager>(); // Assuming you have an EF implementation
+           // services.AddScoped<ISessionRepository, EfSessionRepository>(); // Assuming you have an EF implementation for sessions
 
-                    if (deployment.Mode != DeploymentMode.Client)
-                    {
-                        config.EnsureDirectoriesExist();
-                    }
+            // Register High-Level Managers/Services
+            // IManagedFileManager is the primary orchestrator for file operations.
+            services.AddScoped<IManagedFileManager, FileManager>();
 
-                    return config;
-                });
-
-            // ========================================
-            // Storage Services (Scoped for transaction support)
-            // ========================================
-
-            // Deduplication Service (Scoped - uses DB context)
-            services.AddScoped<IDeduplicationService, DeduplicationService>();
-
-            // S3 Object Storage (Scoped - transaction boundary)
-            services.AddScoped<IS3StorageService>(sp =>
-            {
-                var logger = sp.GetRequiredService<ILogger<SeaweedFSStorageService>>();
-                var config = sp.GetRequiredService<IOptions<S3StorageConfiguration>>();
-                var deduplicationService = sp.GetRequiredService<IDeduplicationService>();
-                return new SeaweedFSStorageService(logger, config, deduplicationService);
-            });
-
-            // ========================================
-            // AI Infrastructure (Mixed lifetimes)
-            // ========================================
-
-            // Vector Store (Singleton for connection pooling)
-            services.AddSingleton<IQdrantService>(sp =>
-            {
-                var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
-                var logger = sp.GetRequiredService<ILogger<QdrantService>>();
-                var useInMemory = configuration.GetValue<bool>("Development:UseInMemoryQdrant", false);
-
-                if (useInMemory && deployment.IsStandalone)
-                {
-                    var storageConfig = sp.GetRequiredService<StorageConfiguration>();
-                    var inMemoryLogger = sp.GetRequiredService<ILogger<InMemoryQdrantService>>();
-                    return new InMemoryQdrantService(inMemoryLogger, storageConfig);
-                }
-
-                return new QdrantService(httpFactory, logger);
-            });
-
-            // Embedding Service (Singleton for performance)
-            services.AddSingleton<IEmbeddingService>(sp =>
-            {
-                var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
-                var logger = sp.GetRequiredService<ILogger<RemoteEmbeddingService>>();
-                return new RemoteEmbeddingService(httpFactory, logger);
-            });
+            // Register Application Services
+            services.AddScoped<QuarantineService>();
+            services.AddScoped<VirtualFileSystemService>();
 
             return services;
         }
     }
 }
+

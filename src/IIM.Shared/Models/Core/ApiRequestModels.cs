@@ -11,6 +11,8 @@ namespace IIM.Shared.Models.Core
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public WorkspaceType Type { get; set; }
+
+        public string? OwnerId { get; set; }
     }
 
     public class SearchWorkspacesRequest

@@ -1,21 +1,18 @@
 ﻿using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
-using IIM.Shared.Models;
 using IIM.Shared.Models.Core;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace IIM.Infrastructure.Storage
 {
     /// <summary>
-    /// A transitional implementation of IManagedFileManager.
-    /// This class orchestrates file operations by delegating work to specialized providers.
-    /// Its role is to bridge legacy application logic with the new agnostic data architecture.
+    /// Orchestrates the lifecycle of files, delegating storage and metadata operations to specialized providers.
+    /// This class implements the core business logic for file ingestion, processing, and integrity verification.
     /// </summary>
     public class FileManager : IManagedFileManager
     {
@@ -23,70 +20,69 @@ namespace IIM.Infrastructure.Storage
         private readonly IWorkspaceProvider _workspaceProvider;
         private readonly IObjectStorageProvider _storageProvider;
         private readonly IDeduplicationService _deduplicationService;
-        private readonly IAuditRepository _auditRepository;
+
+        // This should be driven by configuration
+        private const string EvidenceBucketName = "evidence";
 
         public FileManager(
             ILogger<FileManager> logger,
             IWorkspaceProvider workspaceProvider,
             IObjectStorageProvider storageProvider,
-            IDeduplicationService deduplicationService,
-            IAuditRepository auditRepository)
+            IDeduplicationService deduplicationService)
         {
             _logger = logger;
             _workspaceProvider = workspaceProvider;
             _storageProvider = storageProvider;
             _deduplicationService = deduplicationService;
-            _auditRepository = auditRepository;
         }
 
         public async Task<VirtualFile> IngestFileAsync(Stream stream, VirtualFile virtualFile, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Ingesting file {FileName} for workspace {WorkspaceId}", virtualFile.FileName, virtualFile.WorkspaceId);
 
+            if (stream == null || stream.Length == 0)
+            {
+                throw new ArgumentException("Input stream cannot be null or empty.", nameof(stream));
+            }
+
             try
             {
-                // 1. Calculate hash for deduplication and integrity
-                var hashes = await _deduplicationService.ComputeHashAsync(stream, cancellationToken);
+                var hashes = await _deduplicationService.ComputeHashesAsync(stream, cancellationToken);
                 var primaryHash = hashes["SHA256"];
                 virtualFile.StoredFileHash = primaryHash;
 
-                // 2. Check if the content (StoredFile) already exists
-                if (!await _workspaceProvider.StoredFileExistsAsync(primaryHash, cancellationToken))
-                {
-                    _logger.LogInformation("New file content detected. Uploading to storage with key {Hash}", primaryHash);
-                    // 2a. If not, upload the new content to object storage
-                    stream.Position = 0;
-                    await _storageProvider.PutObjectAsync("evidence", primaryHash, stream, cancellationToken);
+                var existingStoredFile = await _workspaceProvider.GetStoredFileByHashAsync(primaryHash, cancellationToken);
 
-                    // 2b. Create the StoredFile record
+                if (existingStoredFile == null)
+                {
+                    _logger.LogInformation("New content detected. Uploading to storage with key {Hash}", primaryHash);
+                    stream.Position = 0;
+                    await _storageProvider.PutObjectAsync(EvidenceBucketName, primaryHash, stream, cancellationToken);
+
                     var storedFile = new StoredFile
                     {
                         Hash = primaryHash,
                         FileSize = stream.Length,
-                        MimeType = "application/octet-stream" // This should be determined more accurately
-                        // ClassificationTags would be added here after AI enrichment step
+                        MimeType = "application/octet-stream" // Placeholder
+                        // ClassificationTags would be added here in a separate enrichment step
                     };
                     await _workspaceProvider.CreateStoredFileAsync(storedFile, cancellationToken);
                 }
                 else
                 {
-                    _logger.LogInformation("File content is a duplicate of {Hash}. Linking to existing stored file.", primaryHash);
+                    _logger.LogInformation("Duplicate content detected for hash {Hash}. Linking to existing stored file.", primaryHash);
                 }
 
-                // 3. Create the VirtualFile record
                 virtualFile.Id = Guid.NewGuid();
-                // ... other properties of virtualFile are pre-populated ...
-                var createdVirtualFile = await _workspaceProvider.CreateVirtualFileAsync(virtualFile);
-
-                // 4. Add initial chain of custody entry
-                createdVirtualFile.ChainOfCustody.Add(new ChainOfCustodyEntry
+                virtualFile.ChainOfCustody.Add(new ChainOfCustodyEntry
                 {
                     Action = "INGESTED",
                     Actor = virtualFile.CreatedBy,
                     Timestamp = DateTimeOffset.UtcNow,
-                    Details = $"File '{virtualFile.FileName}' ingested into workspace '{virtualFile.WorkspaceId}'."
+                    Details = $"File '{virtualFile.FileName}' ingested by user '{virtualFile.CreatedBy}'."
                 });
-                await _workspaceProvider.UpdateVirtualFileAsync(createdVirtualFile, cancellationToken);
+
+                var createdVirtualFile = await _workspaceProvider.CreateVirtualFileAsync(virtualFile, cancellationToken);
 
                 _logger.LogInformation("File ingested successfully. VirtualFileId: {VirtualFileId}", createdVirtualFile.Id);
                 return createdVirtualFile;
@@ -98,82 +94,84 @@ namespace IIM.Infrastructure.Storage
             }
         }
 
-        public Task<VirtualFile?> GetFileAsync(Guid fileId, CancellationToken cancellationToken = default)
+        public async Task<VirtualFile> ProcessFileAsync(Guid virtualFileId, Func<Stream, Task<Stream>> processor, string processingType, CancellationToken cancellationToken = default)
         {
-            return _workspaceProvider.GetVirtualFileByIdAsync(fileId, cancellationToken);
-        }
+            _logger.LogInformation("Processing file {OriginalFileId} with process '{ProcessingType}'", virtualFileId, processingType);
 
-        public Task<IEnumerable<VirtualFile>> GetFilesByWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default)
-        {
-            return _workspaceProvider.GetVirtualFilesByWorkspaceAsync(workspaceId, cancellationToken);
-        }
-
-        public async Task UpdateFileStatusAsync(Guid fileId, FileUploadStatus status, CancellationToken cancellationToken = default)
-        {
-            var file = await _workspaceProvider.GetVirtualFileByIdAsync(fileId, cancellationToken);
-            if (file != null)
+            var originalFile = await _workspaceProvider.GetVirtualFileByIdAsync(virtualFileId, cancellationToken);
+            if (originalFile == null)
             {
-                file.Status = status;
-                file.UpdatedAt = DateTimeOffset.UtcNow;
-                await _workspaceProvider.UpdateVirtualFileAsync(file, cancellationToken);
-            }
-            else
-            {
-                _logger.LogWarning("Could not find file with ID {FileId} to update status.", fileId);
-            }
-        }
-
-        public async Task<VirtualFile> ProcessFileAsync(Guid originalFileId, string processingType, Func<Stream, Task<Stream>> processor, CancellationToken cancellationToken = default)
-        {
-            _logger.LogInformation("Processing file {OriginalFileId} with process '{ProcessingType}'", originalFileId, processingType);
-
-            var originalVirtualFile = await _workspaceProvider.GetVirtualFileByIdAsync(originalFileId, cancellationToken);
-            if (originalVirtualFile == null)
-            {
-                throw new FileNotFoundException($"Original file with ID '{originalFileId}' not found.");
+                throw new FileNotFoundException($"Virtual file with ID '{virtualFileId}' not found.");
             }
 
-            // Get the original file's content from storage
-            using var originalStream = await _storageProvider.GetObjectAsync("evidence", originalVirtualFile.StoredFileHash, cancellationToken);
-
-            // Process the stream
+            using var originalStream = await _storageProvider.GetObjectAsync(EvidenceBucketName, originalFile.StoredFileHash, cancellationToken);
             using var processedStream = await processor(originalStream);
 
-            // Create a new virtual file for the processed version
-            var processedVirtualFile = new VirtualFile
+            var newVirtualFile = new VirtualFile
             {
-                WorkspaceId = originalVirtualFile.WorkspaceId,
-                FileName = $"{Path.GetFileNameWithoutExtension(originalVirtualFile.FileName)}_{processingType}{Path.GetExtension(originalVirtualFile.FileName)}",
-                Path = originalVirtualFile.Path,
+                WorkspaceId = originalFile.WorkspaceId,
+                FileName = $"{Path.GetFileNameWithoutExtension(originalFile.FileName)}_{processingType}{Path.GetExtension(originalFile.FileName)}",
+                Path = originalFile.Path,
                 Status = FileUploadStatus.Completed,
-                CreatedBy = "System", // Or get current user
+                CreatedBy = "System", // Or resolve current user context
                 CollectedBy = "System",
                 CollectionDate = DateTimeOffset.UtcNow,
-                CollectedLocation = "Processed in-system"
+                CollectedLocation = "Processed In-System"
             };
 
-            // Ingest the processed stream as a new file (this will handle deduplication of the processed output)
-            var newVirtualFile = await IngestFileAsync(processedStream, processedVirtualFile, cancellationToken);
+            // Ingest the processed content. This handles deduplication of the output automatically.
+            var createdProcessedFile = await IngestFileAsync(processedStream, newVirtualFile, cancellationToken);
 
-            // Add a chain of custody entry to the original file to note the processing
-            originalVirtualFile.ChainOfCustody.Add(new ChainOfCustodyEntry
+            originalFile.ProcessedVersions.Add(new ProcessedFile
             {
-                Action = $"PROCESSED_AS_{processingType.ToUpper()}",
-                Actor = "System",
-                Details = $"Created new version: {newVirtualFile.Id}",
-                Timestamp = DateTimeOffset.UtcNow
+                Id = Guid.NewGuid(),
+                OriginalVirtualFileId = originalFile.Id,
+                ProcessedVirtualFileId = createdProcessedFile.Id,
+                ProcessingType = processingType,
+                ProcessedAt = DateTimeOffset.UtcNow,
+                ProcessedBy = "System"
             });
-            await _workspaceProvider.UpdateVirtualFileAsync(originalVirtualFile, cancellationToken);
+            await _workspaceProvider.UpdateVirtualFileAsync(originalFile, cancellationToken);
 
-            return newVirtualFile;
+            return createdProcessedFile;
         }
 
-        public Task ExportFileAsync(Guid fileId, string exportPath, CancellationToken cancellationToken = default)
+        public async Task<bool> VerifyIntegrityAsync(Guid virtualFileId, CancellationToken cancellationToken = default)
         {
-            // This logic will require significant changes to accommodate the new model.
-            // For now, it's a placeholder.
-            _logger.LogWarning("ExportFileAsync is not fully implemented in the new architecture yet.");
-            return Task.CompletedTask;
+            var virtualFile = await _workspaceProvider.GetVirtualFileByIdAsync(virtualFileId, cancellationToken);
+            if (virtualFile == null)
+            {
+                _logger.LogWarning("VerifyIntegrityAsync: VirtualFile with ID {VirtualFileId} not found.", virtualFileId);
+                return false;
+            }
+
+            try
+            {
+                using var stream = await _storageProvider.GetObjectAsync(EvidenceBucketName, virtualFile.StoredFileHash, cancellationToken);
+                var currentHashes = await _deduplicationService.ComputeHashesAsync(stream, cancellationToken);
+
+                var storedHash = virtualFile.StoredFileHash;
+                var currentHash = currentHashes.GetValueOrDefault("SHA256");
+
+                bool isValid = storedHash.Equals(currentHash, StringComparison.OrdinalIgnoreCase);
+
+                if (!isValid)
+                {
+                    _logger.LogError("Integrity check FAILED for VirtualFile {VirtualFileId}. Stored Hash: {StoredHash}, Recalculated Hash: {CurrentHash}",
+                        virtualFileId, storedHash, currentHash);
+                }
+                else
+                {
+                    _logger.LogInformation("Integrity check PASSED for VirtualFile {VirtualFileId}", virtualFileId);
+                }
+                return isValid;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception during integrity check for VirtualFile {VirtualFileId}", virtualFileId);
+                return false;
+            }
         }
     }
 }
+

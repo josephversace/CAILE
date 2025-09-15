@@ -424,8 +424,8 @@ public class StorageConfiguration : IStorageConfiguration
         {
             TotalSize = GetDirectorySize(BasePath),
             ModelsSize = GetDirectorySize(ModelsPath),
-            CasesSize = GetDirectorySize(CasesPath),
-            EvidenceSize = GetDirectorySize(EvidencePath),
+            WorkspacesSize = GetDirectorySize(CasesPath),
+            FilesSize = GetDirectorySize(EvidencePath),
             VectorStoreSize = GetDirectorySize(VectorStorePath),
             TemplatesCount = CountFiles(TemplatesPath, "*.json"),
             ModelsCount = CountModels(),

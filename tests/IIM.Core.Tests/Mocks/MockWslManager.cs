@@ -60,7 +60,7 @@ namespace IIM.Core.Tests.Mocks
             _configuration["wsl.conf.systemd"] = "true";
 
             // Initialize service health
-            var services = new[] { "qdrant", "postgres", "minio", "mcp-server" };
+            var services = new[] { "qdrant", "postgres", "seaweedfs", "mcp-server" };
             foreach (var service in services)
             {
                 _serviceHealth[service] = new ServiceHealthCheck

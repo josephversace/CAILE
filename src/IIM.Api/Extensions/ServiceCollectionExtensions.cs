@@ -46,7 +46,7 @@ namespace IIM.Api.Extensions
             // Add services in dependency order
             services.AddHttpClients(configuration);
            
-            services.AddInfrastructureServices(configuration, deploymentConfig);
+            services.AddInfrastructureServices(configuration);
             
             services.AddCoreServices(configuration, deploymentConfig);
             

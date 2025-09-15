@@ -146,11 +146,8 @@ public class Setting
 /// </summary>
 public class Settings
 {
-    // MinIO Settings
-    public string MinIOEndpoint { get; set; } = "localhost:9000";
-    public string MinIOAccessKey { get; set; } = string.Empty;
-    public string MinIOSecretKey { get; set; } = string.Empty;
-    public string BucketName { get; set; } = "evidence";
+
+ 
     public bool UseSSL { get; set; } = false;
 
     // Evidence Settings

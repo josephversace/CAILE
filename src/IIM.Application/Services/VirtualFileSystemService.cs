@@ -1,36 +1,40 @@
-﻿// src/IIM.Application/Services/VirtualFileSystemService.cs
-using IIM.Shared.Interfaces; // Use the new interfaces from the Shared project
+﻿using IIM.Shared.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 
-public class VirtualFileSystemService // No interface needed for this class itself
+namespace IIM.Application.Services
 {
-    private readonly IWorkspaceProvider _workspaceProvider;
-    private readonly IObjectStorageProvider _storageProvider;
-
-    // Inject the new, clean dependencies
-    public VirtualFileSystemService(
-        IWorkspaceProvider workspaceProvider,
-        IObjectStorageProvider storageProvider)
+    public class VirtualFileSystemService
     {
-        _workspaceProvider = workspaceProvider;
-        _storageProvider = storageProvider;
-    }
+        private readonly IWorkspaceProvider _workspaceProvider;
+        private readonly IObjectStorageProvider _storageProvider;
 
-    public Task<IEnumerable<object>> GetFolderContentsAsync(string path)
-    {
-        // Delegate metadata operations to the workspace provider
-        return _workspaceProvider.GetFolderContentsAsync(path);
-    }
-
-    public async Task<string> GetDownloadUrlAsync(string fileId)
-    {
-        // 1. Get metadata from the workspace provider
-        var fileReference = await _workspaceProvider.GetFileReferenceAsync(fileId);
-        if (fileReference is null)
+        public VirtualFileSystemService(
+            IWorkspaceProvider workspaceProvider,
+            IObjectStorageProvider storageProvider)
         {
-            throw new FileNotFoundException("The requested file does not exist.");
+            _workspaceProvider = workspaceProvider;
+            _storageProvider = storageProvider;
         }
 
-        // 2. Use metadata to get a URL from the storage provider
-        return await _storageProvider.GetPresignedDownloadUrlAsync("your-bucket-name", fileReference.StorageKey, TimeSpan.FromMinutes(15));
+        public Task<IEnumerable<object>> GetFolderContentsAsync(Guid workspaceId, string path)
+        {
+            return _workspaceProvider.GetFolderContentsAsync(workspaceId, path);
+        }
+
+        public async Task<string> GetDownloadUrlAsync(Guid fileId)
+        {
+            var virtualFile = await _workspaceProvider.GetVirtualFileByIdAsync(fileId);
+            if (virtualFile is null)
+            {
+                throw new FileNotFoundException("The requested file does not exist.");
+            }
+
+            // Assuming "evidence" is your main bucket. This should come from configuration.
+            return await _storageProvider.GetPresignedDownloadUrlAsync("evidence", virtualFile.StoredFileHash, TimeSpan.FromMinutes(15));
+        }
     }
 }
+

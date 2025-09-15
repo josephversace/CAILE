@@ -15,7 +15,7 @@ namespace IIM.Shared.Interfaces
         string FineTunedModelsPath { get; }
         string JsonExportsPath { get; }
         string LogsPath { get; }
-        string? MinioBucketName { get; set; }
+       
         string ModelCachePath { get; }
         string ModelConfigsPath { get; }
         string ModelsPath { get; }
