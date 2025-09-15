@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using IIM.Shared.Models;
 using IIM.Core.AI;
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models.Core;
 
 
 namespace IIM.Core.Templates;

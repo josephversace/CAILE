@@ -44,7 +44,7 @@ public class Program
                     WorkspaceId = dummyWorkspaceId,
                     FileName = Path.GetFileName(dummyFilePath),
                     Path = "/",
-                    FileSize = stream.Length,
+          
                     CreatedBy = "CLI_USER",
                     CollectedBy = "CLI_USER",
                     CollectionDate = DateTimeOffset.UtcNow,

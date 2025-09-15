@@ -15,7 +15,7 @@ namespace IIM.Shared.Interfaces
     {
         Task<InvestigationSession?> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken = default);
 
-        Task<IEnumerable<InvestigationSession>> GetSessionsByWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default);
+        Task<List<InvestigationSession>> GetSessionsByWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default);
 
         Task<InvestigationSession> CreateSessionAsync(Guid workspaceId, string userId, string initialPrompt, CancellationToken cancellationToken = default);
 

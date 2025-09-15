@@ -152,43 +152,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         return response;
     }
 
-    private async Task ProcessAttachmentsAsync(
-        string caseId,
-        List<Attachment> attachments,
-        CancellationToken cancellationToken)
-    {
-        foreach (var attachment in attachments)
-        {
-            // Create file record from Attachment
-            var file = new ManagedFile
-            {
-                Id = Guid.NewGuid().ToString(),
-                WorkspaceId = caseId,
-            
-                OriginalFileName = attachment.FileName,
-                FileSize = attachment.Size,
-                Type = MapAttachmentTypeToEvidenceType(attachment.Type),
-                Status = FileUploadStatus.Pending,
-                StoragePath = attachment.StoragePath ?? "",
-                Hash = "", // Will be computed during ingestion
-                IngestTimestamp = DateTimeOffset.UtcNow,
-                Metadata = new FileMetadata
-                {
-                    //CaseNumber = caseId,
-                    //CollectedBy = Environment.UserName,
-                    //CollectionDate = DateTimeOffset.UtcNow
-                }
-            };
 
-            // Note: AddEvidenceAsync doesn't exist, use IngestEvidenceAsync
-            using var stream = new MemoryStream();
-            await _fileManager.IngestFileAsync(
-                stream,
-                attachment.FileName,
-                file.Metadata,
-                cancellationToken);
-        }
-    }
 
     private FileType MapAttachmentTypeToEvidenceType(AttachmentType attachmentType)
     {
@@ -239,7 +203,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         int maxResults,
         CancellationToken cancellationToken)
     {
-        var evidence = await _fileManager.GetFilesByWorkspaceAsync(caseId, cancellationToken);
+        var evidence = await _fileManager.GetF(caseId, cancellationToken);
         return evidence.Take(maxResults).ToList();
     }
 }

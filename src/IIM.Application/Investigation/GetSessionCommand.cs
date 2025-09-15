@@ -2,6 +2,7 @@ using IIM.Core.Mediator;
 using IIM.Core.Services;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 
@@ -45,17 +46,19 @@ namespace IIM.Application.Investigation
     /// <summary>
     /// Query to get sessions by case ID
     /// </summary>
-    public class GetSessionsByCaseCommand : IRequest<List<InvestigationSession>>
+    public class GetSessionsByWorkspaceCommand : IRequest<List<InvestigationSession>>
     {
-        public string CaseId { get; }
+        public Guid WorkspaceId { get; }
 
-        public GetSessionsByCaseCommand(string caseId)
+        public GetSessionsByWorkspaceCommand(string workspaceId)
         {
-            CaseId = caseId;
+            var guid = Guid.Parse(workspaceId);
+
+            WorkspaceId = guid;
         }
     }
 
-    public class GetSessionsByCaseCommandHandler : IRequestHandler<GetSessionsByCaseCommand, List<InvestigationSession>>
+    public class GetSessionsByCaseCommandHandler : IRequestHandler<GetSessionsByWorkspaceCommand, List<InvestigationSession>>
     {
         private readonly ISessionService _sessionService;
         private readonly ILogger<GetSessionsByCaseCommandHandler> _logger;
@@ -69,11 +72,11 @@ namespace IIM.Application.Investigation
         }
 
         public async Task<List<InvestigationSession>> Handle(
-            GetSessionsByCaseCommand request,
+            GetSessionsByWorkspaceCommand request,
             CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Getting sessions for case {CaseId}", request.CaseId);
-            return await _sessionService.GetSessionsByCaseAsync(request.CaseId, cancellationToken);
+            _logger.LogInformation("Getting sessions for case {CaseId}", request.WorkspaceId);
+            return await _sessionService.GetSessionsByWorkspaceAsync(request.WorkspaceId, cancellationToken);
         }
     }
 
