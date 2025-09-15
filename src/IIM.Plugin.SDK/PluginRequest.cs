@@ -10,6 +10,8 @@ namespace IIM.Plugin.SDK;
 /// </summary>
 public class PluginRequest
 {
+
+    public string FunctionName { get; set; } = string.Empty;
     /// <summary>
     /// The intent extracted from user query (e.g., "analyze_hash")
     /// </summary>
@@ -23,7 +25,7 @@ public class PluginRequest
     /// <summary>
     /// Current case identifier for evidence association
     /// </summary>
-    public string? CaseId { get; set; }
+    public string? WorkspaceId { get; set; }
     
     /// <summary>
     /// User making the request for audit purposes
@@ -33,7 +35,7 @@ public class PluginRequest
     /// <summary>
     /// Evidence context if applicable
     /// </summary>
-    public EvidenceContext? Evidence { get; set; }
+    public FileContext? File { get; set; }
     
     /// <summary>
     /// Original user query that triggered this plugin

@@ -46,7 +46,7 @@ namespace IIM.Application.Services
             return _workspaceManager.GetRecentWorkspacesAsync(count, cancellationToken);
         }
 
-        public Task<IEnumerable<InvestigationSession>> GetSessionsByWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+        public Task<List<InvestigationSession>> GetSessionsByWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Fetching sessions for workspace {WorkspaceId}", workspaceId);
             // This is a session concern, so it delegates to the session service.
