@@ -12,6 +12,6 @@ namespace IIM.Application.Files
     {
         public Stream FileStream { get; set; }
         public string FileName { get; set; }
-        public FileMetadata Metadata { get; set; }
+    
     }
 }

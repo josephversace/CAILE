@@ -38,6 +38,8 @@ namespace IIM.Infrastructure.Storage
 
         public Task<string> GetPresignedUploadUrlAsync(string bucketName, string objectKey, TimeSpan expiry)
         {
+            ValidateBucketAndKey(bucketName, objectKey);
+
             var request = new GetPreSignedUrlRequest
             {
                 BucketName = bucketName,
@@ -51,6 +53,8 @@ namespace IIM.Infrastructure.Storage
 
         public Task<string> GetPresignedDownloadUrlAsync(string bucketName, string objectKey, TimeSpan expiry)
         {
+            ValidateBucketAndKey(bucketName, objectKey);
+
             var request = new GetPreSignedUrlRequest
             {
                 BucketName = bucketName,
@@ -64,6 +68,8 @@ namespace IIM.Infrastructure.Storage
 
         public async Task PutObjectAsync(string bucketName, string objectKey, Stream data, CancellationToken cancellationToken = default)
         {
+            ValidateBucketAndKey(bucketName, objectKey);
+
             try
             {
                 var request = new PutObjectRequest
@@ -84,6 +90,8 @@ namespace IIM.Infrastructure.Storage
 
         public async Task<Stream> GetObjectAsync(string bucketName, string objectKey, CancellationToken cancellationToken = default)
         {
+            ValidateBucketAndKey(bucketName, objectKey);
+
             try
             {
                 var request = new GetObjectRequest
@@ -108,6 +116,9 @@ namespace IIM.Infrastructure.Storage
 
         public async Task CopyObjectAsync(string sourceBucket, string sourceKey, string destBucket, string destKey)
         {
+            ValidateBucketAndKey(sourceBucket, sourceKey);
+            ValidateBucketAndKey(destBucket, destKey);
+
             try
             {
                 var request = new CopyObjectRequest
@@ -130,6 +141,8 @@ namespace IIM.Infrastructure.Storage
 
         public async Task DeleteObjectAsync(string bucketName, string objectKey)
         {
+            ValidateBucketAndKey(bucketName, objectKey);
+
             try
             {
                 var request = new DeleteObjectRequest
@@ -145,6 +158,14 @@ namespace IIM.Infrastructure.Storage
                 _logger.LogError(ex, "Failed to delete object {ObjectKey} from bucket {BucketName}", objectKey, bucketName);
                 throw;
             }
+        }
+
+        private static void ValidateBucketAndKey(string bucketName, string objectKey)
+        {
+            if (string.IsNullOrWhiteSpace(bucketName))
+                throw new ArgumentException("Bucket name cannot be null or empty.", nameof(bucketName));
+            if (string.IsNullOrWhiteSpace(objectKey))
+                throw new ArgumentException("Object key cannot be null or empty.", nameof(objectKey));
         }
     }
 }

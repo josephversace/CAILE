@@ -24,7 +24,7 @@ namespace IIM.Api.Extensions
             services.TryAddScoped<IUserContext, UserContextService>();
 
             // Add audit logger
-            services.TryAddScoped<IAuditService, SqliteAuditLogger>();
+           // services.TryAddScoped<IAuditService, SqliteAuditLogger>();
 
             // Add audit configuration
             services.Configure<AuditConfiguration>(

@@ -1,406 +1,84 @@
-
-using IIM.Core.AI;
-using IIM.Core.Configuration;
-using IIM.Core.Models;
-using IIM.Core.Services;
-
-
-using IIM.Shared.Enums;
-
+using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using IIM.Shared.Models;
 
-using IIM.Core.Templates;
-using IIM.Shared.Interfaces;
 
 namespace IIM.Application.Services
 {
+    /// <summary>
+    /// Implements the high-level investigation workflows by orchestrating
+    /// the IWorkspaceManager and ISessionService.
+    /// </summary>
     public class InvestigationService : IInvestigationService
     {
         private readonly ILogger<InvestigationService> _logger;
+        private readonly IWorkspaceManager _workspaceManager;
         private readonly ISessionService _sessionService;
-        private readonly IModelOrchestrator _modelOrchestrator;
-        private readonly IModelConfigurationTemplateService _templateService;
-        private readonly IExportService _exportService;
-   
-        private readonly IVisualizationService _visualizationService;
-
-        private readonly Dictionary<string, SessionModelTracking> _sessionModelTracking = new();
-        private readonly Dictionary<string, Workspace> _workspaces = new();
-        private readonly Dictionary<string, InvestigationResponse> _responses = new();
-        private readonly SemaphoreSlim _trackingLock = new(1, 1);
 
         public InvestigationService(
             ILogger<InvestigationService> logger,
-            ISessionService sessionService,
-            IModelOrchestrator modelOrchestrator,
-            IModelConfigurationTemplateService templateService,
-            IExportService exportService,
-     
-            IVisualizationService visualizationService)
+            IWorkspaceManager workspaceManager,
+            ISessionService sessionService)
         {
             _logger = logger;
+            _workspaceManager = workspaceManager;
             _sessionService = sessionService;
-            _modelOrchestrator = modelOrchestrator;
-            _templateService = templateService;
-            _exportService = exportService;
-   
-            _visualizationService = visualizationService;
-
-            InitializeSampleData();
         }
 
-        #region Session Management
+        // ===================================================================
+        // Workspace Methods (Delegated to IWorkspaceManager)
+        // ===================================================================
 
-        public async Task<InvestigationSession> CreateSessionAsync(
-            CreateSessionRequest request,
-            CancellationToken cancellationToken = default)
+        public Task<Workspace?> GetWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default)
         {
-            var session = await _sessionService.CreateSessionAsync(request, cancellationToken);
-
-            await _trackingLock.WaitAsync(cancellationToken);
-            try
-            {
-                _sessionModelTracking[session.Id] = new SessionModelTracking
-                {
-                    SessionId = session.Id,
-                    Models = new Dictionary<string, ModelConfiguration>()
-                };
-            }
-            finally
-            {
-                _trackingLock.Release();
-            }
-
-            session.EnabledTools = GetDefaultTools();
-            session.Models = GetDefaultModels();
-
-            _logger.LogInformation("Created chat session {SessionId} for workspace {WorkspaceId}",
-                session.Id, request.WorkspaceId);
-
-            return session;
+            _logger.LogInformation("Fetching workspace {WorkspaceId}", workspaceId);
+            return _workspaceManager.GetWorkspaceAsync(workspaceId, cancellationToken);
         }
 
-        public Task<InvestigationSession> GetSessionAsync(
-            string sessionId,
-            CancellationToken cancellationToken = default)
+        public Task<IEnumerable<Workspace>> GetRecentWorkspacesAsync(int count, CancellationToken cancellationToken = default)
         {
+            _logger.LogInformation("Fetching {Count} recent workspaces", count);
+            return _workspaceManager.GetRecentWorkspacesAsync(count, cancellationToken);
+        }
+
+        public Task<IEnumerable<InvestigationSession>> GetSessionsByWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching sessions for workspace {WorkspaceId}", workspaceId);
+            // This is a session concern, so it delegates to the session service.
+            return _sessionService.GetSessionsByWorkspaceAsync(workspaceId, cancellationToken);
+        }
+
+        // ===================================================================
+        // Session Methods (Delegated to ISessionService)
+        // ===================================================================
+
+        public Task<InvestigationSession?> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Fetching session {SessionId}", sessionId);
             return _sessionService.GetSessionAsync(sessionId, cancellationToken);
         }
 
-        public async Task<List<InvestigationSession>> GetSessionsByCaseAsync(
-            string caseId,
-            CancellationToken cancellationToken = default)
+        public Task<InvestigationSession> CreateSessionAsync(Guid workspaceId, string userId, string initialPrompt, CancellationToken cancellationToken = default)
         {
-            return await _sessionService.GetSessionsByCaseAsync(caseId, cancellationToken);
+            _logger.LogInformation("Creating new session for workspace {WorkspaceId} by user {UserId}", workspaceId, userId);
+            return _sessionService.CreateSessionAsync(workspaceId, userId, initialPrompt, cancellationToken);
         }
 
-        public Task<bool> DeleteSessionAsync(
-            string sessionId,
-            CancellationToken cancellationToken = default)
+        public Task<bool> DeleteSessionAsync(Guid sessionId, CancellationToken cancellationToken = default)
         {
-            return _sessionService.CloseSessionAsync(sessionId, cancellationToken);
+            _logger.LogInformation("Deleting session {SessionId}", sessionId);
+            return _sessionService.DeleteSessionAsync(sessionId, cancellationToken);
         }
 
-        #endregion
-
-        #region Query Processing
-
-        public async Task<InvestigationResponse> ProcessQueryAsync(
-            string sessionId,
-            InvestigationQuery query,
-            CancellationToken cancellationToken = default)
+        public Task<Message> AddMessageAsync(Guid sessionId, Message message, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Processing query for session {SessionId}", sessionId);
-
-            var session = await _sessionService.GetSessionAsync(sessionId, cancellationToken);
-
-            // Create user message
-            var userMessage = new InvestigationMessage
-            {
-                Role = MessageRole.User,
-                Content = query.Text,
-                Attachments = query.Attachments,
-                Timestamp = query.Timestamp
-            };
-
-            await _sessionService.AddMessageAsync(sessionId, userMessage, cancellationToken);
-
-            // Create response with actual properties
-            var response = new InvestigationResponse
-            {
-                Id = Guid.NewGuid().ToString(),
-                Message = $"Processing: {query.Text}",
-                ToolResults = new List<ToolResult>(),
-                Citations = new List<Citation>(),
-                FileIds = new List<string>(),
-                Metadata = new Dictionary<string, object>
-                {
-                    ["sessionId"] = sessionId,
-                    ["queryTimestamp"] = query.Timestamp
-                },
-                Confidence = 0.95,
-                DisplayType = ResponseDisplayType.Auto
-            };
-
-            // Store for later retrieval
-            _responses[response.Id] = response;
-
-            // Execute tools if requested
-            if (query.EnabledTools?.Any() == true)
-            {
-                foreach (var tool in query.EnabledTools)
-                {
-                    var toolResult = await ExecuteToolAsync(
-                        sessionId, tool, query.Context, cancellationToken);
-                    response.ToolResults.Add(toolResult);
-                }
-            }
-
-            // Add assistant response
-            var assistantMessage = new InvestigationMessage
-            {
-                Role = MessageRole.Assistant,
-                Content = response.Message,
-                ToolResults = response.ToolResults,
-                Citations = response.Citations,
-                Timestamp = DateTimeOffset.UtcNow,
-                ModelUsed = session.Models.Values.FirstOrDefault()?.ModelId
-            };
-
-            await _sessionService.AddMessageAsync(sessionId, assistantMessage, cancellationToken);
-
-            return response;
+            _logger.LogInformation("Adding message to session {SessionId}", sessionId);
+            return _sessionService.AddMessageAsync(sessionId, message, cancellationToken);
         }
-
-        public Task<InvestigationResponse> SendQueryAsync(
-            string sessionId,
-            InvestigationQuery query,
-            CancellationToken cancellationToken = default)
-        {
-            return ProcessQueryAsync(sessionId, query, cancellationToken);
-        }
-
-        #endregion
-
-        #region Tool Execution
-
-        public async Task<ToolResult> ExecuteToolAsync(
-            string sessionId,
-            string toolName,
-            Dictionary<string, object> parameters,
-            CancellationToken cancellationToken = default)
-        {
-            _logger.LogInformation("Executing tool {ToolName} for session {SessionId}", toolName, sessionId);
-
-            var startTime = DateTimeOffset.UtcNow;
-
-            var result = new ToolResult
-            {
-                Id = Guid.NewGuid().ToString("N"),
-                ToolName = toolName,
-                Status = ToolStatus.Success,
-                Data = new { message = $"Executed {toolName}", parameters },
-                ExecutedAt = startTime,
-                ExecutionTime = TimeSpan.FromMilliseconds(Random.Shared.Next(100, 500)),
-                Visualizations = new List<Visualization>(),
-                Recommendations = new List<string>(),
-                Metadata = new Dictionary<string, object>
-                {
-                    ["sessionId"] = sessionId,
-                    ["executedBy"] = Environment.UserName
-                }
-            };
-
-            return result;
-        }
-
-        #endregion
-
-        #region Workspace Management
-
-        public Task<List<Workspace>> GetRecentWorkspacesAsync(int count = 10, CancellationToken cancellationToken = default)
-        {
-            var recentWorkspaces = _workspaces.Values
-                .OrderByDescending(c => c.UpdatedAt)
-                .Take(count)
-                .ToList();
-
-            return Task.FromResult(recentWorkspaces);
-        }
-
-        public Task<List<InvestigationSession>> GetCaseSessionsAsync(
-            string caseId,
-            CancellationToken cancellationToken = default)
-        {
-            return GetSessionsByCaseAsync(caseId, cancellationToken);
-        }
-
-        public Task<Workspace> GetWorkspace(string workspaceId, CancellationToken cancellationToken = default)
-        {
-            if (_workspaces.TryGetValue(workspaceId, out var workspaceEntity))
-            {
-                return Task.FromResult(workspaceEntity);
-            }
-
-            throw new KeyNotFoundException($"Workspace {workspaceId} not found");
-        }
-
-        #endregion
-
-        #region Response Management
-
-        public Task<InvestigationResponse> EnrichResponseForDisplayAsync(
-            InvestigationResponse response,
-            InvestigationMessage? message = null)
-        {
-            response.Metadata = new Dictionary<string, object>
-            {
-                ["hasToolResults"] = response.ToolResults?.Any() ?? false,
-                ["hasCitations"] = response.Citations?.Any() ?? false,
-                ["hasEvidence"] = response.FileIds?.Any() ?? false,
-                ["confidence"] = response.Confidence ?? 0
-            };
-
-            if (message != null)
-            {
-          
-            }
-
-            return Task.FromResult(response);
-        }
-
-        public Task<InvestigationResponse> GetResponseAsync(string responseId)
-        {
-            if (_responses.TryGetValue(responseId, out var response))
-            {
-                return Task.FromResult(response);
-            }
-
-            return Task.FromResult(new InvestigationResponse
-            {
-                Id = responseId,
-                Message = "Response not found",
-                Metadata = new Dictionary<string, object> { ["notFound"] = true }
-            });
-        }
-
-        public async Task<byte[]> ExportResponseAsync(
-            string responseId,
-            ExportFormat format,
-            ExportOptions? options = null)
-        {
-            var response = await GetResponseAsync(responseId);
-
-            // Use the IExportService for response export
-            var exportResult = await _exportService.ExportResponseAsync(
-                response,
-                format,
-                options ?? new ExportOptions());
-
-            return exportResult.Data;
-        }
-
-        #endregion
-
-        #region Model Management
-
-        private async Task LoadModelAsync(ModelConfiguration config, CancellationToken cancellationToken)
-        {
-            // ModelLoadRequest is a class with required properties
-            var ModelLoadRequest = new ModelLoadRequest
-            {
-                ModelId = config.ModelId,
-                ModelPath = GetModelPath(config.ModelId),
-                ModelType = DetermineModelType(config.ModelId),
-                Provider = config.Provider
-            };
-
-            await _modelOrchestrator.LoadModelAsync(ModelLoadRequest, null, cancellationToken);
-        }
-
-        private string GetModelPath(string modelId)
-        {
-            var baseDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "IIM",
-                "Models"
-            );
-            Directory.CreateDirectory(baseDir);
-
-            var safeModelId = modelId.Replace(":", "_").Replace("/", "_");
-            return Path.Combine(baseDir, safeModelId);
-        }
-
-        private ModelType DetermineModelType(string modelId)
-        {
-            var lower = modelId.ToLowerInvariant();
-
-            if (lower.Contains("whisper")) return ModelType.Whisper;
-            if (lower.Contains("clip") || lower.Contains("vision")) return ModelType.CLIP;
-            if (lower.Contains("embed")) return ModelType.Embedding;
-
-            return ModelType.LLM;
-        }
-
-        #endregion
-
-        #region Private Helper Methods
-
-        private void InitializeSampleData()
-        {
-            var sampleWorkspace = new Workspace
-            {
-                Id = "case-001",
-                Title = "Sample Investigation",
-                Description = "Initial test case",
-                Status = WorkspaceStatus.Active,
-                CreatedAt = DateTimeOffset.UtcNow.AddDays(-7),
-                UpdatedAt = DateTimeOffset.UtcNow,
-                Priority = WorkspacePriority.High,
-                Owner = Environment.UserName,
-                TeamMembers = new List<string> { Environment.UserName },
-                Metadata = new Dictionary<string, object>
-                {
-                    ["category"] = "test",
-                    ["version"] = "1.0"
-                }
-            };
-
-            _workspaces[sampleWorkspace.Id] = sampleWorkspace;
-        }
-
-        private List<string> GetDefaultTools()
-        {
-            return new List<string> { "search", "analyze", "extract", "summarize" };
-        }
-
-        private Dictionary<string, ModelConfiguration> GetDefaultModels()
-        {
-            return new Dictionary<string, ModelConfiguration>
-            {
-                ["primary"] = new ModelConfiguration
-                {
-                    ModelId = "llama3.1:70b",
-                    Provider = "Ollama",
-                    Type = ModelType.LLM,
-                    Status = ModelStatus.Available
-                }
-            };
-        }
-
-        #endregion
-    }
-
-    public class SessionModelTracking
-    {
-        public string SessionId { get; set; } = string.Empty;
-        public Dictionary<string, ModelConfiguration> Models { get; set; } = new();
     }
 }

@@ -61,7 +61,7 @@ namespace IIM.Application.Files
     {
         private readonly ILogger<ProcessFolderUploadCommandHandler> _logger;
         private readonly ISessionService _sessionService;
-        private readonly IWorkspaceManager _caseManager;
+        private readonly IWorkspaceManager _workspaceManager;
         private readonly IFolderOcrService _ocrService;
         private readonly IClassificationService _classificationService;
         private readonly IDeduplicationService _dedupService;
@@ -70,7 +70,7 @@ namespace IIM.Application.Files
         public ProcessFolderUploadCommandHandler(
             ILogger<ProcessFolderUploadCommandHandler> logger,
             ISessionService sessionService,
-            IWorkspaceManager caseManager,
+            IWorkspaceManager workspaceManager,
             IFolderOcrService ocrService,
             IClassificationService classificationService,
             IDeduplicationService dedupService,
@@ -78,7 +78,7 @@ namespace IIM.Application.Files
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
-            _caseManager = caseManager ?? throw new ArgumentNullException(nameof(caseManager));
+            _workspaceManager = workspaceManager ?? throw new ArgumentNullException(nameof(workspaceManager));
             _ocrService = ocrService ?? throw new ArgumentNullException(nameof(ocrService));
             _classificationService = classificationService ?? throw new ArgumentNullException(nameof(classificationService));
             _dedupService = dedupService ?? throw new ArgumentNullException(nameof(dedupService));
@@ -94,7 +94,7 @@ namespace IIM.Application.Files
 
             // Retrieve the session and associated case
             var session = await _sessionService.GetSessionAsync(request.SessionId, cancellationToken);
-            var caseEntity = await _caseManager.GetWorkspaceAsync(session.WorkspaceId, cancellationToken);
+            var caseEntity = await _workspaceManager.GetWorkspaceAsync(session.WorkspaceId, cancellationToken);
 
             // Extract folder structure from each image
             var extractedNodes = new List<VirtualFolderNode>();

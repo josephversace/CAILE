@@ -6,7 +6,7 @@ using IIM.Shared.Models;
 
 namespace IIM.Core.Tests.Services;
 
-public class CaseManagerTests
+public class workspaceManagerTests
 {
-    // TODO: Implement CaseManagerTests
+    // TODO: Implement workspaceManagerTests
 }

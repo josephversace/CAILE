@@ -1,4 +1,5 @@
 ﻿using IIM.Shared.Enums;
+using IIM.Shared.Models.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,39 +13,6 @@ namespace IIM.Shared.Models;
 
 #region Cases
 
-/// <summary>
-/// Workspace case - the primary aggregate root for investigations
-/// </summary>
-public class Workspace
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string CaseNumber { get; set; } = string.Empty;
-    public string Title { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public WorkspaceType Type { get; set; }
-    public WorkspaceStatus Status { get; set; }
-    public WorkspacePriority Priority { get; set; }
-    public string Classification { get; set; } = "Unclassified";
-    public string Owner { get; set; } = string.Empty;
-    public List<string> TeamMembers { get; set; } = new();
-    public List<string> AccessControlList { get; set; } = new();
-
-    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
-    public DateTimeOffset? ClosedAt { get; set; }
-    public string CreatedBy { get; set; } = string.Empty;
-    public string? ClosedBy { get; set; }
-
-    public Dictionary<string, object> Metadata { get; set; } = new();
-    public Dictionary<string, object>? Statistics { get; set; }
-
-    // Navigation properties
-    public List<InvestigationSession> Sessions { get; set; } = new();
-    public List<ManagedFile> Files { get; set; } = new();
-    public List<Report> Reports { get; set; } = new();
-    public List<Timeline> Timelines { get; set; } = new();
-    public List<Finding> Findings { get; set; } = new();
-}
 
 // <summary>
 /// Create case request model
@@ -137,48 +105,7 @@ public class WorkspaceResponse
     public Dictionary<string, object> Metadata { get; set; } = new();
 }
 
-/// <summary>
-/// Case list response model
-/// </summary>
-public class WorkspaceListResponse
-{
-    public List<WorkspaceSummary> Cases { get; set; } = new();
-    public int TotalCount { get; set; }
-    public int Page { get; set; }
-    public int PageSize { get; set; }
-}
 
-/// <summary>
-/// Case summary model
-/// </summary>
-public class WorkspaceSummary
-{
-    public string Id { get; set; } = string.Empty;
-    public string CaseNumber { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
-    public string Classification { get; set; } = string.Empty;
-    public DateTimeOffset UpdatedAt { get; set; }
-    public int FileCount { get; set; }
-    public int ActiveSessions { get; set; }
-}
-
-/// <summary>
-/// Case statistics model
-/// </summary>
-public class WorkspaceStatistics
-{
-    public int TotalFiles { get; set; }
-    public long TotalFileSize { get; set; }
-    public int TotalSessions { get; set; }
-    public int ActiveSessions { get; set; }
-    public int TotalReports { get; set; }
-    public int TotalFindings { get; set; }
-    public TimeSpan TotalTime { get; set; }
-    public Dictionary<string, int> FilesByType { get; set; } = new();
-    public Dictionary<string, int> FilesBySeverity { get; set; } = new();
-}
 
 
 #endregion
@@ -251,77 +178,9 @@ public class Settings
 
 #endregion
 
-#region ManagedFiles
-
-    /// <summary>
-    /// Represents a single, managed file within the agnostic storage system.
-    /// This is the central entity for all file operations.
-    /// </summary>
-    public class ManagedFile
-    {
-        public string Id { get; set; } = Guid.NewGuid().ToString();
-        public string WorkspaceId { get; set; } = string.Empty;
-        public string Path { get; set; } = string.Empty;
-        public string FileName { get; set; } = string.Empty;
-        public string FileType { get; set; } = string.Empty; // MIME type
-        public long FileSize { get; set; }
-
-        /// <summary>
-        /// The primary hash (SHA256) of the file content, used as the storage key for deduplication.
-        /// </summary>
-        public string Hash { get; set; } = string.Empty;
-
-        // Hashing and integrity
-        public Dictionary<string, string> Hashes { get; set; } = new();
-        public bool IntegrityValid { get; set; } = true;
-        public string? Signature { get; set; }
-
-        // Storage
-        public string StoragePath { get; set; } = string.Empty; // Now represents the object key/hash
-
-        // Timestamps
-        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-        public DateTimeOffset? UpdatedAt { get; set; }
-        public string CreatedBy { get; set; } = string.Empty;
-
-        // Domain-specific metadata for forensic context
-        public string? CollectedBy { get; set; }
-        public string? CollectionLocation { get; set; }
-        public DateTimeOffset? CollectionDate { get; set; }
-        public string? Description { get; set; }
-
-        /// <summary>
-        /// A flexible dictionary to store any other source-specific metadata 
-        /// (e.g., "EmailSubject", "OriginalAuthor").
-        /// </summary>
-        public Dictionary<string, string> CustomMetadata { get; set; } = new();
-
-        // Chain of custody
-        public List<ChainOfCustodyEntry> ChainOfCustody { get; set; } = new();
-
-        // Processing
-        public FileProcessingStatus Status { get; set; }
-        public List<ProcessedFile> ProcessedVersions { get; set; } = new();
-    }
-
-    // Note: The old FileMetadata class is now fully consolidated into ManagedFile.
 
 
-/// <summary>
-/// Chain of custody entry for evidence tracking
-/// </summary>
-public class ChainOfCustodyEntry
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
-    public string Action { get; set; } = string.Empty;
-    public string Actor { get; set; } = string.Empty;
-    public string Details { get; set; } = string.Empty;
-    public string Hash { get; set; } = string.Empty;
-    public string PreviousHash { get; set; } = string.Empty;
-    public string? Notes { get; set; }
-    public Dictionary<string, object>? Metadata { get; set; }
-}
+
 
 /// <summary>
 /// Processed evidence version tracking
@@ -354,7 +213,6 @@ public class InitiateFileUploadRequest
     public string FileName { get; set; } = string.Empty;
     public long FileSize { get; set; }
     public string ContentType { get; set; } = "application/octet-stream";
-    public FileMetadata Metadata { get; set; } = new();
     public bool CheckDuplicates { get; set; } = true;
     public string? ChunkingStrategy { get; set; } // For deduplication
 }
@@ -430,31 +288,11 @@ public class FileContext
 #endregion
 
 
-#endregion
+
 
 #region Investigation Sessions
 
-/// <summary>
-/// Investigation session for interactive analysis
-/// </summary>
-public class InvestigationSession
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string Title { get; set; } = "New Investigation";
-    public string Icon { get; set; } = "🔍";
-    public InvestigationType Type { get; set; } = InvestigationType.GeneralInquiry;
-    public InvestigationStatus Status { get; set; } = InvestigationStatus.Active;
 
-    public List<InvestigationMessage> Messages { get; set; } = new();
-    public List<string> EnabledTools { get; set; } = new();
-    public Dictionary<string, ModelConfiguration> Models { get; set; } = new();
-    public List<Finding> Findings { get; set; } = new();
-
-    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
-    public string CreatedBy { get; set; } = Environment.UserName;
-}
 
 /// <summary>
 /// Request to create new investigation session
@@ -474,9 +312,9 @@ public class CreateSessionRequest
 
     public CreateSessionRequest() { }
 
-    public CreateSessionRequest(string caseId, string title, string investigationType)
+    public CreateSessionRequest(string workspaceId, string title, string investigationType)
     {
-        CaseId = caseId;
+        WorkspaceId = workspaceId;
         Title = title;
         InvestigationType = investigationType;
     }
@@ -591,7 +429,7 @@ public class InvestigationResponse
     public TimeSpan? ProcessingTime { get; set; }
     public ResponseDisplayType DisplayType { get; set; } = ResponseDisplayType.Auto;
     public Dictionary<string, object>? Metadata { get; set; }
-    public List<ManagedFile> RelatedFiles { get; set; }
+    public List<VirtualFile> RelatedFiles { get; set; }
 }
 
 #endregion
@@ -1038,23 +876,6 @@ public class Timeline
 }
 
 /// <summary>
-/// Timeline event
-/// </summary>
-public class TimelineEvent
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public DateTimeOffset Timestamp { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public EventType Type { get; set; }
-    public EventImportance Importance { get; set; }
-    public string? EvidenceId { get; set; }
-    public List<string> RelatedEntityIds { get; set; } = new();
-    public GeoLocation? Location { get; set; }
-    public Dictionary<string, object> Metadata { get; set; } = new();
-}
-
-/// <summary>
 /// Timeline pattern detection
 /// </summary>
 public class TimelinePattern
@@ -1128,26 +949,6 @@ public class Visualization
     public string? RenderFormat { get; set; } // html, svg, canvas
 }
 
-/// <summary>
-/// Citation reference
-/// </summary>
-public class Citation
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string SourceId { get; set; } = string.Empty;
-    public string SourceType { get; set; } = string.Empty;
-    public string Text { get; set; } = string.Empty;
-    public int? PageNumber { get; set; }
-    public string? Location { get; set; }
-    public double Relevance { get; set; }
-    public int? Index { get; set; }
-    public string? Source { get; set; }
-    public string? Url { get; set; }
-    public DateTimeOffset? AccessedAt { get; set; }
-    public string? Author { get; set; }
-    public DateTimeOffset? PublishedAt { get; set; }
-    public Dictionary<string, object>? Metadata { get; set; }
-}
 
 /// <summary>
 /// File attachment

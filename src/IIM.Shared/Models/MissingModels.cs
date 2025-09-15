@@ -1,4 +1,5 @@
 ﻿using IIM.Shared.Enums;
+using IIM.Shared.Models.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -409,30 +410,11 @@ public class QueuedRequest
         public string ExportedBy { get; set; } = string.Empty;
     }
 
-    /// <summary>
-    /// Plugin info
-    /// </summary>
-    public class PluginInfo
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string Version { get; set; } = "1.0.0";
-        public string Author { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public bool IsEnabled { get; set; } = true;
-        public string? PackagePath { get; set; }
-        public bool IsLoaded { get; set; }
-        public List<string> Functions { get; set; } = new();
-        public Dictionary<string, object> Metadata { get; set; } = new();
-    }
+
 
 #endregion
 
 
-
-// ========================================
-// INTERFACES
-// ========================================
 
 
 

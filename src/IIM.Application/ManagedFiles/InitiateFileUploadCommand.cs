@@ -29,10 +29,7 @@ namespace IIM.Application.Files
         /// </summary>
         public string ContentType { get; set; } = "application/octet-stream";
 
-        /// <summary>
-        /// file metadata
-        /// </summary>
-        public FileMetadata Metadata { get; set; } = new();
+ 
 
         /// <summary>
         /// User initiating the upload

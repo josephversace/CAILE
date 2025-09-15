@@ -15,6 +15,7 @@ using IIM.Shared.Models;
 using IIM.Core.AI;
 using IIM.Shared.Interfaces;
 using IIM.Core.Templates;
+using IIM.Shared.Models.Core;
 
 namespace IIM.Application.AI
 {
