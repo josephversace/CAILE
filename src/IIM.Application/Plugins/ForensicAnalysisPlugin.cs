@@ -42,11 +42,11 @@ namespace IIM.Application.Plugins
 
                         return new PluginResult { Success = true, Message = "Analysis complete.", Data = analysisResult };
                     }
-                    return new PluginResult { Success = false, ErrorMessage = "File not found." };
+                    return new PluginResult { Success = false, Error = "File not found." };
                 }
-                return new PluginResult { Success = false, ErrorMessage = "Invalid or missing 'fileId' parameter." };
+                return new PluginResult { Success = false, Error = "Invalid or missing 'fileId' parameter." };
             }
-            return new PluginResult { Success = false, ErrorMessage = $"Unknown function: {request.FunctionName}" };
+            return new PluginResult { Success = false, Error = $"Unknown function: {request.FunctionName}" };
         }
     }
 }

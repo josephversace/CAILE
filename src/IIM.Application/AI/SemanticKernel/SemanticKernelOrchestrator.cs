@@ -75,8 +75,8 @@ namespace IIM.Application.AI.SemanticKernel
             {
                 Name = plugin.Name,
                 Description = plugin.Description,
-                Version = plugin.Version,
-                IsLoaded = _pluginManager.IsPluginLoaded(pluginName),
+                Version = plugin.Version
+              
                 // Functions and Metadata would be populated based on the plugin's capabilities
             });
         }

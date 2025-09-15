@@ -2,6 +2,7 @@ using IIM.Core.Mediator;
 
 using System.ComponentModel.DataAnnotations;
 using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 
 namespace IIM.Application.Investigation
 {
@@ -54,7 +55,7 @@ namespace IIM.Application.Investigation
         /// <param name="investigationType">Type of investigation</param>
         public CreateSessionCommand(string caseId, string title, string investigationType)
         {
-            CaseId = caseId ?? throw new ArgumentNullException(nameof(caseId));
+            WorkspaceId = caseId ?? throw new ArgumentNullException(nameof(caseId));
             Title = title ?? throw new ArgumentNullException(nameof(title));
             InvestigationType = investigationType ?? throw new ArgumentNullException(nameof(investigationType));
             Metadata = new Dictionary<string, object>();
