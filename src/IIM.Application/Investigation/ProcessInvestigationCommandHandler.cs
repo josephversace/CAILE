@@ -203,7 +203,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         int maxResults,
         CancellationToken cancellationToken)
     {
-        var evidence = await _fileManager.GetF(caseId, cancellationToken);
+        var evidence = await _fileManager.(caseId, cancellationToken);
         return evidence.Take(maxResults).ToList();
     }
 }

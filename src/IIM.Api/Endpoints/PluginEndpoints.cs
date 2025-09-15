@@ -136,7 +136,7 @@ public static class PluginEndpoints
                 {
                     Intent = request.Intent,
                     Parameters = request.Parameters ?? new(),
-                    CaseId = request.CaseId,
+                    WorkspaceId = request.CaseId,
                     UserId = request.UserId
                 };
                 

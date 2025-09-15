@@ -159,7 +159,7 @@ public static class InvestigationEndpoints
             [FromServices] IMediator mediator,
             CancellationToken ct) =>
         {
-            var query = new GetSessionsByCaseCommand(caseId);
+            var query = new GetSessionsByWorkspaceCommand(caseId);
             var sessions = await mediator.Send(query, ct);
             return Results.Ok(sessions);
         })
