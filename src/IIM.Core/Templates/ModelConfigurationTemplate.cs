@@ -25,14 +25,7 @@ namespace IIM.Core.Templates;
 /// </summary>
 public interface IModelConfigurationTemplateService
 {
-    /// <summary>
-    /// Creates a new template from the current session configuration
-    /// </summary>
-    Task<ModelConfigurationTemplate> CreateTemplateFromSessionAsync(
-        string sessionId,
-        string templateName,
-        string description,
-        CancellationToken cancellationToken = default);
+
 
     /// <summary>
     /// Saves a template to storage
@@ -77,13 +70,7 @@ public interface IModelConfigurationTemplateService
         string newName,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Applies a template to an investigation session
-    /// </summary>
-    Task<InvestigationSession> ApplyTemplateToSessionAsync(
-        string templateId,
-        string sessionId,
-        CancellationToken cancellationToken = default);
+
 
     /// <summary>
     /// Loads all models specified in a template

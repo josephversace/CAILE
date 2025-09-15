@@ -120,34 +120,5 @@ namespace IIM.Application.Handlers
         }
     }
 
-    /// <summary>
-    /// Handler for investigation completion
-    /// </summary>
-    public class InvestigationCompletedHandler : INotificationHandler<InvestigationQueryCompletedNotification>
-    {
-        private readonly INotificationService _notificationService;
-        private readonly ILogger<InvestigationCompletedHandler> _logger;
-
-        public InvestigationCompletedHandler(
-            INotificationService notificationService,
-            ILogger<InvestigationCompletedHandler> logger)
-        {
-            _notificationService = notificationService;
-            _logger = logger;
-        }
-
-        public async Task Handle(InvestigationQueryCompletedNotification notification, CancellationToken cancellationToken)
-        {
-            _logger.LogInformation("Investigation query completed in {Time}ms with {ToolCount} tools",
-                notification.ProcessingTimeMs, notification.ToolsUsed.Count);
-
-            if (notification.CitationCount > 0)
-            {
-                await _notificationService.ShowNotificationAsync(
-                    $"Found {notification.CitationCount} relevant sources",
-                    NotificationType.Info,
-                    3000);
-            }
-        }
-    }
+ 
 }

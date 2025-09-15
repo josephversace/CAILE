@@ -74,12 +74,7 @@ namespace IIM.Api.Extensions
             });
 
 
-            // ========================================
-            // Session/User Services (Scoped per request)
-            // ========================================
-
-            // Session Management (Scoped - per request)
-            services.AddScoped<ISessionService, SessionService>();
+    
 
             // User Context (Scoped - per request)
             services.AddScoped<IUserContext, UserContextService>();
@@ -97,13 +92,12 @@ namespace IIM.Api.Extensions
                 var logger = sp.GetRequiredService<ILogger<ModelConfigurationTemplateService>>();
                 var storageConfig = sp.GetRequiredService<StorageConfiguration>();
                 var orchestrator = sp.GetRequiredService<IModelOrchestrator>();
-                var sessionService = sp.GetRequiredService<ISessionService>();
+         
 
                 return new ModelConfigurationTemplateService(
                     logger,
                     storageConfig,
-                    orchestrator,
-                    sessionService);
+                    orchestrator);
             });
 
             // Reasoning Service (Scoped - uses session)
@@ -111,13 +105,12 @@ namespace IIM.Api.Extensions
             {
                 var logger = sp.GetRequiredService<ILogger<SemanticKernelOrchestrator>>();
                 var modelOrchestrator = sp.GetRequiredService<IModelOrchestrator>();
-                var sessionService = sp.GetRequiredService<ISessionService>();
+          
                 var templateService = sp.GetRequiredService<IModelConfigurationTemplateService>();
 
                 return new SemanticKernelOrchestrator(
                     logger,
                     modelOrchestrator,
-                    sessionService,
                     templateService);
             });
 

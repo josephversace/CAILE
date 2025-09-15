@@ -29,7 +29,7 @@ public class ModelConfigurationTemplateService : IModelConfigurationTemplateServ
     private readonly ILogger<ModelConfigurationTemplateService> _logger;
     private readonly StorageConfiguration _storageConfig;
     private readonly IModelOrchestrator _modelOrchestrator;
-    private readonly ISessionService _sessionService;  // Changed from ISessionProvider
+
     private readonly string _templatesPath;
     private readonly Dictionary<string, ModelConfigurationTemplate> _templateCache = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
@@ -45,13 +45,12 @@ public class ModelConfigurationTemplateService : IModelConfigurationTemplateServ
     public ModelConfigurationTemplateService(
         ILogger<ModelConfigurationTemplateService> logger,
         StorageConfiguration storageConfig,
-        IModelOrchestrator modelOrchestrator,
-        ISessionService sessionService)  // Changed from ISessionProvider
+        IModelOrchestrator modelOrchestrator)  // Changed from ISessionProvider
     {
         _logger = logger;
         _storageConfig = storageConfig;
         _modelOrchestrator = modelOrchestrator;
-        _sessionService = sessionService;  // Changed from _investigationService
+
 
         // Use centralized storage configuration
         _templatesPath = Path.Combine(_storageConfig.BasePath, "Templates");
@@ -61,33 +60,7 @@ public class ModelConfigurationTemplateService : IModelConfigurationTemplateServ
         _ = InitializeSystemTemplatesAsync();
     }
 
-    /// <summary>
-    /// Creates a template from an existing investigation session's configuration
-    /// </summary>
-    public async Task<ModelConfigurationTemplate> CreateTemplateFromSessionAsync(
-        string sessionId,
-        string templateName,
-        string description,
-        CancellationToken cancellationToken = default)
-    {
-        var session = await _sessionService.GetSessionAsync(sessionId, cancellationToken);
-
-        var template = new ModelConfigurationTemplate
-        {
-            Name = templateName,
-            Description = description,
-            Category = DetermineCategoryFromSession(session),
-            Models = ConvertSessionModelsToTemplate(session.Models),
-            Tools = ConvertSessionToolsToTemplate(session.EnabledTools),
-            Metadata = new TemplateMetadata
-            {
-                CreatedBy = session.CreatedBy,
-                CreatedAt = DateTimeOffset.UtcNow
-            }
-        };
-
-        return await SaveTemplateAsync(template, cancellationToken);
-    }
+  
 
     /// <summary>
     /// Saves a template to the file system
@@ -281,55 +254,7 @@ public class ModelConfigurationTemplateService : IModelConfigurationTemplateServ
         return await SaveTemplateAsync(clone, cancellationToken);
     }
 
-    /// <summary>
-    /// Applies a template configuration to an investigation session
-    /// </summary>
-    public async Task<InvestigationSession> ApplyTemplateToSessionAsync(
-        string templateId,
-        string sessionId,
-        CancellationToken cancellationToken = default)
-    {
-        var template = await GetTemplateAsync(templateId, cancellationToken);
-        if (template == null)
-        {
-            throw new KeyNotFoundException($"Template {templateId} not found");
-        }
 
-        var session = await _sessionService.GetSessionAsync(sessionId, cancellationToken);
-
-        // Clear existing models and apply template models
-        session.Models.Clear();
-        foreach (var (capability, config) in template.Models)
-        {
-            session.Models[capability] = new ModelConfiguration
-            {
-                ModelId = config.ModelId,
-                Parameters = config.Parameters,
-                Status = ModelStatus.Available,
-                Type = DetermineModelType(config.ModelId)
-            };
-        }
-
-        // Apply tools
-        session.EnabledTools = template.Tools
-            .Where(t => t.Value.Enabled)
-            .Select(t => t.Key)
-            .ToList();
-
-        // Track usage
-        template.Metadata.UsageCount++;
-        template.Metadata.RecentCases.Add(session.CaseId);
-        if (template.Metadata.RecentCases.Count > 10)
-        {
-            template.Metadata.RecentCases.RemoveAt(0);
-        }
-        await SaveTemplateAsync(template, cancellationToken);
-
-        _logger.LogInformation("Applied template {TemplateId} to session {SessionId}",
-            templateId, sessionId);
-
-        return session;
-    }
 
     /// <summary>
     /// Loads all models specified in a template
@@ -559,20 +484,6 @@ public class ModelConfigurationTemplateService : IModelConfigurationTemplateServ
         return ModelType.LLM; // Default to LLM
     }
 
-    /// <summary>
-    /// Determines category based on session type
-    /// </summary>
-    private string DetermineCategoryFromSession(InvestigationSession session)
-    {
-        return session.Type switch
-        {
-            InvestigationType.Financial => "Financial",
-            InvestigationType.Cybercrime => "Cyber",
-            InvestigationType.OSINTResearch => "OSINT",
-            InvestigationType.ForensicAnalysis => "Forensics",
-            _ => "General"
-        };
-    }
 
     /// <summary>
     /// Converts session models to template format
