@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using IIM.Shared.Enums;
+using IIM.Shared.Models.Core;
 
 namespace IIM.Shared.Models
 {

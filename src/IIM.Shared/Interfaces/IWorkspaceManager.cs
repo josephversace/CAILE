@@ -1,66 +1,60 @@
-
 using IIM.Shared.Enums;
+using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using IIM.Shared.Models;
 using System.Threading;
+using System.Threading.Tasks;
 
-namespace IIM.Shared.Models;
+namespace IIM.Shared.Interfaces;
 
 /// <summary>
-/// Interface for managing workspaces
+/// Defines the contract for managing the lifecycle and high-level operations of workspaces.
 /// </summary>
 public interface IWorkspaceManager
 {
     /// <summary>
-    /// Creates a new case with the specified details
+    /// Creates a new workspace with the specified details.
     /// </summary>
-    Task<Workspace> CreateWorkspaceAsync(string name, string description, WorkspaceType type,
-        CancellationToken cancellationToken = default);
+    Task<Workspace> CreateWorkspaceAsync(string name, string description, WorkspaceType type, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Retrieves a case by its unique identifier
+    /// Retrieves a workspace by its unique identifier.
     /// </summary>
-    Task<Workspace?> GetWorkspaceAsync(string workspaceId, CancellationToken cancellationToken = default);
+    Task<Workspace?> GetWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Retrieves all cases, optionally filtered by user
+    /// Retrieves all workspaces, optionally filtered by user.
     /// </summary>
-    Task<List<Workspace>> GetUserWorkspacesAsync(string? userId = null,
-        CancellationToken cancellationToken = default);
+    Task<IEnumerable<Workspace>> GetUserWorkspacesAsync(string? userId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Updates a case with the provided update action
+    /// Updates a workspace with the provided update action.
     /// </summary>
-    Task<bool> UpdateWorkspaceAsync(string caseId, Action<Workspace> updateAction,
-        CancellationToken cancellationToken = default);
+    Task<bool> UpdateWorkspaceAsync(Guid workspaceId, Action<Workspace> updateAction, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Links an investigation session to a case
+    /// Links an investigation session to a workspace.
     /// </summary>
-    Task<bool> LinkSessionToWorkspaceAsync(string sessionId, string caseId,
-        CancellationToken cancellationToken = default);
+    Task<bool> LinkSessionToWorkspaceAsync(Guid sessionId, Guid workspaceId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Links evidence to a case
+    /// Links a virtual file to a workspace.
     /// </summary>
-    Task<bool> LinkFileToWorkspaceAsync(string fileId, string workspaceId,
-        CancellationToken cancellationToken = default);
+    Task<bool> LinkFileToWorkspaceAsync(Guid virtualFileId, Guid workspaceId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets recent cases ordered by update date
+    /// Gets recent workspaces ordered by update date.
     /// </summary>
-    Task<List<Workspace>> GetRecentWorkspacesAsync(int count = 10,
-        CancellationToken cancellationToken = default);
+    Task<IEnumerable<Workspace>> GetRecentWorkspacesAsync(int count = 10, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deletes a case (soft delete)
+    /// Deletes a workspace (soft delete).
     /// </summary>
-    Task<bool> DeleteWorkspaceAsync(string caseId, CancellationToken cancellationToken = default);
+    Task<bool> DeleteWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default);
 
-    Task<List<TimelineEvent>> GetCaseTimelineAsync(
-            string caseId,
-            CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Gets the timeline of events for a specific workspace.
+    /// </summary>
+    Task<IEnumerable<TimelineEvent>> GetWorkspaceTimelineAsync(Guid workspaceId, CancellationToken cancellationToken = default);
 }

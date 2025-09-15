@@ -3,6 +3,7 @@ using IIM.Shared.Models;
 using IIM.Shared.Enums;
 using Microsoft.AspNetCore.Mvc;
 using IIM.Application.Investigation;
+using IIM.Shared.Models.Core;
 
 namespace IIM.Api.Endpoints;
 
@@ -33,7 +34,7 @@ public static class InvestigationEndpoints
         {
             // Convert CreateSessionRequest to CreateSessionCommand
             var command = new CreateSessionCommand(
-                request.CaseId,
+                request.WorkspaceId,
                 request.Title,
                 request.InvestigationType);
 
@@ -153,7 +154,7 @@ public static class InvestigationEndpoints
         // ========================================
 
         // Get sessions by case
-        investigation.MapGet("/case/{caseId}/sessions", async (
+        investigation.MapGet("/workspace/{caseId}/sessions", async (
             string caseId,
             [FromServices] IMediator mediator,
             CancellationToken ct) =>

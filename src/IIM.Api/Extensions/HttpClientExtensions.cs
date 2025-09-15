@@ -28,15 +28,7 @@ namespace IIM.Api.Extensions
                 client.BaseAddress = new Uri(baseUrl);
                 client.Timeout = TimeSpan.FromSeconds(30);
             });
-            
-            // MinIO object storage client
-            services.AddHttpClient("minio", client =>
-            {
-                var baseUrl = configuration["MinIO:BaseUrl"] ?? "http://localhost:9000";
-                client.BaseAddress = new Uri(baseUrl);
-                client.Timeout = TimeSpan.FromMinutes(5); // Larger timeout for file uploads
-            });
-            
+         
             // WSL management client
             services.AddHttpClient("wsl", client =>
             {

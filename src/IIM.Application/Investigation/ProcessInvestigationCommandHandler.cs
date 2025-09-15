@@ -9,6 +9,7 @@ using System.Text.Json;
 using IIM.Shared.Models;
 using IIM.Application.Investigation;
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models.Core;
 
 /// Handles processing of investigation queries - adapted to actual shared models.
 /// </summary>
@@ -16,7 +17,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
 {
     private readonly ILogger<ProcessInvestigationCommandHandler> _logger;
     private readonly ISessionService _sessionService;
-    private readonly IWorkspaceManager _caseManager;
+    private readonly IWorkspaceManager _workspaceManager;
     private readonly IReasoningService _reasoningService;
     private readonly IInferenceService _inferenceService;
     private readonly IManagedFileManager _fileManager;
@@ -25,7 +26,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
     public ProcessInvestigationCommandHandler(
         ILogger<ProcessInvestigationCommandHandler> logger,
         ISessionService sessionService,
-        IWorkspaceManager caseManager,
+        IWorkspaceManager workspaceManager,
         IReasoningService reasoningService,
         IInferenceService inferenceService,
         IManagedFileManager fileManager,
@@ -33,7 +34,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
-        _caseManager = caseManager ?? throw new ArgumentNullException(nameof(caseManager));
+        _workspaceManager = workspaceManager ?? throw new ArgumentNullException(nameof(workspaceManager));
         _reasoningService = reasoningService ?? throw new ArgumentNullException(nameof(reasoningService));
         _inferenceService = inferenceService ?? throw new ArgumentNullException(nameof(inferenceService));
         _fileManager = fileManager ?? throw new ArgumentNullException(nameof(fileManager));
@@ -47,7 +48,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         _logger.LogInformation("Processing query for session {SessionId}", request.SessionId);
 
         var session = await _sessionService.GetSessionAsync(request.SessionId, cancellationToken);
-        var workspaceEntity = await _caseManager.GetWorkspaceAsync(session.WorkspaceId, cancellationToken);
+        var workspaceEntity = await _workspaceManager.GetWorkspaceAsync(session.WorkspaceId, cancellationToken);
 
         // Build InvestigationQuery
         var query = new InvestigationQuery
@@ -233,7 +234,7 @@ public class ProcessInvestigationCommandHandler : IRequestHandler<ProcessInvesti
         }
     }
 
-    private async Task<List<ManagedFile>> GetRelatedFilesAsync(
+    private async Task<List<VirtualFile>> GetRelatedFilesAsync(
         string caseId,
         string queryText,
         int maxResults,

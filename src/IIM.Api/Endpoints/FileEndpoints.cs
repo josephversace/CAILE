@@ -40,7 +40,6 @@ public static class FileEndpoints
                 FileName = request.FileName,
                 FileSize = request.FileSize,
                 ContentType = request.ContentType,
-                Metadata = request.Metadata,
                 UserId = httpContext.User?.Identity?.Name ?? "Anonymous"
             };
 
@@ -60,7 +59,7 @@ public static class FileEndpoints
         {
             var command = new ConfirmFileUploadCommand
             {
-                EvidenceId = request.EvidenceId,
+                FileId = request.FileId,
                 ETag = request.ETag,
                 ClientHash = request.ClientHash
             };
@@ -72,7 +71,7 @@ public static class FileEndpoints
         })
         .WithName("ConfirmFileUpload")
         .WithSummary("Confirm file upload and verify integrity")
-        .Produces<ConfirmEvidenceUploadResponse>()
+        .Produces<ConfirmFileUploadResponse>()
         .ProducesProblem(StatusCodes.Status400BadRequest);
 
         // Direct evidence ingestion (for smaller files)
@@ -102,25 +101,13 @@ public static class FileEndpoints
                 return Results.BadRequest(new { error = "No file provided" });
             }
 
-            // Extract metadata from form
-            var metadata = new FileMetadata
-            {
-                //CaseNumber = form["caseNumber"].ToString(),
-                //CollectedBy = form["collectedBy"].ToString() ?? request.HttpContext.User?.Identity?.Name ?? "Unknown",
-                //CollectionDate = DateTimeOffset.TryParse(form["collectionDate"], out var date)
-                //    ? date
-                //    : DateTimeOffset.UtcNow,
-                //CollectionLocation = form["collectionLocation"].ToString(),
-                //Description = form["description"].ToString(),
-                //SessionId = form["sessionId"].ToString()
-            };
+     
 
             // Ingest evidence
             using var stream = file.OpenReadStream();
             var evidenceContext = await evidenceManager.IngestFileAsync(
                 stream,
                 file.FileName,
-                metadata,
                 ct);
 
             return Results.Created($"/api/evidence/{evidenceContext.Hash}", evidenceContext);

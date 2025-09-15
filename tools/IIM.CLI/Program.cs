@@ -411,7 +411,7 @@ internal class MockPluginSandbox : IPluginSandbox
             HttpClient = new MockHttpClient(),
             ProcessRunner = new MockProcessRunner(),
             EvidenceStore = new MockEvidenceStore(),
-            PluginInfo = new PluginInfo
+           PluginInfo = new PluginInfo
             {
                 Id = plugin.Id,
                 Name = plugin.Name,
@@ -454,8 +454,7 @@ internal class MockFileSystem : IIM.Plugin.SDK.Security.ISecureFileSystem
     public Task<bool> FileExistsAsync(string path, CancellationToken cancellationToken = default)
         => Task.FromResult(false);
 
-    public Task<FileMetadata?> GetFileMetadataAsync(string path, CancellationToken cancellationToken = default)
-        => Task.FromResult<FileMetadata?>(null);
+
 
     public Task<string[]> ListFilesAsync(string directory, string searchPattern = "*", CancellationToken cancellationToken = default)
         => Task.FromResult(Array.Empty<string>());

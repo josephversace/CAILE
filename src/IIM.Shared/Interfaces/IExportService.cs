@@ -6,6 +6,7 @@ using System.Text;
 using IIM.Shared.Models;
 using IIM.Shared.Interfaces;
 using System.Threading.Tasks;
+using IIM.Shared.Models.Core;
 
 namespace IIM.Shared.Interfaces;
 

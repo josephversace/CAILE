@@ -1,40 +1,24 @@
-
+using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using IIM.Shared.Models;
 
 namespace IIM.Shared.Interfaces
 {
+    /// <summary>
+    /// Defines the contract for the client-side API service that communicates with the backend.
+    /// </summary>
     public interface IIIMApiClient
     {
-        Task<InvestigationSession> CreateSessionAsync(CreateSessionRequest request);
-        Task<bool> EnsureWslAsync();
-        Task<ModelInfo[]> GetAvailableModelsAsync();
-        Task<SystemStatus> GetSystemStatusAsync();
-        Task<WslStatus> GetWslStatusAsync();
-        Task<ManagedFile> IngestFileAsync(Stream file, string fileName, FileMetadata metadata);
-        Task<bool> IsApiAvailableAsync();
-        Task<bool> LoadModelAsync(string modelId);
-        Task<InvestigationResponse> ProcessQueryAsync(string sessionId, string query);
+        Task<List<Workspace>> GetWorkspacesAsync();
 
-        Task<InitiateFileUploadResponse> InitiateEvidenceUploadAsync(
-        InitiateFileUploadRequest request,
-        CancellationToken cancellationToken = default);
+        Task<Workspace> GetWorkspaceAsync(Guid workspaceId);
 
-        Task<ConfirmFileUploadResponse> ConfirmFileUploadAsync(
-        ConfirmFileUploadRequest request,
-        CancellationToken cancellationToken = default);
+        Task<List<VirtualFile>> GetFilesAsync(Guid workspaceId);
 
-        Task<Settings> GetSettingsAsync();
-        Task UpdateSettingsAsync(Settings settings);
+        Task<VirtualFile> GetFileAsync(Guid fileId);
 
-        Task<TestConnectionResult> TestMinIOConnectionAsync(string endpoint);
-
-
+        Task<string> InitiateFileUploadAsync(Guid workspaceId, string fileName, string path, long fileSize, string fileHash);
     }
 }

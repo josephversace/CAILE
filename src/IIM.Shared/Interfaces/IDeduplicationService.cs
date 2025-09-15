@@ -1,5 +1,6 @@
 
 using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,7 +26,7 @@ namespace IIM.Shared.Interfaces
         /// <summary>
         /// Check if a hash already exists and return the evidence
         /// </summary>
-        Task<ManagedFile?> CheckDuplicateAsync(string hash, CancellationToken cancellationToken = default);
+        Task<StoredFile?> CheckDuplicateAsync(string hash, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get count of how many times this hash has been seen

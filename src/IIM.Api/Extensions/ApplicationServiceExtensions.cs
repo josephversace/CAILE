@@ -46,9 +46,9 @@ namespace IIM.Api.Extensions
             // Case Manager (Scoped - uses DB)
             services.AddScoped<IWorkspaceManager>(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<SqliteCaseManager>>();
+                var logger = sp.GetRequiredService<ILogger<SqliteworkspaceManager>>();
                 var storageConfig = sp.GetRequiredService<StorageConfiguration>();
-                return new SqliteCaseManager(logger, storageConfig);
+                return new SqliteworkspaceManager(logger, storageConfig);
             });
 
             // ========================================
