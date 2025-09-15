@@ -1,77 +1,53 @@
 using IIM.Plugin.SDK;
 using IIM.Shared.Interfaces;
-using IIM.Shared.Models;
-using Microsoft.Extensions.Logging;
 using System;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using IIM.Shared.Models.Core;
 
 namespace IIM.Application.Plugins
 {
     public class ForensicAnalysisPlugin : InvestigationPlugin
     {
-        private readonly ILogger<ForensicAnalysisPlugin> _logger;
         private readonly IWorkspaceProvider _workspaceProvider;
 
-        public ForensicAnalysisPlugin(ILogger<ForensicAnalysisPlugin> logger, IWorkspaceProvider workspaceProvider)
+        public override string Id => "com.example.forensicanalysis";
+        public override string Name => "Forensic Analysis Plugin";
+        public override string Description => "A sample plugin for forensic metadata analysis.";
+        public override string Version => "1.0.0";
+        public override PluginCapabilities Capabilities => new()
         {
-            _logger = logger;
-            _workspaceProvider = workspaceProvider;
+            CanProcessText = true,
+            CanProcessFiles = true
+        };
+
+        public ForensicAnalysisPlugin(IWorkspaceProvider workspaceProvider)
+        {
+            _workspaceProvider = workspaceProvider; // Injected via DI
         }
 
-        public override string Name => "Forensic Meta-Data Analyzer";
-        public override string Description => "Analyzes forensic metadata of files, such as collection dates and locations.";
-        public override string Version => "1.0";
-
-        public override async Task<PluginResult> ExecuteAsync(PluginRequest request)
+        public override async Task<PluginResult> ExecuteAsync(PluginRequest request, CancellationToken cancellationToken)
         {
-            if (!request.Parameters.TryGetValue("fileId", out var fileIdObj) || !Guid.TryParse(fileIdObj.ToString(), out var fileId))
+            if (request.FunctionName == "analyze_file_metadata")
             {
+                if (request.Parameters.TryGetValue("fileId", out var fileIdObj) && Guid.TryParse(fileIdObj.ToString(), out var fileId))
+                {
+                    var virtualFile = await _workspaceProvider.GetVirtualFileByIdAsync(fileId, cancellationToken);
+                    if (virtualFile != null)
+                    {
+                        // In a real plugin, you would perform complex analysis here.
+                        var analysisResult = $"Analysis of {virtualFile.FileName}:\n" +
+                                             $"- Collected By: {virtualFile.CollectedBy}\n" +
+                                             $"- Collection Date: {virtualFile.CollectionDate}\n" +
+                                             $"- Collection Location: {virtualFile.CollectedLocation}";
+
+                        return new PluginResult { Success = true, Message = "Analysis complete.", Data = analysisResult };
+                    }
+                    return new PluginResult { Success = false, ErrorMessage = "File not found." };
+                }
                 return new PluginResult { Success = false, ErrorMessage = "Invalid or missing 'fileId' parameter." };
             }
-
-            _logger.LogInformation("ForensicAnalysisPlugin started for file: {FileId}", fileId);
-
-            try
-            {
-                var virtualFile = await _workspaceProvider.GetVirtualFileByIdAsync(fileId);
-                if (virtualFile == null)
-                {
-                    return new PluginResult { Success = false, ErrorMessage = $"File with ID '{fileId}' not found." };
-                }
-
-                // Now we can safely access the forensic data from the VirtualFile object
-                var analysisResult = new
-                {
-                    CollectionDate = virtualFile.CollectionDate,
-                    CollectedBy = virtualFile.CollectedBy,
-                    CollectionLocation = virtualFile.CollectedLocation,
-                    CustomMetadata = virtualFile.CustomMetadata,
-                    Hash = virtualFile.StoredFileHash
-                };
-
-                var result = new PluginResult
-                {
-                    Success = true,
-                    Message = "Forensic metadata analysis complete.",
-                    Data = analysisResult,
-                    // You could also add a visualization here if desired
-                    // VisualizationType = "Table", 
-                };
-
-                _logger.LogInformation("ForensicAnalysisPlugin completed for file: {FileId}", fileId);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error executing ForensicAnalysisPlugin for file {FileId}", fileId);
-                return new PluginResult
-                {
-                    Success = false,
-                    ErrorMessage = $"An unexpected error occurred: {ex.Message}"
-                };
-            }
+            return new PluginResult { Success = false, ErrorMessage = $"Unknown function: {request.FunctionName}" };
         }
     }
 }
+

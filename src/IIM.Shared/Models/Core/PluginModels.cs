@@ -18,25 +18,7 @@ namespace IIM.Shared.Models.Core
         public Dictionary<string, string> Metadata { get; set; } = new();
     }
 
-    /// <summary>
-    /// Represents a request sent to a plugin for execution.
-    /// </summary>
-    public class PluginRequest
-    {
-        public string FunctionName { get; set; }
-        public Dictionary<string, object> Parameters { get; set; }
-    }
 
-    /// <summary>
-    /// Represents the result returned from a plugin execution.
-    /// </summary>
-    public class PluginResult
-    {
-        public bool IsSuccess { get; set; }
-        public string Message { get; set; }
-        public object Data { get; set; }
-        public string ErrorMessage { get; set; }
-    }
 
     public class PluginStatus
     {

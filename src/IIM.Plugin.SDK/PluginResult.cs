@@ -17,7 +17,12 @@ public class PluginResult
     /// The actual data/results from the plugin
     /// </summary>
     public object? Data { get; set; }
-    
+
+    /// <summary>
+    /// Message 
+    /// </summary>
+    public string? Message { get; set; }
+
     /// <summary>
     /// Error message if Success is false
     /// </summary>
