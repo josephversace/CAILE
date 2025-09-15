@@ -19,7 +19,7 @@ namespace IIM.Api.Extensions
         {
             // Add SimpleMediator (your custom implementation)
             services.AddSimpleMediator(
-                typeof(CreateSessionCommand).Assembly,  // Application assembly
+                typeof(LoadModelCommand).Assembly,  // Application assembly
                 typeof(IIM.Core.AI.IModelOrchestrator).Assembly  // Core assembly
             );
 

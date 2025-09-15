@@ -1,9 +1,4 @@
-﻿// ============================================
-// File: src/IIM.Core/Services/UserContextService.cs
-// Provides user context for audit logging
-// ============================================
-
-using IIM.Core.Configuration;
+﻿using IIM.Core.Configuration;
 using IIM.Core.Services;
 using IIM.Shared.Interfaces;
 using Microsoft.AspNetCore.Http;

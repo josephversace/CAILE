@@ -15,16 +15,16 @@ namespace IIM.Application.AI.SemanticKernel
     public class SemanticKernelOrchestrator // This class would implement your high-level AI orchestration interfaces
     {
         private readonly ILogger<SemanticKernelOrchestrator> _logger;
-        private readonly ISessionService _sessionService;
+
         private readonly IPluginManager _pluginManager;
 
         public SemanticKernelOrchestrator(
             ILogger<SemanticKernelOrchestrator> logger,
-            ISessionService sessionService,
+      
             IPluginManager pluginManager)
         {
             _logger = logger;
-            _sessionService = sessionService;
+    
             _pluginManager = pluginManager;
         }
 
@@ -34,14 +34,7 @@ namespace IIM.Application.AI.SemanticKernel
         {
             _logger.LogInformation("Processing message for session {SessionId}", sessionId);
 
-            var session = await _sessionService.GetSessionAsync(sessionId, cancellationToken);
-            if (session == null)
-            {
-                throw new InvalidOperationException($"Session with ID {sessionId} not found.");
-            }
 
-            // Add user message to session
-            session.Messages.Add(userMessage);
 
             // ... (complex AI logic would go here) ...
             // This logic would involve interacting with plugins, generating responses, etc.
@@ -56,8 +49,7 @@ namespace IIM.Application.AI.SemanticKernel
                 Timestamp = DateTimeOffset.UtcNow
             };
 
-            session.Messages.Add(aiResponse);
-            session.UpdatedAt = DateTimeOffset.UtcNow;
+
 
             // Save the updated session state
         //    await _sessionService.UpdateSessionAsync(session, cancellationToken);
