@@ -25,7 +25,7 @@ namespace IIM.Api.Services
             {
                 try
                 {
-                    _logger.LogInformation("Starting evidence integrity check");
+                    _logger.LogInformation("Starting file integrity check");
 
                     // In production, get list of evidence IDs from database
                     // For now, this is a placeholder

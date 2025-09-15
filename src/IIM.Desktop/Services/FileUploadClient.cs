@@ -2,6 +2,7 @@ using IIM.Desktop.Services.Http;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
@@ -156,7 +157,7 @@ namespace IIM.Desktop.Services
                 });
 
                 // Return the file object
-                return new ManagedFile
+                return new StoredFile
                 {
                     Id = initiateResponse.FileId,
                     OriginalFileName = fileName,

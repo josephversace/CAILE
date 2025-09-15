@@ -5,7 +5,7 @@ using System.Text;
 namespace IIM.Infrastructure.Storage
 {
     // Rename the class to be more generic
-    public class S3StorageConfiguration  // ← Renamed from MinIOConfiguration
+    public class S3StorageConfiguration 
     {
         public string Endpoint { get; set; } = "localhost:8333";
         public string AccessKey { get; set; } = "admin";

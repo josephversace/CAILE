@@ -1,52 +1,46 @@
-﻿using IIM.Shared.Enums;
-using IIM.Shared.Models.Core;
+﻿using IIM.Shared.Models.Core;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace IIM.Shared.Interfaces;
-
-/// <summary>
-/// A transitional, high-level interface for orchestrating file management operations.
-/// This interface is being refactored to use the new VirtualFile/StoredFile model.
-/// Its responsibilities will eventually be absorbed by more specific application services.
-/// </summary>
-public interface IManagedFileManager
+namespace IIM.Shared.Interfaces
 {
     /// <summary>
-    /// Ingests a new file into the system. This involves creating a StoredFile (if new) and a VirtualFile.
+    /// A high-level orchestrator for managing the lifecycle of files.
+    /// This acts as a transitional interface, combining ingestion and processing logic
+    /// that will eventually be broken into more specialized services.
     /// </summary>
-    /// <param name="stream">The file content stream.</param>
-    /// <param name="virtualFile">A VirtualFile object pre-populated with context-specific metadata.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The newly created and saved VirtualFile entity.</returns>
-    Task<VirtualFile> IngestFileAsync(Stream stream, VirtualFile virtualFile, CancellationToken cancellationToken = default);
+    public interface IManagedFileManager
+    {
+        /// <summary>
+        /// Ingests a new file into the system from a stream. This is the primary method for adding new evidence.
+        /// It handles hashing, deduplication, storage, and metadata creation.
+        /// </summary>
+        /// <param name="stream">The data stream of the file to ingest.</param>
+        /// <param name="virtualFile">A VirtualFile object containing all context-specific metadata.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The newly created and saved VirtualFile entity.</returns>
+        Task<VirtualFile> IngestFileAsync(Stream stream, VirtualFile virtualFile, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Retrieves a single virtual file by its unique ID.
-    /// </summary>
-    Task<VirtualFile?> GetFileAsync(Guid fileId, CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Processes an existing file using a provided stream processor function, creating a new file as a result.
+        /// </summary>
+        /// <param name="virtualFileId">The ID of the VirtualFile to process.</param>
+        /// <param name="processor">A function that takes the input stream and returns the processed stream.</param>
+        /// <param name="processingType">A string describing the type of processing being performed (e.g., "OCR", "TRANSCRIBE").</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A new VirtualFile record representing the processed output.</returns>
+        Task<VirtualFile> ProcessFileAsync(Guid virtualFileId, Func<Stream, Task<Stream>> processor, string processingType, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Retrieves a list of all virtual files within a given workspace.
-    /// </summary>
-    Task<IEnumerable<VirtualFile>> GetFilesByWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Updates the status of a virtual file.
-    /// </summary>
-    Task UpdateFileStatusAsync(Guid fileId, FileUploadStatus status, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Processes a file using a provided stream processor function and saves the output as a new StoredFile/VirtualFile.
-    /// </summary>
-    Task<VirtualFile> ProcessFileAsync(Guid originalFileId, string processingType, Func<Stream, Task<Stream>> processor, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Exports a file and its chain of custody report to a specified path.
-    /// </summary>
-    Task ExportFileAsync(Guid fileId, string exportPath, CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Verifies the integrity of a stored file by recalculating its hash and comparing it
+        // to the hash of its linked StoredFile.
+        /// </summary>
+        /// <param name="virtualFileId">The ID of the VirtualFile to verify.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>True if the hashes match, otherwise false.</returns>
+        Task<bool> VerifyIntegrityAsync(Guid virtualFileId, CancellationToken cancellationToken = default);
+    }
 }
 

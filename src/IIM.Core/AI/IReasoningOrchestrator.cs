@@ -6,6 +6,7 @@ using IIM.Shared.Models;
 using Microsoft.SemanticKernel;
 using IIM.Core.Models;
 using IIM.Shared.Enums;
+using IIM.Shared.Models.Core;
 
 
 namespace IIM.Core.AI

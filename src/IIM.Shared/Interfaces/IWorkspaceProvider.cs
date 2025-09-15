@@ -5,56 +5,29 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace IIM.Shared.Interfaces;
-
-/// <summary>
-/// Defines the contract for a low-level data provider that manages the metadata
-/// of the virtual file system (files and folders) within workspaces.
-/// </summary>
-public interface IWorkspaceProvider
+namespace IIM.Shared.Interfaces
 {
-
-
-    Task<VirtualFolder> CreateFolderAsync(string path, string folderName, Guid workspaceId);
-    Task<IEnumerable<object>> GetFolderContentsAsync(string path, Guid workspaceId);
-
-    // === File Operations ===
-
     /// <summary>
-    /// Creates a new virtual file reference in the database.
+    /// Provides a low-level, data-centric interface for interacting with the virtual file system's metadata.
+    /// This is the contract for the database implementation (e.g., PostgreSQL).
     /// </summary>
-    Task<VirtualFile> CreateVirtualFileAsync(VirtualFile virtualFile);
+    public interface IWorkspaceProvider
+    {
+        // --- Virtual File Operations ---
+        Task<VirtualFile?> GetVirtualFileByIdAsync(Guid virtualFileId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<VirtualFile>> GetVirtualFilesByWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default);
+        Task<VirtualFile> CreateVirtualFileAsync(VirtualFile virtualFile, CancellationToken cancellationToken = default);
+        Task<VirtualFile> UpdateVirtualFileAsync(VirtualFile virtualFile, CancellationToken cancellationToken = default);
+        Task DeleteVirtualFileAsync(Guid virtualFileId, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Retrieves a specific virtual file by its unique ID.
-    /// </summary>
-    Task<VirtualFile?> GetVirtualFileByIdAsync(Guid virtualFileId, CancellationToken cancellationToken = default);
+        // --- Stored File (Content) Operations ---
+        Task<bool> StoredFileExistsAsync(string hash, CancellationToken cancellationToken = default);
+        Task<StoredFile?> GetStoredFileByHashAsync(string hash, CancellationToken cancellationToken = default);
+        Task<StoredFile> CreateStoredFileAsync(StoredFile storedFile, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Retrieves all virtual files within a specific workspace.
-    /// </summary>
-    Task<IEnumerable<VirtualFile>> GetVirtualFilesByWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Updates an existing virtual file record.
-    /// </summary>
-    Task UpdateVirtualFileAsync(VirtualFile virtualFile, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Checks if a StoredFile with the given hash already exists.
-    /// </summary>
-    Task<bool> StoredFileExistsAsync(string hash, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Creates a new StoredFile record.
-    /// </summary>
-    Task CreateStoredFileAsync(StoredFile storedFile, CancellationToken cancellationToken = default);
-
-    // === Generic Operations ===
-
-    /// <summary>
-    /// Deletes a virtual file or folder reference by its ID.
-    /// </summary>
-    Task DeleteReferenceAsync(Guid id);
+        // --- Folder Operations ---
+        Task<VirtualFolder> CreateFolderAsync(VirtualFolder folder, CancellationToken cancellationToken = default);
+        Task<IEnumerable<object>> GetFolderContentsAsync(Guid workspaceId, string path, CancellationToken cancellationToken = default);
+    }
 }
 

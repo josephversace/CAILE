@@ -1,74 +1,37 @@
-﻿using IIM.Api.Configuration;
-
-using IIM.Application.Services;
-using IIM.Core.Configuration;
-using IIM.Core.Services;
-using IIM.Infrastructure.Data;
-using IIM.Infrastructure.Export;
-using IIM.Infrastructure.Storage;
+﻿using IIM.Api.Services;
+using IIM.Application.Behaviors;
+using IIM.Application.Behaviours;
+using IIM.Core.Mediator;
 using IIM.Shared.Interfaces;
-using IIM.Shared.Models;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 
 namespace IIM.Api.Extensions
 {
-    public static class ApplicationServiceExtensions
-    {
-        public static IServiceCollection AddApplicationServices(
-            this IServiceCollection services,
-            IConfiguration configuration,
-            DeploymentConfiguration deployment)
-        {
-            // ========================================
-            // Investigation Services (Scoped)
-            // ========================================
+	public static class ServiceCollectionExtensions
+	{
+		public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+		{
+			// Register Mediator and its behaviors from the Application assembly
+			services.AddSimpleMediator(typeof(IManagedFileManager).Assembly);
+			services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+			services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-            // Investigation Service (Scoped - per request)
-            services.AddScoped<IInvestigationService, InvestigationService>();
+			// Add other high-level application services here if needed...
 
-            // Evidence Manager (Scoped - uses DB context)
-            services.AddScoped<IFileManager>(sp =>
-            {
-                var logger = sp.GetRequiredService<ILogger<EvidenceManager>>();
-                var storageConfig = sp.GetRequiredService<StorageConfiguration>();
-                var auditContext = sp.GetRequiredService<AuditDbContext>();
+			return services;
+		}
 
-                var config = new FilesConfiguration
-                {
-                    StorePath = storageConfig.EvidencePath,
-                    EnableEncryption = configuration.GetValue<bool>("Evidence:EnableEncryption", false),
-                    RequireDualControl = configuration.GetValue<bool>("Evidence:RequireDualControl", false),
-                    MaxFileSizeMb = configuration.GetValue<int>("Evidence:MaxFileSizeMb", 10240)
-                };
+		public static IServiceCollection AddBackgroundServices(this IServiceCollection services, IConfiguration configuration)
+		{
+			// Background service for monitoring evidence integrity
+			services.AddHostedService<EvidenceIntegrityMonitor>();
 
-                return new EvidenceManager(logger, config, auditContext);
-            });
+			// Add other background services here...
 
-            // Case Manager (Scoped - uses DB)
-            services.AddScoped<IWorkspaceManager>(sp =>
-            {
-                var logger = sp.GetRequiredService<ILogger<SqliteworkspaceManager>>();
-                var storageConfig = sp.GetRequiredService<StorageConfiguration>();
-                return new SqliteworkspaceManager(logger, storageConfig);
-            });
-
-            // ========================================
-            // Processing Services (Scoped)
-            // ========================================
-
-            // Inference Service (Scoped - high-level operations)
-            services.AddScoped<IInferenceService, InferenceService>();
-
-            // Template Engine (Scoped)
-            services.Configure<TemplateEngineOptions>(configuration.GetSection("TemplateEngine"));
-            services.AddScoped<ITemplateEngine, TemplateEngine>();
-
-            // Visualization Service (Scoped)
-            services.AddScoped<IVisualizationService, VisualizationService>();
-
-            // Export Services
-            services.AddExportServices();
-
-            return services;
-        }
-    }
+			return services;
+		}
+	}
 }
+
