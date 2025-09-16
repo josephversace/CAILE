@@ -28,6 +28,10 @@ namespace IIM.Shared.Interfaces
         // --- Folder Operations ---
         Task<VirtualFolder> CreateFolderAsync(VirtualFolder folder, CancellationToken cancellationToken = default);
         Task<IEnumerable<object>> GetFolderContentsAsync(Guid workspaceId, string path, CancellationToken cancellationToken = default);
+
+        Task<Workspace?> GetWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<VirtualFile>> GetVirtualFilesAsync(Guid workspaceId, CancellationToken cancellationToken = default);
+
     }
 }
 

@@ -92,4 +92,72 @@ namespace IIM.Shared.Models.Core
         public string OverallSentiment { get; set; } = string.Empty;
         public float Confidence { get; set; }
     }
+    public class SentimentScore
+    {
+        public string OverallSentiment { get; set; } = string.Empty;
+        public float PositiveScore { get; set; }
+        public float NegativeScore { get; set; }
+        public float NeutralScore { get; set; }
+        public float Confidence { get; set; }
+    }
+
+    // Fix for DataElement (was missing)
+    public class DataElement
+    {
+        public string Name { get; set; } = string.Empty;
+        public object Value { get; set; } = new();
+        public string DataType { get; set; } = string.Empty;
+        public float Confidence { get; set; }
+        public Dictionary<string, object>? Metadata { get; set; }
+    }
+
+    // Fix for DataFacet (was missing)
+    public class DataFacet
+    {
+        public string Name { get; set; } = string.Empty;
+        public Dictionary<string, int> Values { get; set; } = new();
+        public int TotalCount { get; set; }
+    }
+
+    // Fix for InsightMetric (was missing)
+    public class InsightMetric
+    {
+        public string Name { get; set; } = string.Empty;
+        public object Value { get; set; } = new();
+        public string Unit { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public float Confidence { get; set; }
+    }
+
+    // Fix for SuggestedClassificationTag (was missing)
+    public class SuggestedClassificationTag
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public float Confidence { get; set; }
+        public string Reasoning { get; set; } = string.Empty;
+    }
+
+    // Fix for SuggestedStorageTier (was missing)
+    public class SuggestedStorageTier
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public int RetentionDays { get; set; }
+        public float Confidence { get; set; }
+        public string Reasoning { get; set; } = string.Empty;
+    }
+
+    // Fix for SuggestedDataHandlingRule (was missing)
+    public class SuggestedDataHandlingRule
+    {
+        public string RuleType { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public Dictionary<string, object> Parameters { get; set; } = new();
+        public float Confidence { get; set; }
+        public string Reasoning { get; set; } = string.Empty;
+    }
+
+
+
 }

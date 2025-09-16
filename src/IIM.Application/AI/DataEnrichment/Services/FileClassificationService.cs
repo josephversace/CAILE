@@ -54,31 +54,52 @@ namespace IIM.Application.AI.DataEnrichment.Services
 
             // Analyze file name patterns
             var fileNameTags = await AnalyzeFileNameAsync(fileName, availableClassifications, cancellationToken);
-            suggestion.SuggestedTags.AddRange(fileNameTags);
+            // Fix: Convert List<string> to List<TagSuggestion>
+            suggestion.SuggestedTags.AddRange(fileNameTags.Select(tag => new TagSuggestion
+            {
+                Name = tag,
+                Confidence = 0.7f,
+                Reason = "File name pattern match"
+            }));
 
             // Analyze content if available
-            content.Position = 0;
-            var textContent = await _textExtraction.ExtractTextAsync(content, GetMimeTypeFromFileName(fileName), cancellationToken);
+            var mimeType = GetMimeTypeFromFileName(fileName);
+            var textContent = await _textExtraction.ExtractTextAsync(content, mimeType, cancellationToken);
 
             if (!string.IsNullOrEmpty(textContent))
             {
                 var contentTags = await ClassifyContentAsync(textContent, availableClassifications, cancellationToken);
-                suggestion.SuggestedTags.AddRange(contentTags);
+                // Fix: Convert List<string> to List<TagSuggestion>
+                suggestion.SuggestedTags.AddRange(contentTags.Select(tag => new TagSuggestion
+                {
+                    Name = tag,
+                    Confidence = 0.8f,
+                    Reason = "Content analysis match"
+                }));
 
+                // Fix: Use SensitivityLevel property instead of SuggestedSensitivity
                 suggestion.SensitivityLevel = await DetermineSensitivityAsync(textContent, cancellationToken);
-                suggestion.Reasoning = await GenerateReasoningAsync(fileName, textContent, suggestion.SuggestedTags, cancellationToken);
+                suggestion.SuggestedSensitivity = suggestion.SensitivityLevel; // Set both for compatibility
             }
 
-            // Remove duplicates and calculate confidence
-            suggestion.SuggestedTags = suggestion.SuggestedTags.Distinct().ToList();
-            suggestion.ConfidenceScore = _confidenceCalculator.CalculateClassificationConfidence(suggestion);
+            // Generate reasoning
+            suggestion.Reasoning = await GenerateReasoningAsync(fileName, textContent,
+                suggestion.SuggestedTags.Select(t => t.Name).ToList(), cancellationToken);
 
-            // Map to storage tier
-            var storageTier = await DetermineStorageTierAsync(suggestion.SuggestedTags, suggestion.SensitivityLevel, cancellationToken);
+            // Determine storage requirements
+            var storageTier = await DetermineStorageTierAsync(
+                suggestion.SuggestedTags.Select(t => t.Name).ToList(),
+                suggestion.SensitivityLevel,
+                cancellationToken);
+
+            // Fix: Set missing properties
             suggestion.RecommendedStorageTier = storageTier?.Name ?? "default";
+            suggestion.StorageTier = suggestion.RecommendedStorageTier;
             suggestion.RetentionDays = storageTier?.RetentionPeriodDays ?? 365;
-
             suggestion.RequiresHumanReview = DetermineIfHumanReviewRequired(suggestion);
+
+            // Calculate confidence
+            suggestion.ConfidenceScore = _confidenceCalculator.CalculateClassificationConfidence(suggestion);
 
             return suggestion;
         }

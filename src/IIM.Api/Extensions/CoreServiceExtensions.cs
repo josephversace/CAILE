@@ -100,32 +100,10 @@ namespace IIM.Api.Extensions
                     orchestrator);
             });
 
-            // Reasoning Service (Scoped - uses session)
-            services.AddScoped<IReasoningService>(sp =>
-            {
-                var logger = sp.GetRequiredService<ILogger<SemanticKernelOrchestrator>>();
-                var modelOrchestrator = sp.GetRequiredService<IModelOrchestrator>();
-          
-                var templateService = sp.GetRequiredService<IModelConfigurationTemplateService>();
-
-                return new SemanticKernelOrchestrator(
-                    logger,
-                    modelOrchestrator,
-                    templateService);
-            });
+        
 
             // ========================================
-            // Data Router Core Services (Industry Agnostic)
-            // ========================================
-
-            // Data reasoning and enrichment service
-            services.AddScoped<IDataReasoningService, DataEnrichmentOrchestrator>();
-
-            // File classification service (configurable per client)
-            services.AddScoped<IFileClassificationService, ConfigurableFileClassificationService>();
-
-            // Policy routing service (driven by governance framework)
-            services.AddScoped<IPolicyRoutingService, GovernanceBasedRoutingService>();
+       
 
      
 
@@ -133,13 +111,7 @@ namespace IIM.Api.Extensions
             // AI/ML Services (Configurable)
             // ========================================
 
-            // Model orchestrator for AI operations
-            services.AddScoped<IModelOrchestrator, ConfigurableModelOrchestrator>();
-
-            // Content analysis service
-            services.AddScoped<IContentAnalysisService, PluggableContentAnalysisService>();
-
-
+   
             // ========================================
             // Audit Services (Scoped for request tracking)
             // ========================================

@@ -56,7 +56,11 @@ namespace IIM.Application.AI.DataEnrichment.Services
                     // Perform text-based analysis
                     analysis.Summary = await GenerateSummaryAsync(textContent, cancellationToken);
                     analysis.KeyPhrases = await ExtractKeyPhrasesAsync(textContent, cancellationToken);
+
+
                     analysis.DetectedLanguages = await DetectLanguagesAsync(textContent, cancellationToken);
+
+
                     analysis.Sentiment = await AnalyzeSentimentAsync(textContent, cancellationToken);
                     analysis.StructuredData = await ExtractStructuredDataAsync(textContent, cancellationToken);
                 }
@@ -121,23 +125,72 @@ namespace IIM.Application.AI.DataEnrichment.Services
             return new List<string>();
         }
 
-        private async Task<List<string>> DetectLanguagesAsync(string textContent, CancellationToken cancellationToken)
+        private async Task<Dictionary<string, float>> DetectLanguagesAsync(string textContent, CancellationToken cancellationToken)
         {
-            // TODO: Implement language detection
-            return new List<string> { "en" };
+            if (string.IsNullOrEmpty(textContent))
+                return new Dictionary<string, float>();
+
+            // TODO: Implement proper language detection
+            // Simple heuristic for now
+            var languages = new Dictionary<string, float>
+            {
+                ["en"] = 0.95f // Default to English with high confidence
+            };
+
+            return languages;
         }
 
-        private async Task<SentimentScore?> AnalyzeSentimentAsync(string textContent, CancellationToken cancellationToken)
+        private async Task<SentimentScore> AnalyzeSentimentAsync(string textContent, CancellationToken cancellationToken)
         {
-            // TODO: Implement sentiment analysis
-            return null;
+            if (string.IsNullOrEmpty(textContent))
+                return new SentimentScore { OverallSentiment = "neutral", NeutralScore = 1.0f };
+
+            // TODO: Implement proper sentiment analysis
+            return new SentimentScore
+            {
+                OverallSentiment = "neutral",
+                NeutralScore = 0.8f,
+                PositiveScore = 0.1f,
+                NegativeScore = 0.1f,
+                Confidence = 0.7f
+            };
         }
 
         private async Task<List<DataElement>> ExtractStructuredDataAsync(string textContent, CancellationToken cancellationToken)
         {
-            // TODO: Implement structured data extraction
-            return new List<DataElement>();
+            var structuredData = new List<DataElement>();
+
+            if (string.IsNullOrEmpty(textContent))
+                return structuredData;
+
+            // TODO: Implement structured data extraction (JSON, XML, etc.)
+            structuredData.Add(new DataElement
+            {
+                Name = "WordCount",
+                Value = textContent.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length,
+                DataType = "integer",
+                Confidence = 1.0f
+            });
+
+            structuredData.Add(new DataElement
+            {
+                Name = "CharacterCount",
+                Value = textContent.Length,
+                DataType = "integer",
+                Confidence = 1.0f
+            });
+
+            structuredData.Add(new DataElement
+            {
+                Name = "LineCount",
+                Value = textContent.Split('\n').Length,
+                DataType = "integer",
+                Confidence = 1.0f
+            });
+
+            return structuredData;
         }
+
 
         #endregion
     }
