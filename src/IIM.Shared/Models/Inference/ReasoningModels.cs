@@ -102,14 +102,6 @@ namespace IIM.Shared.Models
     }
 
 
-    public class RoutingDecision
-    {
-        public string RequestId { get; set; } = string.Empty;
-        public string SelectedHandler { get; set; } = string.Empty;
-        public string HandlerType { get; set; } = string.Empty;
-        public Dictionary<string, object> HandlerParameters { get; set; } = new();
-        public float ConfidenceScore { get; set; }
-    }
 
 
     public class ReasoningStartedEventArgs : EventArgs

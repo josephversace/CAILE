@@ -17,6 +17,15 @@ namespace IIM.Shared.Models.Core
         public List<string> ApplicableRules { get; set; } = new();
         public string Reasoning { get; set; } = string.Empty;
         public Dictionary<string, object> AdditionalProperties { get; set; } = new();
+        public string RequestId { get; set; } = Guid.NewGuid().ToString();
+        public string TargetBucket { get; set; } = string.Empty;
+        public string TargetPath { get; set; } = string.Empty;
+        public bool RequiresQuarantine { get; set; }
+        public bool AllowDeduplication { get; set; }
+        public List<string> AppliedPolicies { get; set; } = new();
+        public float ConfidenceScore { get; set; }
+        public DateTime DecisionTime { get; set; } = DateTime.UtcNow;
+
     }
 
     public class ComplianceValidationResult

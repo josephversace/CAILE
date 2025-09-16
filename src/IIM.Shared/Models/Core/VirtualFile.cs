@@ -23,6 +23,9 @@ namespace IIM.Shared.Models.Core
         public Dictionary<string, string> CustomMetadata { get; set; } = new();
         public List<ChainOfCustodyEntry> ChainOfCustody { get; set; } = new();
         public List<ProcessedFile> ProcessedVersions { get; set; } = new();
+
+        public DataSensitivityLevel DataSensitivity { get; set; }
+        public List<string>? Tags { get; set; }
     }
 }
 

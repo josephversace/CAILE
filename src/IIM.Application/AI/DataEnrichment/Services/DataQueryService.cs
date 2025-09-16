@@ -63,7 +63,7 @@ namespace IIM.Application.AI.DataEnrichment.Services
                 result.QueryTime = DateTime.UtcNow - startTime;
 
                 _logger.LogInformation("Query processed in {Duration}ms, found {ResultCount} results",
-                    result.QueryTime.TotalMilliseconds, result.TotalResults);
+                    result.QueryTime.Value.TotalMilliseconds, result.TotalResults);
 
                 return result;
             }
@@ -80,68 +80,132 @@ namespace IIM.Application.AI.DataEnrichment.Services
 
             var insight = new DataInsight
             {
-                Question = question,
-                GeneratedAt = DateTime.UtcNow
+                Question = question
             };
+
+            var startTime = DateTime.UtcNow;
 
             try
             {
-                // Get data summary
-                var dataSummary = await GetWorkspaceDataSummaryAsync(workspaceId, cancellationToken);
+                // Analyze workspace data for insights
+                var files = workspaceId.HasValue
+                    ? await _workspaceProvider.GetVirtualFilesAsync(workspaceId.Value, cancellationToken)
+                    : Enumerable.Empty<VirtualFile>();
 
-                // Calculate metrics
-                insight.Metrics = await CalculateInsightMetricsAsync(question, workspaceId, cancellationToken);
+                // Generate insight based on question and data
+                insight.Insight = await GenerateInsightFromDataAsync(question, files, cancellationToken);
 
-                // Generate recommendations
-                insight.Recommendations = await GenerateInsightRecommendationsAsync(question, dataSummary, cancellationToken);
+                // Extract supporting evidence
+                insight.SupportingEvidence = await ExtractSupportingEvidenceAsync(question, files, cancellationToken);
 
-                // TODO: Use AI to generate actual insight
-                insight.Insight = "AI-generated data insight would be provided here based on actual analysis";
-                insight.ConfidenceScore = 0.8f;
+                // Fix: Add missing Metrics property
+                insight.Metrics = await GenerateInsightMetricsAsync(files, cancellationToken);
+
+                // Fix: Add missing Recommendations property  
+                insight.Recommendations = await GenerateInsightRecommendationsAsync(insight.Insight, files, cancellationToken);
+
+                // Fix: Set both Confidence and ConfidenceScore
+                insight.Confidence = CalculateInsightConfidence(insight);
+                insight.ConfidenceScore = insight.Confidence;
+
+                _logger.LogInformation("Generated insight for question '{Question}' with confidence {Confidence}",
+                    question, insight.Confidence);
 
                 return insight;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating data insight for question: '{Question}'", question);
+                _logger.LogError(ex, "Error generating insight for question: '{Question}'", question);
                 throw;
             }
         }
 
         public async Task<SimilarityResult> FindSimilarFilesAsync(Guid virtualFileId, int maxResults = 10, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Finding similar files for {FileId}, max results: {MaxResults}", virtualFileId, maxResults);
+            _logger.LogInformation("Finding similar files for {VirtualFileId}", virtualFileId);
+
+            var startTime = DateTime.UtcNow;
+
+            var result = new SimilarityResult
+            {
+                SourceFileId = virtualFileId
+            };
 
             try
             {
-                var sourceFile = await _workspaceProvider.GetVirtualFileByIdAsync(virtualFileId, cancellationToken);
-                if (sourceFile == null)
-                {
-                    throw new ArgumentException($"Virtual file {virtualFileId} not found", nameof(virtualFileId));
-                }
+                // TODO: Implement similarity search using embeddings
+                // For now, return empty results
+                result.SimilarFiles = new List<SimilarFile>();
 
-                var result = new SimilarityResult
-                {
-                    SourceFileId = virtualFileId,
-                    SimilarityMethod = "Semantic Embeddings + Metadata"
-                };
-
-                var startTime = DateTime.UtcNow;
-
-                // TODO: Implement semantic similarity search
-                // var similarFiles = await FindSemanticallySimilarFilesAsync(sourceFile, maxResults, cancellationToken);
-
+                // Fix: Set missing SearchTime property
                 result.SearchTime = DateTime.UtcNow - startTime;
+
+                _logger.LogInformation("Found {Count} similar files for {VirtualFileId} in {Duration}ms",
+                    result.SimilarFiles.Count, virtualFileId, result.SearchTime.TotalMilliseconds);
 
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error finding similar files for {FileId}", virtualFileId);
+                _logger.LogError(ex, "Error finding similar files for {VirtualFileId}", virtualFileId);
                 throw;
             }
         }
 
+        private async Task<List<InsightMetric>> GenerateInsightMetricsAsync(IEnumerable<VirtualFile> files, CancellationToken cancellationToken)
+        {
+            var metrics = new List<InsightMetric>();
+
+            var fileCount = files.Count();
+            metrics.Add(new InsightMetric
+            {
+                Name = "TotalFiles",
+                Value = fileCount,
+                Unit = "count",
+                Category = "Volume",
+                Confidence = 1.0f
+            });
+
+            return metrics;
+        }
+
+        private async Task<List<string>> GenerateInsightRecommendationsAsync(string insight, IEnumerable<VirtualFile> files, CancellationToken cancellationToken)
+        {
+            var recommendations = new List<string>();
+
+            // Generate basic recommendations based on data patterns
+            var fileCount = files.Count();
+            if (fileCount > 1000)
+            {
+                recommendations.Add("Consider implementing data archiving policies for large datasets");
+            }
+
+            return recommendations;
+        }
+
+        private float CalculateInsightConfidence(DataInsight insight)
+        {
+            var factors = new List<float>();
+
+            if (!string.IsNullOrEmpty(insight.Insight))
+            {
+                factors.Add(0.8f);
+            }
+
+            if (insight.SupportingEvidence.Any())
+            {
+                factors.Add(0.9f);
+            }
+
+            if (insight.Metrics.Any())
+            {
+                factors.Add(0.7f);
+            }
+
+            return factors.Any() ? factors.Average() : 0.5f;
+        }
+
+      
         #region Private Methods
 
         private async Task<object> ParseQueryIntentAsync(string query, CancellationToken cancellationToken)

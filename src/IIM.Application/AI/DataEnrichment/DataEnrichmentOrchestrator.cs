@@ -1,4 +1,5 @@
-﻿using IIM.Shared.Interfaces;
+﻿using IIM.Application.AI.DataEnrichment.Services;
+using IIM.Shared.Interfaces;
 using IIM.Shared.Models.Core;
 using Microsoft.Extensions.Logging;
 using System;
