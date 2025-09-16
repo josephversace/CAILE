@@ -19,7 +19,7 @@ namespace IIM.Infrastructure.Services
         {
             try
             {
-                await _auditRepository.AddAuditLogAsync(auditEvent);
+                await _auditRepository.AddEventAsync(auditEvent);
                 _logger.LogDebug("Audit event logged: {EventType} by {UserId}",
                     auditEvent.EventType, auditEvent.UserId);
             }

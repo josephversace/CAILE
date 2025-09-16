@@ -50,24 +50,37 @@ namespace IIM.Infrastructure.Platform
         public async Task<HealthCheckResult> HealthCheckAsync(CancellationToken ct = default)
         {
             _logger.LogDebug("Performing Docker health check");
+            var stopwatch = Stopwatch.StartNew();
 
             var dockerCheck = await ExecuteDockerAsync("version");
+            var composeCheck = await ExecuteDockerComposeAsync("ps --services");
+
+            var serviceChecks = new List<ServiceHealthCheck>();
+            var issues = new List<string>();
+
             if (!dockerCheck.IsSuccess)
             {
-                return new HealthCheckResult
-                {
-                    IsHealthy = false,
-                    Message = "Docker is not available",
-                    CheckedAt = DateTime.UtcNow
-                };
+                issues.Add("Docker is not available");
             }
 
-            var composeCheck = await ExecuteDockerComposeAsync("ps --services");
+            if (!composeCheck.IsSuccess)
+            {
+                issues.Add("Docker Compose services are not running");
+            }
+
+            stopwatch.Stop();
+
             return new HealthCheckResult
             {
-                IsHealthy = composeCheck.IsSuccess,
-                Message = composeCheck.IsSuccess ? "All services healthy" : "Some services are down",
-                CheckedAt = DateTime.UtcNow
+                IsHealthy = dockerCheck.IsSuccess && composeCheck.IsSuccess,
+                WslReady = true, // Docker is our "WSL" equivalent
+                DistroRunning = composeCheck.IsSuccess,
+                ServicesHealthy = composeCheck.IsSuccess,
+                NetworkConnected = true,
+                ServiceChecks = serviceChecks,
+                Issues = issues,
+                Timestamp = DateTimeOffset.UtcNow,
+                ElapsedMs = stopwatch.ElapsedMilliseconds
             };
         }
 
@@ -82,8 +95,6 @@ namespace IIM.Infrastructure.Platform
             {
                 ServiceName = serviceName,
                 IsHealthy = isRunning,
-                Status = isRunning ? "Running" : "Stopped",
-                LastChecked = DateTime.UtcNow,
                 Details = result.StandardOutput
             };
         }
@@ -92,13 +103,22 @@ namespace IIM.Infrastructure.Platform
         public async Task<WslStatus> GetStatusAsync(CancellationToken ct = default)
         {
             var composeResult = await ExecuteDockerComposeAsync("ps --format json");
-            var dockerResult = await ExecuteDockerAsync("info --format json");
 
             return new WslStatus
             {
-                IsRunning = composeResult.IsSuccess,
-                Services = await ParseDockerComposeServicesAsync(composeResult.StandardOutput),
-                LastChecked = DateTime.UtcNow
+                IsInstalled = true,
+                IsReady = composeResult.IsSuccess,
+                IsWsl2 = true,
+                HasIimDistro = true,
+                InstalledDistros = new List<WslDistro>
+                {
+                    new WslDistro
+                    {
+                        Name = "docker",
+                        State = composeResult.IsSuccess ? WslDistroState.Running : WslDistroState.Stopped,
+                        IsDefault = true
+                    }
+                }
             };
         }
 
@@ -184,14 +204,14 @@ namespace IIM.Infrastructure.Platform
             var result = await ExecuteDockerAsync("version");
             if (!result.IsSuccess)
             {
-                _logger.LogError("Docker is not available: {Error}", result.ErrorMessage);
+                _logger.LogError("Docker is not available: {Error}", result.StandardError);
                 return false;
             }
 
             var composeResult = await ExecuteAsync("docker-compose", "--version");
             if (!composeResult.IsSuccess)
             {
-                _logger.LogError("Docker Compose is not available: {Error}", composeResult.ErrorMessage);
+                _logger.LogError("Docker Compose is not available: {Error}", composeResult.StandardError);
                 return false;
             }
 
@@ -200,18 +220,18 @@ namespace IIM.Infrastructure.Platform
 
         public async Task<string?> StartDockerContainerAsync(DockerServiceConfig config, CancellationToken ct = default)
         {
-            var args = $"run -d --name {config.ServiceName}";
+            var args = $"run -d --name {config.Name}";
 
-            foreach (var port in config.Ports)
-                args += $" -p {port}";
+            //foreach (var port in config.Ports ?? new List<string>())
+            //    args += $" -p {port}";
 
-            foreach (var volume in config.Volumes)
-                args += $" -v {volume}";
+            //foreach (var volume in config.Volumes ?? new List<string>())
+            //    args += $" -v {volume}";
 
-            foreach (var env in config.Environment)
-                args += $" -e {env.Key}={env.Value}";
+            //foreach (var env in config.Environment ?? new Dictionary<string, string>())
+            //    args += $" -e {env.Key}={env.Value}";
 
-            args += $" {config.ImageName}";
+            args += $" {config.Image}";
 
             var result = await ExecuteDockerAsync(args);
             return result.IsSuccess ? result.StandardOutput.Trim() : null;
@@ -232,16 +252,22 @@ namespace IIM.Infrastructure.Platform
 
         public async Task<WslDistro> EnsureDistroAsync(string distroName = "IIM-Ubuntu", CancellationToken ct = default)
         {
-            return new WslDistro { Name = distroName, IsDefault = true, State = "Running" };
+            return new WslDistro
+            {
+                Name = distroName,
+                IsDefault = true,
+                State = WslDistroState.Running
+            };
         }
 
         public async Task<WslNetworkInfo> GetNetworkInfoAsync(string distroName, CancellationToken ct = default)
         {
             return new WslNetworkInfo
             {
-                IpAddress = "localhost",
-                Gateway = "localhost",
-                NetworkName = "bridge"
+                DistroName = distroName,
+                WslIpAddress = "localhost",
+                WindowsHostIp = "localhost",
+                IsConnected = true
             };
         }
 
@@ -287,7 +313,7 @@ namespace IIM.Infrastructure.Platform
 
         public async Task<bool> SyncFilesAsync(FileSyncConfig config, CancellationToken ct = default)
         {
-            return await SyncFilesAsync(config.SourcePath, config.TargetPath);
+            return await SyncFilesAsync(config.WindowsPath, config.WslPath);
         }
 
         // Not applicable for Docker deployment
@@ -337,10 +363,9 @@ namespace IIM.Infrastructure.Platform
 
                 return new CommandResult
                 {
-                    IsSuccess = process.ExitCode == 0,
+                    ExitCode = process.ExitCode,
                     StandardOutput = output,
-                    ErrorMessage = error,
-                    ExitCode = process.ExitCode
+                    StandardError = error
                 };
             }
             catch (Exception ex)
@@ -348,38 +373,11 @@ namespace IIM.Infrastructure.Platform
                 _logger.LogError(ex, "Failed to execute command: {FileName} {Arguments}", fileName, arguments);
                 return new CommandResult
                 {
-                    IsSuccess = false,
-                    ErrorMessage = ex.Message,
-                    ExitCode = -1
+                    ExitCode = -1,
+                    StandardOutput = string.Empty,
+                    StandardError = ex.Message
                 };
             }
-        }
-
-        private async Task<List<string>> ParseDockerComposeServicesAsync(string output)
-        {
-            var services = new List<string>();
-
-            if (string.IsNullOrEmpty(output))
-                return services;
-
-            try
-            {
-                var lines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-                foreach (var line in lines)
-                {
-                    var container = JsonSerializer.Deserialize<DockerContainer>(line);
-                    if (container != null)
-                    {
-                        services.Add(container.Service);
-                    }
-                }
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogWarning(ex, "Failed to parse Docker services JSON");
-            }
-
-            return services;
         }
     }
 
