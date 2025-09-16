@@ -16,7 +16,7 @@ namespace IIM.Api.Extensions
            
 
             // Register Core Infrastructure Services
-            services.AddSingleton<IDeduplicationService, DeduplicationService>();
+            services.AddScoped<IDeduplicationService, DeduplicationService>();
 
             // Register Storage Providers
             services.AddSingleton(sp =>
