@@ -1,5 +1,7 @@
 ﻿using IIM.Application.Services;
 using IIM.Infrastructure.Data;
+using IIM.Infrastructure.Platform;
+using IIM.Infrastructure.Services;
 using IIM.Infrastructure.Storage;
 using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Configuration;
@@ -11,34 +13,40 @@ namespace IIM.Api.Extensions
     {
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
+           
+
             // Register Core Infrastructure Services
             services.AddSingleton<IDeduplicationService, DeduplicationService>();
 
-            // Register Storage Providers based on the new abstractions
-            // This reads the S3Storage section from your appsettings.json
+            // Register Storage Providers
             services.AddSingleton(sp =>
-                configuration.GetSection("S3Storage").Get<S3StorageConfiguration>() ?? new S3StorageConfiguration());
+                configuration.GetSection("Storage:S3Storage").Get<S3StorageConfiguration>() ?? new S3StorageConfiguration());
 
-            // This is our single, agnostic storage provider
             services.AddSingleton<IObjectStorageProvider, SeaweedFSStorageProvider>();
 
-            // Register Repositories (Data Access Layer)
-            services.AddScoped<IAuditRepository, EfAuditRepository>();
-            services.AddScoped<IWorkspaceProvider, PostgresWorkspaceProvider>();
-            services.AddScoped<IGovernanceRepository, EfGovernanceRepository>();
-           /// services.AddScoped<IWorkspaceManager, EfWorkspaceManager>(); // Assuming you have an EF implementation
-           // services.AddScoped<ISessionRepository, EfSessionRepository>(); // Assuming you have an EF implementation for sessions
-
             // Register High-Level Managers/Services
-            // IManagedFileManager is the primary orchestrator for file operations.
             services.AddScoped<IManagedFileManager, FileManager>();
 
             // Register Application Services
             services.AddScoped<QuarantineService>();
             services.AddScoped<VirtualFileSystemService>();
 
+            // Add missing services
+            services.AddScoped<IAuditService, AuditService>();
+
+            // Register IWslManager based on deployment mode
+            var deploymentMode = configuration.GetValue<string>("Deployment:Mode", "Standalone");
+            if (deploymentMode == "Docker" || Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                services.AddSingleton<IWslManager, DockerManager>();
+            }
+            else
+            {
+                // Keep existing WSL implementation for Windows
+                services.AddSingleton<IWslManager, WslManager>();
+            }
+
             return services;
         }
     }
 }
-

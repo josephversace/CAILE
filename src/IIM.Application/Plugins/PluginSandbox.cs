@@ -26,17 +26,17 @@ public class PluginSandbox : IPluginSandbox
 {
     private readonly ILoggerFactory _loggerFactory;
     private readonly IConfiguration _configuration;
-    private readonly IManagedFileManager _fileManager;
+    private readonly IWorkspaceProvider _workspaceProvider;
     private readonly Dictionary<string, PluginContext> _contexts = new();
 
     public PluginSandbox(
         ILoggerFactory loggerFactory,
         IConfiguration configuration,
-        IManagedFileManager fileManager)
+        IWorkspaceProvider workspaceProvider)
     {
         _loggerFactory = loggerFactory;
         _configuration = configuration;
-        _fileManager = fileManager;
+        _workspaceProvider = workspaceProvider;
     }
 
     public async Task<PluginContext> CreateContextAsync(PluginManifest plugin)
@@ -71,30 +71,13 @@ public class PluginSandbox : IPluginSandbox
             _loggerFactory.CreateLogger<SandboxedProcessRunner>()
         );
 
-        var fileStore = new NamespacedEvidenceStore(
-            plugin.Id,
-            _loggerFactory.CreateLogger<NamespacedEvidenceStore>()
-        );
+     
 
-        var context = new PluginContext
-        {
-            Logger = _loggerFactory.CreateLogger($"Plugin.{plugin.Id}"),
-            Configuration = pluginConfig,
-            FileSystem = fileSystem,
-            HttpClient = httpClient,
-            ProcessRunner = processRunner,
-       
-            PluginInfo = new PluginInfo
-            {
-                Id = plugin.Id,
-                Name = plugin.Name,
-                Version = plugin.Version,
-                Author = plugin.Author?.Name ?? "Unknown",
-                Description = plugin.Description ?? string.Empty,
-                IsEnabled = true,
-                IsLoaded = true
-            }
-        };
+        var context = new PluginContext(
+             _loggerFactory.CreateLogger($"Plugin.{plugin.Id}"),
+             _workspaceProvider,
+             new HttpClient()
+         );
 
         _contexts[plugin.Id] = context;
         return context;
@@ -126,6 +109,25 @@ public class PluginSandbox : IPluginSandbox
         }
 
         return Task.FromResult(violations.Count == 0);
+    }
+
+    private async Task CleanupContextAsync(PluginContext context)
+    {
+        try
+        {
+            if (context is IAsyncDisposable asyncDisposable)
+            {
+                await asyncDisposable.DisposeAsync();
+            }
+            else if (context is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
+        catch (Exception ex)
+        {
+           // _logger.LogError(ex, "Error disposing plugin context");
+        }
     }
 }
 

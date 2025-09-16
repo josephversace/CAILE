@@ -34,10 +34,13 @@ public class DockerComposeServiceOrchestrator : IApplianceServiceOrchestrator
     public async Task StopServicesAsync()
     {
         _logger.LogInformation("Stopping all services via Docker Compose...");
-        var (success, message) = await _dockerManager.ExecuteCommandAsync("down");
-        if (!success)
+
+        // Alternative fix: Use explicit property access instead of deconstruction
+        var commandResult = await _dockerManager.ExecuteCommandAsync("down");
+        if (!commandResult.IsSuccess)
         {
-            _logger.LogError("Failed to stop Docker Compose services cleanly: {Message}", message);
+            _logger.LogError("Failed to stop Docker Compose services cleanly: {Message}",
+                commandResult.StandardOutput ?? commandResult.StandardError);
         }
     }
 

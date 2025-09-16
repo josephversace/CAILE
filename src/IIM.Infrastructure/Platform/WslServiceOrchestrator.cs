@@ -85,6 +85,25 @@ public sealed class WslServiceOrchestrator : IApplianceServiceOrchestrator, IHos
         _healthCheckTimer = new Timer(PerformHealthCheck, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
     }
 
+    public async Task StartServicesAsync(IEnumerable<string> serviceNames)
+    {
+        // TODO: Implement service start logic
+        await Task.CompletedTask;
+    }
+
+    public async Task StopServicesAsync()
+    {
+        // TODO: Implement service stop logic
+        await Task.CompletedTask;
+    }
+
+    public async Task<Dictionary<string, string>> GetServicesStatusAsync()
+    {
+        // TODO: Implement status check
+        return new Dictionary<string, string>();
+    }
+
+
     /// <summary>
     /// Starts the orchestrator as a hosted service
     /// </summary>
@@ -680,6 +699,11 @@ public sealed class WslServiceOrchestrator : IApplianceServiceOrchestrator, IHos
     {
         _healthCheckTimer?.Dispose();
         _serviceLock?.Dispose();
+    }
+
+    Task<IEnumerable<ServiceStatus>> IApplianceServiceOrchestrator.GetServicesStatusAsync()
+    {
+        throw new NotImplementedException();
     }
 
     #endregion

@@ -1,6 +1,8 @@
 using IIM.Shared.Interfaces;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace IIM.Plugin.SDK
 {
@@ -15,6 +17,26 @@ namespace IIM.Plugin.SDK
             Logger = logger;
             WorkspaceProvider = workspaceProvider;
             HttpClient = httpClient;
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            try
+            {
+                // Cleanup any resources
+                if (HttpClient != null)
+                {
+                    HttpClient.Dispose();
+                }
+
+                // Add other cleanup as needed
+                GC.SuppressFinalize(this);
+            }
+            catch (Exception ex)
+            {
+                // Log but don't throw during disposal
+                Logger?.LogError(ex, "Error during plugin context disposal");
+            }
         }
     }
 }

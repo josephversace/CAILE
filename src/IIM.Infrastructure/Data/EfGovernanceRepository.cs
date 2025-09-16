@@ -16,8 +16,6 @@ public class EfGovernanceRepository : IGovernanceRepository
         _context = context;
     }
 
-    // --- Implementation of all interface methods ---
-
     public async Task<IEnumerable<ClassificationTag>> GetClassificationTagsAsync() => await _context.ClassificationTags.ToListAsync();
     public async Task<IEnumerable<StorageTier>> GetStorageTiersAsync() => await _context.StorageTiers.ToListAsync();
     public async Task<IEnumerable<AccessRole>> GetAccessRolesAsync() => await _context.AccessRoles.ToListAsync();
@@ -49,5 +47,89 @@ public class EfGovernanceRepository : IGovernanceRepository
             .FirstOrDefaultAsync(r => r.AccessRole.Name == roleName && r.ClassificationTag.Name == classificationTag);
 
         return rule?.Permissions ?? FilePermissions.None;
+    }
+
+    public async Task<GovernanceFramework?> GetCurrentGovernanceFrameworkAsync(CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement EF query
+        return null;
+    }
+
+    public async Task UpdateAsync(GovernanceFramework framework, CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement EF update
+        await Task.CompletedTask;
+    }
+
+    public async Task SaveNewFrameworkAsync(ApproveGovernanceFrameworkCommand command, CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement save logic
+        await Task.CompletedTask;
+    }
+
+    public async Task<IEnumerable<ClassificationTag>> GetClassificationTagsAsync(CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement EF query
+        return Enumerable.Empty<ClassificationTag>();
+    }
+
+    public async Task<IEnumerable<StorageTier>> GetStorageTiersAsync(CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement EF query
+        return Enumerable.Empty<StorageTier>();
+    }
+
+    public async Task<IEnumerable<AccessRole>> GetAccessRolesAsync(CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement EF query
+        return Enumerable.Empty<AccessRole>();
+    }
+
+    public async Task<IEnumerable<AccessControlRule>> GetAccessControlRulesAsync(CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement EF query
+        return Enumerable.Empty<AccessControlRule>();
+    }
+
+    public async Task<IEnumerable<DataHandlingRule>> GetDataHandlingRulesAsync(CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement EF query
+        return Enumerable.Empty<DataHandlingRule>();
+    }
+
+    public async Task AddClassificationTagAsync(ClassificationTag tag, CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement EF add
+        await Task.CompletedTask;
+    }
+
+    public async Task AddStorageTierAsync(StorageTier tier, CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement EF add
+        await Task.CompletedTask;
+    }
+
+    public async Task AddAccessRoleAsync(AccessRole role, CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement EF add
+        await Task.CompletedTask;
+    }
+
+    public async Task AddAccessControlRuleAsync(AccessControlRule rule, CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement EF add
+        await Task.CompletedTask;
+    }
+
+    public async Task<StorageTier?> GetStorageTierForClassificationAsync(string classificationTag, CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement lookup logic
+        return null;
+    }
+
+    public async Task<FilePermissions> GetPermissionsAsync(string roleName, string classificationTag, CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement permissions logic
+        return new FilePermissions();
     }
 }

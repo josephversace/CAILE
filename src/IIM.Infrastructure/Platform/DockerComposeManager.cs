@@ -10,7 +10,7 @@ namespace IIM.Infrastructure.Platform;
 /// Manages the appliance's services using Docker Compose directly.
 /// This is the implementation for the native Linux deployment.
 /// </summary>
-public class DockerComposeManager : IWslManager
+public class DockerComposeManager
 {
     private readonly ILogger<DockerComposeManager> _logger;
     private readonly string _dockerComposeFile = "docker-compose.yml";
@@ -20,6 +20,33 @@ public class DockerComposeManager : IWslManager
     {
         _logger = logger;
     }
+
+    public async Task<bool> StartServicesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "docker-compose",
+                    Arguments = "up -d",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.Start();
+            await process.WaitForExitAsync(cancellationToken);
+            return process.ExitCode == 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to start Docker services");
+            return false;
+        }
+    }
+
 
     public async Task<(bool success, string message)> ExecuteCommandAsync(string command, int timeout = 60)
     {
@@ -71,5 +98,31 @@ public class DockerComposeManager : IWslManager
         // This is a simplified check; a real implementation might check specific container names.
         _logger.LogInformation("Checking if core Docker services are running.");
         return Task.FromResult(true); // Placeholder
+    }
+
+    public async Task<bool> StopServicesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "docker-compose",
+                    Arguments = "down",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.Start();
+            await process.WaitForExitAsync(cancellationToken);
+            return process.ExitCode == 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to stop Docker services");
+            return false;
+        }
     }
 }

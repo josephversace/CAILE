@@ -20,13 +20,12 @@ public class SecurityService : ISecurityService
     public UserInfo GetCurrentUser()
     {
         // In production, get from authentication context
-        return new UserInfo
-        {
-            Id = Environment.UserName,
-            Username = Environment.UserName,
-            DisplayName = Environment.UserName,
-            Roles = new List<string> { "Investigator" }
-        };
+        return new UserInfo(
+               Id: "system",
+               DisplayName: "System User",
+               Email: "system@localhost",
+               Groups: new List<string> { "System" }
+           );
     }
 
     public async Task<string> GenerateHashAsync(string content)
@@ -34,13 +33,13 @@ public class SecurityService : ISecurityService
         using var sha256 = System.Security.Cryptography.SHA256.Create();
         var bytes = System.Text.Encoding.UTF8.GetBytes(content);
         var hash = await Task.Run(() => sha256.ComputeHash(bytes));
-        return Convert.ToBase64String(hash);
+        return Convert.ToHexString(hash);
     }
 
     public bool VerifyHash(string content, string hash)
     {
         var computedHash = GenerateHashAsync(content).Result;
-        return computedHash == hash;
+        return string.Equals(computedHash, hash, StringComparison.OrdinalIgnoreCase);
     }
 
     public async Task<bool> HasPermissionAsync(string userId, string permission)
@@ -48,4 +47,17 @@ public class SecurityService : ISecurityService
         // Implement permission checking
         return true;
     }
+
+    public string GetCurrentUsername()
+    {
+        var user = GetCurrentUser();
+        return user.DisplayName; // Use DisplayName instead of Username
+    }
+
+    public List<string> GetCurrentUserRoles()
+    {
+        var user = GetCurrentUser();
+        return user.Groups; // Use Groups instead of Roles
+    }
+
 }

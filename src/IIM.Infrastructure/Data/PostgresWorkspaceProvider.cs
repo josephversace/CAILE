@@ -362,6 +362,44 @@ namespace IIM.Infrastructure.Data
             }
         }
 
+        // GetWorkspaceAsync method
+        public async Task<Workspace?> GetWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // TODO: Implement actual database query
+                // For now, return a basic workspace object
+                return new Workspace
+                {
+                    Id = workspaceId,
+                    Name = "Default Workspace",
+                    CreatedAt = DateTime.UtcNow,
+                    // Add other required properties
+                };
+            }
+            catch (Exception ex)
+            {
+                // Log error and return null
+                return null;
+            }
+        }
+
+        //  GetVirtualFilesAsync method
+        public async Task<IEnumerable<VirtualFile>> GetVirtualFilesAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // TODO: Implement actual database query
+                // For now, return empty collection
+                return Enumerable.Empty<VirtualFile>();
+            }
+            catch (Exception ex)
+            {
+                // Log error and return empty collection
+                return Enumerable.Empty<VirtualFile>();
+            }
+        }
+
         #endregion
     }
 }
