@@ -115,11 +115,37 @@ namespace IIM.Api.Extensions
             });
 
             // ========================================
+            // Data Router Core Services (Industry Agnostic)
+            // ========================================
+
+            // Data reasoning and enrichment service
+            services.AddScoped<IDataReasoningService, DataEnrichmentOrchestrator>();
+
+            // File classification service (configurable per client)
+            services.AddScoped<IFileClassificationService, ConfigurableFileClassificationService>();
+
+            // Policy routing service (driven by governance framework)
+            services.AddScoped<IPolicyRoutingService, GovernanceBasedRoutingService>();
+
+     
+
+            // ========================================
+            // AI/ML Services (Configurable)
+            // ========================================
+
+            // Model orchestrator for AI operations
+            services.AddScoped<IModelOrchestrator, ConfigurableModelOrchestrator>();
+
+            // Content analysis service
+            services.AddScoped<IContentAnalysisService, PluggableContentAnalysisService>();
+
+
+            // ========================================
             // Audit Services (Scoped for request tracking)
             // ========================================
 
             // Audit Logger (Scoped - tracks per request)
-            services.AddScoped<IAuditService, SqliteAuditLogger>();
+            services.AddScoped<IAuditRepository, EfAuditRepository>();
 
             return services;
         }

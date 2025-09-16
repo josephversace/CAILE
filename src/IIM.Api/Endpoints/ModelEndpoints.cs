@@ -307,33 +307,7 @@ public static class ModelEndpoints
         .WithSummary("Get all model configuration templates")
         .Produces<List<ModelConfigurationTemplate>>();
 
-        // Apply template
-        models.MapPost("/templates/{templateId}/apply", async (
-            string templateId,
-            [FromServices] IModelConfigurationTemplateService templateService,
-            CancellationToken ct,
-            [FromQuery] string? sessionId = null) =>
-        {
-            if (string.IsNullOrEmpty(sessionId))
-            {
-                return Results.BadRequest(new { error = "SessionId is required" });
-            }
-
-            var session = await templateService.ApplyTemplateToSessionAsync(
-                templateId,
-                sessionId,
-                ct);
-
-            return Results.Ok(new
-            {
-                message = "Template applied successfully",
-                session
-            });
-        })
-        .WithName("ApplyModelTemplate")
-        .WithSummary("Apply a model template to a session")
-        .Produces<object>()
-        .ProducesProblem(StatusCodes.Status400BadRequest);
+      
 
         // ========================================
         // BATCH OPERATIONS

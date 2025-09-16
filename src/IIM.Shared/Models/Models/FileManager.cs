@@ -336,36 +336,7 @@ namespace IIM.Shared.Models
         public Dictionary<string, string> FileIdMap { get; set; } // filename -> fileId
     }
 
-    // Missing: BulkClassificationResponse
-    public class BulkClassificationResponse
-    {
-        public int TotalFiles { get; set; }
-        public int SuccessCount { get; set; }
-        public int FailureCount { get; set; }
-        public List<ClassificationResult> Results { get; set; }
-        public TimeSpan ProcessingTime { get; set; }
-    }
 
-    // Missing: ClassificationResult
-    public class ClassificationResult
-    {
-        public string FileId { get; set; }
-        public bool Success { get; set; }
-        public ClassificationMetadata Classification { get; set; }
-        public string ErrorMessage { get; set; }
-        public TimeSpan ProcessingTime { get; set; }
-    }
-
-    // Missing: ClassificationUpdate
-    public class ClassificationUpdate
-    {
-        public string FileId { get; set; }
-        public DataClassificationLevel Level { get; set; }
-        public List<string> Tags { get; set; }
-        public string Description { get; set; }
-        public string UpdatedBy { get; set; }
-        public string UpdateReason { get; set; }
-    }
 
     // Missing: Tree structure responses
     public class TreeStructureResponse
