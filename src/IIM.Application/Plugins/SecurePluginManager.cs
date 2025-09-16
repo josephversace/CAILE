@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using IIM.Core.Plugins.Security;
 using IIM.Plugin.SDK;
 using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 using Microsoft.Extensions.Logging;
 
 
