@@ -125,7 +125,7 @@ app.MapSystemEndpoints();        // System & health endpoints
 
 app.MapModelEndpoints();         // Model management
 app.MapWslEndpoints();           // WSL management
-
+app.MapWorkspaceEndpoints();     // Workspace management
 app.MapRagEndpoints();           // RAG endpoints
                                 // Audit logging
 

@@ -460,25 +460,35 @@ namespace IIM.Infrastructure.Platform
                     HealthCheckCommand = "pg_isready -U iim_user || exit 1"
                 },
 
-                // MinIO Object Storage
-                new DockerServiceConfig
-                {
-                    Name = "minio",
-                    Image = "minio/minio:latest",
-                    Ports = new Dictionary<int, int> { [9000] = 9000, [9001] = 9001 },
-                    Environment = new Dictionary<string, string>
-                    {
-                        ["MINIO_ROOT_USER"] = "iim_admin",
-                        ["MINIO_ROOT_PASSWORD"] = "iim_secure_password",
-                        ["MINIO_BROWSER_REDIRECT_URL"] = "http://localhost:9001"
-                    },
-                    Volumes = new Dictionary<string, string>
-                    {
-                        ["/var/lib/iim/minio"] = "/data"
-                    },
-                    MemoryLimit = 2L * 1024 * 1024 * 1024, // 2GB
-                    HealthCheckCommand = "curl -f http://localhost:9000/minio/health/live || exit 1"
-                },
+             // SeaweedFS Master
+new DockerServiceConfig
+{
+    Name = "seaweedfs-master",
+    Image = "chrislusf/seaweedfs:latest",
+    Ports = new Dictionary<int, int> { [9333] = 9333 },
+    Command = "master",
+
+},
+
+// SeaweedFS Filer  
+new DockerServiceConfig
+{
+    Name = "seaweedfs-filer",
+    Image = "chrislusf/seaweedfs:latest",
+    Ports = new Dictionary<int, int> { [8888] = 8888 },
+    Command = "filer -master=seaweedfs-master:9333",
+
+},
+
+// SeaweedFS S3 Gateway
+new DockerServiceConfig
+{
+    Name = "seaweedfs-s3",
+    Image = "chrislusf/seaweedfs:latest",
+    Ports = new Dictionary<int, int> { [8333] = 8333 },
+    Command = "s3 -filer=seaweedfs-filer:8888",
+
+},
 
                 // MCP Server (Forensic Tools)
                 new DockerServiceConfig
