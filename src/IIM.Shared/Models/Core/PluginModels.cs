@@ -8,6 +8,9 @@ namespace IIM.Shared.Models.Core
     /// </summary>
     public class PluginInfo
     {
+        public string Id { get; set; } = string.Empty;
+        public string PackagePath { get; set; } = string.Empty;
+        public bool IsEnabled { get; set; } = true;
         public string Name { get; set; } = string.Empty;
         public string Version { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;

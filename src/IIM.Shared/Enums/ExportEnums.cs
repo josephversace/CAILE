@@ -22,7 +22,7 @@ namespace IIM.Shared.Enums
     public enum ExportStatus
     {
         Pending,
-        Processing,
+        InProgress,
         Completed,
         Failed,
         Cancelled

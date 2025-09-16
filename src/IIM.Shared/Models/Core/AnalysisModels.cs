@@ -126,6 +126,8 @@ namespace IIM.Shared.Models.Core
         public object Value { get; set; } = new();
         public string Unit { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
+
+        public string Description { get; set; } = string.Empty;
         public float Confidence { get; set; }
     }
 
@@ -136,6 +138,8 @@ namespace IIM.Shared.Models.Core
         public string Description { get; set; } = string.Empty;
         public float Confidence { get; set; }
         public string Reasoning { get; set; } = string.Empty;
+
+        public int FileCount { get; set; }
     }
 
     // Fix for SuggestedStorageTier (was missing)
@@ -146,6 +150,8 @@ namespace IIM.Shared.Models.Core
         public int RetentionDays { get; set; }
         public float Confidence { get; set; }
         public string Reasoning { get; set; } = string.Empty;
+        public string Criteria { get; set; } = string.Empty; // Added missing property
+        public int EstimatedFileCount { get; set; } // Added missing property
     }
 
     // Fix for SuggestedDataHandlingRule (was missing)

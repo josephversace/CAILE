@@ -275,6 +275,12 @@ namespace IIM.Shared.Models
         /// Indicates if the command was successful (ExitCode == 0)
         /// </summary>
         public bool IsSuccess => ExitCode == 0;
+
+        public void Deconstruct(out bool success, out string message)
+        {
+            success = IsSuccess;
+            message = StandardOutput ?? StandardError ?? string.Empty;
+        }
     }
 
     /// <summary>

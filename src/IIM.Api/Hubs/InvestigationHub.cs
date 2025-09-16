@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using IIM.Core.Models;
 using IIM.Shared.Enums;
 using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 
 namespace IIM.Api.Hubs
 {
@@ -41,9 +42,9 @@ namespace IIM.Api.Hubs
         }
         
         // Evidence notifications
-        public async Task NotifyEvidenceAdded(string caseId, Evidence evidence)
+        public async Task NotifyFileAdded(string workspaceId, VirtualFile evidence)
         {
-            await Clients.Group($"case-{caseId}").SendAsync("EvidenceAdded", evidence);
+            await Clients.Group($"workspace-{workspaceId}").SendAsync("FileAdded", evidence);
         }
         
         public async Task NotifyProcessingComplete(string evidenceId, ProcessingResult result)

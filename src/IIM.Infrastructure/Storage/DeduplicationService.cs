@@ -1,5 +1,7 @@
 // IIM.Core/Storage/IDeduplicationService.cs
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -7,7 +9,6 @@ using System.IO;
 using System.Security.Cryptography; // Add this
 using System.Threading;
 using System.Threading.Tasks;
-using IIM.Shared.Models;
 
 
 
@@ -16,13 +17,14 @@ namespace IIM.Infrastructure.Storage
     public class DeduplicationService : IDeduplicationService
     {
         private readonly Dictionary<string, List<string>> _hashToEvidenceIds = new();
-        private readonly Dictionary<string, ManagedFile> _evidenceStore = new();
+        private readonly IWorkspaceProvider _workspaceProvider;
         private readonly ILogger<DeduplicationService> _logger;
         private readonly Dictionary<string, int> _chunkRefCount = new();
 
-        public DeduplicationService(ILogger<DeduplicationService> logger)
+        public DeduplicationService(ILogger<DeduplicationService> logger, IWorkspaceProvider workspaceProvider)
         {
             _logger = logger;
+            _workspaceProvider = workspaceProvider;
         }
 
 
@@ -100,38 +102,25 @@ namespace IIM.Infrastructure.Storage
             return BitConverter.ToString(sha256.Hash).Replace("-", "").ToLowerInvariant();
         }
 
-        /// <summary>
-        /// Check if a hash already exists and return the evidence
-        /// </summary>
-        public async Task<ManagedFile?> CheckDuplicateAsync(string hash, CancellationToken cancellationToken = default)
+        public async Task<bool> IsDuplicateAsync(VirtualFile file, CancellationToken cancellationToken = default)
         {
-            if (_hashToEvidenceIds.TryGetValue(hash, out var evidenceIds) && evidenceIds.Any())
-            {
-                var firstId = evidenceIds.First();
-                if (_evidenceStore.TryGetValue(firstId, out var evidence))
-                {
-                    return evidence;
-                }
-            }
+            // Check if StoredFile with this hash already exists
+            return await _workspaceProvider.StoredFileExistsAsync(file.StoredFileHash, cancellationToken);
+        }
 
-            return null;
+        // Fix Line 106: Change ManagedFile to VirtualFile  
+        public async Task<List<VirtualFile>> FindDuplicatesAsync(VirtualFile targetFile, CancellationToken cancellationToken = default)
+        {
+            var storedFile = await _workspaceProvider.GetStoredFileByHashAsync(targetFile.StoredFileHash, cancellationToken);
+            if (storedFile?.VirtualFiles != null)
+            {
+                return storedFile.VirtualFiles.Where(vf => vf.Id != targetFile.Id).ToList();
+            }
+            return new List<VirtualFile>();
         }
 
         /// <summary>
-        /// Get count of how many times this hash has been seen
-        /// </summary>
-        public async Task<int> GetDuplicateCountAsync(string hash, CancellationToken cancellationToken = default)
-        {
-            if (_hashToEvidenceIds.TryGetValue(hash, out var evidenceIds))
-            {
-                return evidenceIds.Count;
-            }
-
-            return 0;
-        }
-
-        /// <summary>
-        /// Register a new hash with its evidence ID
+        /// Register a new hash with its file ID
         /// </summary>
         public async Task RegisterHashAsync(string hash, string evidenceId, CancellationToken cancellationToken = default)
         {
@@ -145,6 +134,16 @@ namespace IIM.Infrastructure.Storage
             _logger.LogInformation("Registered hash {Hash} for evidence {EvidenceId}", hash, evidenceId);
 
             await Task.CompletedTask;
+        }
+
+        public Task<StoredFile?> CheckDuplicateAsync(string hash, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> GetDuplicateCountAsync(string hash, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
         }
     }
 }

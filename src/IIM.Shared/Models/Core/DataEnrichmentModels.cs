@@ -177,6 +177,7 @@ namespace IIM.Shared.Models.Core
 
     public enum DataSensitivityLevel
     {
+        Unknown = -1,
         Public = 0,
         Internal = 1,
         Confidential = 2,

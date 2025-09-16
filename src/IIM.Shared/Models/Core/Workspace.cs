@@ -19,6 +19,8 @@ namespace IIM.Shared.Models.Core
         public string CreatedBy { get; set; } = string.Empty;
         public bool IsDeleted { get; set; }
 
+        public bool IsPublic { get; set; } = false;
+
         public ICollection<WorkspaceUser> Users { get; set; } = new List<WorkspaceUser>();
         public ICollection<VirtualFile> Files { get; set; } = new List<VirtualFile>();
         public ICollection<InvestigationSession> Sessions { get; set; } = new List<InvestigationSession>();

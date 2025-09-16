@@ -265,37 +265,37 @@ namespace IIM.Application.AI.DataEnrichment.Services
             return suggestions;
         }
 
-        private async Task<List<DataFacet>> BuildQueryFacetsAsync(List<VirtualFile> matchingFiles, CancellationToken cancellationToken)
+        private async Task<Dictionary<string, List<string>>> BuildQueryFacetsAsync(List<VirtualFile> matchingFiles, CancellationToken cancellationToken)
         {
-            var facets = new List<DataFacet>();
+            var facets = new Dictionary<string, List<string>>();
 
-            if (matchingFiles.Any())
-            {
-                // File type facet
-                facets.Add(new DataFacet
-                {
-                    Name = "File Type",
-                    Values = matchingFiles
-                        .GroupBy(f => Path.GetExtension(f.FileName).ToLower())
-                        .ToDictionary(g => g.Key, g => g.Count())
-                });
+            // Build file type facet
+            var fileTypes = matchingFiles
+                .GroupBy(f => Path.GetExtension(f.FileName).ToLower())
+                .Where(g => !string.IsNullOrEmpty(g.Key))
+                .Select(g => g.Key)
+                .ToList();
+            facets["FileTypes"] = fileTypes;
 
-                // Size facet
-                facets.Add(new DataFacet
-                {
-                    Name = "File Size",
-                    Values = new Dictionary<string, int>
-                    {
-                        ["Small (< 1MB)"] = matchingFiles.Count(f => f.FileSize < 1024 * 1024),
-                        ["Medium (1-50MB)"] = matchingFiles.Count(f => f.FileSize >= 1024 * 1024 && f.FileSize < 50 * 1024 * 1024),
-                        ["Large (> 50MB)"] = matchingFiles.Count(f => f.FileSize >= 50 * 1024 * 1024)
-                    }
-                });
-            }
+            // Build date facet
+            var dates = matchingFiles
+                .GroupBy(f => f.CreatedAt.Date.ToString("yyyy-MM-dd"))
+                .Select(g => g.Key)
+                .OrderByDescending(d => d)
+                .Take(10)
+                .ToList();
+            facets["Dates"] = dates;
+
+            // Build size facet
+            var sizes = matchingFiles
+                .Select(f => GetSizeCategory(f.FileSize))
+                .GroupBy(s => s)
+                .Select(g => g.Key)
+                .ToList();
+            facets["Sizes"] = sizes;
 
             return facets;
         }
-
         private async Task<string> GetWorkspaceDataSummaryAsync(Guid? workspaceId, CancellationToken cancellationToken)
         {
             if (!workspaceId.HasValue)
@@ -309,6 +309,50 @@ namespace IIM.Application.AI.DataEnrichment.Services
 
             var totalSize = filesList.Sum(f => f.FileSize);
             return $"Workspace contains {filesList.Count} files with total size of {totalSize:N0} bytes";
+        }
+
+        private async Task<string> GenerateInsightFromDataAsync(string question, IEnumerable<VirtualFile> files, CancellationToken cancellationToken)
+        {
+            var fileCount = files.Count();
+            var totalSize = files.Sum(f => f.FileSize);
+            var avgSize = fileCount > 0 ? totalSize / fileCount : 0;
+
+            // Generate basic insights based on data patterns
+            var insights = new List<string>();
+
+            if (fileCount == 0)
+            {
+                return "No data available to generate insights.";
+            }
+
+            insights.Add($"Dataset contains {fileCount} files with a total size of {FormatBytes(totalSize)}.");
+
+            if (avgSize > 0)
+            {
+                insights.Add($"Average file size is {FormatBytes(avgSize)}.");
+            }
+
+            // Analyze file types
+            var fileTypes = files
+                .GroupBy(f => Path.GetExtension(f.FileName).ToLower())
+                .OrderByDescending(g => g.Count())
+                .Take(3)
+                .ToList();
+
+            if (fileTypes.Any())
+            {
+                var topType = fileTypes.First();
+                insights.Add($"Most common file type is {topType.Key} ({topType.Count()} files).");
+            }
+
+            // Analyze creation dates
+            var recentFiles = files.Where(f => f.CreatedAt > DateTime.UtcNow.AddDays(-30)).Count();
+            if (recentFiles > 0)
+            {
+                insights.Add($"{recentFiles} files were created in the last 30 days.");
+            }
+
+            return string.Join(" ", insights);
         }
 
         private async Task<List<InsightMetric>> CalculateInsightMetricsAsync(string question, Guid? workspaceId, CancellationToken cancellationToken)
@@ -358,6 +402,66 @@ namespace IIM.Application.AI.DataEnrichment.Services
             }
 
             return recommendations;
+        }
+
+        private async Task<List<InsightSupport>> ExtractSupportingEvidenceAsync(string question, IEnumerable<VirtualFile> files, CancellationToken cancellationToken)
+        {
+            var evidence = new List<InsightSupport>();
+
+            // Extract relevant files as supporting evidence
+            var relevantFiles = files
+                .OrderByDescending(f => f.CreatedAt)
+                .Take(5)
+                .ToList();
+
+            foreach (var file in relevantFiles)
+            {
+                evidence.Add(new InsightSupport
+                {
+                    FileId = file.Id.ToString(),
+                    FileName = file.FileName,
+                    Evidence = $"File created on {file.CreatedAt:yyyy-MM-dd} with size {FormatBytes(file.FileSize)}",
+                    Relevance = CalculateFileRelevance(file, question)
+                });
+            }
+
+            return evidence;
+        }
+
+        // Helper methods
+        private string GetSizeCategory(long fileSize)
+        {
+            if (fileSize < 1024) return "Small (< 1KB)";
+            if (fileSize < 1024 * 1024) return "Medium (< 1MB)";
+            if (fileSize < 1024 * 1024 * 100) return "Large (< 100MB)";
+            return "Very Large (> 100MB)";
+        }
+
+        private string FormatBytes(long bytes)
+        {
+            if (bytes < 1024) return $"{bytes} B";
+            if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+            if (bytes < 1024 * 1024 * 1024) return $"{bytes / (1024.0 * 1024.0):F1} MB";
+            return $"{bytes / (1024.0 * 1024.0 * 1024.0):F1} GB";
+        }
+
+        private float CalculateFileRelevance(VirtualFile file, string question)
+        {
+            // Simple relevance calculation based on file properties
+            var relevance = 0.5f; // Base relevance
+
+            // Boost relevance for recent files
+            if (file.CreatedAt > DateTime.UtcNow.AddDays(-7))
+                relevance += 0.2f;
+
+            // Boost relevance if filename contains question keywords
+            var questionWords = question.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var fileNameLower = file.FileName.ToLower();
+
+            var matchingWords = questionWords.Count(word => fileNameLower.Contains(word));
+            relevance += (matchingWords / (float)questionWords.Length) * 0.3f;
+
+            return Math.Min(relevance, 1.0f);
         }
 
         #endregion

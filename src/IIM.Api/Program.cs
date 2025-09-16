@@ -122,14 +122,13 @@ if (deploymentConfig.Mode == DeploymentMode.Server)
 // Map all endpoints from separate files
 // ============================================
 app.MapSystemEndpoints();        // System & health endpoints
-app.MapInvestigationEndpoints(); // Investigation endpoints
-app.MapEvidenceEndpoints();      // Evidence management
+
 app.MapModelEndpoints();         // Model management
 app.MapWslEndpoints();           // WSL management
 
 app.MapRagEndpoints();           // RAG endpoints
                                 // Audit logging
-app.MapCaseEndpoints();
+
 
 // Start the application
 app.Run("http://localhost:5080");

@@ -3,6 +3,7 @@ using IIM.Core.Models;
 
 using IIM.Shared.Enums;
 using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -21,7 +22,19 @@ public class ExcelService : IExcelService
     {
         _logger = logger;
     }
-    
+
+    public async Task<Stream> ExportSessionAsync(GetWorkspaceQuery session, ExportFormat format, ExportOptions? options = null)
+    {
+        // Minimal implementation - just return empty stream for now
+        return new MemoryStream();
+    }
+
+    public async Task<Stream> ExportWorkspaceAsync(Workspace workspace, ExportFormat format, ExportOptions? options = null)
+    {
+        // Minimal implementation - just return empty stream for now
+        return new MemoryStream();
+    }
+
     public async Task<byte[]> GenerateSpreadsheetAsync(object data, ExportOptions options)
     {
         using var workbook = new XLWorkbook();
