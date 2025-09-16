@@ -41,8 +41,8 @@ namespace IIM.Infrastructure.Platform
         {
             ["qdrant"] = 6333,
             ["postgres"] = 5432,
-            ["minio"] = 9000,
-            ["minio-console"] = 9001,
+            ["seaweedfs-s3"] = 8333,
+            ["seaweedfs-filer"] = 8888,
             ["mcp-server"] = 3000
         };
 

@@ -370,6 +370,11 @@ namespace IIM.Shared.Models
         public string? HealthCheckCommand { get; set; }
 
         /// <summary>
+        /// Command
+        /// </summary>
+        public string? Command { get; set; }
+
+        /// <summary>
         /// Network name to join
         /// </summary>
         public string NetworkName { get; set; } = "iim-network";
