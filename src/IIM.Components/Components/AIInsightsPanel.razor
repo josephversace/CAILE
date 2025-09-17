@@ -1,0 +1,34 @@
+﻿@using IIM.Shared.Models.Core
+@if (Insights.Any())
+{
+    <div class="float-panel">
+        <h3 class="panel-title">🤖 AI Insights</h3>
+        @foreach (var insight in Insights)
+        {
+            <div class="ai-suggestion">
+                <div class="suggestion-text">@insight.Text</div>
+                <div class="suggestion-confidence">Confidence: @(insight.Confidence)%</div>
+            </div>
+        }
+
+        @if (ShowDismissButton)
+        {
+            <div class="panel-actions">
+                <button class="btn-dismiss" @onclick="@OnDismiss">✕</button>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public List<AIInsight> Insights { get; set; } = new();
+    [Parameter] public bool ShowDismissButton { get; set; } = false;
+    [Parameter] public EventCallback OnDismissed { get; set; }
+
+    private async Task OnDismiss()
+    {
+        await OnDismissed.InvokeAsync();
+    }
+
+
+}

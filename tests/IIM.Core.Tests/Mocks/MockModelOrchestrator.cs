@@ -225,7 +225,7 @@ public class MockModelOrchestrator : IModelOrchestrator
             {
                 new SimilarImage
                 {
-                    EvidenceId = "evidence-002",
+                    FileId = "evidence-002",
                     FileName = "similar1.jpg",
                     Similarity = 0.89
                 }

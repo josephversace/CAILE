@@ -1,0 +1,40 @@
+﻿@using IIM.Shared.Models.Core
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<div class="dashboard-card">
+    <div class="card-header">
+        <h3 class="card-title">Evidence Summary</h3>
+        <span class="status-badge status-active">Secure</span>
+    </div>
+    <div class="card-content">
+        <div class="metric">
+            <span class="metric-label">Total Files</span>
+            <span class="metric-value">@Summary.FileCount.ToString("N0")</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Verified Today</span>
+        
+        </div>
+        <div class="metric">
+            <span class="metric-label">Storage Used</span>
+  
+        </div>
+        <div class="metric-breakdown">
+            <div class="breakdown-item">
+                <span class="breakdown-label">Last 24h:</span>
+           
+            </div>
+            <div class="breakdown-item">
+                <span class="breakdown-label">Integrity Issues:</span>
+              @*   <span class="breakdown-value @(Summary.IntegrityIssues > 0 ? "text-warning" : "text-success")">
+                    @Summary.IntegrityIssues
+                </span> *@
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public WorkspaceSummary Summary { get; set; } = new();
+
+}

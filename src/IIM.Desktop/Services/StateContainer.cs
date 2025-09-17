@@ -8,22 +8,10 @@ using IIM.Shared.Models;
 /// </summary>
 public class StateContainer
 {
-    private InvestigationSession? _currentSession;
+  
     private readonly List<Notification> _notifications = new();
 
-    /// <summary>
-    /// Gets or sets the current investigation session.
-    /// Raises OnChange event when modified.
-    /// </summary>
-    public InvestigationSession? CurrentSession
-    {
-        get => _currentSession;
-        set
-        {
-            _currentSession = value;
-            NotifyStateChanged();
-        }
-    }
+   
 
     /// <summary>
     /// Gets a read-only list of current notifications.

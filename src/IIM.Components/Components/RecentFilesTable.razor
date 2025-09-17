@@ -1,0 +1,152 @@
+﻿@using IIM.Shared.Models.Core
+@using Microsoft.FluentUI.AspNetCore.Components
+@using Microsoft.FluentUI.AspNetCore.Components.Icons
+
+<div class="recent-files-table">
+    <div class="table-header">
+        <h3 class="table-title">Recent Evidence Files</h3>
+        <FluentButton Appearance="Appearance.Stealth"
+                      IconStart="@(new Microsoft.FluentUI.AspNetCore.Components.Icons.Regular.Size16.ArrowMaximize())"
+                      OnClick="@(() => OnViewAll.InvokeAsync())">
+            View All
+        </FluentButton>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header-row">
+            <div class="table-cell header-cell file-name-col">Name</div>
+            <div class="table-cell header-cell file-size-col">Size</div>
+            <div class="table-cell header-cell file-type-col">Type</div>
+            <div class="table-cell header-cell file-date-col">Date Modified</div>
+            <div class="table-cell header-cell integrity-col">Integrity</div>
+            <div class="table-cell header-cell actions-col">Actions</div>
+        </div>
+
+        @if (Files.Any())
+        {
+            @foreach (var file in Files.Take(MaxDisplayFiles))
+            {
+                <div class="table-row @(SelectedFiles.Contains(file) ? "selected" : "")"
+                     @onclick="@(() => OnFileSelected.InvokeAsync(file))">
+                    <div class="table-cell file-name-col">
+                        <div class="file-name-container">
+                            <span class="file-icon-small">@GetFileIconEmoji(file)</span>
+                            <span class="file-name">@file.FileName</span>
+                        </div>
+                    </div>
+                    <div class="table-cell file-size-col">@FormatFileSize(file.FileSize)</div>
+                    <div class="table-cell file-type-col">@GetFileTypeDisplay(file)</div>
+                    <div class="table-cell file-date-col">@file.CollectionDate.ToString("MMM dd, yyyy")</div>
+                    <div class="table-cell integrity-col">
+                        <div class="integrity-status">
+                            <div class="integrity-dot @GetIntegrityClass(file)"></div>
+                            <span>@GetIntegrityStatus(file)</span>
+                        </div>
+                    </div>
+                    <div class="table-cell actions-col">
+                        <FluentButton Appearance="Appearance.Stealth"
+                                      IconStart="@(new Microsoft.FluentUI.AspNetCore.Components.Icons.Regular.Size16.Eye())"
+                                      Title="View File"
+                                      OnClick="@(() => OnFileView.InvokeAsync(file))" />
+                        <FluentButton Appearance="Appearance.Stealth"
+                                      IconStart="@(new Microsoft.FluentUI.AspNetCore.Components.Icons.Regular.Size16.ArrowDownload())"
+                                      Title="Download File"
+                                      OnClick="@(() => OnFileDownload.InvokeAsync(file))" />
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon">📄</div>
+                <div class="empty-text">No recent files found</div>
+                <div class="empty-subtitle">Files will appear here as they are ingested</div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<VirtualFile> Files { get; set; } = new();
+    [Parameter] public List<VirtualFile> SelectedFiles { get; set; } = new();
+    [Parameter] public int MaxDisplayFiles { get; set; } = 10;
+    [Parameter] public EventCallback<VirtualFile> OnFileSelected { get; set; }
+    [Parameter] public EventCallback<VirtualFile> OnFileView { get; set; }
+    [Parameter] public EventCallback<VirtualFile> OnFileDownload { get; set; }
+    [Parameter] public EventCallback OnViewAll { get; set; }
+
+    private string GetFileIconEmoji(VirtualFile file)
+    {
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        return extension switch
+        {
+            ".dd" or ".img" or ".raw" => "💾",
+            ".e01" or ".ex01" or ".aff4" => "📱",
+            ".mp4" or ".avi" or ".mov" => "🎥",
+            ".wav" or ".mp3" or ".flac" => "🎵",
+            ".xlsx" or ".xls" => "📊",
+            ".docx" or ".doc" => "📄",
+            ".pdf" => "📕",
+            ".pst" or ".ost" => "📧",
+            ".json" or ".xml" => "📋",
+            ".txt" or ".log" => "📄",
+            ".jpg" or ".png" or ".gif" => "🖼️",
+            _ => "🗂️"
+        };
+    }
+
+    private string GetFileTypeDisplay(VirtualFile file)
+    {
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        return extension switch
+        {
+            ".dd" or ".img" or ".raw" => "Disk Image",
+            ".e01" or ".ex01" or ".aff4" => "Evidence File",
+            ".mp4" or ".avi" or ".mov" => "Video File",
+            ".wav" or ".mp3" or ".flac" => "Audio File",
+            ".xlsx" or ".xls" => "Spreadsheet",
+            ".docx" or ".doc" => "Document",
+            ".pdf" => "PDF Document",
+            ".pst" or ".ost" => "Outlook Data",
+            ".json" or ".xml" => "Data File",
+            ".txt" or ".log" => "Text File",
+            ".jpg" or ".png" or ".gif" => "Image File",
+            _ => "File"
+        };
+    }
+
+    private string GetIntegrityClass(VirtualFile file)
+    {
+        // Mock integrity status - replace with actual logic
+        return file.FileName switch
+        {
+            var name when name.Contains("phone") => "integrity-pending",
+            var name when name.Contains("email") => "integrity-failed",
+            _ => "integrity-verified"
+        };
+    }
+
+    private string GetIntegrityStatus(VirtualFile file)
+    {
+        return GetIntegrityClass(file) switch
+        {
+            "integrity-pending" => "Pending",
+            "integrity-failed" => "Failed",
+            _ => "Verified"
+        };
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len /= 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+}

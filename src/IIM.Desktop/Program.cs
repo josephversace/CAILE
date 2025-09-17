@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.FluentUI.AspNetCore.Components;
 using System;
 using System.IO;
 using System.Windows.Forms;
@@ -47,7 +48,7 @@ internal static class Program
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
+            System.Windows.Forms.MessageBox.Show(
                 $"Failed to start application:\n{ex.Message}",
                 "Startup Error",
                 MessageBoxButtons.OK,
@@ -117,6 +118,11 @@ internal static class Program
 
                 // Add memory cache for UI state
                 services.AddMemoryCache();
+
+
+                services.AddFluentUIComponents();
+
+                services.AddScoped<LayoutStateService>();
 
                 // ========================================
                 // API Client Configuration (MAIN SERVICE)

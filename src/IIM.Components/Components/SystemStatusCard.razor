@@ -1,0 +1,57 @@
+﻿@using IIM.Shared.Models
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<div class="dashboard-card">
+    <div class="card-header">
+        <h3 class="card-title">System Status</h3>
+        <span class="status-badge @GetStatusBadgeClass()">@GetStatusText()</span>
+    </div>
+    <div class="card-content">
+        <div class="metric">
+            <span class="metric-label">File Integrity Monitor</span>
+          
+        </div>
+        <div class="metric">
+            <span class="metric-label">AI Models Loaded</span>
+   
+        </div>
+        <div class="metric">
+            <span class="metric-label">Storage Health</span>
+        
+        </div>
+        <div class="progress-bar">
+ 
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public SystemStatus Status { get; set; } = new();
+
+    private string GetStatusBadgeClass()
+    {
+        // if (!Status.IntegrityMonitorActive || Status.AIModelsLoaded < Status.TotalAIModels || Status.StorageHealthPercent < 90)
+        // {
+        //     return "status-warning";
+        // }
+        // if (Status.StorageHealthPercent < 80)
+        // {
+        //     return "status-error";
+        // }
+        return "status-active";
+    }
+
+    private string GetStatusText()
+    {
+        // if (!Status.IntegrityMonitorActive || Status.AIModelsLoaded < Status.TotalAIModels)
+        // {
+        //     return "Warning";
+        // }
+        // if (Status.StorageHealthPercent < 80)
+        // {
+        //     return "Critical";
+        // }
+        return "Active";
+    }
+
+}

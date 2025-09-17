@@ -26,6 +26,11 @@ namespace IIM.Shared.Models.Core
 
         public DataSensitivityLevel DataSensitivity { get; set; }
         public List<string>? Tags { get; set; }
+
+        public string Description { get; set; } = string.Empty; 
     }
+
+    // Supporting classes
+    public record AIInsight(string Text, int Confidence);
 }
 

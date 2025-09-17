@@ -24,43 +24,9 @@
     <!-- Component container -->
     <div id="app">Loading IIM Platform...</div>
 
-    <!-- jQuery (required for HUD) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-
-    <!-- Bootstrap Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
-
-    <!-- HUD JavaScript Framework -->
-    <script src="_content/IIM.Components/js/app.min.js"></script>
-
-    <!-- IIM Components JavaScript -->
-    <script src="_content/IIM.Components/js/iim-components.js"></script>
-
-    <script src="_content/IIM.Components/js/iim-theme-integration.js"></script>
 
     <!-- Blazor -->
     <script src="_framework/blazor.webview.js" autostart="false"></script>
 
-    <script>
-        // Initialize Blazor and HUD after DOM is ready
-        window.addEventListener('DOMContentLoaded', () => {
-            // Start Blazor
-            Blazor.start().then(() => {
-                console.log('Blazor initialized');
-
-                // Initialize HUD components
-                if (window.App && window.App.init) {
-                    window.App.init();
-                }
-
-                // Initialize IIM specific components
-                if (window.IIM && window.IIM.init) {
-                    window.IIM.init();
-                }
-            });
-        });
-    </script>
 </body>
 </html>

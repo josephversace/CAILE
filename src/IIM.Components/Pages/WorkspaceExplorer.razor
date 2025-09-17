@@ -1,0 +1,159 @@
+﻿@page "/file-explorer"
+@using IIM.Shared.Models.Core
+@using IIM.Shared.Interfaces
+@using Microsoft.FluentUI.AspNetCore.Components
+@layout MainLayout
+
+
+<PageTitle>File Explorer</PageTitle>
+
+<div class="content-area">
+    <div class="content-header">
+        <h1 class="page-title">Evidence Files</h1>
+        <p class="page-subtitle">Manage and analyze digital evidence with AI-powered insights</p>
+    </div>
+
+    <!-- File Grid Component -->
+    <FileGrid Files="@FilteredFiles"
+              SelectedFiles="@SelectedFiles"
+              OnFileSelectionChanged="@OnFileSelectionChanged"
+              OnFileDoubleClick="@OnFileDoubleClick" />
+
+    <!-- Chain of Custody Component -->
+    @if (SelectedFile != null)
+    {
+        <ChainOfCustodyViewer File="@SelectedFile" />
+    }
+</div>
+
+@code {
+    // Data properties
+    private List<VirtualFile> Files = new();
+    private List<VirtualFile> FilteredFiles = new();
+    private List<VirtualFile> SelectedFiles = new();
+    private VirtualFile? SelectedFile;
+    private string SearchQuery = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFiles();
+        
+        // Subscribe to layout search changes
+        SubscribeToLayoutEvents();
+    }
+
+    private async Task LoadFiles()
+    {
+        // Load files - replace with actual service calls
+        Files = new List<VirtualFile>
+        {
+            new() 
+            { 
+                Id = Guid.NewGuid(), 
+                FileName = "suspect_laptop.dd", 
+                FileSize = 2576980377, 
+                CollectionDate = DateTimeOffset.Now.AddDays(-1),
+                CollectedBy = "Agent Smith",
+                CollectedLocation = "Suspect's Office",
+                StoredFileHash = "a1b2c3d4e5f6789012345678901234567890abcdef",
+                ChainOfCustody = new List<ChainOfCustodyEntry>
+                {
+                    new() { Action = "File Ingested", Actor = "Agent Smith", Timestamp = DateTimeOffset.Now.AddDays(-1), Details = "Evidence Room A" },
+                    new() { Action = "Hash Generated & Verified", Actor = "Automated System", Timestamp = DateTimeOffset.Now.AddDays(-1).AddMinutes(1), Details = "System" },
+                    new() { Action = "AI Analysis Initiated", Actor = "Pattern Recognition Model v2.1", Timestamp = DateTimeOffset.Now.AddDays(-1).AddMinutes(5), Details = "AI Server" },
+                    new() { Action = "Integrity Verification Passed", Actor = "Automated System", Timestamp = DateTimeOffset.Now.AddHours(-6), Details = "System" }
+                }
+            },
+            new() 
+            { 
+                Id = Guid.NewGuid(), 
+                FileName = "financial_records.xlsx", 
+                FileSize = 14888509, 
+                CollectionDate = DateTimeOffset.Now.AddDays(-1),
+                CollectedBy = "Agent Johnson",
+                CollectedLocation = "Accounting Office"
+            },
+            new() 
+            { 
+                Id = Guid.NewGuid(), 
+                FileName = "phone_extraction.e01", 
+                FileSize = 897581056, 
+                CollectionDate = DateTimeOffset.Now,
+                CollectedBy = "Agent Smith",
+                CollectedLocation = "Evidence Room B"
+            },
+            new() 
+            { 
+                Id = Guid.NewGuid(), 
+                FileName = "security_footage.mp4", 
+                FileSize = 1932735283, 
+                CollectionDate = DateTimeOffset.Now.AddDays(-2),
+                CollectedBy = "Agent Brown",
+                CollectedLocation = "Security Office"
+            },
+            new() 
+            { 
+                Id = Guid.NewGuid(), 
+                FileName = "network_logs.json", 
+                FileSize = 46797, 
+                CollectionDate = DateTimeOffset.Now.AddDays(-2),
+                CollectedBy = "Agent Wilson",
+                CollectedLocation = "IT Department"
+            },
+            new() 
+            { 
+                Id = Guid.NewGuid(), 
+                FileName = "email_export.pst", 
+                FileSize = 935329177, 
+                CollectionDate = DateTimeOffset.Now.AddDays(-3),
+                CollectedBy = "Agent Davis",
+                CollectedLocation = "Executive Office"
+            }
+        };
+
+        FilteredFiles = Files.ToList();
+    }
+
+    private void SubscribeToLayoutEvents()
+    {
+        // Subscribe to search events from the main layout
+        // This would be implemented with a proper event service
+    }
+
+    private void OnFileSelectionChanged(List<VirtualFile> selectedFiles)
+    {
+        SelectedFiles = selectedFiles;
+        SelectedFile = selectedFiles.LastOrDefault();
+        StateHasChanged();
+    }
+
+    private async Task OnFileDoubleClick(VirtualFile file)
+    {
+        // Implement file opening logic
+        SelectedFile = file;
+        if (!SelectedFiles.Contains(file))
+        {
+            SelectedFiles.Add(file);
+        }
+        StateHasChanged();
+    }
+
+    public void OnSearchChanged(string searchQuery)
+    {
+        SearchQuery = searchQuery;
+        FilterFiles();
+    }
+
+    private void FilterFiles()
+    {
+        if (string.IsNullOrEmpty(SearchQuery))
+        {
+            FilteredFiles = Files.ToList();
+        }
+        else
+        {
+            FilteredFiles = Files.Where(f => f.FileName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        StateHasChanged();
+    }
+}

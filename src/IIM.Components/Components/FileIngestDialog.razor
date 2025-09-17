@@ -1,0 +1,203 @@
+﻿@using Microsoft.FluentUI.AspNetCore.Components
+@using IIM.Shared.Models.Core
+
+<FluentDialog @bind-Hidden="@InternalIsVisible"
+              TrapFocus="true"
+              Modal="true"
+              Style="--dialog-width: 500px;">
+    <FluentDialogHeader>
+        <h2>Ingest Evidence File</h2>
+    </FluentDialogHeader>
+    <FluentDialogBody>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <FluentTextField @bind-Value="@FileName"
+                             Label="File Name"
+                             Required="true" />
+            <FluentTextArea @bind-Value="@Description"
+                            Label="Description"
+                            Rows="3" />
+            <FluentTextField @bind-Value="@CollectionLocation"
+                             Label="Collection Location"
+                             Required="true" />
+            <FluentTextField @bind-Value="@CollectedBy"
+                             Label="Collected By" />
+            <FluentInputFile @ref="FileInput"
+                             Mode="InputFileMode.Buffer"
+                             Multiple="false"
+                             MaximumFileCount="1"
+                             Accept="@AcceptedFileTypes"
+                             OnCompleted="@OnFileSelected"
+                             Style="margin-top: 8px;" />
+
+            @if (ValidationErrors.Any())
+            {
+                <div class="validation-errors">
+                    @foreach (var error in ValidationErrors)
+                    {
+                        <div class="validation-error">@error</div>
+                    }
+                </div>
+            }
+        </div>
+    </FluentDialogBody>
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Accent"
+                      OnClick="@ProcessIngest"
+                      Loading="@IsProcessing"
+                      Disabled="@(!CanProcessIngest)">
+            Ingest File
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Stealth"
+                      OnClick="@Cancel">
+            Cancel
+        </FluentButton>
+    </FluentDialogFooter>
+</FluentDialog>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; } = false;
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public EventCallback<VirtualFile> OnFileIngested { get; set; }
+    [Parameter] public string CurrentUser { get; set; } = "Current User";
+    [Parameter] public string AcceptedFileTypes { get; set; } = ".dd,.e01,.img,.raw,.pst,.xlsx,.docx,.pdf,.mp4,.json";
+
+    // Form fields
+    private string FileName = string.Empty;
+    private string Description = string.Empty;
+    private string CollectionLocation = string.Empty;
+    private string CollectedBy = string.Empty;
+    private FluentInputFile? FileInput;
+    private byte[]? SelectedFileData;
+    private long FileSize = 0;
+
+    // UI state
+    private bool IsProcessing = false;
+    private List<string> ValidationErrors = new();
+
+    private bool InternalIsVisible
+    {
+        get => !IsVisible;
+        set
+        {
+            if (IsVisible != !value)
+            {
+                IsVisible = !value;
+                IsVisibleChanged.InvokeAsync(IsVisible);
+            }
+        }
+    }
+
+    private bool CanProcessIngest =>
+        !string.IsNullOrEmpty(FileName) &&
+        !string.IsNullOrEmpty(CollectionLocation) &&
+        !string.IsNullOrEmpty(CollectedBy) &&
+        SelectedFileData != null &&
+        !IsProcessing;
+
+    protected override void OnParametersSet()
+    {
+        if (IsVisible && string.IsNullOrEmpty(CollectedBy))
+        {
+            CollectedBy = CurrentUser;
+        }
+    }
+
+    private async Task OnFileSelected(IEnumerable<FluentInputFileEventArgs> files)
+    {
+        var file = files.FirstOrDefault();
+        if (file != null)
+        {
+            SelectedFileData = file.Buffer?.Data;
+            FileSize = file.Size;
+
+            if (string.IsNullOrEmpty(FileName))
+            {
+                FileName = file.Name ?? string.Empty;
+            }
+
+            ValidateForm();
+            StateHasChanged();
+        }
+    }
+
+    private async Task ProcessIngest()
+    {
+        if (!CanProcessIngest || SelectedFileData == null)
+            return;
+
+        IsProcessing = true;
+        ValidationErrors.Clear();
+
+        try
+        {
+            // Create new VirtualFile
+            var newFile = new VirtualFile
+            {
+                Id = Guid.NewGuid(),
+                FileName = FileName.Trim(),
+                FileSize = FileSize,
+                CollectionDate = DateTimeOffset.Now,
+                CollectedBy = CollectedBy.Trim(),
+                CollectedLocation = CollectionLocation.Trim(),
+                Description = Description?.Trim(),
+                ChainOfCustody = new List<ChainOfCustodyEntry>
+                {
+                    new()
+                    {
+                        Action = "File Ingested",
+                        Actor = CollectedBy.Trim(),
+                        Timestamp = DateTimeOffset.Now,
+                        Details = $"Ingested via web interface from {CollectionLocation.Trim()}"
+                    }
+                }
+            };
+
+            await OnFileIngested.InvokeAsync(newFile);
+            ResetForm();
+        }
+        catch (Exception ex)
+        {
+            ValidationErrors.Add($"Error ingesting file: {ex.Message}");
+        }
+        finally
+        {
+            IsProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Cancel()
+    {
+        ResetForm();
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    private void ValidateForm()
+    {
+        ValidationErrors.Clear();
+
+        if (string.IsNullOrWhiteSpace(FileName))
+            ValidationErrors.Add("File name is required.");
+
+        if (string.IsNullOrWhiteSpace(CollectionLocation))
+            ValidationErrors.Add("Collection location is required.");
+
+        if (string.IsNullOrWhiteSpace(CollectedBy))
+            ValidationErrors.Add("Collector name is required.");
+
+        if (SelectedFileData == null)
+            ValidationErrors.Add("Please select a file to ingest.");
+    }
+
+    private void ResetForm()
+    {
+        FileName = string.Empty;
+        Description = string.Empty;
+        CollectionLocation = string.Empty;
+        CollectedBy = CurrentUser;
+        SelectedFileData = null;
+        FileSize = 0;
+        ValidationErrors.Clear();
+        IsProcessing = false;
+    }
+}

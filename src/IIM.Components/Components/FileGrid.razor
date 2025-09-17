@@ -1,0 +1,114 @@
+﻿@using IIM.Shared.Models.Core
+
+<div class="file-grid">
+    @foreach (var file in Files)
+    {
+        <div class="file-card @(SelectedFiles.Contains(file) ? "selected" : "")"
+             @onclick="@(() => ToggleFileSelection(file))"
+             @ondblclick="@(() => OnFileDoubleClick.InvokeAsync(file))">
+            <div class="file-icon @GetFileIconClass(file)">
+                @GetFileIconEmoji(file)
+            </div>
+            <div class="file-info">
+                <h3>@file.FileName</h3>
+                <div class="file-meta">
+                    <span>@FormatFileSize(file.FileSize)</span>
+                    <span>@file.CollectionDate.ToString("MMM dd, yyyy")</span>
+                </div>
+                <div class="integrity-indicator">
+                    <div class="integrity-dot @GetIntegrityClass(file)"></div>
+                    <span>@GetIntegrityStatus(file)</span>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<VirtualFile> Files { get; set; } = new();
+    [Parameter] public List<VirtualFile> SelectedFiles { get; set; } = new();
+    [Parameter] public EventCallback<List<VirtualFile>> OnFileSelectionChanged { get; set; }
+    [Parameter] public EventCallback<VirtualFile> OnFileDoubleClick { get; set; }
+
+    private async Task ToggleFileSelection(VirtualFile file)
+    {
+        var newSelectedFiles = SelectedFiles.ToList();
+
+        if (newSelectedFiles.Contains(file))
+        {
+            newSelectedFiles.Remove(file);
+        }
+        else
+        {
+            newSelectedFiles.Add(file);
+        }
+
+        await OnFileSelectionChanged.InvokeAsync(newSelectedFiles);
+    }
+
+    private string GetFileIconClass(VirtualFile file)
+    {
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        return extension switch
+        {
+            ".dd" or ".img" or ".raw" => "disk-image",
+            ".e01" or ".ex01" or ".aff4" => "evidence",
+            ".mp4" or ".wav" or ".mp3" => "media",
+            _ => "document"
+        };
+    }
+
+    private string GetFileIconEmoji(VirtualFile file)
+    {
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        return extension switch
+        {
+            ".dd" or ".img" or ".raw" => "💾",
+            ".e01" or ".ex01" or ".aff4" => "📱",
+            ".mp4" or ".avi" or ".mov" => "🎥",
+            ".wav" or ".mp3" or ".flac" => "🎵",
+            ".xlsx" or ".xls" => "📊",
+            ".docx" or ".doc" => "📄",
+            ".pdf" => "📕",
+            ".pst" or ".ost" => "📧",
+            ".json" or ".xml" => "📋",
+            ".txt" or ".log" => "📄",
+            ".jpg" or ".png" or ".gif" => "🖼️",
+            _ => "🗂️"
+        };
+    }
+
+    private string GetIntegrityClass(VirtualFile file)
+    {
+        // Mock integrity status - replace with actual logic
+        return file.FileName switch
+        {
+            "phone_extraction.e01" => "integrity-pending",
+            "email_export.pst" => "integrity-failed",
+            _ => "integrity-verified"
+        };
+    }
+
+    private string GetIntegrityStatus(VirtualFile file)
+    {
+        return GetIntegrityClass(file) switch
+        {
+            "integrity-pending" => "Verification Pending",
+            "integrity-failed" => "Integrity Check Failed",
+            _ => "Integrity Verified"
+        };
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len /= 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+}
