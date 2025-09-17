@@ -1,86 +1,50 @@
 # CAILE
 
-IIM Platform - Comprehensive Architectural Review \& Onboarding Report
+CAILE Platform - Comprehensive Architectural Review & Onboarding Report
 
 Executive Summary
 
-The Intelligent Investigation Machine (IIM) is a .NET 8/9-based platform designed for law enforcement agencies to perform AI-assisted investigations using local models. Built as a Blazor Hybrid desktop application with WSL2 integration, it provides secure, offline-capable AI orchestration with comprehensive auditing and evidence chain-of-custody features.
+CAILE (Classified Analytics & Intelligent Logistics Engine) is a secure data router engineered to move classified and other sensitive data between mission enclaves while preserving provenance and control. Built to serve multi-domain operations—from law enforcement casework to defense intelligence fusion centers—it applies AI-driven insights to accelerate investigations without compromising segregation mandates.
 
-Key Findings:
+Key Capabilities:
 
-
-
-Architecture: Well-structured multi-tier architecture with clear separation of concerns
-
-Tech Stack: Modern .NET ecosystem with Blazor, Semantic Kernel, ONNX/GGUF support
-
-Security: Strong emphasis on local-first, privacy-preserving operations
-
-Areas for Improvement: Code duplication, incomplete implementations, documentation gaps
-
-
+- Tier-aware data classification pipelines that tag, label, and prioritize assets as they enter the platform.
+- Policy-driven routing services that enforce handling rules, releasability constraints, and cross-domain approval workflows.
+- Segregated processing zones with strict boundary controls for evidence, intelligence, and public-safety data.
+- Cross-domain analytics that combine structured and unstructured sources with AI-assisted summarization, anomaly detection, and decision support.
 
 1\. Project Overview
 
 Business Purpose
 
-A secure, auditable AI platform enabling law enforcement to:
+A secure, auditable data movement and analytics platform enabling law enforcement, intelligence, and public-safety teams to:
 
-
-
-Run local AI models (ONNX, GGUF) for privacy preservation
-
-Perform multi-modal investigations (text, audio, image, documents)
-
-Maintain evidence integrity with SHA-256 hashing and audit trails
-
-Operate in air-gapped environments with full offline capability
-
-
+- Orchestrate intake pipelines that classify evidence, case files, and intelligence by tier the moment they enter the system.
+- Enforce routing policies that keep sensitive records within the appropriate enclaves while expediting releasable data to partner domains.
+- Maintain segregation controls that isolate investigative workspaces, protect chain-of-custody, and assure compliance audits.
+- Deliver AI-driven cross-domain insights that surface correlations, risks, and investigative leads faster than manual review.
 
 Primary Users
 
-
-
-Law enforcement investigators
-
-Digital forensics specialists
-
-Intelligence analysts
-
-
-
-
+- Law enforcement investigators
+- Digital forensics specialists
+- Intelligence analysts
+- Interagency fusion center staff
 
 Core Use Cases
 
-
-
-Evidence ingestion and analysis (documents, audio, images)
-
-Multi-modal AI workflows (RAG, transcription, image matching)
-
-Secure offline investigations
-
-Audit trail and chain-of-custody maintenance
-
-Report generation with citations
-
-
+- Evidence ingestion with automated classification, tagging, and provenance capture.
+- Policy-aware data routing between on-prem, cloud, and coalition environments.
+- Segregated enclave analytics with AI summarization, translation, and prioritization.
+- Audit trail, compliance reporting, and cross-domain dissemination tracking.
+- Multi-modal investigations spanning text, audio, imagery, and structured datasets.
 
 Operational Goals
 
-
-
-Privacy: All processing happens locally, no cloud dependencies
-
-Compliance: Full audit trails, evidence integrity preservation
-
-Performance: Optimized for Framework Desktop with 128GB RAM
-
-Flexibility: Support for multiple AI model formats and providers
-
-
+- Privacy: All processing happens locally with tier-specific controls, no uncontrolled cloud dependencies.
+- Compliance: Continuous monitoring of routing decisions, segregation boundaries, and audit trail completeness.
+- Performance: Optimized for Framework Desktop with 128GB RAM and scalable enclave workloads.
+- Flexibility: Support for multiple AI model formats, policy engines, and data-handling standards.
 
 2\. Solution \& Repository Structure
 
