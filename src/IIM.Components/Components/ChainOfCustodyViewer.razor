@@ -1,0 +1,58 @@
+﻿@using IIM.Shared.Models.Core
+
+<div class="chain-of-custody">
+    <div class="custody-header">
+        <h2 class="custody-title">Chain of Custody - @File.FileName</h2>
+    </div>
+    <div class="custody-timeline">
+        @if (File.ChainOfCustody != null && File.ChainOfCustody.Any())
+        {
+            @foreach (var entry in File.ChainOfCustody.OrderBy(c => c.Timestamp))
+            {
+                <div class="custody-event">
+                    <div class="custody-icon">@GetCustodyIcon(entry)</div>
+                    <div class="custody-details">
+                        <div class="custody-action">@entry.Action</div>
+                        <div class="custody-info">
+                            By @entry.Actor • @entry.Timestamp.ToString("MMM dd, yyyy hh:mm tt") • @entry.Details
+                        </div>
+                        @if (!string.IsNullOrEmpty(entry.Notes))
+                        {
+                            <div class="custody-info" style="margin-top: 4px; font-style: italic;">
+                                @entry.Notes
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="custody-event">
+                <div class="custody-icon">📋</div>
+                <div class="custody-details">
+                    <div class="custody-action">No chain of custody entries</div>
+                    <div class="custody-info">This file has no recorded custody history.</div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public VirtualFile File { get; set; } = new();
+
+    private string GetCustodyIcon(ChainOfCustodyEntry entry)
+    {
+        return entry.Action.ToLowerInvariant() switch
+        {
+            var action when action.Contains("ingest") => "📥",
+            var action when action.Contains("hash") => "🔒",
+            var action when action.Contains("ai") => "🤖",
+            var action when action.Contains("verification") => "✅",
+            var action when action.Contains("analysis") => "🔍",
+            var action when action.Contains("export") => "📤",
+            _ => "📋"
+        };
+    }
+}

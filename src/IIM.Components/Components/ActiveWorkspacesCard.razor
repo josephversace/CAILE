@@ -1,0 +1,44 @@
+﻿@using IIM.Shared.Models.Core
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<div class="dashboard-card">
+    <div class="card-header">
+        <h3 class="card-title">Active Investigations</h3>
+        <span class="status-badge status-warning">@Workspaces.Count Active</span>
+    </div>
+    <div class="card-content">
+        @if (Workspaces.Any())
+        {
+            @foreach (var ws in Workspaces)
+            {
+                <div class="metric">
+                    <span class="metric-label">@ws.Name</span>
+                    <span class="metric-value">@ws.Files.Count</span>
+                </div>
+            }
+            <div class="investigation-summary">
+                <div class="summary-item">
+                    <span class="summary-label">Total Cases:</span>
+                    <span class="summary-value">@Workspaces.Count</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Total Files:</span>
+                    <span class="summary-value">@Workspaces.Sum(i => i.Files.Count)</span>
+                </div>
+              
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <span class="empty-icon">📁</span>
+                <span class="empty-text">No active investigations</span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<Workspace> Workspaces { get; set; } = new();
+
+}

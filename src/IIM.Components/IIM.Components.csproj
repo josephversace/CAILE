@@ -6,6 +6,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Components\FileManager\**" />
+    <Content Remove="Components\FileManager\**" />
+    <EmbeddedResource Remove="Components\FileManager\**" />
+    <None Remove="Components\FileManager\**" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <SupportedPlatform Include="browser" />
@@ -36,6 +43,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.8" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.8" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.12.1" />
     <PackageReference Include="Microsoft.JSInterop" Version="8.0.*" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="PdfPig" Version="0.1.9" />
@@ -218,6 +226,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Components\Messages\" />
+    <Folder Include="Components\Settings\" />
     <Folder Include="Components\Tools\" />
   </ItemGroup>
 

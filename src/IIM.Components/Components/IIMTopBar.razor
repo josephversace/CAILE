@@ -1,0 +1,62 @@
+﻿@using Microsoft.FluentUI.AspNetCore.Components
+
+<div class="top-bar">
+    <div class="search-container">
+        <FluentTextField @bind-Value="@InternalSearchQuery"
+                         Placeholder="@SearchPlaceholder"
+                         Style="width: 100%; background: #334155; border: 1px solid #475569; border-radius: 8px; padding: 10px 40px 10px 16px; color: #f1f5f9;"
+                         OnInput="@OnSearchInput" />
+        <span class="search-icon">🔍</span>
+    </div>
+    <div class="toolbar">
+        <FluentButton Appearance="Appearance.Stealth"
+                      class="btn btn-secondary"
+                      OnClick="@OnExportClick"
+                      Disabled="@ExportDisabled">
+            <span>📤</span> Export
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Accent"
+                      class="btn btn-primary"
+                      OnClick="@OnIngestClick">
+            <span>➕</span> Ingest File
+        </FluentButton>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string SearchQuery { get; set; } = string.Empty;
+    [Parameter] public string SearchPlaceholder { get; set; } = "Search files...";
+    [Parameter] public bool ExportDisabled { get; set; } = false;
+    [Parameter] public EventCallback<string> OnSearchChanged { get; set; }
+    [Parameter] public EventCallback OnExportClicked { get; set; }
+    [Parameter] public EventCallback OnIngestClicked { get; set; }
+
+    private string InternalSearchQuery
+    {
+        get => SearchQuery;
+        set
+        {
+            if (SearchQuery != value)
+            {
+                SearchQuery = value;
+                OnSearchChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        var searchValue = e.Value?.ToString() ?? string.Empty;
+        await OnSearchChanged.InvokeAsync(searchValue);
+    }
+
+    private async Task OnExportClick()
+    {
+        await OnExportClicked.InvokeAsync();
+    }
+
+    private async Task OnIngestClick()
+    {
+        await OnIngestClicked.InvokeAsync();
+    }
+}

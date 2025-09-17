@@ -1,529 +1,115 @@
-﻿
-@namespace IIM.Components.Components.Layout
+﻿@inherits LayoutComponentBase
+@using IIM.Shared.Models.Core
+@using IIM.Shared.Interfaces
+@using Microsoft.FluentUI.AspNetCore.Components
 
-@using IIM.Core.AI
-@using IIM.Core.Models
-@using IIM.Core.Services
-@using IIM.Shared.Enums
-@using IIM.Shared.Models
-@using Microsoft.Extensions.Logging
-@inherits LayoutComponentBase
+<div class="app-container">
+    <!-- Sidebar Navigation Component -->
+    <IIMSidebar SelectedWorkspaceId="@SelectedWorkspaceId"
+                Workspaces="@Workspaces" 
+                CurrentRoute="@CurrentRoute" />
 
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Top Navigation Bar -->
+        <IIMTopBar SearchQuery="@SearchQuery"
+                   OnSearchChanged="@OnSearchChanged"
+                   OnExportClicked="@OnExportClicked"
+                   OnIngestClicked="@OnIngestClicked" />
 
-<div class="iim-app-wrapper" data-bs-theme="@(_isDarkMode ? "dark" : "light")">
-    <!-- Header -->
-
-
-
-     <!-- Main Body -->
-    <div class="app-body d-flex h-100 min-vh-100">
-       
-        <!-- Content Area -->
-        <div class="app-content flex-fill d-flex flex-column"> 
-            <!-- Tool Ribbon -->
-        <ToolRibbon OnToolSelected="@HandleToolSelected" />
-
-        <div class="card h-100" style="z-index: 1020;">
-            <div class="d-flex h-100">
-                <a class="d-lg-none btn btn-lg bg-inverse bg-opacity-15 bg-blur-2 text-body rounded-0 z-3 ms-1px mt-5 shadow-lg position-absolute top-0 start-0 " data-bs-toggle="offcanvas" href="#aiChatSidebar" role="button" aria-controls="offcanvasExample"><i class="fa fa-gear"></i></a>
-
-                <div class="w-300px offcanvas offcanvas-start bg-none position-lg-relative transform-lg-none visibility-lg-initial z-lg-3" id="aiChatSidebar">
-                    <div class="d-lg-none bg-blur-3 d-block position-absolute top-0 end-0 w-100 h-100"></div>
-
-
-                    <div class="position-relative h-100 d-flex flex-column">
-                        <div class="p-3">
-                            <button type="button" class="btn btn-outline-theme w-100 rounded-3 py-2 d-flex align-items-center justify-content-center" data-toggle-ai-tab="aiChatIntro">
-                                New Chat
-                            </button>
-                        </div>
-
-
-                        <hr class="m-0 opacity-20">
-
-
-                        <div class="flex-1 overflow-hidden text-body">
-                            <div data-scrollbar="true" class="p-3" data-height="100%">
-                                <div class="fw-500 mb-1 d-flex align-items-center">
-                                    <iconify-icon icon="solar:calendar-bold-duotone" class="fs-16px me-8px mt-n1 text-theme"></iconify-icon>
-                                    Today
-                                </div>
-                                <div class="px-2">
-                                    <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
-                                        <div class="flex-1 text-body text-opacity-75">Plan My Dream Vacation</div>
-                                        <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
-                                        <div class="dropdown position-relative z-3">
-                                            <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
-                                            <div class="dropdown-menu">
-                                                <a href="#" class="dropdown-item">Share Chat</a>
-                                                <a href="#" class="dropdown-item">See Details</a>
-                                                <div class="dropdown-divider"></div>
-                                                <a href="#" class="dropdown-item">Rename</a>
-                                                <a href="#" class="dropdown-item">Archive</a>
-                                                <a href="#" class="dropdown-item">Delete</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
-                                        <div class="flex-1 text-body text-opacity-75">Craft a Winning Pitch</div>
-                                        <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
-                                        <div class="dropdown position-relative z-3">
-                                            <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
-                                            <div class="dropdown-menu">
-                                                <a href="#" class="dropdown-item">Share Chat</a>
-                                                <a href="#" class="dropdown-item">See Details</a>
-                                                <div class="dropdown-divider"></div>
-                                                <a href="#" class="dropdown-item">Rename</a>
-                                                <a href="#" class="dropdown-item">Archive</a>
-                                                <a href="#" class="dropdown-item">Delete</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
-                                        <div class="flex-1 text-body text-opacity-75">Organize My Day</div>
-                                        <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
-                                        <div class="dropdown position-relative z-3">
-                                            <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
-                                            <div class="dropdown-menu">
-                                                <a href="#" class="dropdown-item">Share Chat</a>
-                                                <a href="#" class="dropdown-item">See Details</a>
-                                                <div class="dropdown-divider"></div>
-                                                <a href="#" class="dropdown-item">Rename</a>
-                                                <a href="#" class="dropdown-item">Archive</a>
-                                                <a href="#" class="dropdown-item">Delete</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
-                                        <div class="flex-1 text-body text-opacity-75">Write Custom Code</div>
-                                        <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
-                                        <div class="dropdown position-relative z-3">
-                                            <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
-                                            <div class="dropdown-menu">
-                                                <a href="#" class="dropdown-item">Share Chat</a>
-                                                <a href="#" class="dropdown-item">See Details</a>
-                                                <div class="dropdown-divider"></div>
-                                                <a href="#" class="dropdown-item">Rename</a>
-                                                <a href="#" class="dropdown-item">Archive</a>
-                                                <a href="#" class="dropdown-item">Delete</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
-                                        <div class="flex-1 text-body text-opacity-75">Draft a Polished Email</div>
-                                        <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
-                                        <div class="dropdown position-relative z-3">
-                                            <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
-                                            <div class="dropdown-menu">
-                                                <a href="#" class="dropdown-item">Share Chat</a>
-                                                <a href="#" class="dropdown-item">See Details</a>
-                                                <div class="dropdown-divider"></div>
-                                                <a href="#" class="dropdown-item">Rename</a>
-                                                <a href="#" class="dropdown-item">Archive</a>
-                                                <a href="#" class="dropdown-item">Delete</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
-                                        <div class="flex-1 text-body text-opacity-75">Brainstorm Ideas</div>
-                                        <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
-                                        <div class="dropdown position-relative z-3">
-                                            <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
-                                            <div class="dropdown-menu">
-                                                <a href="#" class="dropdown-item">Share Chat</a>
-                                                <a href="#" class="dropdown-item">See Details</a>
-                                                <div class="dropdown-divider"></div>
-                                                <a href="#" class="dropdown-item">Rename</a>
-                                                <a href="#" class="dropdown-item">Archive</a>
-                                                <a href="#" class="dropdown-item">Delete</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="fw-500 mb-1 d-flex align-items-center mt-3">
-                                    <iconify-icon icon="solar:calendar-bold-duotone" class="fs-16px me-8px mt-n1 text-theme"></iconify-icon>
-                                    1 Week Ago
-                                </div>
-                                <div class="px-2">
-                                    <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
-                                        <div class="flex-1 text-body text-opacity-75">Summarize an Article</div><a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
-                                        <div class="dropdown position-relative z-3">
-                                            <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
-                                            <div class="dropdown-menu">
-                                                <a href="#" class="dropdown-item">Share Chat</a>
-                                                <a href="#" class="dropdown-item">See Details</a>
-                                                <div class="dropdown-divider"></div>
-                                                <a href="#" class="dropdown-item">Rename</a>
-                                                <a href="#" class="dropdown-item">Archive</a>
-                                                <a href="#" class="dropdown-item">Delete</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
-                                        <div class="flex-1 text-body text-opacity-75">Prepare for a Speech</div>
-                                        <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
-                                        <div class="dropdown position-relative z-3">
-                                            <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
-                                            <div class="dropdown-menu">
-                                                <a href="#" class="dropdown-item">Share Chat</a>
-                                                <a href="#" class="dropdown-item">See Details</a>
-                                                <div class="dropdown-divider"></div>
-                                                <a href="#" class="dropdown-item">Rename</a>
-                                                <a href="#" class="dropdown-item">Archive</a>
-                                                <a href="#" class="dropdown-item">Delete</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
-                                        <div class="flex-1 text-body text-opacity-75">Create a Business Proposal</div>
-                                        <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
-                                        <div class="dropdown position-relative z-3">
-                                            <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
-                                            <div class="dropdown-menu">
-                                                <a href="#" class="dropdown-item">Share Chat</a>
-                                                <a href="#" class="dropdown-item">See Details</a>
-                                                <div class="dropdown-divider"></div>
-                                                <a href="#" class="dropdown-item">Rename</a>
-                                                <a href="#" class="dropdown-item">Archive</a>
-                                                <a href="#" class="dropdown-item">Delete</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="fw-500 mb-1 d-flex align-items-center mt-3">
-                                    <iconify-icon icon="solar:calendar-bold-duotone" class="fs-16px me-8px mt-n1 text-theme"></iconify-icon>
-                                    2 Weeks Ago
-                                </div>
-                                <div class="px-2">
-                                    <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
-                                        <div class="flex-1 text-body text-opacity-75">Organize Project Tasks</div>
-                                        <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
-                                        <div class="dropdown position-relative z-3">
-                                            <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
-                                            <div class="dropdown-menu">
-                                                <a href="#" class="dropdown-item">Share Chat</a>
-                                                <a href="#" class="dropdown-item">See Details</a>
-                                                <div class="dropdown-divider"></div>
-                                                <a href="#" class="dropdown-item">Rename</a>
-                                                <a href="#" class="dropdown-item">Archive</a>
-                                                <a href="#" class="dropdown-item">Delete</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
-                                        <div class="flex-1 text-body text-opacity-75">Research Market Trends</div>
-                                        <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
-                                        <div class="dropdown position-relative z-3">
-                                            <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
-                                            <div class="dropdown-menu">
-                                                <a href="#" class="dropdown-item">Share Chat</a>
-                                                <a href="#" class="dropdown-item">See Details</a>
-                                                <div class="dropdown-divider"></div>
-                                                <a href="#" class="dropdown-item">Rename</a>
-                                                <a href="#" class="dropdown-item">Archive</a>
-                                                <a href="#" class="dropdown-item">Delete</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
-                                        <div class="flex-1 text-body text-opacity-75">Craft Social Media Posts</div>
-                                        <a href="#" class="stretched-link" data-toggle-ai-tab="aiChatPrev"></a>
-                                        <div class="dropdown position-relative z-3">
-                                            <a href="#" data-bs-toggle="dropdown" class="link-secondary opacity-50 d-none hover-show-elm"><i class="fa fa-ellipsis"></i></a>
-                                            <div class="dropdown-menu">
-                                                <a href="#" class="dropdown-item">Share Chat</a>
-                                                <a href="#" class="dropdown-item">See Details</a>
-                                                <div class="dropdown-divider"></div>
-                                                <a href="#" class="dropdown-item">Rename</a>
-                                                <a href="#" class="dropdown-item">Archive</a>
-                                                <a href="#" class="dropdown-item">Delete</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <hr class="m-0 opacity-20">
-
-
-                        <div class="fs-6 p-2">
-                            <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
-                                <i class="far fa-folder fa-lg fa-fw me-2 ms-n2"></i>
-                                Explore Bots
-                            </div>
-                            <div class="position-relative hover-bg-light bg-opacity-25 hover-show rounded-2 py-6px px-3 border-0 d-flex align-items-center">
-                                <i class="far fa-gem fa-lg fa-fw me-2 ms-n2"></i>
-                                Go Pro
-                            </div>
-                        </div>
-
-
-                        <hr class="m-0 opacity-20">
-
-
-                        <div class="rounded-4 px-3 py-3 border-0">
-                            <div class="fw-500 flex-1 fs-13px text-body d-flex align-items-center">
-                                <div class="w-30px h-30px fs-20px me-2 rounded-circle text-white bg-inverse bg-opacity-50 d-flex align-items-center justify-content-center">
-                                    S
-                                </div>
-                                support@seantheme.com
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                @Body
-            </div>
-
-
-            <div class="card-arrow">
-                <div class="card-arrow-top-left"></div>
-                <div class="card-arrow-top-right"></div>
-                <div class="card-arrow-bottom-left"></div>
-                <div class="card-arrow-bottom-right"></div>
-            </div>
+        <!-- Page Content -->
+        <div class="content-wrapper">
+            @Body
         </div>
-    </div>
+    </main>
 
-    
-
-
-
-            <!-- Status Bar -->
-        @*     <StatusBar ConnectionStatus="_connectionStatus"
-                       ModelStatus="_modelStatus"
-                       GpuUsage="_gpuUsage"
-                       RamUsage="_ramUsage" /> *@
-        </div>
-    </div> 
-
-
-<!-- Notification Container -->
-<div class="iim-notifications" id="notificationContainer">
-    @foreach (var notification in _notifications)
-    {
-        <div class="iim-notification @GetNotificationTypeClass(notification.Type) @GetPriorityClass(notification.Priority) show">
-            <i class="fas @GetNotificationIcon(notification) me-2"></i>
-            <div class="notification-content">
-                @if (!string.IsNullOrEmpty(notification.Title))
-                {
-                    <strong>@notification.Title</strong>
-                    <br />
-                }
-                @notification.Message
-            </div>
-        </div>
-    }
+    <!-- AI Insights Panel (Global) -->
+    <AIInsightsPanel Insights="@GlobalAIInsights" />
 </div>
 
-
-
-
+<!-- Global Dialogs -->
+<FileIngestDialog @bind-IsVisible="@ShowIngestDialog"
+                  OnFileIngested="@OnFileIngested" />
 
 @code {
-    private bool _isDarkMode = true;
-    private bool _sidebarCollapsed = false;
-    private string _currentTool = "investigation";
-    private string _connectionStatus = "connected";
-    private string _modelStatus = "ready";
-    private int _gpuUsage = 45;
-    private int _ramUsage = 62;
+    // Layout state
+    private string SelectedWorkspaceId = string.Empty;
+    private string SearchQuery = string.Empty;
+    private string CurrentRoute = string.Empty;
+    private bool ShowIngestDialog = false;
 
-    // Using existing models from IIM.Core and Models namespace
-    private List<Notification> _notifications = new();
-    private InvestigationSession? _currentSession;
-    private List<InvestigationSession> _sessions = new();
-    private GpuStats? _gpuStats;
+    // Data
+    private List<Workspace> Workspaces = new();
+    private List<AIInsight> GlobalAIInsights = new();
 
-    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
-    [Inject] private ILogger<MainLayout> Logger { get; set; } = default!;
-
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
   
-
     protected override async Task OnInitializedAsync()
     {
-        // Load user preferences
-        _isDarkMode = await LoadPreference("darkMode", true);
-        _sidebarCollapsed = await LoadPreference("sidebarCollapsed", false);
-
-      
-        // Initialize monitoring
-        await StartSystemMonitoring();
+        CurrentRoute = Navigation.Uri;
+        Navigation.LocationChanged += OnLocationChanged;
+        
+        await LoadLayoutData();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private async Task LoadLayoutData()
     {
-        if (firstRender)
+        // Load workspaces
+        Workspaces = new List<Workspace>
         {
-            // Initialize HUD components after first render
-            await JSRuntime.InvokeVoidAsync("eval", @"
-                if (window.App && window.App.init) {
-                    window.App.init();
-                }
-                if (window.IIM && window.IIM.init) {
-                    window.IIM.init();
-                }
-            ");
-        }
-    }
-
-    private void ToggleTheme()
-    {
-        _isDarkMode = !_isDarkMode;
-        SavePreference("darkMode", _isDarkMode);
-        StateHasChanged();
-    }
-
-    private void ToggleSidebar()
-    {
-        _sidebarCollapsed = !_sidebarCollapsed;
-        SavePreference("sidebarCollapsed", _sidebarCollapsed);
-    }
-
-    private async Task HandleSessionSelected(string sessionId)
-    {
-     
-
-        // Navigate to investigation page with session
-        NavigationManager.NavigateTo($"/investigation/{sessionId}");
-    }
-
-    private async Task HandleNewSession()
-    {
-
-    }
-
-    private void HandleSettingsClicked()
-    {
-        // Open settings panel
-        //Logger.LogInformation("Settings clicked");
-        NavigationManager.NavigateTo($"/settings");
-    }
-
-    private void HandleToolSelected(string tool)
-    {
-        _currentTool = tool;
-        //Logger.LogInformation("Tool selected: {Tool}", tool);
-        StateHasChanged();
-    }
-
-    private void RecoverFromError()
-    {
-        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
-    }
-
-    private async Task StartSystemMonitoring()
-    {
- 
-    }
-
-    private void ShowNotification(string message, NotificationType type, string? title = null, NotificationCategory category = NotificationCategory.System)
-    {
-        var notification = new Notification
-        {
-            Id = Guid.NewGuid().ToString(),
-            Title = title ?? "",
-            Message = message,
-            Type = type,
-            Category = category,
-            Priority = type == NotificationType.Error ? NotificationPriority.High : NotificationPriority.Normal,
-            CreatedAt = DateTimeOffset.UtcNow,
-            IsRead = false
+            new() { Id = Guid.NewGuid(), Name = "Case #2024-001 - Financial Fraud" },
+            new() { Id = Guid.NewGuid(), Name = "Case #2024-002 - Cyber Security" },
+            new() { Id = Guid.NewGuid(), Name = "Case #2024-003 - Data Breach" }
         };
 
-        _notifications.Add(notification);
-        StateHasChanged();
-
-        // Remove after 3 seconds for non-critical notifications
-        if (notification.Priority != NotificationPriority.Critical)
+        if (Workspaces.Any())
         {
-            Task.Delay(3000).ContinueWith(_ =>
-            {
-                _notifications.Remove(notification);
-                InvokeAsync(StateHasChanged);
-            });
+            SelectedWorkspaceId = Workspaces.First().Id.ToString();
         }
-    }
 
-    private string GetNotificationTypeClass(NotificationType type) => type switch
-    {
-        NotificationType.Success => "success",
-        NotificationType.Error => "error",
-        NotificationType.Warning => "warning",
-        NotificationType.Critical => "critical",
-        _ => "info"
-    };
-
-    private string GetPriorityClass(NotificationPriority priority) => priority switch
-    {
-        NotificationPriority.Urgent or NotificationPriority.Critical => "priority-high",
-        NotificationPriority.Low => "priority-low",
-        _ => ""
-    };
-
-    private string GetNotificationIcon(Notification notification)
-    {
-        // First check category-specific icons
-        if (notification.Category == NotificationCategory.Model)
-            return "fa-robot";
-        if (notification.Category == NotificationCategory.Investigation)
-            return "fa-search";
-        if (notification.Category == NotificationCategory.Evidence)
-            return "fa-file-alt";
-        if (notification.Category == NotificationCategory.Security)
-            return "fa-shield-alt";
-
-        // Fall back to type-based icons
-        return notification.Type switch
+        // Load global AI insights
+        GlobalAIInsights = new List<AIInsight>
         {
-            NotificationType.Success => "fa-check-circle",
-            NotificationType.Error => "fa-exclamation-circle",
-            NotificationType.Warning => "fa-exclamation-triangle",
-            NotificationType.Critical => "fa-times-circle",
-            _ => "fa-info-circle"
+            new("Detected unusual file access patterns in suspect_laptop.dd between 2:00-4:00 AM.", 87),
+            new("Found 23 deleted files with recent timestamps. Recommend forensic recovery.", 94),
+            new("Cross-reference phone_extraction.e01 with network_logs.json for timeline correlation.", 76)
         };
     }
 
-    private async Task<T> LoadPreference<T>(string key, T defaultValue)
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        try
-        {
-            var result = await JSRuntime.InvokeAsync<string>($"localStorage.getItem", $"iim_{key}");
-            if (result != null)
-            {
-                return System.Text.Json.JsonSerializer.Deserialize<T>(result) ?? defaultValue;
-            }
-        }
-        catch (Exception ex)
-        {
-            //Logger.LogWarning(ex, "Failed to load preference {Key}", key);
-        }
-        return defaultValue;
+        CurrentRoute = e.Location;
+        StateHasChanged();
     }
 
-    private async void SavePreference<T>(string key, T value)
+    private void OnSearchChanged(string searchQuery)
     {
-        try
-        {
-            var json = System.Text.Json.JsonSerializer.Serialize(value);
-            await JSRuntime.InvokeVoidAsync("localStorage.setItem", $"iim_{key}", json);
-        }
-        catch (Exception ex)
-        {
-            //Logger.LogWarning(ex, "Failed to save preference {Key}", key);
-        }
+        SearchQuery = searchQuery;
+        // Broadcast search to current page component
     }
 
+    private void OnExportClicked()
+    {
+        // Handle global export
+    }
 
+    private void OnIngestClicked()
+    {
+        ShowIngestDialog = true;
+    }
+
+    private async Task OnFileIngested(VirtualFile file)
+    {
+        // Handle global file ingestion
+        ShowIngestDialog = false;
+    }
 
     public void Dispose()
     {
-        // Cleanup if needed
+        Navigation.LocationChanged -= OnLocationChanged;
     }
+
+  
+
+ 
 }

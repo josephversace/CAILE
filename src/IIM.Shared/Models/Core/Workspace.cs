@@ -45,6 +45,8 @@ namespace IIM.Shared.Models.Core
         public DateTimeOffset UpdatedAt { get; set; }
         public int FileCount { get; set; }
         public int ActiveSessions { get; set; }
+
+       
     }
 
     /// <summary>

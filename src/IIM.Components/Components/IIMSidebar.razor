@@ -1,0 +1,94 @@
+﻿@using IIM.Shared.Models.Core
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<nav class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">
+            <div class="logo-icon">I</div>
+            <div class="logo-text">
+                <h1>IIM</h1>
+                <p>Investigation Manager</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="workspace-selector">
+        <select @bind="@InternalSelectedWorkspaceId"
+                style="background: #334155; border: 1px solid #475569; border-radius: 8px; padding: 12px; color: #f1f5f9; width: 100%;">
+            @foreach (var workspace in Workspaces)
+            {
+                <option value="@workspace.Id.ToString()">@workspace.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Navigation</div>
+        <NavLink href="/dashboard" class="nav-item" ActiveClass="active">
+            <span class="nav-item-icon">📊</span>
+            Dashboard
+        </NavLink>
+        <NavLink href="/evidence-explorer" class="nav-item" ActiveClass="active">
+            <span class="nav-item-icon">📁</span>
+            File Management
+        </NavLink>
+        <NavLink href="/chain-of-custody" class="nav-item" ActiveClass="active">
+            <span class="nav-item-icon">🔗</span>
+            Chain of Custody
+        </NavLink>
+        <NavLink href="/search" class="nav-item" ActiveClass="active">
+            <span class="nav-item-icon">🔍</span>
+            Search & Analysis
+        </NavLink>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">AI Tools</div>
+        <NavLink href="/ai-analysis" class="nav-item" ActiveClass="active">
+            <span class="nav-item-icon">🤖</span>
+            AI Analysis
+        </NavLink>
+        <NavLink href="/pattern-detection" class="nav-item" ActiveClass="active">
+            <span class="nav-item-icon">📈</span>
+            Pattern Detection
+        </NavLink>
+        <NavLink href="/plugins" class="nav-item" ActiveClass="active">
+            <span class="nav-item-icon">🧩</span>
+            Plugins
+        </NavLink>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">System</div>
+        <NavLink href="/settings" class="nav-item" ActiveClass="active">
+            <span class="nav-item-icon">⚙️</span>
+            Settings
+        </NavLink>
+        <NavLink href="/audit-logs" class="nav-item" ActiveClass="active">
+            <span class="nav-item-icon">📋</span>
+            Audit Logs
+        </NavLink>
+    </div>
+</nav>
+
+@code {
+    [Parameter] public List<Workspace> Workspaces { get; set; } = new();
+    [Parameter] public string SelectedWorkspaceId { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SelectedWorkspaceIdChanged { get; set; }
+    [Parameter] public string CurrentRoute { get; set; } = string.Empty;
+
+    private string InternalSelectedWorkspaceId
+    {
+        get => SelectedWorkspaceId;
+        set
+        {
+            if (SelectedWorkspaceId != value)
+            {
+                SelectedWorkspaceId = value;
+                SelectedWorkspaceIdChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+
+}
