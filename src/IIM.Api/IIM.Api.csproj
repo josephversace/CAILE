@@ -10,16 +10,17 @@
     <PackageReference Include="AspNetCore.HealthChecks.UI" Version="8.0.2" />
     <PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.17" />
-    <PackageReference Include="Hangfire.Core" Version="1.8.17" />
-    <PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.21" />
+    <PackageReference Include="Hangfire.Core" Version="1.8.21" />
+	<PackageReference Include="Hangfire.PostgreSql" Version="1.8.21" />
+    <PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.8" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.8" />
-	  <PackageReference Include="AWSSDK.S3" Version="3.7.305.10" />
+	<PackageReference Include="AWSSDK.S3" Version="3.7.305.10" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.8" />
     <PackageReference Include="OpenIddict.AspNetCore" Version="7.0.0" />

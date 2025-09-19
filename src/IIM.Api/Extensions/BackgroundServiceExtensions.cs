@@ -1,4 +1,6 @@
-﻿using IIM.Api.Configuration;
+﻿using Hangfire;
+using Hangfire.PostgreSql;
+using IIM.Api.Configuration;
 using IIM.Api.Services;
 using IIM.Infrastructure.Platform;
 using Microsoft.Extensions.Configuration;
@@ -13,22 +15,31 @@ namespace IIM.Api.Extensions
             IConfiguration configuration,
             DeploymentConfiguration deployment)
         {
-            // Only add background services if not in client mode
-            if (deployment.Mode == DeploymentMode.Client)
-            {
-                return services;
-            }
+            // Add Hangfire
+            services.AddHangfire(config => config
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(options =>
+                {
+                    // Use your existing PostgreSQL connection
+                    options.UseNpgsqlConnection(configuration.GetConnectionString("DefaultConnection"));
+                }));
 
-      
-            // Note: EvidenceIntegrityMonitor is already defined in Program.cs
-            // We'll move it here later, for now comment it out
-           // services.AddHostedService<EvidenceIntegrityMonitor>();
-
-            // WSL Service Orchestration (Windows only)
-            if (OperatingSystem.IsWindows())
+            // Add Hangfire server
+            services.AddHangfireServer(options =>
             {
-                //services.AddHostedService<WslServiceOrchestrator>();
-            }
+                options.ServerName = $"DataRouter-{Environment.MachineName}";
+                options.WorkerCount = Environment.ProcessorCount * 2;
+                options.Queues = new[]
+                {
+                "critical",      // High priority processing
+                "enrichment",    // AI analysis
+                "routing",       // File movement
+                "background"     // Low priority
+            };
+            });
+
 
             // Infrastructure Health Monitoring
             services.AddHostedService<InfrastructureMonitor>();

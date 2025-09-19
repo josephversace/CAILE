@@ -36,4 +36,20 @@ namespace IIM.Shared.Models.Core
         public string? Status { get; set; }
         public string? Assignee { get; set; }
     }
+
+
+    public record UploadRequest(
+        Guid WorkspaceId,
+        string FileName,
+        bool RequiresQuarantine = true
+    );
+
+    public record UploadResponse(
+        string UploadUrl,
+        string Bucket,
+        string ObjectKey,
+        DateTimeOffset ExpiresAt
+    );
 }
+
+

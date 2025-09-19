@@ -1,16 +1,15 @@
+using Hangfire;
 using IIM.Api.Configuration;
 using IIM.Api.Endpoints;
 using IIM.Api.Extensions;
 using IIM.Api.Hubs;
       
 using IIM.Core.AI;
-
-using IIM.Shared.Mediator;
 using IIM.Core.Models;                       
 using IIM.Core.Services;
 using IIM.Infrastructure.Platform;
-
 using IIM.Shared.Interfaces;
+using IIM.Shared.Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.OpenApi.Models;
@@ -32,6 +31,7 @@ builder.Services.AddApiServices(builder.Configuration);
 
 
 builder.Services.AddEndpointsApiExplorer(); // Required for minimal APIs
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -115,6 +115,17 @@ if (deploymentConfig.Mode == DeploymentMode.Server)
 {
     app.MapHub<AdminHub>("/hubs/admin");
     app.MapRazorPages(); // Admin pages
+}
+
+
+// Add Hangfire dashboard
+if (app.Environment.IsDevelopment() || deploymentConfig.Mode == DeploymentMode.Server)
+{
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = new[] { new HangfireAuthorizationFilter() },
+        IgnoreAntiforgeryToken = true
+    });
 }
 
 

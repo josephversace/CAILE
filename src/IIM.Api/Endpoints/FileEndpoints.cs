@@ -1,4 +1,6 @@
-﻿using IIM.Shared.Interfaces;
+﻿using IIM.Application.ManagedFiles;
+using IIM.Shared.Interfaces;
+using IIM.Shared.Mediator;
 using IIM.Shared.Models.Core;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -117,7 +119,21 @@ namespace IIM.Api.Endpoints
             })
             .WithName("VerifyFileIntegrity")
             .Produces<object>();
+
+            // In FileEndpoints.cs
+            files.MapPost("/request-upload", async (
+                [FromBody] RequestUploadUrlCommand command,  // Take the command directly
+                [FromServices] IMediator mediator,
+                CancellationToken ct) =>
+            {
+                var result = await mediator.Send(command, ct);
+                return Results.Ok(result);
+            })
+            .WithName("RequestUpload")
+            .RequireAuthorization();
+
+
         }
     }
-}
 
+}

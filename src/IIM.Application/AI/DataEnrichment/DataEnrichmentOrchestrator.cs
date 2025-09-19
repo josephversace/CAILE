@@ -1,5 +1,6 @@
 ﻿using IIM.Application.AI.DataEnrichment.Services;
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using IIM.Shared.Models.Core;
 using Microsoft.Extensions.Logging;
 using System;
@@ -21,6 +22,7 @@ namespace IIM.Application.AI.DataEnrichment
         private readonly IDataQueryService _queryService;
         private readonly IGovernanceSuggestionService _governanceService;
         private readonly IRiskAssessmentService _riskAssessmentService;
+        private readonly IObjectStorageProvider _storageProvider;
 
         public DataEnrichmentOrchestrator(
             ILogger<DataEnrichmentOrchestrator> logger,
@@ -28,7 +30,8 @@ namespace IIM.Application.AI.DataEnrichment
             IFileClassificationService classificationService,
             IDataQueryService queryService,
             IGovernanceSuggestionService governanceService,
-            IRiskAssessmentService riskAssessmentService)
+            IRiskAssessmentService riskAssessmentService,
+            IObjectStorageProvider storageProvider)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _contentAnalysisService = contentAnalysisService ?? throw new ArgumentNullException(nameof(contentAnalysisService));
@@ -36,7 +39,11 @@ namespace IIM.Application.AI.DataEnrichment
             _queryService = queryService ?? throw new ArgumentNullException(nameof(queryService));
             _governanceService = governanceService ?? throw new ArgumentNullException(nameof(governanceService));
             _riskAssessmentService = riskAssessmentService ?? throw new ArgumentNullException(nameof(riskAssessmentService));
+            _storageProvider = storageProvider;
         }
+
+
+
 
         #region Events
         public event EventHandler<AnalysisStartedEventArgs>? AnalysisStarted;
@@ -45,6 +52,92 @@ namespace IIM.Application.AI.DataEnrichment
         #endregion
 
         #region IDataReasoningService Implementation - Delegates to Specialized Services
+
+        public async Task ProcessUploadedFile(string bucketName, string objectKey, long fileSize)
+        {
+            try
+            {
+                // Fetch the file from storage
+                using var stream = await _storageProvider.GetObjectAsync(bucketName, objectKey);
+
+                // Use the existing method
+                var analysis = await AnalyzeFileContentAsync(
+                    stream,
+                    objectKey,
+                    "application/octet-stream", // Determine from file
+                    CancellationToken.None);
+
+              
+
+                // Check if needs to move based on classification
+                //if (analysis.StructuredData != null)
+                //{
+                //    var routingDecision = new RoutingDecision
+                //    {
+                //        TargetBucket = DetermineTargetBucket(analysis.Classification),
+                //        RequiresQuarantine = analysis.Classification.RiskScore > 0.7f
+                //    };
+
+                //    if (routingDecision.TargetBucket != bucketName)
+                //    {
+                //        // Move file to appropriate bucket
+                //        await _storageProvider.CopyObjectAsync(
+                //            bucketName, objectKey,
+                //            routingDecision.TargetBucket, objectKey);
+
+                //        await _storageProvider.DeleteObjectAsync(bucketName, objectKey);
+                //    }
+                //}
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to process uploaded file {ObjectKey}", objectKey);
+                throw;
+            }
+        }
+
+       public async Task ProcessFileFromStorageAsync(
+       string bucketName,
+       string objectKey,
+       long fileSize)
+        {
+            try
+            {
+                _logger.LogInformation("Processing file {ObjectKey} from bucket {Bucket}", objectKey, bucketName);
+
+                // Fetch the file from storage
+                using var stream = await _storageProvider.GetObjectAsync(bucketName, objectKey);
+
+                // Use existing analysis method
+                var analysis = await AnalyzeFileContentAsync(
+                    stream,
+                    objectKey,
+                    "application/octet-stream", // You could determine this from the file
+                    CancellationToken.None);
+
+                // Log results
+                //_logger.LogInformation(
+                //    "Completed processing {ObjectKey}. Classification: {Category}, Sensitivity: {Sensitivity}",
+                //    objectKey,
+                //    analysis.Classification?.Category,
+                //    analysis.Classification?.Sensitivity);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to process file {ObjectKey} from {Bucket}", objectKey, bucketName);
+                throw;
+            }
+        }
+
+        private string DetermineTargetBucket(ClassificationData classification)
+        {
+            // Use the existing classification data
+            if (classification.Level == DataClassificationLevel.Confidential)
+                return "primary/sensitive";
+            if (classification.Level == DataClassificationLevel.Confidential)
+                return "primary/nodedup";
+            return "primary/objects";
+        }
 
         public async Task<ContentAnalysis> AnalyzeFileContentAsync(Stream content, string fileName, string mimeType, CancellationToken cancellationToken = default)
         {
