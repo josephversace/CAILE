@@ -5,390 +5,306 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using IIM.Shared.Enums;
-using IIM.Infrastructure.AI.DirectML;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using IIM.Shared.Interfaces;
+using IIM.Infrastructure.AI.Execution;
 
 namespace IIM.Infrastructure.AI.OnnxRuntime
 {
- 
+	/// <summary>
+	/// Unified ONNX Runtime manager.
+	/// Delegates hardware provider selection to IOnnxExecutionProvider.
+	/// </summary>
+	public class OnnxRuntimeManager : IOnnxRuntimeManager, IDisposable
+	{
+		private readonly ILogger<OnnxRuntimeManager> _logger;
+		private readonly IOnnxExecutionProvider _provider;
 
-    /// <summary>
-    /// Concrete ONNX Runtime manager.
-    /// </summary>
-    public class OnnxRuntimeManager : IOnnxRuntimeManager
-    {
-        private readonly ILogger<OnnxRuntimeManager> _logger;
-        private readonly IDirectMLDeviceManager _deviceManager;
-        private readonly Dictionary<string, InferenceSession> _sessionCache = new();
-        private readonly SemaphoreSlim _sessionLock = new(1, 1);
-        private bool _disposed;
+		private readonly Dictionary<string, InferenceSession> _sessionCache = new();
+		private readonly SemaphoreSlim _sessionLock = new(1, 1);
 
-        /// <summary>
-        /// Constructs the manager with required dependencies.
-        /// </summary>
-        public OnnxRuntimeManager(
-            ILogger<OnnxRuntimeManager> logger,
-            IDirectMLDeviceManager deviceManager)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _deviceManager = deviceManager ?? throw new ArgumentNullException(nameof(deviceManager));
-        }
+		private bool _disposed;
 
-        /// <summary>
-        /// Creates or retrieves a cached ONNX inference session for the specified model and provider.
-        /// </summary>
-        public async Task<InferenceSession> CreateSessionAsync(string modelPath, ExecutionProvider provider)
-        {
-            if (!File.Exists(modelPath))
-                throw new FileNotFoundException($"Model file not found: {modelPath}");
+		public OnnxRuntimeManager(
+			ILogger<OnnxRuntimeManager> logger,
+			IOnnxExecutionProvider provider)
+		{
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+			_provider = provider ?? throw new ArgumentNullException(nameof(provider));
+		}
 
-            var cacheKey = $"{modelPath}_{provider}";
-            await _sessionLock.WaitAsync();
-            try
-            {
-                if (_sessionCache.TryGetValue(cacheKey, out var cachedSession))
-                {
-                    _logger.LogDebug("Using cached session for {Model}", modelPath);
-                    return cachedSession;
-                }
+		/// <summary>
+		/// Creates or retrieves a cached ONNX inference session using the currently selected provider.
+		/// </summary>
+		public async Task<InferenceSession> CreateSessionAsync(string modelPath)
+		{
+			if (!File.Exists(modelPath))
+				throw new FileNotFoundException($"Model file not found: {modelPath}");
 
-                _logger.LogInformation("Creating inference session for {Model} with {Provider}", modelPath, provider);
+			var cacheKey = $"{modelPath}::{_provider.Name}";
 
-                var sessionOptions = await CreateSessionOptionsAsync(provider);
-                var session = new InferenceSession(modelPath, sessionOptions);
+			await _sessionLock.WaitAsync();
+			try
+			{
+				if (_sessionCache.TryGetValue(cacheKey, out var cached))
+				{
+					_logger.LogDebug("Using cached ONNX session for {Model} ({Provider})", modelPath, _provider.Name);
+					return cached;
+				}
 
-                _sessionCache[cacheKey] = session;
+				_logger.LogInformation("Creating ONNX session for {Model} using provider {Provider}", modelPath, _provider.Name);
 
-                _logger.LogInformation("Successfully created session for {Model}", modelPath);
-                return session;
-            }
-            finally
-            {
-                _sessionLock.Release();
-            }
-        }
+				var options = _provider.Configure(new SessionOptions());
+				var session = new InferenceSession(modelPath, options);
 
-        /// <summary>
-        /// Executes inference on the given session using provided inputs.
-        /// </summary>
-        public async Task<IDisposableReadOnlyCollection<DisposableNamedOnnxValue>> RunAsync(
-     InferenceSession session,
-     IEnumerable<NamedOnnxValue> inputs,
-     CancellationToken cancellationToken = default)
-        {
-            return await Task.Run(() =>
-            {
-                try
-                {
-                    var inputList = inputs.ToList(); // ← Ensure IReadOnlyCollection
-                    _logger.LogDebug("Running inference with {InputCount} inputs", inputList.Count);
-                    var results = session.Run(inputList); // ← Pass the List
-                    _logger.LogDebug("Inference completed successfully");
-                    return results;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Inference failed");
-                    throw;
-                }
-            }, cancellationToken);
-        }
+				_sessionCache[cacheKey] = session;
 
+				_logger.LogInformation("Session created successfully for {Model}", modelPath);
+				return session;
+			}
+			finally
+			{
+				_sessionLock.Release();
+			}
+		}
 
-        /// <summary>
-        /// Returns the input metadata for the session (name, types, shape, etc).
-        /// </summary>
-        public IReadOnlyDictionary<string, NodeMetadata> GetInputMetadata(InferenceSession session)
-            => session.InputMetadata;
+		/// <summary>
+		/// Executes inference.
+		/// </summary>
+		public async Task<IDisposableReadOnlyCollection<DisposableNamedOnnxValue>> RunAsync(
+			InferenceSession session,
+			IEnumerable<NamedOnnxValue> inputs,
+			CancellationToken cancellationToken = default)
+		{
+			return await Task.Run(() =>
+			{
+				try
+				{
+					var inputList = inputs.ToList();
+					_logger.LogDebug("Running inference with {Count} inputs", inputList.Count);
 
-        /// <summary>
-        /// Returns the output metadata for the session (name, types, shape, etc).
-        /// </summary>
-        public IReadOnlyDictionary<string, NodeMetadata> GetOutputMetadata(InferenceSession session)
-            => session.OutputMetadata;
+					var results = session.Run(inputList);
+					return results;
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, "Inference execution failed");
+					throw;
+				}
+			}, cancellationToken);
+		}
 
-        /// <summary>
-        /// Helper to create a NamedOnnxValue (tensor input) for a model.
-        /// </summary>
-        public NamedOnnxValue CreateTensor<T>(string name, T[] data, int[] dimensions) where T : unmanaged
-        {
-            var tensor = new DenseTensor<T>(data, dimensions);
-            return NamedOnnxValue.CreateFromTensor(name, tensor);
-        }
+		public IReadOnlyDictionary<string, NodeMetadata> GetInputMetadata(InferenceSession session)
+			=> session.InputMetadata;
 
-        /// <summary>
-        /// Converts raw input (e.g., string, image bytes) into a list of NamedOnnxValue, depending on model type.
-        /// </summary>
-        public async Task<List<NamedOnnxValue>> PreprocessInputAsync(
-            InferenceSession session,
-            object rawInput,
-            ModelType modelType)
-        {
-            return await Task.Run(() =>
-            {
-                return modelType switch
-                {
-                    ModelType.LLM => PreprocessTextInput(session, rawInput as string),
-                    ModelType.Whisper => PreprocessAudioInput(session, rawInput),
-                    ModelType.CLIP => PreprocessImageInput(session, rawInput),
-                    ModelType.Embedding => PreprocessEmbeddingInput(session, rawInput as string),
-                    _ => throw new NotSupportedException($"Model type {modelType} preprocessing not implemented"),
-                };
-            });
-        }
+		public IReadOnlyDictionary<string, NodeMetadata> GetOutputMetadata(InferenceSession session)
+			=> session.OutputMetadata;
 
-        /// <summary>
-        /// Converts inference outputs to a user-facing result for a given model type.
-        /// </summary>
-        public async Task<object> PostprocessOutputAsync(
-            IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs,
-            ModelType modelType)
-        {
-            return await Task.Run(() =>
-            {
-                return modelType switch
-                {
-                    ModelType.LLM => PostprocessTextOutput(outputs),
-                    ModelType.Whisper => PostprocessAudioOutput(outputs),
-                    ModelType.CLIP => PostprocessImageOutput(outputs),
-                    ModelType.Embedding => PostprocessEmbeddingOutput(outputs),
-                    _ => outputs.ToDictionary(o => o.Name, o => o.Value)
-                };
-            });
-        }
+		public NamedOnnxValue CreateTensor<T>(string name, T[] data, int[] dims) where T : unmanaged
+		{
+			var tensor = new DenseTensor<T>(data, dims);
+			return NamedOnnxValue.CreateFromTensor(name, tensor);
+		}
 
-        /// <summary>
-        /// Creates ONNX SessionOptions based on the requested provider.
-        /// </summary>
-        private async Task<SessionOptions> CreateSessionOptionsAsync(ExecutionProvider provider)
-        {
-            var options = new SessionOptions
-            {
-                ExecutionMode = ExecutionMode.ORT_PARALLEL,
-                InterOpNumThreads = Environment.ProcessorCount,
-                IntraOpNumThreads = Environment.ProcessorCount,
-                GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
-                EnableMemoryPattern = true,
-                EnableCpuMemArena = true
-            };
+		// =====================================================================
+		// Preprocessing
+		// =====================================================================
 
-            switch (provider)
-            {
-                case ExecutionProvider.DirectML:
-                    try
-                    {
-                        options.AppendExecutionProvider_DML(0);
-                        _logger.LogInformation("Using DirectML execution provider");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "DirectML not available, falling back to CPU");
-                        options.AppendExecutionProvider_CPU();
-                    }
-                    break;
+		public async Task<List<NamedOnnxValue>> PreprocessInputAsync(
+			InferenceSession session, object rawInput, ModelType type)
+		{
+			return await Task.Run(() =>
+			{
+				return type switch
+				{
+					ModelType.LLM => PreprocessTextInput(session, rawInput as string),
+					ModelType.Whisper => PreprocessAudioInput(session, rawInput),
+					ModelType.CLIP => PreprocessImageInput(session, rawInput),
+					ModelType.Embedding => PreprocessEmbeddingInput(session, rawInput as string),
 
-                case ExecutionProvider.CUDA:
-                    try
-                    {
-                        options.AppendExecutionProvider_CUDA(0);
-                        _logger.LogInformation("Using CUDA execution provider");
-                    }
-                    catch
-                    {
-                        _logger.LogWarning("CUDA not available, falling back to CPU");
-                        options.AppendExecutionProvider_CPU();
-                    }
-                    break;
+					_ => throw new NotSupportedException($"Model type {type} not supported.")
+				};
+			});
+		}
 
-                case ExecutionProvider.CPU:
-                default:
-                    options.AppendExecutionProvider_CPU();
-                    _logger.LogInformation("Using CPU execution provider");
-                    break;
-            }
+		// TEXT
+		private List<NamedOnnxValue> PreprocessTextInput(InferenceSession session, string? text)
+		{
+			text ??= string.Empty;
 
-            return options;
-        }
+			var tokens = text.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+				.Select((w, i) => (long)(i + 1))
+				.ToArray();
 
-        /// <summary>
-        /// Converts a plain string input into tokenized tensors for a language model (demo: simple tokenizer).
-        /// </summary>
-        private List<NamedOnnxValue> PreprocessTextInput(InferenceSession session, string? text)
-        {
-            text ??= string.Empty;
+			const int maxLength = 512;
 
-            // Demo: word index as token. In production, use a real tokenizer.
-            var tokens = text.Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                .Select((w, i) => (long)(i + 1))
-                .ToArray();
+			var padded = new long[maxLength];
+			Array.Copy(tokens, padded, Math.Min(tokens.Length, maxLength));
 
-            var maxLength = 512;
-            var paddedTokens = new long[maxLength];
-            Array.Copy(tokens, paddedTokens, Math.Min(tokens.Length, maxLength));
+			var mask = padded.Select(t => t > 0 ? 1L : 0L).ToArray();
 
-            var attentionMask = paddedTokens.Select(t => t > 0 ? 1L : 0L).ToArray();
+			return new List<NamedOnnxValue>
+			{
+				CreateTensor("input_ids", padded, new[] { 1, maxLength }),
+				CreateTensor("attention_mask", mask, new[] { 1, maxLength })
+			};
+		}
 
-            return new List<NamedOnnxValue>
-            {
-                CreateTensor("input_ids", paddedTokens, new[] { 1, maxLength }),
-                CreateTensor("attention_mask", attentionMask, new[] { 1, maxLength })
-            };
-        }
+		// AUDIO
+		private List<NamedOnnxValue> PreprocessAudioInput(InferenceSession session, object raw)
+		{
+			var mel = new float[80 * 3000];
+			return new List<NamedOnnxValue>
+			{
+				CreateTensor("mel", mel, new[] { 1, 80, 3000 })
+			};
+		}
 
-        /// <summary>
-        /// Converts a raw audio input into a tensor for Whisper (placeholder for demo).
-        /// </summary>
-        private List<NamedOnnxValue> PreprocessAudioInput(InferenceSession session, object rawInput)
-        {
-            // TODO: Implement real mel spectrogram extraction
-            var melSpectrogram = new float[80 * 3000]; // e.g., 80 bins x 3000 steps
+		// IMAGE
+		private List<NamedOnnxValue> PreprocessImageInput(InferenceSession session, object raw)
+		{
+			const int size = 224;
+			const int channels = 3;
 
-            return new List<NamedOnnxValue>
-            {
-                CreateTensor("mel", melSpectrogram, new[] { 1, 80, 3000 })
-            };
-        }
+			var data = new float[size * size * channels];
 
-        /// <summary>
-        /// Converts a raw image input into a tensor for CLIP (placeholder for demo).
-        /// </summary>
-        private List<NamedOnnxValue> PreprocessImageInput(InferenceSession session, object rawInput)
-        {
-            // TODO: Implement real image preprocessing
-            var imageSize = 224;
-            var channels = 3;
-            var imageData = new float[channels * imageSize * imageSize];
-            // Normalize to [-1, 1]
-            for (int i = 0; i < imageData.Length; i++)
-                imageData[i] = (imageData[i] / 255.0f - 0.5f) * 2.0f;
+			for (int i = 0; i < data.Length; i++)
+				data[i] = (data[i] / 255f - 0.5f) * 2f;
 
-            return new List<NamedOnnxValue>
-            {
-                CreateTensor("pixel_values", imageData, new[] { 1, channels, imageSize, imageSize })
-            };
-        }
+			return new List<NamedOnnxValue>
+			{
+				CreateTensor("pixel_values", data, new[] { 1, channels, size, size })
+			};
+		}
 
-        /// <summary>
-        /// Converts text input to input_ids tensor for embeddings models (simple tokenizer for demo).
-        /// </summary>
-        private List<NamedOnnxValue> PreprocessEmbeddingInput(InferenceSession session, string? text)
-        {
-            text ??= string.Empty;
-            var tokens = text.Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                .Select((w, i) => (long)(i + 1))
-                .Take(512)
-                .ToArray();
+		// EMBEDDINGS
+		private List<NamedOnnxValue> PreprocessEmbeddingInput(InferenceSession session, string? text)
+		{
+			text ??= string.Empty;
 
-            var paddedTokens = new long[512];
-            Array.Copy(tokens, paddedTokens, tokens.Length);
+			var tokens = text.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+				.Select((w, i) => (long)(i + 1))
+				.Take(512)
+				.ToArray();
 
-            return new List<NamedOnnxValue>
-            {
-                CreateTensor("input_ids", paddedTokens, new[] { 1, 512 })
-            };
-        }
+			var padded = new long[512];
+			Array.Copy(tokens, padded, tokens.Length);
 
-        /// <summary>
-        /// Converts language model logits output to a list of token IDs (demo: greedy decode).
-        /// </summary>
-        private object PostprocessTextOutput(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs)
-        {
-            var logits = outputs.FirstOrDefault(o => o.Name == "logits");
-            if (logits != null)
-            {
-                var tensor = logits.AsTensor<float>();
-                var shape = tensor.Dimensions.ToArray();
-                var predictions = new List<int>();
+			return new List<NamedOnnxValue>
+			{
+				CreateTensor("input_ids", padded, new[] { 1, 512 })
+			};
+		}
 
-                // Simple greedy decode
-                for (int i = 0; i < shape[1]; i++)
-                {
-                    float maxVal = float.MinValue;
-                    int maxIdx = 0;
-                    for (int j = 0; j < shape[2]; j++)
-                    {
-                        var val = tensor[0, i, j];
-                        if (val > maxVal)
-                        {
-                            maxVal = val;
-                            maxIdx = j;
-                        }
-                    }
-                    predictions.Add(maxIdx);
-                }
-                // Demo: Return token ids as string
-                return string.Join(" ", predictions.Select(p => $"token_{p}"));
-            }
-            return "No output found";
-        }
+		// =====================================================================
+		// Postprocessing
+		// =====================================================================
 
-        /// <summary>
-        /// Converts Whisper output to transcription (placeholder for demo).
-        /// </summary>
-        private object PostprocessAudioOutput(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs)
-        {
-            var textOutput = outputs.FirstOrDefault(o => o.Name.Contains("text") || o.Name.Contains("tokens"));
-            if (textOutput != null)
-                return "Transcribed audio text"; // TODO: decode tokens to text
+		public async Task<object> PostprocessOutputAsync(
+			IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs,
+			ModelType type)
+		{
+			return await Task.Run(() =>
+			{
+				return type switch
+				{
+					ModelType.LLM => PostprocessTextOutput(outputs),
+					ModelType.Whisper => PostprocessAudioOutput(outputs),
+					ModelType.CLIP => PostprocessImageOutput(outputs),
+					ModelType.Embedding => PostprocessEmbeddingOutput(outputs),
 
-            return "No transcription found";
-        }
+					_ => outputs.ToDictionary(o => o.Name, o => o.Value)
+				};
+			});
+		}
 
-        /// <summary>
-        /// Converts CLIP model output to embedding array (placeholder for demo).
-        /// </summary>
-        private object PostprocessImageOutput(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs)
-        {
-            var embeddings = outputs.FirstOrDefault(o => o.Name.Contains("embed") || o.Name.Contains("features"));
-            if (embeddings != null)
-            {
-                var tensor = embeddings.AsTensor<float>();
-                return new
-                {
-                    Embeddings = tensor.ToArray(),
-                    Dimensions = tensor.Dimensions.ToArray()
-                };
-            }
-            return "No embeddings found";
-        }
+		private object PostprocessTextOutput(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs)
+		{
+			var logits = outputs.FirstOrDefault(o => o.Name == "logits");
+			if (logits == null)
+				return "No output";
 
-        /// <summary>
-        /// Converts embedding model output to embedding array (placeholder for demo).
-        /// </summary>
-        private object PostprocessEmbeddingOutput(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs)
-        {
-            var embeddings = outputs.FirstOrDefault();
-            if (embeddings != null)
-            {
-                var tensor = embeddings.AsTensor<float>();
-                return tensor.ToArray();
-            }
-            return Array.Empty<float>();
-        }
+			var tensor = logits.AsTensor<float>();
+			var dims = tensor.Dimensions.ToArray();
 
-        /// <summary>
-        /// Disposes of sessions and internal resources.
-        /// </summary>
-        public void Dispose()
-        {
-            if (_disposed) return;
+			var preds = new List<int>();
 
-            _sessionLock?.Wait();
-            try
-            {
-                foreach (var session in _sessionCache.Values)
-                    session?.Dispose();
-                _sessionCache.Clear();
-            }
-            finally
-            {
-                _sessionLock?.Release();
-                _sessionLock?.Dispose();
-            }
-            _disposed = true;
-        }
-    }
+			for (int t = 0; t < dims[1]; t++)
+			{
+				float max = float.MinValue;
+				int maxIdx = 0;
+
+				for (int j = 0; j < dims[2]; j++)
+				{
+					var v = tensor[0, t, j];
+					if (v > max)
+					{
+						max = v;
+						maxIdx = j;
+					}
+				}
+				preds.Add(maxIdx);
+			}
+
+			return string.Join(" ", preds.Select(p => $"token_{p}"));
+		}
+
+		private object PostprocessAudioOutput(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs)
+		{
+			return "Transcribed audio text";
+		}
+
+		private object PostprocessImageOutput(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs)
+		{
+			var embed = outputs.FirstOrDefault();
+			if (embed == null)
+				return "No embeddings";
+
+			var tensor = embed.AsTensor<float>();
+			return new { Data = tensor.ToArray(), Shape = tensor.Dimensions.ToArray() };
+		}
+
+		private object PostprocessEmbeddingOutput(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs)
+		{
+			var embed = outputs.FirstOrDefault();
+			if (embed == null)
+				return Array.Empty<float>();
+
+			return embed.AsTensor<float>().ToArray();
+		}
+
+		// =====================================================================
+		// Cleanup
+		// =====================================================================
+
+		public void Dispose()
+		{
+			if (_disposed) return;
+
+			_sessionLock.Wait();
+			try
+			{
+				foreach (var s in _sessionCache.Values)
+					s?.Dispose();
+
+				_sessionCache.Clear();
+			}
+			finally
+			{
+				_sessionLock.Release();
+				_sessionLock.Dispose();
+			}
+
+			_disposed = true;
+		}
+
+		public Task<InferenceSession> CreateSessionAsync(string modelPath, ExecutionProvider provider)
+		{
+			// Old API is deprecated — ignore the enum and use the current provider.
+			return CreateSessionAsync(modelPath);
+		}
+
+	}
 }

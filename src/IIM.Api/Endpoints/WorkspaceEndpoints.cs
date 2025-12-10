@@ -1,16 +1,22 @@
-﻿using IIM.Application.Case;
-using IIM.Shared.Mediator;
-using IIM.Shared.Interfaces;
-using IIM.Shared.Models.Core;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Application.Artifacts;
+using IIM.Application.Case;
+using IIM.Application.Workspaces;
+using IIM.Shared.Dtos;
+using IIM.Shared.Interfaces;
+using IIM.Shared.Mediator;
+using IIM.Shared.Models;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using NPOI.OpenXmlFormats.Spreadsheet;
+using IIM.Shared.Extensions;
+using Org.BouncyCastle.Ocsp;
 
 namespace IIM.Api.Endpoints
 {
@@ -68,8 +74,34 @@ namespace IIM.Api.Endpoints
             .Produces<Workspace>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-            // Delete workspace
-            workspaces.MapDelete("/{workspaceId:guid}", async (
+			workspaces.MapPut("{workspaceId:guid}", async (
+		Guid workspaceId,
+	UpdateWorkspaceRequest req,
+	IMediator mediator,
+	HttpContext ctx,
+	CancellationToken ct) =>
+			{
+				var cmd = new UpdateWorkspaceCommand
+				{
+					WorkspaceId = workspaceId,
+					Name = req.Name,
+					Description = req.Description,
+					Type = req.Type,
+					IsPublic = req.IsPublic,
+					OwnerId = req.OwnerId,
+					UsersToAdd = req.UsersToAdd,
+					UsersToUpdate = req.UsersToUpdate,
+					UsersToRemove = req.UsersToRemove,
+					UpdatedBy = ctx.User.GetUserIdString() ?? "system"
+				};
+
+				var ok = await mediator.Send(cmd, ct);
+				return ok ? Results.Ok() : Results.NotFound();
+			});
+
+
+			// Delete workspace
+			workspaces.MapDelete("/{workspaceId:guid}", async (
                 Guid workspaceId,
                 [FromServices] IMediator mediator,
                 CancellationToken ct) =>
@@ -144,7 +176,123 @@ namespace IIM.Api.Endpoints
             .WithSummary("Link a file to a workspace")
             .RequireAuthorization()
             .ProducesProblem(StatusCodes.Status500InternalServerError);
-        }
-    }
+
+			// ─────────────────────────────────────────────────────────────
+			// ARTIFACTS (CRUD)
+			// Route base: /api/workspaces/{workspaceId}/artifacts
+			// ─────────────────────────────────────────────────────────────
+			var artifacts = app.MapGroup("/api/workspaces/{workspaceId:guid}/artifacts")
+				.WithTags("Artifacts")
+				.WithOpenApi();
+
+			// CREATE ARTIFACT
+			artifacts.MapPost("/", async (
+				Guid workspaceId,
+				CreateArtifactDto dto,
+				IMediator mediator,
+				CancellationToken ct) =>
+			{
+				var artifact = new WorkspaceArtifact
+				{
+					Id = Guid.NewGuid(),
+					WorkspaceId = workspaceId,
+					Title = dto.Title,
+					Summary = dto.Summary,
+					Content = dto.Content,
+					Tags = dto.Tags ?? new List<string>(),
+					Type = dto.Type,
+					CreatedUtc = DateTime.UtcNow,
+					UpdatedUtc = DateTime.UtcNow,
+					IsDeleted = false
+				};
+
+				var created = await mediator.Send(
+					new CreateArtifactCommand { Artifact = artifact },
+					ct
+				);
+
+				return Results.Created($"/api/workspaces/{workspaceId}/artifacts/{created.Id}", created);
+			});
+
+			// GET ALL ARTIFACTS FOR WORKSPACE
+			artifacts.MapGet("/", async (
+				Guid workspaceId,
+				IMediator mediator,
+				CancellationToken ct) =>
+			{
+				var items = await mediator.Send(
+					new GetWorkspaceArtifactsQuery { WorkspaceId = workspaceId },
+					ct
+				);
+
+				return Results.Ok(items);
+			});
+
+			// GET SINGLE ARTIFACT
+			artifacts.MapGet("/{artifactId:guid}", async (
+				Guid workspaceId,
+				Guid artifactId,
+				IMediator mediator,
+				CancellationToken ct) =>
+			{
+				var result = await mediator.Send(
+					new GetArtifactQuery { ArtifactId = artifactId },
+					ct
+				);
+
+				return result is null
+					? Results.NotFound()
+					: Results.Ok(result);
+			});
+
+			// UPDATE ARTIFACT
+			artifacts.MapPut("/{artifactId:guid}", async (
+				Guid workspaceId,
+				Guid artifactId,
+				UpdateArtifactDto dto,
+				IMediator mediator,
+				CancellationToken ct) =>
+			{
+				var updatedArtifact = new WorkspaceArtifact
+				{
+					Id = artifactId,
+					WorkspaceId = workspaceId,
+					Title = dto.Title,
+					Summary = dto.Summary,
+					Content = dto.Content,
+					Tags = dto.Tags ?? new List<string>(),
+					Type = dto.Type,
+					UpdatedUtc = DateTime.UtcNow
+				};
+
+				var ok = await mediator.Send(
+					new UpdateArtifactCommand { Artifact = updatedArtifact },
+					ct
+				);
+
+				return ok ? Results.Ok() : Results.NotFound();
+			});
+
+			// DELETE ARTIFACT
+			artifacts.MapDelete("/{artifactId:guid}", async (
+				Guid workspaceId,
+				Guid artifactId,
+				IMediator mediator,
+				CancellationToken ct) =>
+			{
+				var ok = await mediator.Send(
+					new DeleteArtifactCommand { ArtifactId = artifactId },
+					ct
+				);
+
+				return ok ? Results.NoContent() : Results.NotFound();
+			});
+
+
+
+
+
+		}
+	}
 }
 

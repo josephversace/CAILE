@@ -1,124 +1,62 @@
 ﻿using IIM.Shared.Mediator;
-using IIM.Shared.Models;
-using IIM.Core.Services;
-using IIM.Shared.Enums;
-using IIM.Shared.Interfaces;
+using IIM.Application.Models;
 using Microsoft.Extensions.Logging;
 using System.Threading;
 using System.Threading.Tasks;
-using IIM.Application.Investigation;
-using IIM.Application.Models;
-using IIM.Application.Wsl;
 
 namespace IIM.Application.Handlers
 {
-    /// <summary>
-    /// Handler for WSL setup completion
-    /// </summary>
-    public class WslSetupCompletedHandler : INotificationHandler<WslSetupCompletedNotification>
-    {
-        private readonly INotificationService _notificationService;
-        private readonly ILogger<WslSetupCompletedHandler> _logger;
 
-        public WslSetupCompletedHandler(
-            INotificationService notificationService,
-            ILogger<WslSetupCompletedHandler> logger)
-        {
-            _notificationService = notificationService;
-            _logger = logger;
-        }
+	/// <summary>
+	/// Handler for model loaded notifications
+	/// </summary>
+	public class ModelLoadedNotificationHandler : INotificationHandler<ModelLoadedNotification>
+	{
+		private readonly ILogger<ModelLoadedNotificationHandler> _logger;
 
-        public async Task Handle(WslSetupCompletedNotification notification, CancellationToken cancellationToken)
-        {
-            _logger.LogInformation("WSL setup completed successfully");
+		public ModelLoadedNotificationHandler(ILogger<ModelLoadedNotificationHandler> logger)
+		{
+			_logger = logger;
+		}
 
-            await _notificationService.ShowToastAsync(
-                "WSL Ready",
-                $"WSL2 and all services are now running. Distribution: {notification.DistroName}",
-                NotificationType.Success);
-        }
-    }
+		public Task Handle(ModelLoadedNotification notification, CancellationToken cancellationToken)
+		{
+			_logger.LogInformation(
+				"Model loaded: ModelId={ModelId}, LoadTimeMs={LoadMs}, Provider={Provider}, Type={Type}",
+				notification.ModelId,
+				notification.LoadTimeMs,
+				notification.Provider,
+				notification.ModelType
+			);
 
-    /// <summary>
-    /// Handler for WSL setup failure
-    /// </summary>
-    public class WslSetupFailedHandler : INotificationHandler<WslSetupFailedNotification>
-    {
-        private readonly INotificationService _notificationService;
-        private readonly ILogger<WslSetupFailedHandler> _logger;
+			return Task.CompletedTask;
+		}
+	}
 
-        public WslSetupFailedHandler(
-            INotificationService notificationService,
-            ILogger<WslSetupFailedHandler> logger)
-        {
-            _notificationService = notificationService;
-            _logger = logger;
-        }
+	/// <summary>
+	/// Audit-only handler for model loading
+	/// </summary>
+	public class ModelLoadedAuditHandler : INotificationHandler<ModelLoadedNotification>
+	{
+		private readonly ILogger<ModelLoadedAuditHandler> _logger;
 
-        public async Task Handle(WslSetupFailedNotification notification, CancellationToken cancellationToken)
-        {
-            _logger.LogError("WSL setup failed: {Error}", notification.Error);
+		public ModelLoadedAuditHandler(ILogger<ModelLoadedAuditHandler> logger)
+		{
+			_logger = logger;
+		}
 
-            await _notificationService.ShowToastAsync(
-                "WSL Setup Failed",
-                notification.Error,
-                NotificationType.Error);
-        }
-    }
+		public Task Handle(ModelLoadedNotification notification, CancellationToken cancellationToken)
+		{
+			_logger.LogInformation(
+				"[AUDIT] Model loaded — ID={ModelId} | Provider={Provider} | Type={Type} | MemoryMB={MemoryMB} | Time={Timestamp}",
+				notification.ModelId,
+				notification.Provider,
+				notification.ModelType,
+				notification.MemoryUsage / (1024 * 1024),
+				notification.Timestamp
+			);
 
-    /// <summary>
-    /// Handler for model loaded notifications
-    /// </summary>
-    public class ModelLoadedNotificationHandler : INotificationHandler<ModelLoadedNotification>
-    {
-        private readonly INotificationService _notificationService;
-        private readonly ILogger<ModelLoadedNotificationHandler> _logger;
-
-        public ModelLoadedNotificationHandler(
-            INotificationService notificationService,
-            ILogger<ModelLoadedNotificationHandler> logger)
-        {
-            _notificationService = notificationService;
-            _logger = logger;
-        }
-
-        public async Task Handle(ModelLoadedNotification notification, CancellationToken cancellationToken)
-        {
-            _logger.LogInformation("Model {ModelId} loaded in {LoadTime}ms",
-                notification.ModelId, notification.LoadTimeMs);
-
-            await _notificationService.ShowToastAsync(
-                "Model Loaded",
-                $"{notification.ModelId} is ready for inference ({notification.LoadTimeMs}ms)",
-                NotificationType.Success);
-        }
-    }
-
-    /// <summary>
-    /// Audit handler for model loading
-    /// </summary>
-    public class ModelLoadedAuditHandler : INotificationHandler<ModelLoadedNotification>
-    {
-        private readonly ILogger<ModelLoadedAuditHandler> _logger;
-
-        public ModelLoadedAuditHandler(ILogger<ModelLoadedAuditHandler> logger)
-        {
-            _logger = logger;
-        }
-
-        public Task Handle(ModelLoadedNotification notification, CancellationToken cancellationToken)
-        {
-            _logger.LogInformation(
-                "[AUDIT] Model loaded - ID: {ModelId} | Provider: {Provider} | Type: {Type} | Memory: {Memory}MB | Time: {Timestamp}",
-                notification.ModelId,
-                notification.Provider,
-                notification.ModelType,
-                notification.MemoryUsage / (1024 * 1024),
-                notification.Timestamp);
-
-            return Task.CompletedTask;
-        }
-    }
-
- 
+			return Task.CompletedTask;
+		}
+	}
 }

@@ -1,0 +1,29 @@
+﻿<span class="tag-pill @GetTagColorClass()">
+    @Text
+</span>
+
+@code {
+    /// <summary>
+    /// The text to display inside the tag.
+    /// </summary>
+    [Parameter]
+    public string Text { get; set; }
+
+    /// <summary>
+    /// Returns a CSS class based on the tag's text for special coloring.
+    /// </summary>
+    private string GetTagColorClass()
+    {
+        return Text?.ToLower() switch
+        {
+            "pii" => "tag-red",
+            "legal" => "tag-blue",
+            "evidence" => "tag-yellow",
+            "financial" => "tag-green",
+            "top secret" => "tag-black",
+            "suspicious" => "tag-orange",
+            "malware detected" => "tag-orange",
+            _ => "tag-default"
+        };
+    }
+}

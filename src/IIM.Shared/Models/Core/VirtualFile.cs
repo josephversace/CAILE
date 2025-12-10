@@ -1,36 +1,44 @@
-﻿using IIM.Shared.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Text.Json;
+using IIM.Shared.Enums;
+using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 
-namespace IIM.Shared.Models.Core
+public class VirtualFile
 {
-    public class VirtualFile
-    {
-        public Guid Id { get; set; }
-        public Guid WorkspaceId { get; set; }
-        public string FileName { get; set; } = string.Empty;
-        public string Path { get; set; } = "/";
-        public long FileSize { get; set; }
-        public FileUploadStatus Status { get; set; }
-        public string StoredFileHash { get; set; } = string.Empty;
-        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-        public DateTimeOffset? UpdatedAt { get; set; }
-        public string CreatedBy { get; set; } = string.Empty;
-        public string CollectedBy { get; set; } = string.Empty;
-        public DateTimeOffset CollectionDate { get; set; } = DateTimeOffset.UtcNow;
-        public string CollectedLocation { get; set; } = string.Empty;
-        public Dictionary<string, string> CustomMetadata { get; set; } = new();
-        public List<ChainOfCustodyEntry> ChainOfCustody { get; set; } = new();
-        public List<ProcessedFile> ProcessedVersions { get; set; } = new();
+	public Guid Id { get; set; }
+	public Guid WorkspaceId { get; set; }
 
-        public DataSensitivityLevel DataSensitivity { get; set; }
-        public List<string>? Tags { get; set; }
+	public string FileName { get; set; } = string.Empty;
+	public string Path { get; set; } = "/";  // arbitrary virtual path
+	public long FileSize { get; set; }
+	public FileUploadStatus Status { get; set; }
 
-        public string Description { get; set; } = string.Empty; 
-    }
+	// Points to StoredFile.Blake3Hash
+	public string? StoredFileHash { get; set; }
+	public StoredFile? StoredFile { get; set; }
 
-    // Supporting classes
-    public record AIInsight(string Text, int Confidence);
+	public DateTime CreatedAt { get; set; }
+
+	public List<string> Tags { get; set; } = new();
+	public string? ProposedLabel { get; set; }   // AI suggestion
+	public Dictionary<string, string> EnrichmentMetadata { get; set; } = new();
+
+
+	// Metadata
+	public Dictionary<string, string> CustomMetadata { get; set; } = new();
+	public string CustomMetadataJson
+	{
+		get => JsonSerializer.Serialize(CustomMetadata);
+		set => CustomMetadata =
+			string.IsNullOrWhiteSpace(value)
+				? new()
+				: JsonSerializer.Deserialize<Dictionary<string, string>>(value)!;
+	}
+
+	public List<ChainOfCustodyEntry> ChainOfCustody { get; set; } = new();
+
+
+
 }
-

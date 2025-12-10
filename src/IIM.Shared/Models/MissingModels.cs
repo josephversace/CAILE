@@ -375,40 +375,7 @@ public class QueuedRequest
 
     #region Additional Models
 
-    /// <summary>
-    /// Chain of custody report
-    /// </summary>
-    public class ChainOfCustodyReport
-    {
-        public string FileId { get; set; } = string.Empty;
-        public string OriginalFileName { get; set; } = string.Empty;
-        public string CaseNumber { get; set; } = string.Empty;
-        public List<ChainOfCustodyEntry> ChainEntries { get; set; } = new();
-        public List<ProcessedFile> ProcessedVersions { get; set; } = new();
-        public bool IntegrityValid { get; set; }
-        public string Signature { get; set; } = string.Empty;
-        public DateTimeOffset GeneratedAt { get; set; } = DateTimeOffset.UtcNow;
-        public string GeneratedBy { get; set; } = string.Empty;
-        public DateTime IngestTimestamp { get; set; } = DateTime.UtcNow;
-        public string MachineIdentifier { get; set; } = Environment.MachineName;
-        public Dictionary<string, string> OriginalHashes { get; set; } = new();
-        public List<AuditEvent> AuditLog { get; set; } = new();
-        public string PublicKey { get; set; } = string.Empty;
-    }
 
-    /// <summary>
-    /// File export
-    /// </summary>
-    public class FileExport
-    {
-        public string ExportId { get; set; } = Guid.NewGuid().ToString();
-        public string FileId { get; set; } = string.Empty;
-        public string ExportPath { get; set; } = string.Empty;
-        public List<string> Files { get; set; } = new();
-        public bool IntegrityValid { get; set; }
-        public DateTimeOffset ExportedAt { get; set; } = DateTimeOffset.UtcNow;
-        public string ExportedBy { get; set; } = string.Empty;
-    }
 
 
 

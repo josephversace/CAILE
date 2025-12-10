@@ -25,79 +25,16 @@ namespace IIM.Core.Templates;
 /// </summary>
 public interface IModelConfigurationTemplateService
 {
-
-
-    /// <summary>
-    /// Saves a template to storage
-    /// </summary>
-    Task<ModelConfigurationTemplate> SaveTemplateAsync(
-        ModelConfigurationTemplate template,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Retrieves a template by ID
-    /// </summary>
-    Task<ModelConfigurationTemplate?> GetTemplateAsync(
-        string templateId,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets all templates, optionally filtered by category
-    /// </summary>
-    Task<List<ModelConfigurationTemplate>> GetTemplatesAsync(
-        string? category = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Updates an existing template
-    /// </summary>
-    Task<ModelConfigurationTemplate> UpdateTemplateAsync(
-        ModelConfigurationTemplate template,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Deletes a template (user templates only, not system templates)
-    /// </summary>
-    Task<bool> DeleteTemplateAsync(
-        string templateId,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Clones an existing template with a new name
-    /// </summary>
-    Task<ModelConfigurationTemplate> CloneTemplateAsync(
-        string templateId,
-        string newName,
-        CancellationToken cancellationToken = default);
-
-
-
-    /// <summary>
-    /// Loads all models specified in a template
-    /// </summary>
-    Task<bool> LoadModelsFromTemplateAsync(
-        string templateId,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets system-provided templates
-    /// </summary>
-    Task<List<ModelConfigurationTemplate>> GetSystemTemplatesAsync(
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Exports a template to JSON
-    /// </summary>
-    Task<string> ExportTemplateAsync(
-        string templateId,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Imports a template from JSON
-    /// </summary>
-    Task<ModelConfigurationTemplate> ImportTemplateAsync(
-        string json,
-        CancellationToken cancellationToken = default);
+	Task<ModelTemplate> SaveTemplateAsync(ModelTemplate template, CancellationToken cancellationToken = default);
+	Task<ModelTemplate?> GetTemplateAsync(string templateId, CancellationToken cancellationToken = default);
+	Task<List<ModelTemplate>> GetTemplatesAsync(string? category = null, CancellationToken cancellationToken = default);
+	Task<ModelTemplate> UpdateTemplateAsync(ModelTemplate template, CancellationToken cancellationToken = default);
+	Task<bool> DeleteTemplateAsync(string templateId, CancellationToken cancellationToken = default);
+	Task<ModelTemplate> CloneTemplateAsync(string templateId, string newName, CancellationToken cancellationToken = default);
+	Task<List<ModelTemplate>> GetSystemTemplatesAsync(CancellationToken cancellationToken = default);
+	Task<string> ExportTemplateAsync(string templateId, CancellationToken cancellationToken = default);
+	Task<ModelTemplate> ImportTemplateAsync(string json, CancellationToken cancellationToken = default);
 }
 
-   
+
+

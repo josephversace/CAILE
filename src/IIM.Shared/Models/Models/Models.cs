@@ -1,4 +1,5 @@
-﻿using IIM.Shared.Enums;
+﻿using IIM.Shared.Dtos;
+using IIM.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-    namespace IIM.Shared.Models;
+
 
     #region Model Management
 
@@ -79,7 +80,10 @@ public class ModelStats
 /// </summary>
 public class ModelConfiguration
 {
-    public string ModelId { get; set; } = string.Empty;
+	public Guid Id { get; set; } = Guid.NewGuid();
+
+
+	public string ModelId { get; set; } = string.Empty;
     public long Size { get; set; }
     public string ModelPath { get; set; } = string.Empty;
     public string Filename { get; set; } = string.Empty;
@@ -221,189 +225,62 @@ public class ModelLoadRequest
 
 #region ModelTemplates
 
-/// <summary>
-/// Model template configuration for server mode
-/// </summary>
-public class ModelTemplateConfiguration
-{
-    public string ActiveTemplateId { get; set; } = "default";
-    public Dictionary<string, ModelTemplate> Templates { get; set; } = new();
-}
 
 
-/// <summary>
-/// Defines a configuration template for AI model orchestration, including 
-/// default models, tools, and runtime parameters for a given workflow.
-/// </summary>
 public class ModelTemplate
 {
-    /// <summary>
-    /// Unique template identifier.
-    /// </summary>
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+	public string Id { get; set; } = "";
+	public string Name { get; set; } = "";
+	public string? Description { get; set; }
+	public MultiModelDto Models { get; set; } = new();
+	public List<string> EnabledTools { get; set; } = new();
 
-    /// <summary>
-    /// Friendly name for this template.
-    /// </summary>
-    public string Name { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Template description (purpose, usage, etc).
-    /// </summary>
-    public string Description { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Model ID for the LLM (text generation) model.
-    /// </summary>
-    public string LLMModelId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Model ID for the vision (image analysis/CLIP) model.
-    /// </summary>
-    public string VisionModelId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Model ID for the OCR model.
-    /// </summary>
-    public string OCRModelId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Model ID for the embedding (vectorization) model.
-    /// </summary>
-    public string EmbeddingModelId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// List of enabled tool/plugin names for this workflow.
-    /// </summary>
-    public List<string> EnabledTools { get; set; } = new();
-
-    /// <summary>
-    /// Arbitrary template-level parameters (e.g. system prompt, custom limits).
-    /// </summary>
-    public Dictionary<string, object> Parameters { get; set; } = new();
-
-    /// <summary>
-    /// Timestamp of template creation.
-    /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    /// <summary>
-    /// Name or ID of the template creator.
-    /// </summary>
-    public string CreatedBy { get; set; } = string.Empty;
+	public IEnumerable<ModelDefinitionDto> GetAllSlots()
+	{
+		if (Models.Chat is not null) yield return Models.Chat;
+		if (Models.Reasoning is not null) yield return Models.Reasoning;
+		if (Models.Coding is not null) yield return Models.Coding;
+		if (Models.Embedding is not null) yield return Models.Embedding;
+		if (Models.Vision is not null) yield return Models.Vision;
+		if (Models.Multimodal is not null) yield return Models.Multimodal;
+	}
 }
 
-/// <summary>
-/// Represents a saved model configuration template for investigations.
-/// Users can create, save, and reuse these templates for different investigation types.
-/// Similar to LMStudio's model selection profiles.
-/// </summary>
-public class ModelConfigurationTemplate
+
+public  class ModelDefinition
 {
-    /// <summary>
-    /// Unique identifier for the template
-    /// </summary>
-    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+	public string Id { get; set; } = "";
+	public string DisplayName { get; set; } = "";
+	public string? Description { get; set; }
 
-    /// <summary>
-    /// User-friendly name for the template (e.g., "Fast Response", "Deep Analysis")
-    /// </summary>
-    public string Name { get; set; } = string.Empty;
+	public string? FoundryModelId { get; set; }
+	public string? LocalPath { get; set; }
 
-    /// <summary>
-    /// Description of what this template is optimized for
-    /// </summary>
-    public string Description { get; set; } = string.Empty;
+	public double Temperature { get; set; } = 0.7;
+	public int MaxTokens { get; set; } = 2048;
+	public double TopP { get; set; } = 0.9;
 
-    /// <summary>
-    /// Category for organization (e.g., "Financial Crime", "CSAM", "Fraud", "General")
-    /// </summary>
-    public string Category { get; set; } = "General";
+	public string? SystemPrompt { get; set; }
+	public string? CustomPromptFormat { get; set; }
 
-    /// <summary>
-    /// Icon or emoji for UI display
-    /// </summary>
-    public string Icon { get; set; } = "🔍";
-
-    /// <summary>
-    /// Tags for searchability and filtering
-    /// </summary>
-    public List<string> Tags { get; set; } = new();
-
-    /// <summary>
-    /// Model configurations for each capability.
-    /// Key: capability type (text, vision, audio, embedder, etc.)
-    /// Value: Model configuration with all settings
-    /// This allows users to swap models for each capability independently
-    /// </summary>
-    public Dictionary<string, ModelSelectionConfig> Models { get; set; } = new();
-
-    /// <summary>
-    /// Pipeline configuration for how models work together
-    /// </summary>
-    public PipelineConfig Pipeline { get; set; } = new();
-
-    /// <summary>
-    /// Tool configurations - which investigation tools are enabled and their settings
-    /// </summary>
-    public Dictionary<string, ToolConfig> Tools { get; set; } = new();
-
-    /// <summary>
-    /// Performance preferences for this template
-    /// </summary>
-    public PerformancePreferences Performance { get; set; } = new();
-
-    /// <summary>
-    /// Template metadata for tracking usage and updates
-    /// </summary>
-    public TemplateMetadata Metadata { get; set; } = new();
-
-    /// <summary>
-    /// Whether this is a system-provided template (read-only) or user-created
-    /// </summary>
-    public bool IsSystemTemplate { get; set; } = false;
-
-    /// <summary>
-    /// Template version for compatibility tracking
-    /// </summary>
-    public string Version { get; set; } = "1.0.0";
+	public string Category { get; set; } = "chat";
 }
 
-/// <summary>
-/// Model selection and configuration for a specific capability
-/// </summary>
-public class ModelSelectionConfig
+public class BasicModelDefinition : ModelDefinition { }
+
+public class MultiModel
 {
-    /// <summary>
-    /// The primary model ID to use (e.g., "llama3.1:70b", "whisper-large-v3")
-    /// </summary>
-    public string ModelId { get; set; } = string.Empty;
+    public ModelDefinition? Chat { get; set; }
+    public ModelDefinition? Reasoning { get; set; }
+    public ModelDefinition? Embedding { get; set; }
+    public ModelDefinition? Vision { get; set; }
+    public ModelDefinition? Multimodal { get; set; }
 
-    /// <summary>
-    /// Alternative model IDs in priority order (fallbacks if primary isn't available)
-    /// </summary>
-    public List<string> AlternativeModels { get; set; } = new();
-
-    /// <summary>
-    /// Model-specific parameters (temperature, max_tokens, etc.)
-    /// </summary>
-    public Dictionary<string, object> Parameters { get; set; } = new();
-
-    /// <summary>
-    /// Whether to automatically load this model when template is selected
-    /// </summary>
-    public bool AutoLoad { get; set; } = true;
-
-    /// <summary>
-    /// Minimum memory required in bytes
-    /// </summary>
-    public long MinMemoryRequired { get; set; }
-
-    /// <summary>
-    /// Preferred device for this model (GPU, CPU, Auto)
-    /// </summary>
-    public string PreferredDevice { get; set; } = "Auto";
+    // Future expansion:
+    public ModelDefinition? Coding { get; set; }
+    public ModelDefinition? Planning { get; set; }
 }
+
 
 
 /// <summary>

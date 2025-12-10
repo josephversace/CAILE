@@ -1,26 +1,52 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+	  <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.305.10" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.22.1" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.22.1" />
-    <PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
-    <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.13.1" />
+    <PackageReference Include="BERTTokenizers" Version="1.2.0" />
+    <PackageReference Include="Blake3" Version="2.0.0" />
+    <PackageReference Include="Hangfire" Version="1.8.22" />
+    <PackageReference Include="Hangfire.PostgreSql" Version="1.20.12" />
+    <PackageReference Include="ManagedCode.GraphRag" Version="10.0.7" />
+    <PackageReference Include="ManagedCode.GraphRag.Neo4j" Version="10.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+	  <!-- Base CPU library -->
+	  <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.2" />
+
+	  <!-- Windows (AMD, Intel, general GPU via DirectX12) -->
+	  <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.23.0" />
+
+	  <!-- NVIDIA CUDA support (Windows + Linux automatically) -->
+	  <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.23.2" />
+
+	  <!-- macOS support (Metal + CoreML via managed runtime) -->
+	  <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.23.2" />
+	  <PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI.Cuda" Version="0.11.3" />
+	  <PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI.DirectML" Version="0.11.3" />
+
+	  <PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI.Foundry" Version="0.11.3" />
+
+
+	  <PackageReference Include="OpenIddict.Abstractions" Version="7.2.0" />
+    <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="7.2.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+    <PackageReference Include="System.Management" Version="10.0.0" />
     <PackageReference Include="Vortice.DirectML" Version="3.6.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+
+
+	<ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -33,5 +59,13 @@
 
   <ItemGroup>
     <Folder Include="Data\Entities\" />
+    <Folder Include="DesignTime\" />
+    <Folder Include="Migrations\AuditDb\" />
+    <Folder Include="Migrations\AuthDb\" />
+    <Folder Include="Migrations\ConfigDb\" />
+    <Folder Include="Migrations\FilesDb\" />
+    <Folder Include="Migrations\GovernanceDb\" />
+    <Folder Include="Migrations\WorkspaceDb\" />
+    <Folder Include="VectorStore\" />
   </ItemGroup>
 </Project>

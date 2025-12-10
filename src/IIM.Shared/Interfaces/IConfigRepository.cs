@@ -1,7 +1,9 @@
-﻿using IIM.Shared.Models;
+﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 
 namespace IIM.Shared.Interfaces
 {
@@ -12,5 +14,11 @@ namespace IIM.Shared.Interfaces
         Task AddAsync(Setting setting, CancellationToken cancellationToken = default);
         Task UpdateAsync(Setting setting, CancellationToken cancellationToken = default);
         Task DeleteAsync(string key, CancellationToken cancellationToken = default);
-    }
+
+        Task SetJsonAsync<T>(string key, T value, string category, CancellationToken ct = default);
+
+        Task<T?> GetJsonAsync<T>(string key, CancellationToken ct = default);
+
+
+	}
 }

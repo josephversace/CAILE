@@ -1,0 +1,54 @@
+﻿.tag-editor-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    margin-top: 1.5rem;
+}
+
+.current-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-height: 2rem; /* Ensure space even when empty */
+}
+
+.file-tag-wrapper {
+    display: inline-flex;
+    align-items: center;
+    background-color: #e9ecef;
+    border-radius: 1rem;
+    padding-left: 0.75rem;
+}
+
+.remove-tag-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: none;
+    background-color: #ced4da;
+    color: #495057;
+    margin-left: 0.5rem;
+    margin-right: 0.25rem;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+    .remove-tag-btn:hover {
+        background-color: #adb5bd;
+        color: white;
+    }
+
+.no-tags-text {
+    font-style: italic;
+    color: #6c757d;
+}
+
+.add-tag-section {
+    margin-top: 1rem;
+}

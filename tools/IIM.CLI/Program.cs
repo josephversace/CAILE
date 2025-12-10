@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using IIM.Shared.Models.Core;
+using IIM.Shared.Models;
 
 public class Program
 {
@@ -25,7 +26,7 @@ public class Program
         using (var scope = host.Services.CreateScope())
         {
             var fileManager = scope.ServiceProvider.GetRequiredService<IManagedFileManager>();
-            var workspaceProvider = scope.ServiceProvider.GetRequiredService<IWorkspaceProvider>();
+            var workspaceProvider = scope.ServiceProvider.GetRequiredService<IWorkspaceManager>();
 
             Console.WriteLine("Demonstrating file ingestion...");
             // In a real scenario, you would get workspaceId and file paths from command line arguments
@@ -92,7 +93,7 @@ public class Program
                 // This is a simplified setup to resolve compilation errors.
                 // services.AddDbContext<...>(); 
                 services.AddScoped<IAuditRepository, EfAuditRepository>();
-                services.AddScoped<IWorkspaceProvider, PostgresWorkspaceProvider>();
+                services.AddScoped<IWorkspaceManager, EfWorkspaceManager>();
 
                 services.AddScoped<IManagedFileManager, FileManager>();
 

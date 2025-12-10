@@ -1,19 +1,25 @@
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using Hangfire;
-using IIM.Api.Configuration;
+
 using IIM.Api.Endpoints;
 using IIM.Api.Extensions;
+using IIM.Api.Filters;
 using IIM.Api.Hubs;
-      
-using IIM.Core.AI;
-using IIM.Core.Models;                       
-using IIM.Core.Services;
-using IIM.Infrastructure.Platform;
+using IIM.Api.Services;
+using IIM.Infrastructure.Foundry;
+using IIM.Infrastructure.Services;
+using IIM.Ingestion.Interfaces;
+using IIM.Ingestion.Services;
+using IIM.Shared.Configuration;
 using IIM.Shared.Interfaces;
-using IIM.Shared.Mediator;
-using Microsoft.AspNetCore.Mvc;
+using GraphRag;
+using GraphRag.Storage.Neo4j;
+using Microsoft.Extensions.AI;   
+using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.OpenApi.Models;
-using System.Text.Json;
+using IIM.Infrastructure.Data;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,123 +30,198 @@ var builder = WebApplication.CreateBuilder(args);
 var deploymentConfig = new DeploymentConfiguration();
 builder.Configuration.GetSection("Deployment").Bind(deploymentConfig);
 
+// bind Deployment first
+var deployment = builder.Configuration.GetSection("Deployment").Get<DeploymentConfiguration>();
+
+builder.Services
+	.AddBoundConfiguration(builder.Configuration)
+	.AddIdentityAndAuth(builder.Configuration, deployment)
+	.AddIIMDatabases(builder.Configuration)
+	.AddInfrastructureLayer(builder.Configuration)
+	.AddCoreLayer(builder.Configuration, deployment)
+	.AddAgentsLayer()
+	.AddApplicationLayer()
+	.AddApiLayer(builder.Configuration, deployment)
+	.AddIngestionLayer(builder.Configuration)
+	.AddHostedWorkers(builder.Configuration);
+
+
+
+
+
+
 // ============================================
-// Add services using extension methods
+// Swagger / OpenAPI
 // ============================================
-builder.Services.AddApiServices(builder.Configuration);
-
-
-builder.Services.AddEndpointsApiExplorer(); // Required for minimal APIs
-
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "IIM API",
-        Version = "v1",
-        Description = "Intelligent Data Governance Machine API",
-        Contact = new OpenApiContact
-        {
-            Name = "IIM Team",
-            Email = "support@iim.local"
-        }
-    });
+	options.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo
+	{
+		Title = "IIM API",
+		Version = "v1",
+		Description = "Intelligent Data Governance Machine API",
+		Contact = new Microsoft.OpenApi.OpenApiContact
+		{
+			Name = "IIM Team",
+			Email = "support@iim.local"
+		}
+	});
 });
 
+// ============================================
+// JSON Options
+// ============================================
+builder.Services.ConfigureHttpJsonOptions(opts =>
+{
+	opts.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+	opts.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+	opts.SerializerOptions.WriteIndented = false;
+});
 
-
+// ============================================
+// Health Checks
+// ============================================
 builder.Services.AddHealthChecks();
 
-// Add response compression for SignalR
+// ============================================
+// Response Compression for SignalR
+// ============================================
 builder.Services.AddResponseCompression(opts =>
 {
-    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-        new[] { "application/octet-stream" });
+	opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+		new[] { "application/octet-stream" });
 });
 
-// Add CORS
+// ============================================
+// CORS for Blazor Client
+// ============================================
+var corsPolicy = "_caileCors";
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowBlazor", policy =>
-    {
-        policy.WithOrigins("http://localhost:5000", "http://localhost:5001")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials(); // Required for SignalR
-    });
+	options.AddPolicy(corsPolicy, policy =>
+	{
+		policy
+			.WithOrigins("http://localhost:5056")
+			.AllowAnyHeader()
+			.AllowAnyMethod()
+			.AllowCredentials();
+	});
+});
+
+
+
+
+builder.Services.AddAGUI();
+
+
+
+builder.WebHost.ConfigureKestrel(k =>
+{
+	k.ListenLocalhost(5080);
 });
 
 var app = builder.Build();
 
 // ============================================
-// Configure pipeline
+// Run Database Migrations
+// ============================================
+
+using (var scope = app.Services.CreateScope())
+{
+	var migrator = scope.ServiceProvider.GetRequiredService<DatabaseMigrationRunner>();
+	await migrator.ApplyAllMigrationsAsync();
+}
+
+// ============================================
+// Swagger Middleware
 // ============================================
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "IIM API v1");
-        options.RoutePrefix = "swagger"; // Swagger at /swagger
-
-        // Optional: Make Swagger the default page
-        // options.RoutePrefix = string.Empty; // Swagger at root
-    });
+	app.UseSwagger();
+	app.UseSwaggerUI(options =>
+	{
+		options.SwaggerEndpoint("/swagger/v1/swagger.json", "IIM API v1");
+		options.RoutePrefix = "swagger";
+	});
 }
 
+// ============================================
+// Core Pipeline
+// ============================================
 app.UseResponseCompression();
-app.UseCors("AllowBlazor");
+app.UseCors(corsPolicy);
 
-// Add authentication if required
 if (deploymentConfig.RequireAuth)
 {
-    app.UseAuthentication();
-    app.UseAuthorization();
+	app.UseAuthentication();
+	app.UseAuthorization();
 }
 
-// Health checks
+// ============================================
+// Health Check Endpoints
+// ============================================
 app.MapHealthChecks("/health");
-app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
-    Predicate = check => check.Tags.Contains("ready")
+	Predicate = check => check.Tags.Contains("ready")
 });
-app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
-    Predicate = _ => false
+	Predicate = _ => true
 });
 
-// SignalR hubs
+// ============================================
+// SignalR Hubs
+// ============================================
 app.MapHub<InvestigationHub>("/hubs/investigation");
-if (deploymentConfig.Mode == DeploymentMode.Server)
+
+if (deploymentConfig.Mode == DeploymentMode.ClientUI)
 {
-    app.MapHub<AdminHub>("/hubs/admin");
-    app.MapRazorPages(); // Admin pages
+	app.MapHub<AdminHub>("/hubs/admin");
+	app.MapRazorPages();
 }
 
-
-// Add Hangfire dashboard
-if (app.Environment.IsDevelopment() || deploymentConfig.Mode == DeploymentMode.Server)
+// ============================================
+// Hangfire Dashboard
+// ============================================
+if (app.Environment.IsDevelopment() ||
+	deploymentConfig.Mode == DeploymentMode.ServerNode)
 {
-    app.UseHangfireDashboard("/hangfire", new DashboardOptions
-    {
-        Authorization = new[] { new HangfireAuthorizationFilter() },
-        IgnoreAntiforgeryToken = true
-    });
+	app.UseHangfireDashboard("/hangfire", new DashboardOptions
+	{
+		Authorization = new[] { new HangfireAuthorizationFilter() },
+		IgnoreAntiforgeryToken = true
+	});
 }
+
+// ============================================
+// Map endpoint groups
+// ============================================
+
+app.MapModelRegistryEndpoints();
+app.MapFileEndpoints();
+app.MapWorkspaceEndpoints();
+app.MapRagEndpoints();
+app.MapAuthEndpoints();
+app.MapIngestionEndpoints();
+app.MapSetupEndpoints();
+// AI endpoints with tool calling support
+app.MapAIEndpoints();
+
+// AG-UI endpoint for reasoning (uses MapAGUI directly)
+//using (var scope = app.Services.CreateScope())
+//{
+
+//	var agentFactory = scope.ServiceProvider.GetRequiredService<IAIAgentFactory>();
+//	var agent = await agentFactory.GetChatAgentAsync();
+//	app.MapAGUI("/ai/reason-ui", agent);
+//}
 
 
 // ============================================
-// Map all endpoints from separate files
-// ============================================
-app.MapSystemEndpoints();        // System & health endpoints
-
-app.MapModelEndpoints();         // Model management
-app.MapWslEndpoints();           // WSL management
-app.MapWorkspaceEndpoints();     // Workspace management
-app.MapRagEndpoints();           // RAG endpoints
-                                // Audit logging
-
-
 // Start the application
-app.Run("http://localhost:5080");
+// ============================================
 
+
+app.Run();

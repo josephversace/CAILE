@@ -1,5 +1,6 @@
 ﻿using IIM.Application.AI.DataEnrichment.Helpers;
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using IIM.Shared.Models.Core;
 using Microsoft.Extensions.Logging;
 using System;
@@ -16,13 +17,13 @@ namespace IIM.Application.AI.DataEnrichment.Services
     public class GovernanceSuggestionService : IGovernanceSuggestionService
     {
         private readonly ILogger<GovernanceSuggestionService> _logger;
-        private readonly IWorkspaceProvider _workspaceProvider;
+        private readonly IWorkspaceManager _workspaceProvider;
         private readonly IGovernanceRepository _governanceRepository;
         private readonly ConfidenceCalculator _confidenceCalculator;
 
         public GovernanceSuggestionService(
             ILogger<GovernanceSuggestionService> logger,
-            IWorkspaceProvider workspaceProvider,
+            IWorkspaceManager workspaceProvider,
             IGovernanceRepository governanceRepository,
             ConfidenceCalculator confidenceCalculator)
         {
@@ -133,18 +134,18 @@ namespace IIM.Application.AI.DataEnrichment.Services
             var rules = new List<SuggestedDataHandlingRule>();
 
             // Analyze sensitive data patterns
-            var sensitiveFiles = files.Where(f => f.DataSensitivity >= DataSensitivityLevel.Confidential).Count();
-            if (sensitiveFiles > 0)
-            {
-                rules.Add(new SuggestedDataHandlingRule
-                {
-                    RuleType = "Encryption",
-                    Description = "Require encryption for confidential data",
-                    Parameters = new Dictionary<string, object> { ["Algorithm"] = "AES-256" },
-                    Confidence = 0.9f,
-                    Reasoning = $"Found {sensitiveFiles} confidential files requiring encryption"
-                });
-            }
+            //var sensitiveFiles = files.Where(f => f.StoredFile.C = DataSensitivityLevel.Confidential).Count();
+            //if (sensitiveFiles > 0)
+            //{
+            //    rules.Add(new SuggestedDataHandlingRule
+            //    {
+            //        RuleType = "Encryption",
+            //        Description = "Require encryption for confidential data",
+            //        Parameters = new Dictionary<string, object> { ["Algorithm"] = "AES-256" },
+            //        Confidence = 0.9f,
+            //        Reasoning = $"Found {sensitiveFiles} confidential files requiring encryption"
+            //    });
+            //}
 
             return rules;
         }
@@ -153,18 +154,18 @@ namespace IIM.Application.AI.DataEnrichment.Services
         {
             var rules = new List<string>();
 
-            // Generate basic governance rules based on data patterns
-            if (files.Any(f => f.DataSensitivity >= DataSensitivityLevel.Confidential))
-            {
-                rules.Add("Implement access controls for confidential data");
-                rules.Add("Enable audit logging for sensitive file access");
-            }
+            //// Generate basic governance rules based on data patterns
+            //if (files.Any(f => f.DataSensitivity >= DataSensitivityLevel.Confidential))
+            //{
+            //    rules.Add("Implement access controls for confidential data");
+            //    rules.Add("Enable audit logging for sensitive file access");
+            //}
 
-            if (files.Count() > 1000)
-            {
-                rules.Add("Implement data lifecycle management policies");
-                rules.Add("Configure automated data archiving");
-            }
+            //if (files.Count() > 1000)
+            //{
+            //    rules.Add("Implement data lifecycle management policies");
+            //    rules.Add("Configure automated data archiving");
+            //}
 
             return rules;
         }

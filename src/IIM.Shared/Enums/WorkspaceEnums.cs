@@ -1,4 +1,6 @@
-﻿namespace IIM.Shared.Enums;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace IIM.Shared.Enums;
 
 public enum WorkspaceStatus
 {
@@ -18,17 +20,23 @@ public enum WorkspaceStatus
 
 public enum WorkspaceType
 {
+	[Display(Name = "")]
+	Undefined,
     Investigation,
     Intelligence,
     Surveillance,
     Forensics,
     CyberCrime,
-    FinancialCrime,
-    CounterIntelligence,
-    MissingPerson,
+	[Display(Name = "Financial Crime")]
+	FinancialCrime,
+	[Display(Name = "Counter Intelligence")]
+	CounterIntelligence,
+	[Display(Name = "Missing Persons")]
+	MissingPerson,
     Homicide,
     Fraud,
     Narcotics,
+    [Display(Name = "Organized Crime")]
     OrganizedCrime,
     Terrorism,
     Other

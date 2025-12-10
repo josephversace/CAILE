@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace IIM.Shared.Models.Core
+namespace IIM.Shared.Models
 {
     // These models are used as Data Transfer Objects (DTOs) for API endpoints.
 
@@ -18,9 +18,9 @@ namespace IIM.Shared.Models.Core
     {
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public WorkspaceType Type { get; set; }
+        public WorkspaceType Type { get; set; } = WorkspaceType.Undefined;
 
-        public string? OwnerId { get; set; }
+		public string? OwnerId { get; set; }
     }
 
     public class SearchWorkspacesRequest

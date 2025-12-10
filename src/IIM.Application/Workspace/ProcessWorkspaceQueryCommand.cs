@@ -21,18 +21,18 @@ namespace IIM.Application.Investigation
     public class ProcessWorkspaceQueryCommandHandler : IRequestHandler<ProcessWorkspaceQueryCommand, Unit>
     {
   
-        private readonly IManagedFileManager _fileManager;
+   
         private readonly IWorkspaceManager _workspaceManager;
         // The AI Orchestrator would be injected here for actual processing
         // private readonly IIM.Application.AI.SemanticKernel.SemanticKernelOrchestrator _orchestrator;
 
         public ProcessWorkspaceQueryCommandHandler(
          
-            IManagedFileManager fileManager,
+ 
             IWorkspaceManager workspaceManager)
         {
         
-            _fileManager = fileManager;
+          
             _workspaceManager = workspaceManager;
         }
 

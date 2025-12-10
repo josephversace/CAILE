@@ -300,12 +300,12 @@ public static class ModelEndpoints
             [FromServices] IModelConfigurationTemplateService templateService,
             CancellationToken ct) =>
         {
-            var templates = await templateService.GetTemplatesAsync(null, ct);
+            var templates = await templateService.GetSystemTemplatesAsync(ct);
             return Results.Ok(templates);
         })
         .WithName("GetModelTemplates")
         .WithSummary("Get all model configuration templates")
-        .Produces<List<ModelConfigurationTemplate>>();
+        .Produces<List<ModelTemplatesConfig>>();
 
       
 

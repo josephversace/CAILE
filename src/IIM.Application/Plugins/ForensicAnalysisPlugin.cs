@@ -8,7 +8,7 @@ namespace IIM.Application.Plugins
 {
     public class ForensicAnalysisPlugin : InvestigationPlugin
     {
-        private readonly IWorkspaceProvider _workspaceProvider;
+        private readonly IWorkspaceManager _workspaceProvider;
 
         public override string Id => "com.example.forensicanalysis";
         public override string Name => "Forensic Analysis Plugin";
@@ -20,7 +20,7 @@ namespace IIM.Application.Plugins
             CanProcessFiles = true
         };
 
-        public ForensicAnalysisPlugin(IWorkspaceProvider workspaceProvider)
+        public ForensicAnalysisPlugin(IWorkspaceManager workspaceProvider)
         {
             _workspaceProvider = workspaceProvider; // Injected via DI
         }
@@ -34,11 +34,18 @@ namespace IIM.Application.Plugins
                     var virtualFile = await _workspaceProvider.GetVirtualFileByIdAsync(fileId, cancellationToken);
                     if (virtualFile != null)
                     {
-                        // In a real plugin, you would perform complex analysis here.
-                        var analysisResult = $"Analysis of {virtualFile.FileName}:\n" +
-                                             $"- Collected By: {virtualFile.CollectedBy}\n" +
-                                             $"- Collection Date: {virtualFile.CollectionDate}\n" +
-                                             $"- Collection Location: {virtualFile.CollectedLocation}";
+                  	// Simple forensic metadata analysis example
+                    if (virtualFile.ChainOfCustody == null || virtualFile.ChainOfCustody.Count == 0)
+                        {
+                            return new PluginResult { Success = false, Error = "No chain of custody information available for the file." };
+						}
+
+					
+						// In a real plugin, you would perform complex analysis here.
+						var analysisResult = $"Analysis of {virtualFile.FileName}:\n" +
+                                             $"- Collected By: {virtualFile.StoredFileHash}\n" +
+                                             $"- Collection Date: {virtualFile.ChainOfCustody[0].Timestamp}\n" +
+                                             $"- Collection Location: {virtualFile.ChainOfCustody[0].Actor}";
 
                         return new PluginResult { Success = true, Message = "Analysis complete.", Data = analysisResult };
                     }

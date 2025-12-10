@@ -1,0 +1,32 @@
+﻿
+@using IIM.Components.Shared
+@using IIM.Shared.Models.Core
+
+<div class="side-panel">
+    @if (SelectedFile != null)
+    {
+        <h4>@SelectedFile.FileName</h4>
+        <hr />
+        
+        <Tabs>
+            <Tab Title="Chain of Custody">
+                <ChainOfCustodyViewer File="@SelectedFile" />
+            </Tab>
+            <Tab Title="Classification & AI">
+           @*      <AIInsightsPanel File="@SelectedFile" /> *@
+                <TagEditor File="@SelectedFile" />
+            </Tab>
+        </Tabs>
+    }
+    else
+    {
+        <div class="no-file-selected">
+            <p>Select a file to see its details.</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public VirtualFile? SelectedFile { get; set; }
+}

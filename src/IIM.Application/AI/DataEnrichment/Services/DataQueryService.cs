@@ -1,5 +1,6 @@
 ﻿using IIM.Application.AI.DataEnrichment.Helpers;
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using IIM.Shared.Models.Core;
 using Microsoft.Extensions.Logging;
 using System;
@@ -17,12 +18,12 @@ namespace IIM.Application.AI.DataEnrichment.Services
     public class DataQueryService : IDataQueryService
     {
         private readonly ILogger<DataQueryService> _logger;
-        private readonly IWorkspaceProvider _workspaceProvider;
+        private readonly IWorkspaceManager _workspaceProvider;
         private readonly AIPromptBuilder _promptBuilder;
 
         public DataQueryService(
             ILogger<DataQueryService> logger,
-            IWorkspaceProvider workspaceProvider,
+            IWorkspaceManager workspaceProvider,
             AIPromptBuilder promptBuilder)
         {
             _logger = logger;

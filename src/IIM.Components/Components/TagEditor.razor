@@ -1,0 +1,76 @@
+﻿@using IIM.Shared.Models.Core
+
+<div class="tag-editor-card">
+    <h4>Manage Tags</h4>
+    
+    @if (File is not null)
+    {
+        <div class="current-tags-container">
+            @if (File.Tags is not null && File.Tags.Any())
+            {
+                @foreach (var tag in File.Tags)
+                {
+                    <span class="file-tag-wrapper">
+                        <Tag Text="@tag" />
+                        <button class="remove-tag-btn" @onclick="() => RemoveTag(tag)">&times;</button>
+                    </span>
+                }
+            }
+            else
+            {
+                <p class="no-tags-text">No tags applied.</p>
+            }
+        </div>
+
+        <hr />
+
+        <div class="add-tag-section">
+            <label for="tag-select">Add a new tag:</label>
+            <div class="input-group">
+                <select id="tag-select" class="form-select" @bind="SelectedTagToAdd">
+                    <option value="">Select a tag...</option>
+                    @foreach (var availableTag in AvailableTags)
+                    {
+                        <option value="@availableTag">@availableTag</option>
+                    }
+                </select>
+                <button class="btn btn-primary" @onclick="AddTag" disabled="@string.IsNullOrEmpty(SelectedTagToAdd)">Add</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public VirtualFile? File { get; set; }
+
+    // This would be populated from your ConfigurationService
+    private List<string> AllApprovedTags { get; set; } = new()
+    {
+        "PII", "Legal", "Evidence", "Financial", "Internal", "Public", "Top Secret", "Client Data"
+    };
+
+    private List<string> AvailableTags =>
+        AllApprovedTags.ToList();
+
+    private string? SelectedTagToAdd;
+
+    private void AddTag()
+    {
+        if (File is not null && !string.IsNullOrEmpty(SelectedTagToAdd) && !File.Tags.Contains(SelectedTagToAdd))
+        {
+            File.Tags.Add(SelectedTagToAdd);
+            SelectedTagToAdd = null; // Reset the dropdown
+            StateHasChanged();
+        }
+    }
+
+    private void RemoveTag(string tagToRemove)
+    {
+        if (File is not null)
+        {
+            File.Tags.Remove(tagToRemove);
+            StateHasChanged();
+        }
+    }
+}

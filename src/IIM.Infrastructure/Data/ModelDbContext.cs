@@ -2,66 +2,56 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Text.Json;
-using static Microsoft.ML.Transforms.Text.LatentDirichletAllocationTransformer;
 
 namespace IIM.Infrastructure.Data
 {
+	public class ModelDbContext : DbContext
+	{
+		public ModelDbContext(DbContextOptions<ModelDbContext> options) : base(options) { }
 
-    public class ModelDbContext : DbContext
-    {
-        public ModelDbContext(DbContextOptions<ModelDbContext> options) : base(options) { }
+		public DbSet<ModelConfiguration> ModelConfigurations { get; set; }
+		public DbSet<ModelParameterSet> ModelParameterSets { get; set; }
 
-        public DbSet<ModelConfiguration> ModelConfigurations { get; set; }
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
+		{
+			base.OnModelCreating(modelBuilder);
 
-        public DbSet<ModelParameterSet> ModelParameterSets { get; set; }
+			//
+			// 🔧 JSON Value Converter for Dictionary<string, object>
+			//
+			var dictionaryConverter = new ValueConverter<Dictionary<string, object>, string>(
+				v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+				v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null) ?? new()
+			);
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            // Value converter for Dictionary<string, object>
-            var dictionaryConverter = new ValueConverter<Dictionary<string, object>, string>(
-                v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
-                v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null) ?? new()
-            );
+			//
+			// 📌 ModelConfiguration.Properties
+			//
+			modelBuilder.Entity<ModelConfiguration>()
+				.Property(e => e.Properties)
+				.HasConversion(dictionaryConverter)
+				.HasColumnType("nvarchar(max)");
 
-            modelBuilder.Entity<ModelConfiguration>()
-                .Property(e => e.Properties)
-                .HasConversion(dictionaryConverter);
+			//
+			// 📌 ModelConfiguration.Parameters
+			//
+			modelBuilder.Entity<ModelConfiguration>()
+				.Property(e => e.Parameters)
+				.HasConversion(dictionaryConverter)
+				.HasColumnType("nvarchar(max)");
 
-            modelBuilder.Entity<ModelConfiguration>()
-                .Property(e => e.Parameters)
-                .HasConversion(dictionaryConverter);
+			//
+			// 📌 ModelParameterSet.Parameters
+			//
+			modelBuilder.Entity<ModelParameterSet>()
+				.Property(e => e.Parameters)
+				.HasConversion(dictionaryConverter)
+				.HasColumnType("nvarchar(max)");
 
-            // Add if you want to specify column types (optional, but helpful for migrations)
-            modelBuilder.Entity<ModelConfiguration>()
-                .Property(e => e.Properties)
-                .HasColumnType("nvarchar(max)");
-
-            modelBuilder.Entity<ModelConfiguration>()
-                .Property(e => e.Parameters)
-                .HasColumnType("nvarchar(max)");
-
-  
-            modelBuilder.Entity<ModelConfiguration>()
-                .Property(e => e.Properties)
-                .HasConversion(dictionaryConverter)
-                .HasColumnType("nvarchar(max)");
-
-            modelBuilder.Entity<ModelConfiguration>()
-                .Property(e => e.Parameters)
-                .HasConversion(dictionaryConverter)
-                .HasColumnType("nvarchar(max)");
-
-            // Add mapping for ModelParameterSet
-            modelBuilder.Entity<ModelParameterSet>()
-                .Property(e => e.Parameters)
-                .HasConversion(dictionaryConverter)
-                .HasColumnType("nvarchar(max)");
-
-            modelBuilder.Entity<ModelParameterSet>()
-                .HasIndex(e => new { e.ModelId, e.Name }).IsUnique(); // Prevent duplicate set names per model
-        }
-
-
-    }
+			//
+			// 🚫 EXCLUDE: ModelCapabilities should NOT be treated as an EF entity
+			//
+			modelBuilder.Ignore<ModelCapabilities>();
+		}
+	}
 }
-

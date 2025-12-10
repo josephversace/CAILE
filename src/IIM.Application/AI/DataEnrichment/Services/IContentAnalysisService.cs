@@ -1,4 +1,5 @@
-﻿using IIM.Shared.Models.Core;
+﻿using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 using System;
 using System.IO;
 using System.Threading;

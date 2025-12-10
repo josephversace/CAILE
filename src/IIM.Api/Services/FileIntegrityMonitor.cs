@@ -7,12 +7,12 @@ namespace IIM.Api.Services
 {
     public class FileIntegrityMonitor : BackgroundService
     {
-        private readonly IManagedFileManager _fileManager;
+        private readonly IFileStore  _fileManager;
         private readonly ILogger<FileIntegrityMonitor> _logger;
         private readonly TimeSpan _checkInterval = TimeSpan.FromHours(6);
 
         public FileIntegrityMonitor(
-            IManagedFileManager fileManager,
+			IFileStore fileManager,
             ILogger<FileIntegrityMonitor> logger)
         {
             _fileManager = fileManager;

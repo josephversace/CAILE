@@ -26,8 +26,7 @@ namespace IIM.Infrastructure.Storage
             {
                 ServiceURL = $"http://{s3Config.Endpoint}",
                 ForcePathStyle = true,
-                UseHttp = !s3Config.UseSSL,
-                SignatureVersion = "4"
+                UseHttp = !s3Config.UseSSL
             };
 
             _s3Client = new AmazonS3Client(

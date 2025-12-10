@@ -1,11 +1,12 @@
 ﻿
-using IIM.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
+using Microsoft.ML.OnnxRuntime;
 
 
 namespace IIM.Shared.Interfaces
@@ -48,5 +49,8 @@ namespace IIM.Shared.Interfaces
         /// <param name="modelPath">Path to the ONNX model</param>
         /// <returns>True if compatible</returns>
         Task<bool> ValidateModelCompatibilityAsync(string modelPath);
-    }
+
+        SessionOptions GetSessionOptions(int deviceId);
+
+	}
 }

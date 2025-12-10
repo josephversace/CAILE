@@ -1,5 +1,6 @@
 ﻿using IIM.Application.AI.DataEnrichment.Helpers;
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using IIM.Shared.Models.Core;
 using Microsoft.Extensions.Logging;
 using System;
@@ -16,13 +17,13 @@ namespace IIM.Application.AI.DataEnrichment.Services
     public class RiskAssessmentService : IRiskAssessmentService
     {
         private readonly ILogger<RiskAssessmentService> _logger;
-        private readonly IWorkspaceProvider _workspaceProvider;
+        private readonly IWorkspaceManager _workspaceProvider;
         private readonly IGovernanceRepository _governanceRepository;
         private readonly ConfidenceCalculator _confidenceCalculator;
 
         public RiskAssessmentService(
             ILogger<RiskAssessmentService> logger,
-            IWorkspaceProvider workspaceProvider,
+            IWorkspaceManager workspaceProvider,
             IGovernanceRepository governanceRepository,
             ConfidenceCalculator confidenceCalculator)
         {
@@ -90,23 +91,25 @@ namespace IIM.Application.AI.DataEnrichment.Services
 
         private async Task AssessDataSensitivityRisks(IEnumerable<VirtualFile> files, RiskAssessment assessment, CancellationToken cancellationToken)
         {
-            var sensitiveFiles = files.Where(f => f.DataSensitivity == DataSensitivityLevel.Confidential ||
-                                                  f.DataSensitivity == DataSensitivityLevel.Restricted).ToList();
+			//Todo: Implement data sensitivity risk assessment logic
 
-            if (sensitiveFiles.Any())
-            {
-                assessment.IdentifiedRisks.Add(new RiskFactor
-                {
-                    RiskType = "Data Sensitivity",
-                    Description = $"Found {sensitiveFiles.Count} files with high sensitivity levels",
-                    Impact = RiskLevel.Medium,
-                    Likelihood = RiskLevel.High,
-                    Mitigation = "Ensure proper access controls and encryption are in place"
-                });
-            }
-        }
+			//var sensitiveFiles = files.Where(f => f.DataSensitivity == DataSensitivityLevel.Confidential ||
+			//                                      f.DataSensitivity == DataSensitivityLevel.Restricted).ToList();
 
-        private async Task AssessComplianceRisks(IEnumerable<VirtualFile> files, RiskAssessment assessment, CancellationToken cancellationToken)
+			//if (sensitiveFiles.Any())
+			//{
+			//    assessment.IdentifiedRisks.Add(new RiskFactor
+			//    {
+			//        RiskType = "Data Sensitivity",
+			//        Description = $"Found {sensitiveFiles.Count} files with high sensitivity levels",
+			//        Impact = RiskLevel.Medium,
+			//        Likelihood = RiskLevel.High,
+			//        Mitigation = "Ensure proper access controls and encryption are in place"
+			//    });
+			//}
+		}
+
+		private async Task AssessComplianceRisks(IEnumerable<VirtualFile> files, RiskAssessment assessment, CancellationToken cancellationToken)
         {
             // Check for files that may have compliance implications
             var potentialComplianceFiles = files.Where(f =>

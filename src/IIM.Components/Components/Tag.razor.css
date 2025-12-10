@@ -1,0 +1,43 @@
+﻿.tag-pill {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.875rem; /* More rounded pill shape */
+    color: #fff;
+}
+
+/* Default Color */
+.tag-default {
+    background-color: #6c757d; /* Bootstrap secondary gray */
+}
+
+/* Special Colors */
+.tag-red {
+    background-color: #dc3545; /* Bootstrap danger red */
+}
+
+.tag-blue {
+    background-color: #0d6efd; /* Bootstrap primary blue */
+}
+
+.tag-yellow {
+    background-color: #ffc107; /* Bootstrap warning yellow */
+    color: #000; /* Darker text for light background */
+}
+
+.tag-green {
+    background-color: #198754; /* Bootstrap success green */
+}
+
+.tag-black {
+    background-color: #212529; /* Bootstrap dark */
+}
+
+.tag-orange {
+    background-color: #fd7e14; /* Bootstrap orange */
+}

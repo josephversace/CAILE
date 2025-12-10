@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace IIM.Shared.Models.Core
+namespace IIM.Shared.Models
 {
     public class ContentAnalysis
     {

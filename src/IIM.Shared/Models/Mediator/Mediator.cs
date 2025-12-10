@@ -216,11 +216,13 @@ namespace IIM.Shared.Mediator
                 // Create handler instance
                 var handlerInstance = ActivatorUtilities.CreateInstance(_serviceProvider, handlerType);
 
-                // Get pipeline behaviors
-                var behaviors = GetPipelineBehaviors<TResponse>(requestType);
+				// Get pipeline behaviors
+				var behaviorType = typeof(IPipelineBehavior<,>)
+	  .MakeGenericType(requestType, typeof(TResponse));
 
-                // Build pipeline
-                RequestHandlerDelegate<TResponse> handlerDelegate = async () =>
+
+				// Build pipeline
+				RequestHandlerDelegate<TResponse> handlerDelegate = async () =>
                 {
                     var method = handlerType.GetMethod("Handle");
                     var task = (Task<TResponse>)method!.Invoke(handlerInstance, new object[] { request, cancellationToken })!;
@@ -228,11 +230,7 @@ namespace IIM.Shared.Mediator
                 };
 
                 // Execute pipeline in reverse order
-                foreach (var behavior in behaviors.AsEnumerable().Reverse())
-                {
-                    var currentDelegate = handlerDelegate;
-                    handlerDelegate = () => behavior.Handle(request, currentDelegate, cancellationToken);
-                }
+                
 
                 return await handlerDelegate();
             }
@@ -330,7 +328,7 @@ namespace IIM.Shared.Mediator
             params Assembly[] assemblies)
         {
             // Register mediator
-            services.AddSingleton<IMediator, SimpleMediator>();
+            services.AddScoped<IMediator, SimpleMediator>();
 
             // Scan assemblies for handlers
             var assembliesToScan = assemblies.Any()

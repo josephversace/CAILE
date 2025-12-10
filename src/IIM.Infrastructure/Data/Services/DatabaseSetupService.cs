@@ -1,70 +1,127 @@
-﻿using IIM.Infrastructure.Data;
+﻿using Hangfire;
+using Hangfire.PostgreSql;
+using IIM.Infrastructure.Data;
+using IIM.Infrastructure.Services;
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OpenIddict.Abstractions;
 
 namespace IIM.Infrastructure.Data
 {
-    public static class DatabaseServiceExtensions
-    {
-        /// <summary>
-        /// Adds database support with Entity Framework Core
-        /// Supports both PostgreSQL (production) and SQLite (development)
-        /// </summary>
-        public static IServiceCollection AddIIMDatabases(
-            this IServiceCollection services,
-            IConfiguration configuration)
-        {
-            var useSqliteForDev = configuration.GetValue<bool>("Development:UseSqliteForDev", false);
-            var isDevelopment = configuration.GetValue<bool>("Deployment:IsDevelopment", false);
+	public static class DatabaseLayer
+	{
+		public static IServiceCollection AddIIMDatabases(
+			this IServiceCollection services,
+			IConfiguration config)
+		{
+			var tier = config.GetValue<string>("Deployment:Tier", "mini")?.ToLowerInvariant();
+			var isDev = config.GetValue<bool>("Deployment:IsDevelopment", false);
 
-            if (isDevelopment && useSqliteForDev)
-            {
-                // SQLite for development
-                services.AddDbContext<FileDbContext>(options =>
-                    options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+			return tier switch
+			{
+				"micro" or "mini" or "small"
+					=> services.AddPostgresDatabases(config, isDev),
 
-                services.AddDbContext<GovernanceDbContext>(options =>
-                    options.UseSqlite(configuration.GetConnectionString("ConfigDb")));
+				_ => throw new InvalidOperationException(
+					$"Invalid deployment tier '{tier}'. Expected: micro, mini, small.")
+			};
+		}
 
-                services.AddDbContext<AuditDbContext>(options =>
-                    options.UseSqlite(configuration.GetConnectionString("AuditDb")));
+		// ---------------------------------------------------------------------
+		// POSTGRES IMPLEMENTATION
+		// ---------------------------------------------------------------------
+		private static IServiceCollection AddPostgresDatabases(
+			this IServiceCollection services,
+			IConfiguration config,
+			bool isDevelopment)
+		{
+			var host = config["Database:Host"] ?? "localhost";
+			var port = config.GetValue<int>("Database:Port", 5432);
+			var username = config["Database:Username"] ?? "iim_user";
+			var password = config["Database:Password"]
+				?? throw new InvalidOperationException("Database:Password is missing.");
 
-                services.AddDbContext<ConfigDbContext>(options =>
-                    options.UseSqlite(configuration.GetConnectionString("ConfigDb")));
+			string Conn(string db) =>
+				$"Host={host};Port={port};Database={db};Username={username};Password={password}";
 
-                services.AddDbContext<ModelDbContext>(options =>
-                    options.UseSqlite(configuration.GetConnectionString("ModelDb")));
-            }
-            else
-            {
-                // PostgreSQL for production
-                services.AddDbContext<FileDbContext>(options =>
-                    options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+			// -----------------------------------------------------------------
+			// 1. Register DbContexts
+			// -----------------------------------------------------------------
+	
+			services.AddDbContext<ConfigDbContext>(opt => opt.UseNpgsql(Conn("iim_config")));
+			services.AddDbContext<AuthDbContext>(opt =>
+			{
+				opt.UseNpgsql(Conn("iim_identity"));
+				opt.UseOpenIddict();
+			});
+			services.AddDbContext<AuditDbContext>(opt => opt.UseNpgsql(Conn("iim_audit")));
+			services.AddDbContext<GovernanceDbContext>(opt => opt.UseNpgsql(Conn("iim_governance")));
+			services.AddDbContext<WorkspaceDbContext>(opt => opt.UseNpgsql(Conn("iim_workspace")));
 
-                services.AddDbContext<GovernanceDbContext>(options =>
-                    options.UseNpgsql(configuration.GetConnectionString("ConfigDb")));
+			// -----------------------------------------------------------------
+			// 2. Hangfire Database
+			// -----------------------------------------------------------------
+			var jobsDb = "iim_jobs";
+			EnsureDatabaseExists(host, port, username, password, jobsDb);
 
-                services.AddDbContext<AuditDbContext>(options =>
-                    options.UseNpgsql(configuration.GetConnectionString("AuditDb")));
+			services.AddHangfire(config => config
+				.UseSimpleAssemblyNameTypeSerializer()
+				.UseRecommendedSerializerSettings()
+				.UsePostgreSqlStorage(opt => opt.UseNpgsqlConnection(Conn(jobsDb)))
+			);
 
-                services.AddDbContext<ConfigDbContext>(options =>
-                    options.UseNpgsql(configuration.GetConnectionString("ConfigDb")));
+			// -----------------------------------------------------------------
+			// 3. Repositories
+			// -----------------------------------------------------------------
+			services.AddScoped<IConfigRepository, EfConfigRepository>();
+			services.AddScoped<IAuditRepository, EfAuditRepository>();
+			services.AddScoped<IGovernanceRepository, EfGovernanceRepository>();
+			services.AddScoped<IRoleRepository, EfRoleRepository>();
+			services.AddScoped<IWorkspaceManager, EfWorkspaceManager>();
+			services.AddScoped<IUserRepository, EfUserRepository>();
 
-                services.AddDbContext<ModelDbContext>(options =>
-                    options.UseNpgsql(configuration.GetConnectionString("ModelDb")));
-            }
+			// -----------------------------------------------------------------
+			// 4. Migration Runner
+			// -----------------------------------------------------------------
+			services.AddTransient<DatabaseMigrationRunner>();
 
-            // Register repositories
-            services.AddScoped<IAuditRepository, EfAuditRepository>();
-            services.AddScoped<IConfigRepository, EfConfigRepository>();
-            services.AddScoped<IModelRepository, EfModelRepository>();
-            services.AddScoped<IModelParameterSetRepository, EfModelParameterSetRepository>();
-            services.AddScoped<IGovernanceRepository, EfGovernanceRepository>();
-            services.AddScoped<IWorkspaceProvider, PostgresWorkspaceProvider>();
+			return services;
+		}
 
-            return services;
-        }
-    }
+		// ---------------------------------------------------------------------
+		// DATABASE CREATION HELPER
+		// ---------------------------------------------------------------------
+		private static void EnsureDatabaseExists(
+			string host,
+			int port,
+			string username,
+			string password,
+			string database)
+		{
+			var master = $"Host={host};Port={port};Database=postgres;Username={username};Password={password}";
+
+			using var conn = new Npgsql.NpgsqlConnection(master);
+			conn.Open();
+
+			// Check
+			using (var cmd = conn.CreateCommand())
+			{
+				cmd.CommandText = $"SELECT 1 FROM pg_database WHERE datname = '{database}'";
+				var exists = cmd.ExecuteScalar() != null;
+				if (exists) return;
+			}
+
+			// Create db
+			using (var cmd = conn.CreateCommand())
+			{
+				cmd.CommandText = $"CREATE DATABASE \"{database}\"";
+				cmd.ExecuteNonQuery();
+			}
+		}
+	}
 }

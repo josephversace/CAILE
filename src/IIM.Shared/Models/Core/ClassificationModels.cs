@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IIM.Shared.Models.Core
+namespace IIM.Shared.Models
 {
     public class ClassificationResult
     {
@@ -43,8 +43,8 @@ namespace IIM.Shared.Models.Core
     public class ClassificationUpdate
     {
         public string FileId { get; set; }
-        public DataClassificationLevel Level { get; set; }
-        public List<string> Tags { get; set; }
+		public string ClassificationLevel { get; set; } = string.Empty;
+		public List<string> Tags { get; set; }
         public string Description { get; set; }
         public string UpdatedBy { get; set; }
         public string UpdateReason { get; set; }

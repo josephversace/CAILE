@@ -1,8 +1,3 @@
-using IIM.Shared.Mediator;
-using IIM.Shared.Interfaces;
-
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,7 +5,12 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Application.Extensions;
+using IIM.Shared.Interfaces;
+using IIM.Shared.Mediator;
 using IIM.Shared.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace IIM.Application.Behaviors
 {
@@ -77,15 +77,16 @@ namespace IIM.Application.Behaviors
                 Timestamp = timestamp.UtcDateTime, // Convert to DateTime if needed
                 Action = "COMMAND_START",
                 Details = requestData,
-                AdditionalData = new Dictionary<string, object>
-                {
-                    ["RequestId"] = requestId,
-                    ["RequestType"] = requestName,
-                    ["UserName"] = GetUserName(), // Store username in AdditionalData
-                    ["HttpMethod"] = _httpContextAccessor?.HttpContext?.Request.Method ?? "N/A",
-                    ["Path"] = _httpContextAccessor?.HttpContext?.Request.Path.ToString() ?? "N/A"
-                }
-            };
+				AdditionalData = new List<AuditMetadataItem>
+{
+	new AuditMetadataItem { Key = "RequestId",   Value = requestId },
+	new AuditMetadataItem { Key = "RequestType", Value = requestName },
+	new AuditMetadataItem { Key = "UserName",    Value = GetUserName() },
+	new AuditMetadataItem { Key = "HttpMethod",  Value = _httpContextAccessor?.HttpContext?.Request.Method ?? "N/A" },
+	new AuditMetadataItem { Key = "Path",        Value = _httpContextAccessor?.HttpContext?.Request.Path.ToString() ?? "N/A" }
+}
+
+			};
 
             // Persist to database
             await _auditLogger.LogAuditAsync(startEvent, cancellationToken);
@@ -111,25 +112,27 @@ namespace IIM.Application.Behaviors
                     Timestamp = DateTimeOffset.UtcNow.UtcDateTime,
                     Action = "COMMAND_SUCCESS",
                     Details = $"Completed in {stopwatch.ElapsedMilliseconds}ms",
-                    AdditionalData = new Dictionary<string, object>
-                    {
-                        ["RequestId"] = requestId,
-                        ["RequestType"] = requestName,
-                        ["UserName"] = GetUserName(),
-                        ["ElapsedMs"] = stopwatch.ElapsedMilliseconds,
-                        ["Success"] = true,
-                        ["ResponseType"] = response?.GetType().Name ?? "null"
-                    }
-                };
+					AdditionalData = new List<AuditMetadataItem>
+{
+	new AuditMetadataItem { Key = "RequestId",     Value = requestId },
+	new AuditMetadataItem { Key = "RequestType",   Value = requestName },
+	new AuditMetadataItem { Key = "UserName",      Value = GetUserName() },
+	new AuditMetadataItem { Key = "ElapsedMs",     Value = stopwatch.ElapsedMilliseconds.ToString() },
+	new AuditMetadataItem { Key = "Success",       Value = true.ToString() },
+	new AuditMetadataItem { Key = "ResponseType",  Value = response?.GetType().Name ?? "null" }
+}
 
-                // Extract changes for update commands (if you define IUpdateCommand interface)
-                if (IsUpdateCommand(request) && response != null)
-                {
-                    completionEvent.AdditionalData["Changes"] = ExtractChanges(request, response);
-                }
+				};
 
-                // Persist to database
-                await _auditLogger.LogAuditAsync(completionEvent, cancellationToken);
+				// Extract changes for update commands (if you define IUpdateCommand interface)
+				if (IsUpdateCommand(request) && response != null)
+				{
+					completionEvent.AdditionalData.Set("Changes", ExtractChanges(request, response));
+				}
+
+
+				// Persist to database
+				await _auditLogger.LogAuditAsync(completionEvent, cancellationToken);
 
                 return response;
             }
@@ -153,17 +156,18 @@ namespace IIM.Application.Behaviors
                     Timestamp = DateTimeOffset.UtcNow.UtcDateTime,
                     Action = "COMMAND_FAILURE",
                     Details = ex.Message,
-                    AdditionalData = new Dictionary<string, object>
-                    {
-                        ["RequestId"] = requestId,
-                        ["RequestType"] = requestName,
-                        ["UserName"] = GetUserName(),
-                        ["ElapsedMs"] = stopwatch.ElapsedMilliseconds,
-                        ["Success"] = false,
-                        ["ExceptionType"] = ex.GetType().Name,
-                        ["StackTrace"] = ex.StackTrace ?? string.Empty
-                    }
-                };
+					AdditionalData = new List<AuditMetadataItem>
+{
+	new AuditMetadataItem { Key = "RequestId",      Value = requestId },
+	new AuditMetadataItem { Key = "RequestType",    Value = requestName },
+	new AuditMetadataItem { Key = "UserName",       Value = GetUserName() },
+	new AuditMetadataItem { Key = "ElapsedMs",      Value = stopwatch.ElapsedMilliseconds.ToString() },
+	new AuditMetadataItem { Key = "Success",        Value = false.ToString() },
+	new AuditMetadataItem { Key = "ExceptionType",  Value = ex.GetType().Name },
+	new AuditMetadataItem { Key = "StackTrace",     Value = ex.StackTrace ?? string.Empty }
+}
+
+				};
 
                 // Persist to database
                 await _auditLogger.LogAuditAsync(failureEvent, cancellationToken);

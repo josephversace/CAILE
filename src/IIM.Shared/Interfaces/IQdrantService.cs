@@ -1,38 +1,42 @@
-using IIM.Shared.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 
-namespace IIM.Shared.Interfaces
+namespace IIM.Shared.Interfaces;
+
+public interface IQdrantService
 {
-    public interface IQdrantService
-    {
-        Task<bool> CollectionExistsAsync(string collectionName, CancellationToken cancellationToken = default);
-        Task<bool> CreateCaseCollectionAsync(string caseId, CancellationToken cancellationToken = default);
-        Task<bool> CreateCollectionAsync(string collectionName, VectorConfig config, CancellationToken cancellationToken = default);
-        Task<bool> CreateSnapshotAsync(string collectionName, CancellationToken cancellationToken = default);
-        Task<bool> DeleteCaseCollectionAsync(string caseId, CancellationToken cancellationToken = default);
-        Task<bool> DeleteCollectionAsync(string collectionName, CancellationToken cancellationToken = default);
-        Task<bool> DeletePointsAsync(string collectionName, List<string> ids, CancellationToken cancellationToken = default);
-        Task<List<string>> FindSimilarPointsAsync(string collectionName, string pointId, int limit = 10, CancellationToken cancellationToken = default);
-        Task<List<Cluster>> GetClustersAsync(string collectionName, int numClusters, CancellationToken cancellationToken = default);
-        Task<CollectionInfo> GetCollectionInfoAsync(string collectionName, CancellationToken cancellationToken = default);
-        Task<QdrantInfo> GetInfoAsync(CancellationToken cancellationToken = default);
-        Task<VectorPoint?> GetPointAsync(string collectionName, string id, CancellationToken cancellationToken = default);
-        Task<List<VectorPoint>> GetPointsAsync(string collectionName, List<string> ids, CancellationToken cancellationToken = default);
-        Task<StorageInfo> GetStorageInfoAsync(CancellationToken cancellationToken = default);
-        Task<bool> IndexCaseDocumentAsync(string caseId, string documentId, string content, Dictionary<string, object>? metadata = null, CancellationToken cancellationToken = default);
-        Task<bool> IsHealthyAsync(CancellationToken cancellationToken = default);
-        Task<List<string>> ListCollectionsAsync(CancellationToken cancellationToken = default);
-        Task<bool> OptimizeCollectionAsync(string collectionName, CancellationToken cancellationToken = default);
-        Task<bool> PingAsync(CancellationToken cancellationToken = default);
-        Task<List<SearchResult>> SearchAsync(string collectionName, float[] vector, int limit = 10, float scoreThreshold = 0, SearchFilter? filter = null, CancellationToken cancellationToken = default);
-        Task<List<SearchResult>> SearchBatchAsync(string collectionName, List<float[]> vectors, int limit = 10, CancellationToken cancellationToken = default);
-        Task<List<SearchResult>> SearchByTextAsync(string collectionName, string text, int limit = 10, float scoreThreshold = 0, CancellationToken cancellationToken = default);
-        Task<List<SearchResult>> SearchCaseAsync(string caseId, string query, int limit = 10, TimeRange? timeRange = null, CancellationToken cancellationToken = default);
-        Task<bool> UpsertPointsAsync(string collectionName, List<VectorPoint> points, CancellationToken cancellationToken = default);
-    }
+	/// <summary>Ensures that the global CAILE vector collection exists.</summary>
+	Task EnsureCollectionAsync(CancellationToken ct = default);
+
+	/// <summary>Upserts a vector chunk + metadata.</summary>
+	Task StoreEmbeddingAsync(
+		Guid fileId,
+		string caseId,
+		string chunkId,
+		float[] embedding,
+		string text,
+		string? classification = null,
+		string? mediaType = null,
+		CancellationToken ct = default);
+
+	/// <summary>Semantic search with optional case isolation.</summary>
+	Task<List<ChunkHit>> SearchAsync(
+		float[] embedding,
+		int limit = 10,
+		string? caseId = null,
+		CancellationToken ct = default);
+
+	/// <summary>Delete embeddings tied to a specific file.</summary>
+	Task DeleteEmbeddingsForFileAsync(
+		Guid fileId,
+		CancellationToken ct = default);
+
+	/// <summary>Lightweight health check.</summary>
+	Task<bool> IsHealthyAsync(CancellationToken ct = default);
+
+	/// <summary>Debug: count points for a case.</summary>
+	Task<long> CountForCaseAsync(string caseId, CancellationToken ct = default);
 }

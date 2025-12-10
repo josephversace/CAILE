@@ -29,19 +29,7 @@ public class CreateWorspaceRequest
     public Dictionary<string, object>? Metadata { get; set; }
 }
 
-/// <summary>
-/// Update case request model
-/// </summary>
-public class UpdateWorkspaceRequest
-{
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public string? Status { get; set; }
-    public string? Owner { get; set; }
-    public List<string>? TeamMembers { get; set; }
-    public string? Classification { get; set; }
-    public Dictionary<string, object>? Metadata { get; set; }
-}
+
 
 /// <summary>
 /// Search cases request model
@@ -62,14 +50,7 @@ public class SearchWorspaceRequest
 /// <summary>
 /// Get case query model
 /// </summary>
-public class GetWorkspaceQuery
-{
-    public string WorkspaceId { get; set; } = string.Empty;
-    public bool IncludeEvidence { get; set; } = false;
-    public bool IncludeSessions { get; set; } = false;
-    public bool IncludeReports { get; set; } = false;
-    public bool IncludeStatistics { get; set; } = true;
-}
+
 
 /// <summary>
 /// Get case statistics query model
@@ -136,7 +117,14 @@ public class Setting
     public string? ValidationRegex { get; set; }
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
     public string UpdatedBy { get; set; } = string.Empty;
-    public Dictionary<string, object>? Metadata { get; set; }
+	public List<SettingMetadataItem> Metadata { get; set; } = new();
+}
+
+public class SettingMetadataItem
+{
+	public int Id { get; set; }
+	public string Key { get; set; } = string.Empty;
+	public string Value { get; set; } = string.Empty;   // store as string/JSON
 }
 
 /// <summary>
@@ -179,23 +167,6 @@ public class Settings
 
 
 
-/// <summary>
-/// Processed evidence version tracking
-/// </summary>
-public class ProcessedFile
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string OriginalFileId { get; set; } = string.Empty;
-    public string ProcessingType { get; set; } = string.Empty;
-    public DateTimeOffset ProcessedTimestamp { get; set; } = DateTimeOffset.UtcNow;
-    public string ProcessedBy { get; set; } = string.Empty;
-    public string ProcessedHash { get; set; } = string.Empty;
-    public string StoragePath { get; set; } = string.Empty;
-    public TimeSpan? ProcessingDuration { get; set; }
-    public bool Success { get; set; } = true;
-    public string? ErrorMessage { get; set; }
-    public Dictionary<string, object>? ProcessingResults { get; set; }
-}
 
 #region File Upload Models
 
@@ -639,13 +610,6 @@ public class DetectedFace
 /// <summary>
 /// Bounding box for object detection
 /// </summary>
-public class BoundingBox
-{
-    public int X { get; set; }
-    public int Y { get; set; }
-    public int Width { get; set; }
-    public int Height { get; set; }
-}
 
 /// <summary>
 /// Similar image match
@@ -1227,8 +1191,16 @@ public class AuditEvent
     public string? IpAddress { get; set; }
     public string? UserAgent { get; set; }
     public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
-    public Dictionary<string, object>? AdditionalData { get; set; }
+	public List<AuditMetadataItem> AdditionalData { get; set; } = new();
 }
+
+public class AuditMetadataItem
+{
+	public int Id { get; set; }
+	public string Key { get; set; } = string.Empty;
+	public string Value { get; set; } = string.Empty;
+}
+
 
 public class AuditLogFilter
 {

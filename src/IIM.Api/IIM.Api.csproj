@@ -1,38 +1,73 @@
-﻿
-<Project Sdk="Microsoft.NET.Sdk.Web">
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="AspNetCore.HealthChecks.Npgsql" Version="8.0.2" />
-    <PackageReference Include="AspNetCore.HealthChecks.UI" Version="8.0.2" />
-    <PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
-    <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.21" />
-    <PackageReference Include="Hangfire.Core" Version="1.8.21" />
-	<PackageReference Include="Hangfire.PostgreSql" Version="1.8.21" />
-    <PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.11" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.11" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.8" />
-	<PackageReference Include="AWSSDK.S3" Version="3.7.305.10" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.8" />
-    <PackageReference Include="OpenIddict.AspNetCore" Version="7.0.0" />
-    <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="7.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
-    <PackageReference Include="System.IO.Packaging" Version="8.0.1" />
-    <PackageReference Include="PdfPig" Version="0.1.11" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\IIM.Application\IIM.Application.csproj" />
-    <ProjectReference Include="..\IIM.Core\IIM.Core.csproj" />
-    <ProjectReference Include="..\IIM.Infrastructure\IIM.Infrastructure.csproj" />
-    <ProjectReference Include="..\IIM.Shared\IIM.Shared.csproj" />
-  </ItemGroup>
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Agent Framework packages -->
+		<PackageReference Include="ManagedCode.GraphRag" Version="10.0.7" />
+		<PackageReference Include="ManagedCode.GraphRag.Neo4j" Version="10.0.7" />
+		<PackageReference Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.0.0-preview.251125.1" />
+		<PackageReference Include="Microsoft.Agents.AI" Version="1.0.0-preview.251125.1" />
+		<PackageReference Include="Microsoft.Agents.AI.AGUI" Version="1.0.0-preview.251125.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<!-- AI Extensions - provides AsIChatClient() -->
+		<PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.0.1-preview.1.25571.5" />
+
+		<!-- OpenAI SDK - MUST match version required by Microsoft.Extensions.AI.OpenAI (>= 2.6.0) -->
+		<PackageReference Include="OpenAI" Version="2.7.0" />
+
+		<!-- Foundry Local -->
+		<PackageReference Include="Microsoft.AI.Foundry.Local" Version="0.8.2.1" />
+
+		<!-- Other packages -->
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.Npgsql" Version="9.0.0" />
+		<PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
+		<PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
+		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.22" />
+		<PackageReference Include="Hangfire.Core" Version="1.8.22" />
+		<PackageReference Include="Hangfire.PostgreSql" Version="1.20.12" />
+	
+		<PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.2" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+		<PackageReference Include="OpenIddict.AspNetCore" Version="7.2.0" />
+		<PackageReference Include="OpenIddict.EntityFrameworkCore" Version="7.2.0" />
+		<PackageReference Include="QRCoder" Version="1.7.0" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+		<PackageReference Include="StackExchange.Redis" Version="2.10.1" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
+		<PackageReference Include="System.IO.Packaging" Version="10.0.0" />
+		<PackageReference Include="PdfPig" Version="0.1.12" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.14.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.14.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.14.0" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+
+		<ProjectReference Include="..\IIM.Application\IIM.Application.csproj" />
+		<ProjectReference Include="..\IIM.Core\IIM.Core.csproj" />
+		<ProjectReference Include="..\IIM.Infrastructure\IIM.Infrastructure.csproj" />
+		<ProjectReference Include="..\IIM.Ingestion\IIM.Ingestion.csproj" />
+		<ProjectReference Include="..\IIM.Shared\IIM.Shared.csproj" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <Folder Include="Configuration\" />
+	</ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 ﻿// IIM.Api/Filters/HangfireAuthorizationFilter.cs
 using Hangfire.Dashboard;
-using IIM.Api.Configuration;
+using IIM.Shared.Configuration;
 
 namespace IIM.Api.Filters
 {

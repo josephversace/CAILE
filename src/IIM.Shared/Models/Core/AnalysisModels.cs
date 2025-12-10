@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IIM.Shared.Models.Core
+namespace IIM.Shared.Models
 {
     public class ContentAnalysisResult
     {

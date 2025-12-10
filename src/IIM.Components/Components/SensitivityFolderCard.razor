@@ -1,0 +1,24 @@
+﻿@using IIM.Shared.Models.Core
+<div class="folder-card @Level.Key" @onclick="() => OnClick.InvokeAsync(Level)">
+    <div class="folder-icon">
+        <i class="bi bi-folder"></i>
+    </div>
+    <div class="folder-details">
+        <h4>@Level.Name</h4>
+        <span class="total-files">@Level.TotalFiles Files</span>
+        <div class="tag-breakdown">
+            @foreach (var tag in Level.TagCounts)
+            {
+                <span class="tag-count">@tag.Key: @tag.Value</span>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public SensitivityLevelData Level { get; set; }
+
+    [Parameter]
+    public EventCallback<SensitivityLevelData> OnClick { get; set; }
+}

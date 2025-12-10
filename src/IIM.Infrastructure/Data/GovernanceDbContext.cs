@@ -25,5 +25,11 @@ public class GovernanceDbContext : DbContext
             .HasOne(r => r.ClassificationTag)
             .WithMany()
             .HasForeignKey(r => r.ClassificationTagId);
-    }
+
+		modelBuilder.Entity<StoredFile>()
+	.HasMany(f => f.ClassificationTags)
+	.WithMany(t => t.StoredFiles)
+	.UsingEntity(j => j.ToTable("StoredFileClassificationTags"));
+
+	}
 }

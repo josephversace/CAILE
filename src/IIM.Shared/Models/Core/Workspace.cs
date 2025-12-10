@@ -1,8 +1,9 @@
-﻿using IIM.Shared.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using IIM.Shared.Enums;
 
-namespace IIM.Shared.Models.Core
+namespace IIM.Shared.Models
 {
     /// <summary>
     /// Represents a workspace, which is the primary container for investigations, files, and collaboration.
@@ -18,26 +19,89 @@ namespace IIM.Shared.Models.Core
         public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
         public string CreatedBy { get; set; } = string.Empty;
         public bool IsDeleted { get; set; }
-
         public bool IsPublic { get; set; } = false;
+        public Guid OwnerId { get; set; }
+		public ICollection<WorkspaceUser> Users { get; set; } = new List<WorkspaceUser>();
+        public ICollection<WorkspaceFile> Files { get; set; } = new List<WorkspaceFile>();
+        public ICollection<WorkspaceSession> Sessions { get; set; } = new List<WorkspaceSession>();
+		public ICollection<TimelineEvent> TimelineEvents { get; set; } = new List<TimelineEvent>();
 
-        public ICollection<WorkspaceUser> Users { get; set; } = new List<WorkspaceUser>();
-        public ICollection<VirtualFile> Files { get; set; } = new List<VirtualFile>();
-        public ICollection<InvestigationSession> Sessions { get; set; } = new List<InvestigationSession>();
-    }
+	}
 
-    /// <summary>
-    /// Represents a user's role and association with a specific workspace.
-    /// </summary>
-    public class WorkspaceUser
+	/// <summary>
+	/// Represents a user's role and association with a specific workspace.
+	/// </summary>
+	public class WorkspaceUser
+	{
+		public Guid WorkspaceId { get; set; }
+		public string UserId { get; set; } = null!;
+		public WorkspaceRole Role { get; set; } = WorkspaceRole.Owner;
+		public DateTimeOffset AddedAt { get; set; } = DateTimeOffset.UtcNow;
+
+		// Non-mapped enrichment fields
+		[NotMapped]
+		public string? DisplayName { get; set; }
+
+		[NotMapped]
+		public string? Email { get; set; }
+
+		[NotMapped]
+		public ApplicationUser? User { get; set; }
+	}
+
+
+	public enum WorkspaceRole
     {
-        public Guid Id { get; set; }
-        public Guid WorkspaceId { get; set; }
-        public string UserId { get; set; } = string.Empty;
-        public string Role { get; set; } = "Member"; // e.g., "Owner", "Member", "Viewer"
-    }
+        Owner,
+        Editor,
+        Viewer
+	}
 
-    public class WorkspaceSummary
+	public class WorkspaceArtifact
+	{
+		public Guid Id { get; set; } = Guid.NewGuid();
+		public Guid WorkspaceId { get; set; }
+
+		public ArtifactType Type { get; set; }
+
+		public string Title { get; set; } = "";
+		public string Summary { get; set; } = "";
+		public string Content { get; set; } = "";
+
+		public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+		public DateTime? UpdatedUtc { get; set; }
+
+		public bool IsDeleted { get; set; } = false;
+
+		public List<string> Tags { get; set; } = new();
+	}
+
+	public class WorkspaceFile
+	{
+		public Guid WorkspaceId { get; set; }
+		public Workspace Workspace { get; set; }
+
+		public Guid VirtualFileId { get; set; }
+		public VirtualFile VirtualFile { get; set; }
+
+		public DateTimeOffset LinkedAt { get; set; } = DateTimeOffset.UtcNow;
+	}
+
+
+	public class WorkspaceSession
+	{
+		public Guid WorkspaceId { get; set; }
+		public Workspace Workspace { get; set; }
+
+		public Guid SessionId { get; set; }
+		public InvestigationSession Session { get; set; }
+
+		public DateTimeOffset LinkedAt { get; set; } = DateTimeOffset.UtcNow;
+	}
+
+
+
+	public class WorkspaceSummary
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

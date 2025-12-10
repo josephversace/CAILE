@@ -10,20 +10,51 @@
 <div class="content-area">
     <div class="content-header">
         <h1 class="page-title">Evidence Files</h1>
-        <p class="page-subtitle">Manage and analyze digital evidence with AI-powered insights</p>
+        <p class="page-subtitle">Manage and analyze your files with AI-powered insights</p>
     </div>
 
+    <div class="workspace-layout">
+
+        <div class="main-content">
+
+            <div class="sensitivity-folders-grid">
+                @foreach (var level in AllLevelsInOrder)
+                {
+                    <SensitivityFolderCard Level="@level" OnClick="@HandleFolderSelection" />
+                }
+            </div>
+
+            <div class="file-grid-container">
+                <h3>Files in: @SelectedLevelName</h3>
+                <FileGrid Files="@CurrentlyDisplayedFiles" OnFileDoubleClick="@HandleFileSelection" />
+            </div>
+
+        </div>
+
+        <div class="details-panel">
+            <DetailsSidePanel SelectedFile="@SelectedFile" />
+        </div>
+
+    </div>
+
+    <div class="flex">
+
+        <div>
     <!-- File Grid Component -->
     <FileGrid Files="@FilteredFiles"
               SelectedFiles="@SelectedFiles"
               OnFileSelectionChanged="@OnFileSelectionChanged"
               OnFileDoubleClick="@OnFileDoubleClick" />
-
-    <!-- Chain of Custody Component -->
-    @if (SelectedFile != null)
-    {
-        <ChainOfCustodyViewer File="@SelectedFile" />
-    }
+        </div>
+        <div>
+            <!-- Chain of Custody Component -->
+            @if (SelectedFile != null)
+            {
+                <ChainOfCustodyViewer File="@SelectedFile" />
+            }
+        </div>
+  
+    </div>
 </div>
 
 @code {
@@ -33,6 +64,11 @@
     private List<VirtualFile> SelectedFiles = new();
     private VirtualFile? SelectedFile;
     private string SearchQuery = string.Empty;
+
+    private List<SensitivityLevelData> AllLevelsInOrder { get; set; } = new();
+    private List<VirtualFile> CurrentlyDisplayedFiles { get; set; } = new();
+ 
+    private string SelectedLevelName { get; set; } = "Quarantine";
 
     protected override async Task OnInitializedAsync()
     {
@@ -71,7 +107,8 @@
                 FileSize = 14888509, 
                 CollectionDate = DateTimeOffset.Now.AddDays(-1),
                 CollectedBy = "Agent Johnson",
-                CollectedLocation = "Accounting Office"
+                CollectedLocation = "Accounting Office",
+                      ProposedSensitiviyLevel = "Medium"
             },
             new() 
             { 
@@ -80,7 +117,8 @@
                 FileSize = 897581056, 
                 CollectionDate = DateTimeOffset.Now,
                 CollectedBy = "Agent Smith",
-                CollectedLocation = "Evidence Room B"
+                CollectedLocation = "Evidence Room B",
+                      ProposedSensitiviyLevel = "High"
             },
             new() 
             { 
@@ -89,7 +127,8 @@
                 FileSize = 1932735283, 
                 CollectionDate = DateTimeOffset.Now.AddDays(-2),
                 CollectedBy = "Agent Brown",
-                CollectedLocation = "Security Office"
+                CollectedLocation = "Security Office",
+                ProposedSensitiviyLevel = "High"
             },
             new() 
             { 
@@ -118,6 +157,31 @@
     {
         // Subscribe to search events from the main layout
         // This would be implemented with a proper event service
+    }
+
+    private void HandleFolderSelection(SensitivityLevelData selectedLevel)
+    {
+        SelectedLevelName = selectedLevel.Name;
+        CurrentlyDisplayedFiles = GetFilesForLevel(selectedLevel.Name);
+        SelectedFile = null; // Deselect file when changing folders
+        StateHasChanged();
+    }
+
+    private void HandleFileSelection(VirtualFile selectedFile)
+    {
+        SelectedFile = selectedFile;
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Filters the master list of mock files to return only those
+    /// matching the specified sensitivity level name.
+    /// </summary>
+    /// <param name="levelName">The name of the sensitivity level to filter by.</param>
+    /// <returns>A list of FileData objects for the specified level.</returns>
+    private List<VirtualFile> GetFilesForLevel(string levelName)
+    {
+        return Files.Where(f => f.ProposedSensitiviyLevel == levelName).ToList();
     }
 
     private void OnFileSelectionChanged(List<VirtualFile> selectedFiles)

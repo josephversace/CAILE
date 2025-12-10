@@ -1,4 +1,5 @@
 ﻿// File: src/IIM.Shared/Interfaces/IDataReasoningService.cs
+using IIM.Shared.Models;
 using IIM.Shared.Models.Core;
 using System;
 using System.IO;

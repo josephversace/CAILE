@@ -103,6 +103,9 @@ public class ClassificationTag
     public Guid Id { get; set; }
     public string Name { get; set; } // e.g., "LEGAL_PRIVILEGED"
     public string Description { get; set; }
+
+	public ICollection<StoredFile> StoredFiles { get; set; } = new List<StoredFile>();
+
 }
 
 // Represents a physical or logical storage tier.

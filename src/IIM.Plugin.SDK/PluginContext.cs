@@ -9,10 +9,10 @@ namespace IIM.Plugin.SDK
     public class PluginContext
     {
         public ILogger Logger { get; }
-        public IWorkspaceProvider WorkspaceProvider { get; }
+        public IWorkspaceManager WorkspaceProvider { get; }
         public HttpClient HttpClient { get; }
 
-        public PluginContext(ILogger logger, IWorkspaceProvider workspaceProvider, HttpClient httpClient)
+        public PluginContext(ILogger logger, IWorkspaceManager workspaceProvider, HttpClient httpClient)
         {
             Logger = logger;
             WorkspaceProvider = workspaceProvider;

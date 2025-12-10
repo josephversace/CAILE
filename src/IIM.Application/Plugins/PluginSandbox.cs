@@ -26,13 +26,13 @@ public class PluginSandbox : IPluginSandbox
 {
     private readonly ILoggerFactory _loggerFactory;
     private readonly IConfiguration _configuration;
-    private readonly IWorkspaceProvider _workspaceProvider;
+    private readonly IWorkspaceManager _workspaceProvider;
     private readonly Dictionary<string, PluginContext> _contexts = new();
 
     public PluginSandbox(
         ILoggerFactory loggerFactory,
         IConfiguration configuration,
-        IWorkspaceProvider workspaceProvider)
+        IWorkspaceManager workspaceProvider)
     {
         _loggerFactory = loggerFactory;
         _configuration = configuration;

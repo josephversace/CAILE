@@ -129,15 +129,12 @@ namespace IIM.Application.AI.DataEnrichment
             }
         }
 
-        private string DetermineTargetBucket(ClassificationData classification)
+        private string DetermineTargetBucket(string promptClassification)
         {
-            // Use the existing classification data
-            if (classification.Level == DataClassificationLevel.Confidential)
-                return "primary/sensitive";
-            if (classification.Level == DataClassificationLevel.Confidential)
-                return "primary/nodedup";
-            return "primary/objects";
-        }
+			//Todo : Implement your routing logic based on classification
+			// Use the existing classification data
+			throw new NotImplementedException();
+		}
 
         public async Task<ContentAnalysis> AnalyzeFileContentAsync(Stream content, string fileName, string mimeType, CancellationToken cancellationToken = default)
         {

@@ -7,6 +7,7 @@ using IIM.Shared.Mediator;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models.Core;
+using IIM.Shared.Models;
 
 namespace IIM.Application.Case
 {
