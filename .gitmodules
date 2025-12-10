@@ -1,0 +1,3 @@
+[submodule "src/external/graphrag"]
+	path = src/external/graphrag
+	url = https://github.com/josephversace/iim_graphrag.git
