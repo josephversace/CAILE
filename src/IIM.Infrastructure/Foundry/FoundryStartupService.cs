@@ -1,6 +1,8 @@
 ﻿using IIM.Shared.Configuration;
+using IIM.Shared.Dtos;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,6 +15,8 @@ public sealed class FoundryStartupService : IHostedService
 	private readonly IFoundryEndpointProvider _endpoint;
 	private readonly IFoundryStatusChecker _status;
 	private readonly IFoundryModelService _modelSvc;
+	private readonly IServiceScopeFactory _scopeFactory;
+
 	private readonly CaileConfig _cfg;
 
 	public FoundryStartupService(
@@ -20,12 +24,14 @@ public sealed class FoundryStartupService : IHostedService
 		IFoundryEndpointProvider endpoint,
 		IFoundryStatusChecker status,
 		IFoundryModelService modelSvc,
+	IServiceScopeFactory scopeFactory,
 		CaileConfig cfg)
 	{
 		_log = log;
 		_endpoint = endpoint;
 		_status = status;
 		_modelSvc = modelSvc;
+		_scopeFactory = scopeFactory;
 		_cfg = cfg;
 	}
 
@@ -42,19 +48,27 @@ public sealed class FoundryStartupService : IHostedService
 
 		// 2. Resolve endpoint — wait for Foundry to expose HTTP
 		var resolved = await WaitForEndpointAsync(ct);
+		
 		_log.LogInformation("Foundry endpoint confirmed: {Url}", resolved);
 
+		ModelTemplateDto? template = null;
 
+		using (var scope = _scopeFactory.CreateScope())
+		{
+			// 2. Resolve the Scoped service (e.g., a DbContext) from this new scope's provider
+			var _templates = scope.ServiceProvider.GetRequiredService<IModelConfigurationTemplateService>();
 
-		// 3. Apply default model template
-		var activeId = _cfg.ModelTemplates.ActiveTemplateId;
-		var template = _cfg.ModelTemplates.Templates[activeId];
+			template = await _templates.GetDefaultTemplateAsync(ct);
 
-		_log.LogInformation("Applying Foundry template: {Id}", activeId);
+		}
+
+		_log.LogInformation("Applying Foundry template: {Id}", template.Name);
 
 		await _modelSvc.ApplyTemplateAsync(template, ct);
 
 		_log.LogInformation("Foundry initialized successfully.");
+
+
 	}
 
 	public Task StopAsync(CancellationToken ct) => Task.CompletedTask;

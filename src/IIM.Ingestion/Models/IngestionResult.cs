@@ -2,7 +2,7 @@
 {
 	public class IngestionResult
 	{
-		public Guid EvidenceId { get; set; }
+		public string StoredId { get; set; }
 		public int ChunkCount { get; set; }
 		public int EntityCount { get; set; }
 

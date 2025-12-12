@@ -8,7 +8,7 @@ namespace IIM.Api.Extensions
 	{
 		public static IServiceCollection AddApplicationLayer(this IServiceCollection services)
 		{
-			services.AddSimpleMediator(typeof(CompleteUploadHandler).Assembly);
+			services.AddSimpleMediator(typeof(RegisterUploadedFileCommand).Assembly);
 
 			services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 			services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));

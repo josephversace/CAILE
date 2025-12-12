@@ -23,7 +23,7 @@ namespace IIM.Shared.Dtos
 			if (Models.Coding is not null) yield return Models.Coding;
 			if (Models.Embedding is not null) yield return Models.Embedding;
 			if (Models.Vision is not null) yield return Models.Vision;
-			if (Models.Multimodal is not null) yield return Models.Multimodal;
+			if (Models.Audio is not null) yield return Models.Audio;
 		}
 
 	}
@@ -36,7 +36,7 @@ namespace IIM.Shared.Dtos
 		public ModelDefinitionDto? Coding { get; set; }
 		public EmbeddingModelDto? Embedding { get; set; }
 		public ModelDefinitionDto? Vision { get; set; }
-		public ModelDefinitionDto? Multimodal { get; set; }
+		public ModelDefinitionDto? Audio { get; set; }
 	}
 
 	public class ModelDefinitionDto

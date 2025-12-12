@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IIM.Infrastructure.Migrations.AuditDb
 {
     [DbContext(typeof(AuditDbContext))]
-    [Migration("20251206214924_InitialMigration")]
+    [Migration("20251211185123_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />

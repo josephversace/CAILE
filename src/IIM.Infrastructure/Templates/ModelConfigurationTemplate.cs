@@ -58,14 +58,16 @@ namespace IIM.Infrastructure.Templates
 						"Stored default template invalid. Falling back to system template.");
 				}
 			}
+			else
+			{
+				// 2. Fallback to system template
+				var activeId = _cfg.ModelTemplates.ActiveTemplateId
+							   ?? _cfg.Deployment.Tier     // tie to Deployment Tier
+							   ?? "micro";
 
-			// 2. Fallback to system template
-			var activeId = _cfg.ModelTemplates.ActiveTemplateId
-						   ?? _cfg.Deployment.Tier     // tie to Deployment Tier
-						   ?? "micro";
-
-			if (_systemTemplates.TryGetValue(activeId, out var sys))
-				return Clone(sys);
+				if (_systemTemplates.TryGetValue(activeId, out var sys))
+					return Clone(sys);
+			}
 
 			return null;
 		}
@@ -142,7 +144,7 @@ namespace IIM.Infrastructure.Templates
 				template.Models.Coding != null ||
 				template.Models.Embedding != null ||
 				template.Models.Vision != null ||
-				template.Models.Multimodal != null;
+				template.Models.Audio != null;
 
 			if (!hasAny)
 				throw new ArgumentException("Template must define at least one model slot.");

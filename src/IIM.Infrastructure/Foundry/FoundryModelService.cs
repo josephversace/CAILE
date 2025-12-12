@@ -270,7 +270,9 @@ public sealed class FoundryModelService : IFoundryModelService
 		// ------------------------------------------------------------
 		foreach (var modelId in required)
 		{
-			var url = await ApiAsync($"openai/load/{Uri.EscapeDataString(modelId)}?ttl=999999", ct);
+			string normalizedModel = modelId.Replace(" ", "");
+			
+			var url = await ApiAsync($"openai/load/{Uri.EscapeDataString(normalizedModel)}?ttl=999999", ct);
 
 			_log.LogInformation("Applying template: loading model {ModelId} via {Url}", modelId, url);
 

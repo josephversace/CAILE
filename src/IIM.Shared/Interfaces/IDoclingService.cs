@@ -7,5 +7,5 @@ namespace IIM.Shared.Interfaces;
 
 public interface IDoclingService
 {
-	Task<DoclingResult> ParseAsync(Stream fileStream, string fileName, CancellationToken ct = default);
+	Task<DoclingDocument> ParseAsync(Stream fileStream, string fileName, CancellationToken ct = default);
 }

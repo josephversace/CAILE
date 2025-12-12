@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IIM.Infrastructure.Migrations.GovernanceDb
 {
     [DbContext(typeof(GovernanceDbContext))]
-    [Migration("20251206215003_InitialMigration")]
+    [Migration("20251211185244_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -24,6 +24,7 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
                 .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "hstore");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("ClassificationTagStoredFile", b =>
@@ -31,12 +32,12 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
                     b.Property<Guid>("ClassificationTagsId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("StoredFilesHash")
-                        .HasColumnType("text");
+                    b.Property<string>("StoredFilesBlake3Hash")
+                        .HasColumnType("character varying(64)");
 
-                    b.HasKey("ClassificationTagsId", "StoredFilesHash");
+                    b.HasKey("ClassificationTagsId", "StoredFilesBlake3Hash");
 
-                    b.HasIndex("StoredFilesHash");
+                    b.HasIndex("StoredFilesBlake3Hash");
 
                     b.ToTable("StoredFileClassificationTags", (string)null);
                 });
@@ -141,6 +142,46 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
                     b.ToTable("ClassificationTags");
                 });
 
+            modelBuilder.Entity("IIM.Shared.Models.Core.ProcessedFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Dictionary<string, string>>("Metadata")
+                        .IsRequired()
+                        .HasColumnType("hstore");
+
+                    b.Property<string>("MetadataJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProcessorName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("StoredFileBlake3Hash")
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("StoredFileHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("VirtualFileId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoredFileBlake3Hash");
+
+                    b.HasIndex("VirtualFileId");
+
+                    b.ToTable("ProcessedFile");
+                });
+
             modelBuilder.Entity("IIM.Shared.Models.Core.StorageTier", b =>
                 {
                     b.Property<Guid>("Id")
@@ -171,18 +212,25 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
 
             modelBuilder.Entity("IIM.Shared.Models.Core.StoredFile", b =>
                 {
-                    b.Property<string>("Hash")
-                        .HasColumnType("text");
+                    b.Property<string>("Blake3Hash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("Bucket")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("ChunkCount")
+                        .HasColumnType("integer");
 
                     b.Property<string>("ContentSummary")
                         .HasColumnType("text");
 
                     b.Property<string>("DetectedEntitiesJson")
                         .HasColumnType("text");
+
+                    b.Property<int>("EntityCount")
+                        .HasColumnType("integer");
 
                     b.Property<long>("FileSize")
                         .HasColumnType("bigint");
@@ -197,8 +245,20 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
                     b.Property<Guid?>("FirstWorkspaceId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("GraphRagMetadataJson")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("IndexedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsIndexed")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsQuarantined")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Md5Hash")
+                        .HasColumnType("text");
 
                     b.Property<string>("MimeType")
                         .IsRequired()
@@ -221,83 +281,38 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
                     b.Property<DateTimeOffset?>("QuarantinedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Sha256Hash")
+                        .HasColumnType("text");
+
                     b.Property<string>("StoragePath")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Hash");
+                    b.HasKey("Blake3Hash");
 
                     b.ToTable("StoredFile");
                 });
 
-            modelBuilder.Entity("IIM.Shared.Models.ProcessedFile", b =>
+            modelBuilder.Entity("VirtualFile", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("OriginalVirtualFileId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("ProcessedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("ProcessedBy")
+                    b.Property<Dictionary<string, string>>("CustomMetadata")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ProcessingType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("StoredFileHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid?>("VirtualFileId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("VirtualFileId");
-
-                    b.ToTable("ProcessedFile");
-                });
-
-            modelBuilder.Entity("IIM.Shared.Models.VirtualFile", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("CollectedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CollectedLocation")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("CollectionDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("hstore");
 
                     b.Property<string>("CustomMetadataJson")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("DataSensitivity")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Description")
+                    b.Property<Dictionary<string, string>>("EnrichmentMetadata")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("hstore");
 
                     b.Property<string>("FileName")
                         .IsRequired()
@@ -310,32 +325,28 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("ProposedSensitiviyLevel")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("SensitivityLevel")
-                        .IsRequired()
+                    b.Property<string>("ProposedLabel")
                         .HasColumnType("text");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<string>("StoredFileBlake3Hash")
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("StoredFileHash")
                         .HasColumnType("text");
 
                     b.PrimitiveCollection<List<string>>("Tags")
+                        .IsRequired()
                         .HasColumnType("text[]");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StoredFileHash");
+                    b.HasIndex("StoredFileBlake3Hash");
 
                     b.ToTable("VirtualFile");
                 });
@@ -350,14 +361,14 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
 
                     b.HasOne("IIM.Shared.Models.Core.StoredFile", null)
                         .WithMany()
-                        .HasForeignKey("StoredFilesHash")
+                        .HasForeignKey("StoredFilesBlake3Hash")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
             modelBuilder.Entity("IIM.Shared.Models.ChainOfCustodyEntry", b =>
                 {
-                    b.HasOne("IIM.Shared.Models.VirtualFile", null)
+                    b.HasOne("VirtualFile", null)
                         .WithMany("ChainOfCustody")
                         .HasForeignKey("VirtualFileId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -383,30 +394,42 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
                     b.Navigation("ClassificationTag");
                 });
 
-            modelBuilder.Entity("IIM.Shared.Models.ProcessedFile", b =>
+            modelBuilder.Entity("IIM.Shared.Models.Core.ProcessedFile", b =>
                 {
-                    b.HasOne("IIM.Shared.Models.VirtualFile", null)
+                    b.HasOne("IIM.Shared.Models.Core.StoredFile", "StoredFile")
                         .WithMany("ProcessedVersions")
-                        .HasForeignKey("VirtualFileId");
+                        .HasForeignKey("StoredFileBlake3Hash");
+
+                    b.HasOne("VirtualFile", "VirtualFile")
+                        .WithMany()
+                        .HasForeignKey("VirtualFileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StoredFile");
+
+                    b.Navigation("VirtualFile");
                 });
 
-            modelBuilder.Entity("IIM.Shared.Models.VirtualFile", b =>
+            modelBuilder.Entity("VirtualFile", b =>
                 {
-                    b.HasOne("IIM.Shared.Models.Core.StoredFile", null)
+                    b.HasOne("IIM.Shared.Models.Core.StoredFile", "StoredFile")
                         .WithMany("VirtualFiles")
-                        .HasForeignKey("StoredFileHash");
+                        .HasForeignKey("StoredFileBlake3Hash");
+
+                    b.Navigation("StoredFile");
                 });
 
             modelBuilder.Entity("IIM.Shared.Models.Core.StoredFile", b =>
                 {
+                    b.Navigation("ProcessedVersions");
+
                     b.Navigation("VirtualFiles");
                 });
 
-            modelBuilder.Entity("IIM.Shared.Models.VirtualFile", b =>
+            modelBuilder.Entity("VirtualFile", b =>
                 {
                     b.Navigation("ChainOfCustody");
-
-                    b.Navigation("ProcessedVersions");
                 });
 #pragma warning restore 612, 618
         }

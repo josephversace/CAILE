@@ -1,10 +1,15 @@
 ﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using IIM.Api.Models;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
 using Microsoft.Agents.AI;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
+using MagikaSharp;
+
+
 
 namespace IIM.Api.Endpoints;
 
@@ -17,6 +22,8 @@ public static class AIEndpoints
 		app.MapPost("/ai/reload-models", ReloadModelsAsync);
 		app.MapGet("/ai/models", GetModelsAsync);
 	}
+
+
 
 	// ============================================================
 	// AG-UI CHAT HANDLER (Stable with your current SDK)

@@ -30,7 +30,7 @@ namespace IIM.Api.Extensions
 					);
 
 				if (gpu.HasMetal)
-					return new MetalExecutionProvider();
+					return new CpuExecutionProvider();
 
 				return new CpuExecutionProvider();
 			});

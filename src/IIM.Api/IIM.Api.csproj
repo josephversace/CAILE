@@ -26,6 +26,13 @@
 
 		<!-- Foundry Local -->
 		<PackageReference Include="Microsoft.AI.Foundry.Local" Version="0.8.2.1" />
+		<!-- Base CPU library -->
+		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.2" />
+
+
+
+		<PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI.Foundry" Version="0.11.3" />
+
 
 		<!-- Other packages -->
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />

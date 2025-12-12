@@ -5,53 +5,71 @@ using System.Text.Json.Serialization;
 namespace IIM.Shared.Models;
 
 
-public class DoclingResult
+// Models matching your Python DoclingDocument
+public class DoclingDocument
 {
-	// Primary content formats
-	public string Markdown { get; set; } = "";
-	public string Text { get; set; } = "";
-	public string Html { get; set; } = "";
+	[JsonPropertyName("id")]
+	public string Id { get; set; } = string.Empty;
 
-	// Full structured document (if requested)
-	public DoclingDocument? Document { get; set; }
+	[JsonPropertyName("title")]
+	public string? Title { get; set; }
 
-	// Processing info
-	public string Status { get; set; } = "";
-	public double ProcessingTimeSeconds { get; set; }
-	public List<string> Errors { get; set; } = [];
+	[JsonPropertyName("pages")]
+	public List<DoclingPage> Pages { get; set; } = new();
 
-	// Quick stats
-	public int PageCount { get; set; }
-	public int TextBlockCount { get; set; }
-	public int TableCount { get; set; }
-	public int PictureCount { get; set; }
+	[JsonPropertyName("images")]
+	public List<DoclingImageInfo> Images { get; set; } = new();
 
-	// Convenience properties
-	public bool IsSuccess => Status == "success" || Status == "partial_success";
-	public int BlockCount => TextBlockCount + TableCount + PictureCount;
+	[JsonPropertyName("markdown")]
+	public string? Markdown { get; set; }
 }
+
+public class DoclingPage
+{
+	[JsonPropertyName("page_number")]
+	public int PageNumber { get; set; }
+
+	[JsonPropertyName("blocks")]
+	public List<DoclingBlock> Blocks { get; set; } = new();
+}
+
+public class DoclingBlock
+{
+	[JsonPropertyName("block_type")]
+	public string BlockType { get; set; } = string.Empty;
+
+	[JsonPropertyName("markdown")]
+	public string Markdown { get; set; } = string.Empty;
+
+	[JsonPropertyName("section_heading")]
+	public string? SectionHeading { get; set; }
+
+	[JsonPropertyName("role")]
+	public string? Role { get; set; }
+}
+
+public class DoclingImageInfo
+{
+	[JsonPropertyName("id")]
+	public string Id { get; set; } = string.Empty;
+
+	[JsonPropertyName("page_number")]
+	public int PageNumber { get; set; }
+
+	[JsonPropertyName("kind")]
+	public string Kind { get; set; } = string.Empty;
+
+	[JsonPropertyName("path")]
+	public string Path { get; set; } = string.Empty;
+
+	[JsonPropertyName("caption")]
+	public string? Caption { get; set; }
+}
+
 /// <summary>
-/// Response from docling-serve /v1/convert/file or /v1/convert/source
-/// </summary>
-public class DoclingResponse
-{
-	[JsonPropertyName("document")]
-	public DoclingDocumentOutput? Document { get; set; }
+ /// Response from docling-serve /v1/convert/file or /v1/convert/source
+ /// </summary>
 
-	[JsonPropertyName("status")]
-	public string Status { get; set; } = "";
-
-	[JsonPropertyName("processing_time")]
-	public double ProcessingTime { get; set; }
-
-	[JsonPropertyName("timings")]
-	public Dictionary<string, double>? Timings { get; set; }
-
-	[JsonPropertyName("errors")]
-	public List<string>? Errors { get; set; }
-
-	public bool IsSuccess => Status == "success" || Status == "partial_success";
-}
 
 public class DoclingDocumentOutput
 {
@@ -71,44 +89,6 @@ public class DoclingDocumentOutput
 	public string DocTagsContent { get; set; } = "";
 }
 
-/// <summary>
-/// The DoclingDocument schema from docling-core
-/// </summary>
-public class DoclingDocument
-{
-	[JsonPropertyName("schema_name")]
-	public string SchemaName { get; set; } = "DoclingDocument";
-
-	[JsonPropertyName("version")]
-	public string Version { get; set; } = "";
-
-	[JsonPropertyName("name")]
-	public string Name { get; set; } = "";
-
-	[JsonPropertyName("origin")]
-	public DocumentOrigin? Origin { get; set; }
-
-	[JsonPropertyName("furniture")]
-	public DocumentNode? Furniture { get; set; }
-
-	[JsonPropertyName("body")]
-	public DocumentNode? Body { get; set; }
-
-	[JsonPropertyName("groups")]
-	public List<GroupItem>? Groups { get; set; }
-
-	[JsonPropertyName("texts")]
-	public List<TextItem>? Texts { get; set; }
-
-	[JsonPropertyName("tables")]
-	public List<TableItem>? Tables { get; set; }
-
-	[JsonPropertyName("pictures")]
-	public List<PictureItem>? Pictures { get; set; }
-
-	[JsonPropertyName("pages")]
-	public Dictionary<string, PageItem>? Pages { get; set; }
-}
 
 public class DocumentOrigin
 {

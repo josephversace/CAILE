@@ -404,7 +404,7 @@ namespace IIM.Infrastructure.Data
 			var oldPath = stored.StoragePath;
 
 			// New path (folder based on new bucket)
-			var newPath = $"{newBucket}/{stored.Blake3Hash}/{stored.OriginalFileName}";
+			var newPath = $"{newBucket}/{stored.Blake3Hash}";
 
 			// Read original bytes
 			var bytes = await _fileStore.ReadAsync(oldPath, ct);

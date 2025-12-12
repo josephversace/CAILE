@@ -242,7 +242,7 @@ public class ModelTemplate
 		if (Models.Coding is not null) yield return Models.Coding;
 		if (Models.Embedding is not null) yield return Models.Embedding;
 		if (Models.Vision is not null) yield return Models.Vision;
-		if (Models.Multimodal is not null) yield return Models.Multimodal;
+		if (Models.Audio is not null) yield return Models.Audio;
 	}
 }
 

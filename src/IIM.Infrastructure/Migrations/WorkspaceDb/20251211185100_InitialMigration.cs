@@ -12,6 +12,9 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterDatabase()
+                .Annotation("Npgsql:PostgresExtension:hstore", ",,");
+
             migrationBuilder.CreateTable(
                 name: "ClassificationTags",
                 columns: table => new
@@ -45,9 +48,11 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                 name: "StoredFiles",
                 columns: table => new
                 {
-                    Hash = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    Blake3Hash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    Md5Hash = table.Column<string>(type: "text", nullable: true),
+                    Sha256Hash = table.Column<string>(type: "text", nullable: true),
                     FileSize = table.Column<long>(type: "bigint", nullable: false),
-                    MimeType = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
+                    MimeType = table.Column<string>(type: "text", nullable: false),
                     IsQuarantined = table.Column<bool>(type: "boolean", nullable: false),
                     QuarantineReason = table.Column<string>(type: "text", nullable: false),
                     QuarantinedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
@@ -60,11 +65,16 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                     PerceptualHash = table.Column<string>(type: "text", nullable: true),
                     PerceptualQuality = table.Column<double>(type: "double precision", nullable: true),
                     ContentSummary = table.Column<string>(type: "text", nullable: true),
-                    DetectedEntitiesJson = table.Column<string>(type: "text", nullable: true)
+                    DetectedEntitiesJson = table.Column<string>(type: "text", nullable: true),
+                    IsIndexed = table.Column<bool>(type: "boolean", nullable: false),
+                    ChunkCount = table.Column<int>(type: "integer", nullable: false),
+                    EntityCount = table.Column<int>(type: "integer", nullable: false),
+                    IndexedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    GraphRagMetadataJson = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StoredFiles", x => x.Hash);
+                    table.PrimaryKey("PK_StoredFiles", x => x.Blake3Hash);
                 });
 
             migrationBuilder.CreateTable(
@@ -92,13 +102,13 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
                     Type = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     CreatedBy = table.Column<string>(type: "text", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     IsPublic = table.Column<bool>(type: "boolean", nullable: false),
                     OwnerId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -133,26 +143,26 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                 });
 
             migrationBuilder.CreateTable(
-                name: "StoredFileClassificationTag",
+                name: "ClassificationTagStoredFile",
                 columns: table => new
                 {
-                    ClassificationTagId = table.Column<Guid>(type: "uuid", nullable: false),
-                    StoredFileHash = table.Column<string>(type: "character varying(256)", nullable: false)
+                    ClassificationTagsId = table.Column<Guid>(type: "uuid", nullable: false),
+                    StoredFilesBlake3Hash = table.Column<string>(type: "character varying(64)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StoredFileClassificationTag", x => new { x.ClassificationTagId, x.StoredFileHash });
+                    table.PrimaryKey("PK_ClassificationTagStoredFile", x => new { x.ClassificationTagsId, x.StoredFilesBlake3Hash });
                     table.ForeignKey(
-                        name: "FK_StoredFileClassificationTag_ClassificationTags_Classificati~",
-                        column: x => x.ClassificationTagId,
+                        name: "FK_ClassificationTagStoredFile_ClassificationTags_Classificati~",
+                        column: x => x.ClassificationTagsId,
                         principalTable: "ClassificationTags",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_StoredFileClassificationTag_StoredFiles_StoredFileHash",
-                        column: x => x.StoredFileHash,
+                        name: "FK_ClassificationTagStoredFile_StoredFiles_StoredFilesBlake3Ha~",
+                        column: x => x.StoredFilesBlake3Hash,
                         principalTable: "StoredFiles",
-                        principalColumn: "Hash",
+                        principalColumn: "Blake3Hash",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -166,19 +176,13 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                     Path = table.Column<string>(type: "text", nullable: false),
                     FileSize = table.Column<long>(type: "bigint", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    StoredFileHash = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    CreatedBy = table.Column<string>(type: "text", nullable: false),
-                    CollectedBy = table.Column<string>(type: "text", nullable: false),
-                    CollectionDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    CollectedLocation = table.Column<string>(type: "text", nullable: false),
-                    CustomMetadataJson = table.Column<string>(type: "text", nullable: false),
-                    ProposedSensitiviyLevel = table.Column<string>(type: "text", nullable: false),
-                    SensitivityLevel = table.Column<string>(type: "text", nullable: false),
-                    DataSensitivity = table.Column<int>(type: "integer", nullable: false),
-                    Tags = table.Column<List<string>>(type: "text[]", nullable: true),
-                    Description = table.Column<string>(type: "text", nullable: false)
+                    StoredFileHash = table.Column<string>(type: "character varying(64)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Tags = table.Column<List<string>>(type: "text[]", nullable: false),
+                    ProposedLabel = table.Column<string>(type: "text", nullable: true),
+                    EnrichmentMetadata = table.Column<Dictionary<string, string>>(type: "hstore", nullable: false),
+                    CustomMetadata = table.Column<Dictionary<string, string>>(type: "hstore", nullable: false),
+                    CustomMetadataJson = table.Column<string>(type: "jsonb", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -187,8 +191,8 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                         name: "FK_VirtualFiles_StoredFiles_StoredFileHash",
                         column: x => x.StoredFileHash,
                         principalTable: "StoredFiles",
-                        principalColumn: "Hash",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Blake3Hash",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -247,7 +251,7 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                     WorkspaceId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<string>(type: "text", nullable: false),
                     Role = table.Column<int>(type: "integer", nullable: false),
-                    AddedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
+                    AddedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -306,25 +310,32 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProcessedFile",
+                name: "ProcessedFiles",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    OriginalVirtualFileId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProcessingType = table.Column<string>(type: "text", nullable: false),
+                    VirtualFileId = table.Column<Guid>(type: "uuid", nullable: false),
+                    StoredFileHash = table.Column<string>(type: "character varying(64)", nullable: false),
+                    ProcessorName = table.Column<string>(type: "text", nullable: false),
                     ProcessedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    ProcessedBy = table.Column<string>(type: "text", nullable: false),
-                    StoredFileHash = table.Column<string>(type: "text", nullable: false),
-                    VirtualFileId = table.Column<Guid>(type: "uuid", nullable: true)
+                    Metadata = table.Column<Dictionary<string, string>>(type: "hstore", nullable: false),
+                    MetadataJson = table.Column<string>(type: "jsonb", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ProcessedFile", x => x.Id);
+                    table.PrimaryKey("PK_ProcessedFiles", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ProcessedFile_VirtualFiles_VirtualFileId",
+                        name: "FK_ProcessedFiles_StoredFiles_StoredFileHash",
+                        column: x => x.StoredFileHash,
+                        principalTable: "StoredFiles",
+                        principalColumn: "Blake3Hash",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ProcessedFiles_VirtualFiles_VirtualFileId",
                         column: x => x.VirtualFileId,
                         principalTable: "VirtualFiles",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -358,6 +369,11 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                 column: "VirtualFileId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ClassificationTagStoredFile_StoredFilesBlake3Hash",
+                table: "ClassificationTagStoredFile",
+                column: "StoredFilesBlake3Hash");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Message_InvestigationSessionId",
                 table: "Message",
                 column: "InvestigationSessionId");
@@ -368,14 +384,14 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                 column: "MessageId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProcessedFile_VirtualFileId",
-                table: "ProcessedFile",
-                column: "VirtualFileId");
+                name: "IX_ProcessedFiles_StoredFileHash",
+                table: "ProcessedFiles",
+                column: "StoredFileHash");
 
             migrationBuilder.CreateIndex(
-                name: "IX_StoredFileClassificationTag_StoredFileHash",
-                table: "StoredFileClassificationTag",
-                column: "StoredFileHash");
+                name: "IX_ProcessedFiles_VirtualFileId",
+                table: "ProcessedFiles",
+                column: "VirtualFileId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TimelineEvents_WorkspaceId",
@@ -405,13 +421,13 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                 name: "ChainOfCustodyEntry");
 
             migrationBuilder.DropTable(
+                name: "ClassificationTagStoredFile");
+
+            migrationBuilder.DropTable(
                 name: "MessageAttachment");
 
             migrationBuilder.DropTable(
-                name: "ProcessedFile");
-
-            migrationBuilder.DropTable(
-                name: "StoredFileClassificationTag");
+                name: "ProcessedFiles");
 
             migrationBuilder.DropTable(
                 name: "TimelineEvents");
@@ -429,10 +445,10 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                 name: "WorkspaceUsers");
 
             migrationBuilder.DropTable(
-                name: "Message");
+                name: "ClassificationTags");
 
             migrationBuilder.DropTable(
-                name: "ClassificationTags");
+                name: "Message");
 
             migrationBuilder.DropTable(
                 name: "VirtualFiles");

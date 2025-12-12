@@ -16,16 +16,7 @@ namespace IIM.Api.Endpoints
 
 		
 
-			// ------------------------------------------------------------
-			// Complete upload
-			// ------------------------------------------------------------
-			files.MapPost("/complete",
-				async (CompleteUploadCommand cmd, IMediator mediator, CancellationToken ct) =>
-				{
-					var result = await mediator.Send(cmd, ct);
-					return Results.Ok(result);
-				})
-			.WithName("CompleteUpload");
+			
 
 			// ------------------------------------------------------------
 			// Get metadata

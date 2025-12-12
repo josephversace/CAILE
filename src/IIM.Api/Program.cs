@@ -1,25 +1,25 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using GraphRag;
+using GraphRag.Storage.Neo4j;
 using Hangfire;
-
 using IIM.Api.Endpoints;
 using IIM.Api.Extensions;
 using IIM.Api.Filters;
 using IIM.Api.Hubs;
 using IIM.Api.Services;
+using IIM.Infrastructure.Data;
+using IIM.Infrastructure.Embeddings;
 using IIM.Infrastructure.Foundry;
 using IIM.Infrastructure.Services;
 using IIM.Ingestion.Interfaces;
 using IIM.Ingestion.Services;
 using IIM.Shared.Configuration;
 using IIM.Shared.Interfaces;
-using GraphRag;
-using GraphRag.Storage.Neo4j;
-using Microsoft.Extensions.AI;   
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.ResponseCompression;
-using IIM.Infrastructure.Data;
+using Microsoft.Extensions.AI;   
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -124,14 +124,25 @@ builder.WebHost.ConfigureKestrel(k =>
 var app = builder.Build();
 
 // ============================================
-// Run Database Migrations
+// Preload Models Aync
 // ============================================
 
 using (var scope = app.Services.CreateScope())
 {
-	var migrator = scope.ServiceProvider.GetRequiredService<DatabaseMigrationRunner>();
+	var migrator = scope.ServiceProvider
+		.GetRequiredService<DatabaseMigrationRunner>();
 	await migrator.ApplyAllMigrationsAsync();
+
+	var vision = scope.ServiceProvider
+		.GetRequiredService<IMultimodalVisionService>();
+	_ = Task.Run(() => vision.InitializeAsync());
+
+	var embedding = scope.ServiceProvider
+		.GetRequiredService<IEmbeddingService>();
+	_ = Task.Run(() => embedding.InitializeAsync());
 }
+
+
 
 // ============================================
 // Swagger Middleware
@@ -206,8 +217,8 @@ app.MapRagEndpoints();
 app.MapAuthEndpoints();
 app.MapIngestionEndpoints();
 app.MapSetupEndpoints();
-// AI endpoints with tool calling support
 app.MapAIEndpoints();
+app.MapAttachmentEndpoints();
 
 // AG-UI endpoint for reasoning (uses MapAGUI directly)
 //using (var scope = app.Services.CreateScope())

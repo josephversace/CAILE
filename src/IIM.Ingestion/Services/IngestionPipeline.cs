@@ -1,122 +1,159 @@
-﻿using System.IO;
+﻿using System.Text;
 using IIM.Ingestion.Interfaces;
 using IIM.Ingestion.Models;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
-using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
-namespace IIM.Ingestion.Services;
-
-public class IngestionPipeline : IIngestionPipeline
+public sealed class IngestionPipeline : IIngestionPipeline
 {
 	private readonly IWorkspaceManager _workspace;
-	private readonly IDoclingService _docling;
 	private readonly IFileStore _files;
-	private readonly IHashService _hashes;
+	private readonly IDoclingService _docling;
+	private readonly IMultimodalVisionService _vision;
 	private readonly IGraphRagPipeline _graphRag;
-	private readonly IQdrantService? _qdrant;
-	private readonly IEmbeddingGenerator<string, Embedding<float>>? _embedding;
+	private readonly IEmbeddingService _embedding;
+	private readonly IQdrantService _qdrant;
 	private readonly ILogger<IngestionPipeline> _logger;
 
 	public IngestionPipeline(
 		IWorkspaceManager workspace,
-		IDoclingService docling,
 		IFileStore files,
-		IHashService hashes,
+		IDoclingService docling,
+		IMultimodalVisionService vision,
 		IGraphRagPipeline graphRag,
+		IEmbeddingService embedding,
 		IQdrantService qdrant,
-		IEmbeddingGenerator<string, Embedding<float>>? embedding,
 		ILogger<IngestionPipeline> logger)
 	{
 		_workspace = workspace;
-		_docling = docling;
 		_files = files;
-		_hashes = hashes;
+		_docling = docling;
+		_vision = vision;
 		_graphRag = graphRag;
-		_qdrant = qdrant;
 		_embedding = embedding;
+		_qdrant = qdrant;
 		_logger = logger;
 	}
 
-	public async Task<IngestionResult> IngestAsync(Guid evidenceId, CancellationToken ct)
+	public async Task<IngestionResult> IngestAsync(Guid virtualFileId, CancellationToken ct)
 	{
-		var evidence = await _workspace.GetVirtualFileByIdAsync(evidenceId, ct);
-		if (evidence == null)
-			throw new InvalidOperationException($"VirtualFile {evidenceId} not found.");
+		// ------------------------------------------------------------
+		// 1. Load VirtualFile + StoredFile
+		// ------------------------------------------------------------
+		var vf = await _workspace.GetVirtualFileByIdAsync(virtualFileId, ct)
+			?? throw new InvalidOperationException($"VirtualFile {virtualFileId} not found.");
 
-		if (evidence.StoredFile == null)
-			throw new InvalidOperationException($"StoredFile missing for VirtualFile {evidenceId}.");
+		var stored = vf.StoredFile
+			?? throw new InvalidOperationException("StoredFile missing.");
 
-		_logger.LogInformation("Loading file {FileName} for ingestion.", evidence.FileName);
+		_logger.LogInformation("Ingesting {FileName}", vf.FileName);
 
-		var fileBytes = await _files.ReadAsync(evidence.StoredFile.StoragePath, ct);
-		_logger.LogInformation("Loaded {Length} bytes from storage.", fileBytes.Length);
+		var bytes = await _files.ReadAsync(stored.StoragePath, ct);
+		using var stream = new MemoryStream(bytes);
 
-		using var mem = new MemoryStream(fileBytes);
+		// ------------------------------------------------------------
+		// 2. File classification (Magika already ran earlier)
+		// ------------------------------------------------------------
+		var mime = stored.MimeType;
 
-		var hash = _hashes.ComputeBlake3Async(fileBytes);
-		_logger.LogDebug("Computed BLAKE3 hash {Hash}.", hash);
+		string? extractedText = null;
 
-		// 4. Docling parsing
-		mem.Position = 0;
-		var doclingOutput = await _docling.ParseAsync(mem, evidence.FileName, ct);
-		_logger.LogInformation("Docling extracted {Pages} pages, {TextBlocks} text blocks, {Tables} tables in {Time:F2}s.",
-			doclingOutput.PageCount,
-			doclingOutput.TextBlockCount,
-			doclingOutput.TableCount,
-			doclingOutput.ProcessingTimeSeconds);
-
-		if (!doclingOutput.IsSuccess)
+		// ------------------------------------------------------------
+		// 3. Route extraction
+		// ------------------------------------------------------------
+		if (mime.StartsWith("image/"))
 		{
-			_logger.LogWarning("Docling parsing had issues: {Errors}", string.Join(", ", doclingOutput.Errors));
+			extractedText = await HandleImageAsync(bytes, ct);
+		}
+		else if (mime == "application/pdf" || mime.Contains("officedocument"))
+		{
+			extractedText = await HandleDocumentAsync(stream, vf.FileName, ct);
+		}
+		else if (mime.StartsWith("text/"))
+		{
+			extractedText = Encoding.UTF8.GetString(bytes);
+		}
+		else
+		{
+			_logger.LogInformation("Unsupported type {Mime}; metadata-only ingestion.", mime);
+			return new IngestionResult { CompletedAt = DateTime.UtcNow, StoredId=stored.Blake3Hash };
 		}
 
-		mem.Position = 0;
-		var graphInput = new DocumentInput(evidence.FileName, mem);
+		if (string.IsNullOrWhiteSpace(extractedText))
+		{
+			_logger.LogWarning("No extractable text.");
+			return new IngestionResult { CompletedAt = DateTime.UtcNow, StoredId = stored.Blake3Hash };
+		}
+
+		// ------------------------------------------------------------
+		// 4. GraphRAG extraction (Neo4j)
+		// ------------------------------------------------------------
+		using var textStream = new MemoryStream(Encoding.UTF8.GetBytes(extractedText));
+
+		var graphInput = new DocumentInput(vf.FileName, textStream);
 		var graphResult = await _graphRag.ProcessAsync([graphInput]);
 
-		_logger.LogInformation("GraphRag produced {Chunks} chunks and {Entities} entities.",
-			graphResult.TextUnits.Count, graphResult.Entities.Count);
+		_logger.LogInformation(
+			"GraphRAG: {Chunks} chunks, {Entities} entities",
+			graphResult.TextUnits.Count,
+			graphResult.Entities.Count);
 
+		// ------------------------------------------------------------
+		// 5. Embeddings + Qdrant
+		// ------------------------------------------------------------
 		int vectorCount = 0;
 
-		if (_qdrant != null && _embedding != null && graphResult.TextUnits.Count > 0)
+		if (_embedding.IsReady && graphResult.TextUnits.Count > 0)
 		{
-			var caseId = evidence.WorkspaceId.ToString();
-
-			// Batch embed all chunks
 			var texts = graphResult.TextUnits.Select(t => t.Text).ToList();
-			var embeddings = await _embedding.GenerateAsync(texts, cancellationToken: ct);
+			var vectors = await _embedding.EmbedAsync(texts, ct);
 
-			_logger.LogDebug("Generated {Count} embeddings.", embeddings.Count);
+			//await _qdrant.UpsertChunksAsync(
+			//	workspaceId: vf.WorkspaceId,
+			//	virtualFileId: vf.Id,
+			//	storedFileHash: stored.Blake3Hash,
+			//	fileName: vf.FileName,
+			//	mimeType: stored.MimeType,
+			//	chunks: graphResult.TextUnits.Select(t => (t.Id, t.Text)).ToList(),
+			//	vectors: vectors,
+			//	ct: ct);
 
-			// Store each chunk with its embedding
-			for (int i = 0; i < graphResult.TextUnits.Count; i++)
-			{
-				var chunk = graphResult.TextUnits[i];
-				var vector = embeddings[i].Vector.ToArray();
-
-				await _qdrant.StoreEmbeddingAsync(
-					fileId: evidenceId,
-					caseId: caseId,
-					chunkId: chunk.Id,
-					embedding: vector,
-					text: chunk.Text,
-					ct: ct);
-
-				vectorCount++;
-			}
-
-			_logger.LogInformation("Qdrant stored {Count} vectors.", vectorCount);
+			vectorCount = vectors.Count;
 		}
 
 		return new IngestionResult
 		{
-			EvidenceId = evidenceId,
+			StoredId = stored.Blake3Hash,
 			ChunkCount = graphResult.TextUnits.Count,
 			EntityCount = graphResult.Entities.Count,
 			VectorCount = vectorCount
 		};
+	}
+
+	// ------------------------------------------------------------
+	// ROUTERS
+	// ------------------------------------------------------------
+
+	private async Task<string?> HandleDocumentAsync(
+		Stream stream,
+		string fileName,
+		CancellationToken ct)
+	{
+		return await _docling.ParseAsync(stream, fileName, ct)
+			.ContinueWith(t => t.Result.Markdown, ct);
+	}
+
+	private async Task<string?> HandleImageAsync(
+		byte[] bytes,
+		CancellationToken ct)
+	{
+		if (!_vision.IsReady)
+			return null;
+
+		return await _vision.AnalyzeImageAsync(
+			"Extract all visible text and investigative details.",
+			bytes,
+			ct);
 	}
 }

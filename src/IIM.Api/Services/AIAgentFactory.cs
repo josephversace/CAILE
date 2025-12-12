@@ -6,12 +6,9 @@ using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using OpenAI.Chat;
-
 using Microsoft.Agents.AI;
 
 namespace IIM.Api.Services;
-
-
 
 public class AIAgentFactory : IAIAgentFactory, IDisposable
 {
@@ -57,7 +54,7 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 	// ---------------------------------------------------------
 	public async Task<AIAgent> GetChatAgentAsync()
 	{
-		
+
 		await EnsureInitializedAsync();
 		return _chatAgent!;
 	}
@@ -91,7 +88,7 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 				await ReloadModelsInternalAsync();
 			}
 
-		
+
 		}
 		finally
 		{
