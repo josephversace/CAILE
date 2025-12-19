@@ -1,37 +1,54 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace IIM.Shared.Interfaces;
 
 /// <summary>
-/// Abstracts SeaweedFS Filer API for byte-level reads/writes.
+/// Abstracts physical object storage (SeaweedFS).
+/// Collection-first, hash-keyed.
 /// </summary>
 public interface IFileStore
 {
 	/// <summary>
-	/// Write bytes to the specified SeaweedFS logical path.
+	/// Writes a file into a collection using a stable key (e.g. BLAKE3).
 	/// </summary>
-	Task<string> WriteAsync(byte[] data, string path, CancellationToken ct = default);
+	Task WriteAsync(
+		string collection,
+		string key,
+		Stream data,
+		CancellationToken ct = default);
 
 	/// <summary>
-	/// Write a stream to the specified SeaweedFS logical path.
+	/// Reads a file by collection + key.
 	/// </summary>
-	Task<string> WriteAsync(Stream data, string path, CancellationToken ct = default);
+	Task<byte[]> ReadAsync(
+		string collection,
+		string key,
+		CancellationToken ct = default);
 
 	/// <summary>
-	/// Read the bytes of a stored file by path.
+	/// Deletes a file by collection + key.
 	/// </summary>
-	Task<byte[]> ReadAsync(string path, CancellationToken ct = default);
+	Task DeleteAsync(
+		string collection,
+		string key,
+		CancellationToken ct = default);
 
 	/// <summary>
-	/// Delete the file at the specified path.
+	/// Checks if a file exists.
 	/// </summary>
-	Task DeleteAsync(string path, CancellationToken ct = default);
+	Task<bool> ExistsAsync(
+		string collection,
+		string key,
+		CancellationToken ct = default);
 
 	/// <summary>
-	/// Check if a file exists at the specified path.
+	/// Atomically promotes a file between collections.
 	/// </summary>
-	Task<bool> ExistsAsync(string path, CancellationToken ct = default);
+	Task PromoteAsync(
+		string sourceCollection,
+		string destinationCollection,
+		string key,
+		CancellationToken ct = default);
 }

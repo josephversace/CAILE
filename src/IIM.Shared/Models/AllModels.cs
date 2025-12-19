@@ -449,23 +449,7 @@ public class ProcessingResult
     public int? RetryCount { get; set; }
 }
 
-/// <summary>
-/// Data chunk for deduplication
-/// Purpose: Represent file chunks for dedup storage
-/// Used by: Deduplication service, chunk store
-/// </summary>
-public class ChunkData
-{
-    public string Hash { get; set; } = string.Empty;
-    public byte[] Data { get; set; } = Array.Empty<byte>();
-    public int Size { get; set; }
-    public int Offset { get; set; }
-    public int Index { get; set; }
-    public bool IsDuplicate { get; set; }
-    public string? DuplicateChunkId { get; set; }
-    public string? StorageLocation { get; set; }
-    public int ReferenceCount { get; set; } = 1;
-}
+
 
 /// <summary>
 /// Deduplication analysis result

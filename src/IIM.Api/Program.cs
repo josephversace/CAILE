@@ -42,7 +42,7 @@ builder.Services
 	.AddAgentsLayer()
 	.AddApplicationLayer()
 	.AddApiLayer(builder.Configuration, deployment)
-	.AddIngestionLayer(builder.Configuration)
+	.AddIngestionLayer()
 	.AddHostedWorkers(builder.Configuration);
 
 
@@ -102,7 +102,12 @@ builder.Services.AddCors(options =>
 	options.AddPolicy(corsPolicy, policy =>
 	{
 		policy
-			.WithOrigins("http://localhost:5056")
+			.WithOrigins(
+	"http://localhost:5056",
+	"https://localhost:5056",
+	"https://localhost:5080"
+)
+
 			.AllowAnyHeader()
 			.AllowAnyMethod()
 			.AllowCredentials();
@@ -118,7 +123,10 @@ builder.Services.AddAGUI();
 
 builder.WebHost.ConfigureKestrel(k =>
 {
-	k.ListenLocalhost(5080);
+	k.ListenLocalhost(5080, opt => {
+
+		opt.UseHttps();
+	});
 });
 
 var app = builder.Build();
@@ -140,6 +148,9 @@ using (var scope = app.Services.CreateScope())
 	var embedding = scope.ServiceProvider
 		.GetRequiredService<IEmbeddingService>();
 	_ = Task.Run(() => embedding.InitializeAsync());
+
+	var qdrant = scope.ServiceProvider.GetRequiredService<IQdrantService>();
+	await qdrant.EnsureCollectionAsync();
 }
 
 
@@ -161,13 +172,17 @@ if (app.Environment.IsDevelopment())
 // Core Pipeline
 // ============================================
 app.UseResponseCompression();
+
 app.UseCors(corsPolicy);
 
-if (deploymentConfig.RequireAuth)
-{
-	app.UseAuthentication();
-	app.UseAuthorization();
-}
+app.UseAuthentication();
+app.UseAuthorization();
+
+//if (deploymentConfig.RequireAuth)
+//{
+//	app.UseAuthentication();
+//	app.UseAuthorization();
+//}
 
 // ============================================
 // Health Check Endpoints
@@ -185,7 +200,7 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions
 // ============================================
 // SignalR Hubs
 // ============================================
-app.MapHub<InvestigationHub>("/hubs/investigation");
+app.MapHub<WorkspaceHub>("/hubs/workspace");
 
 if (deploymentConfig.Mode == DeploymentMode.ClientUI)
 {
@@ -205,6 +220,17 @@ if (app.Environment.IsDevelopment() ||
 		IgnoreAntiforgeryToken = true
 	});
 }
+
+app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/ai"), branch =>
+{
+	branch.Use(async (ctx, next) =>
+	{
+		// Force-disable compression for AI streaming
+		ctx.Response.Headers["Content-Encoding"] = "identity";
+		await next();
+	});
+});
+
 
 // ============================================
 // Map endpoint groups

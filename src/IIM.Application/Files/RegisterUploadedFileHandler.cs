@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Hangfire;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Mediator;
@@ -11,29 +12,32 @@ using Microsoft.Extensions.Logging;
 namespace IIM.Application.Files;
 
 public sealed class RegisterUploadedFileHandler
-	: IRequestHandler<RegisterUploadedFileCommand, Guid>
+	: IRequestHandler<RegisterUploadedFileCommand, RegisterUploadedFileResult>
 {
 	private readonly IWorkspaceManager _workspace;
 	private readonly IFileStore _files;
 	private readonly IHashService _hashes;
-	private readonly IMediator _mediator;
+	private readonly IBackgroundJobClient _jobs;
 	private readonly ILogger<RegisterUploadedFileHandler> _logger;
+	private readonly IMediator _mediator;
 
 	public RegisterUploadedFileHandler(
 		IWorkspaceManager workspace,
 		IFileStore files,
 		IHashService hashes,
+		IBackgroundJobClient jobs,
 		IMediator mediator,
 		ILogger<RegisterUploadedFileHandler> logger)
 	{
 		_workspace = workspace;
 		_files = files;
 		_hashes = hashes;
+		_jobs = jobs;
 		_mediator = mediator;
 		_logger = logger;
 	}
 
-	public async Task<Guid> Handle(
+	public async Task<RegisterUploadedFileResult> Handle(
 		RegisterUploadedFileCommand cmd,
 		CancellationToken ct)
 	{
@@ -44,25 +48,28 @@ public sealed class RegisterUploadedFileHandler
 			throw new ArgumentException("InputStream must be readable.");
 
 		// ------------------------------------------------------------
-		// 1. Compute BLAKE3 hash (streaming)
+		// 1. Compute all hashes in single pass (BLAKE3, MD5, SHA-256)
 		// ------------------------------------------------------------
-		string blake3;
 		cmd.InputStream.Position = 0;
-		blake3 = await _hashes.ComputeBlake3Async(cmd.InputStream, ct);
+		var hashes = await _hashes.ComputeAllHashesAsync(cmd.InputStream, ct);
 
-		_logger.LogDebug("Computed BLAKE3 hash {Hash}", blake3);
+		_logger.LogDebug(
+			"Computed hashes - BLAKE3: {Blake3}, MD5: {Md5}, SHA256: {Sha256}",
+			hashes.Blake3[..12],
+			hashes.Md5,
+			hashes.Sha256);
 
 		// ------------------------------------------------------------
-		// 2. Deduplication check
+		// 2. Deduplication check (by BLAKE3)
 		// ------------------------------------------------------------
-		var existingStored = await _workspace.GetStoredFileByHashAsync(blake3, ct);
+		var existingStored = await _workspace.GetStoredFileByHashAsync(hashes.Blake3, ct);
 
 		if (existingStored != null)
 		{
 			_logger.LogInformation(
 				"Deduplicated upload: {FileName} → {Hash}",
 				cmd.FileName,
-				blake3);
+				hashes.Blake3[..12]);
 
 			var vf = new VirtualFile
 			{
@@ -76,14 +83,14 @@ public sealed class RegisterUploadedFileHandler
 
 			var created = await _workspace.CreateVirtualFileAsync(vf, ct);
 
-			if (cmd.Reprocess)
-			{
-				await _mediator.Send(
-					new IngestFileCommand(created.Id),
-					ct);
-			}
+			_jobs.Enqueue<IngestionJob>(job => job.RunAsync(created.Id, CancellationToken.None));
 
-			return created.Id;
+			return new RegisterUploadedFileResult
+			{
+				VirtualFileId = created.Id,
+				Blake3Hash = hashes.Blake3,
+				Deduplicated = true
+			};
 		}
 
 		// ------------------------------------------------------------
@@ -92,25 +99,27 @@ public sealed class RegisterUploadedFileHandler
 		cmd.InputStream.Position = 0;
 
 		var sanitizedName = SanitizeFileName(cmd.FileName);
-		var storagePath = $"quarantine/{blake3}/{sanitizedName}";
+		var objectKey = $"{hashes.Blake3}";
 
-		await _files.WriteAsync(cmd.InputStream, storagePath, ct);
+		await _files.WriteAsync("quarantine", objectKey, cmd.InputStream, ct);
 
 		_logger.LogInformation(
-			"Stored new file {FileName} at {Path}",
+			"Stored new file {FileName} at quarantine/{ObjectKey}",
 			cmd.FileName,
-			storagePath);
+			objectKey);
 
 		// ------------------------------------------------------------
-		// 4. Create StoredFile
+		// 4. Create StoredFile (with all hashes)
 		// ------------------------------------------------------------
 		var stored = new StoredFile
 		{
-			Blake3Hash = blake3,
+			Blake3Hash = hashes.Blake3,
+			Md5Hash = hashes.Md5,
+			Sha256Hash = hashes.Sha256,
 			FileSize = cmd.FileSize,
 			MimeType = cmd.MimeType,
 			Bucket = "quarantine",
-			StoragePath = storagePath,
+			StoragePath = objectKey,
 			OriginalFileName = cmd.FileName,
 			FirstWorkspaceId = cmd.WorkspaceId,
 			FirstSeenAt = DateTimeOffset.UtcNow
@@ -126,7 +135,7 @@ public sealed class RegisterUploadedFileHandler
 			WorkspaceId = cmd.WorkspaceId,
 			FileName = cmd.FileName,
 			FileSize = cmd.FileSize,
-			StoredFileHash = blake3,
+			StoredFileHash = hashes.Blake3,
 			CreatedAt = DateTime.UtcNow,
 			Status = FileUploadStatus.Pending
 		};
@@ -134,13 +143,16 @@ public sealed class RegisterUploadedFileHandler
 		var createdVf = await _workspace.CreateVirtualFileAsync(virtualFile, ct);
 
 		// ------------------------------------------------------------
-		// 6. Trigger ingestion (always for new content)
+		// 6. Enqueue ingestion job (runs in background via Hangfire)
 		// ------------------------------------------------------------
-		await _mediator.Send(
-			new IngestFileCommand(createdVf.Id),
-			ct);
+		_jobs.Enqueue<IngestionJob>(job => job.RunAsync(createdVf.Id, CancellationToken.None));
 
-		return createdVf.Id;
+		return new RegisterUploadedFileResult
+		{
+			VirtualFileId = createdVf.Id,
+			Blake3Hash = hashes.Blake3,
+			Deduplicated = false
+		};
 	}
 
 	private static string SanitizeFileName(string fileName)

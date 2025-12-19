@@ -1,14 +1,11 @@
-﻿namespace IIM.Ingestion.Models
+﻿public record IngestionResult
 {
-	public class IngestionResult
-	{
-		public string StoredId { get; set; }
-		public int ChunkCount { get; set; }
-		public int EntityCount { get; set; }
-
-		public int VectorCount { get; set; }
-		public DateTimeOffset CompletedAt { get; set; } = DateTimeOffset.UtcNow;
-
-		public Dictionary<string, string>? Metadata { get; set; }
-	}
+	public required string StoredId { get; init; }
+	public bool Deduplicated { get; init; }
+	public int ChunkCount { get; init; }
+	public int VectorCount { get; init; }
+	public int EntityCount { get; init; }
+	public int RelationshipCount { get; init; }
+	public bool GraphExtractionFailed { get; init; }
+	public DateTime CompletedAt { get; init; }
 }

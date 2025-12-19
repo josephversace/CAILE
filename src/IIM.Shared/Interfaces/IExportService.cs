@@ -22,10 +22,7 @@ public interface IExportService
         ExportFormat format,
         ExportOptions? options = null);
 
-    Task<ExportResult> ExportSessionAsync(
-        InvestigationSession session,
-        ExportFormat format,
-        ExportOptions? options = null);
+
 
     Task<ExportResult> ExportWorkspaceAsync(
         Workspace workspaceEntity,

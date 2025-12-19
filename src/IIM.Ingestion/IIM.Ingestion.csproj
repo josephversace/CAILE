@@ -8,13 +8,15 @@
 
 
 	<ItemGroup>
-		<PackageReference Include="ManagedCode.GraphRag" Version="10.0.7" />
-		<PackageReference Include="ManagedCode.GraphRag.Neo4j" Version="10.0.7" />
 		<PackageReference Include="Qdrant.Client" Version="1.16.1" />
 		<PackageReference Include="StackExchange.Redis" Version="2.10.1" />
 	</ItemGroup>
 
 	<ItemGroup>
+
+    <ProjectReference Include="..\external\graphrag\src\ManagedCode.GraphRag.Neo4j\ManagedCode.GraphRag.Neo4j.csproj" />
+
+    <ProjectReference Include="..\external\graphrag\src\ManagedCode.GraphRag\ManagedCode.GraphRag.csproj" />
 
     <ProjectReference Include="..\IIM.Shared\IIM.Shared.csproj" />
   </ItemGroup>

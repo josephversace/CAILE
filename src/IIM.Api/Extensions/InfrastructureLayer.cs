@@ -1,5 +1,8 @@
 ﻿using GraphRag;
+using GraphRag.Graphs;
+using GraphRag.LanguageModels;
 using GraphRag.Storage.Neo4j;
+using IIM.Api.Services;
 using IIM.Application.Services;
 using IIM.Infrastructure.Docling;
 using IIM.Infrastructure.Foundry;
@@ -26,15 +29,12 @@ namespace IIM.Api.Extensions
 			services.AddScoped<IFileIntegrityService, FileIntegrityService>();
 			services.AddScoped<IAuditService, AuditService>();
 
-		
-
-			//SewaeedFS
+			// SeaweedFS
 			services.AddHttpClient<IFileStore, SeaweedFileStore>((sp, client) =>
 			{
 				var cfg = sp.GetRequiredService<CaileConfig>().SeaweedFS;
 				client.BaseAddress = new Uri(cfg.FilerUrl);
 			});
-
 
 			// FOUNDRY
 			services.AddSingleton<IFoundryEndpointProvider, FoundryEndpointProvider>();
@@ -42,7 +42,7 @@ namespace IIM.Api.Extensions
 			services.AddSingleton<IFoundryModelService, FoundryModelService>();
 			services.AddHostedService<FoundryStartupService>();
 
-			//Docling
+			// DOCLING
 			services.AddHttpClient<IDoclingService, DoclingService>((sp, client) =>
 			{
 				var cfg = sp.GetRequiredService<CaileConfig>().Docling;
@@ -51,23 +51,41 @@ namespace IIM.Api.Extensions
 					client.Timeout = TimeSpan.FromSeconds(cfg.TimeoutSeconds);
 			});
 
+			// ------------------------------------------------------------
+			// GRAPH RAG + NEO4J (FIXED)
+			// ------------------------------------------------------------
 
-			// GRAPH RAG + NEO4J
+			// Core GraphRAG services
+			services.AddScoped<IGraphRagChatClient, AgentGraphRagChatClient>();
 			services.AddGraphRag();
+
+		
+
+			// Register Neo4j-backed GraphRAG store (keyed)
 			services.AddNeo4jGraphStore("neo4j", opts =>
 			{
-				var s = config.GetSection("GraphRag:GraphStores:neo4j");
-				opts.Uri = s["Uri"]!;
-				opts.Username = s["Username"]!;
-				opts.Password = s["Password"]!;
+		
+				var caile = services.BuildServiceProvider().GetRequiredService<CaileConfig>();
+
+				var neo = caile.GraphRag.GraphStores.neo4j;
+
+				opts.Uri = neo.Uri;
+				opts.Username = neo.Username;
+				opts.Password = neo.Password;
 			});
 
+		
+			services.AddSingleton<IGraphStore>(sp =>
+				sp.GetRequiredKeyedService<IGraphStore>("neo4j"));
+
+			// MODEL TEMPLATES
 			services.AddScoped<IModelConfigurationTemplateService, ModelTemplateService>();
 			services.AddScoped<IModelTemplateResolver, ModelTemplateResolver>();
 
+			// INGESTION NOTIFICATIONS
+			services.AddScoped<IIngestionNotifier, SignalRIngestionNotifier>();
 
 			return services;
 		}
 	}
-
 }

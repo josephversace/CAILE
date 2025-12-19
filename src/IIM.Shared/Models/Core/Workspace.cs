@@ -94,7 +94,7 @@ namespace IIM.Shared.Models
 		public Workspace Workspace { get; set; }
 
 		public Guid SessionId { get; set; }
-		public InvestigationSession Session { get; set; }
+
 
 		public DateTimeOffset LinkedAt { get; set; } = DateTimeOffset.UtcNow;
 	}

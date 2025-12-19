@@ -32,6 +32,8 @@ namespace IIM.Infrastructure.Data
 					nav.Property(m => m.Value).HasMaxLength(2000);
 				});
 			});
+
+	
 		}
 	}
 }

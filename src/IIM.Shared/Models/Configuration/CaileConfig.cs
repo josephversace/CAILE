@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Text;
 using GraphRag.Config;
+using IIM.Shared.Models.Configuration;
 
 namespace IIM.Shared.Models
 {
 	
 	public class CaileConfig
 	{
+
+		public string ApiBaseUrl { get; set; } = "http://localhost:5000";
 		public DeploymentConfig Deployment { get; set; } = new();
 		public SetupConfig Setup { get; set; } = new();
 		public DatabaseConfig Database { get; set; } 
@@ -18,6 +21,8 @@ namespace IIM.Shared.Models
 		public QdrantConfig Qdrant { get; set; } = new();
 		public Neo4jConfig Neo4j { get; set; } = new();
 		public DoclingConfig Docling { get; set; } = new();
+
+		public KreuzbergConfig Kreuzberg { get; set; } = new();
 		public HangfireConfig Hangfire { get; set; } = new();
 		public DataRouterConfig DataRouter { get; set; } = new();
 		public ManagedFilesConfig ManagedFiles { get; set; } = new();

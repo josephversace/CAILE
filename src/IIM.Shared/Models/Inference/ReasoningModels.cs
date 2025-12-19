@@ -98,7 +98,7 @@ namespace IIM.Shared.Models
         public string Type { get; set; } = string.Empty;
         public object Input { get; set; } = new();
         public Dictionary<string, object> Parameters { get; set; } = new();
-        public InvestigationSession? Session { get; set; }
+    
     }
 
 

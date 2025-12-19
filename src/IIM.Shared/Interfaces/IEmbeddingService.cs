@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Models;
 
 public interface IEmbeddingService
 {
@@ -10,6 +11,6 @@ public interface IEmbeddingService
 	Task InitializeAsync(CancellationToken ct = default);
 
 	Task<IReadOnlyList<float[]>> EmbedAsync(
-		IReadOnlyList<string> texts,
+		IReadOnlyList<EmbeddingWorkItem> texts,
 		CancellationToken ct = default);
 }

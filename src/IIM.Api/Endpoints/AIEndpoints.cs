@@ -60,9 +60,47 @@ public static class AIEndpoints
 
 		var abort = ctx.RequestAborted;
 
+		// Read raw body first to debug
+		ctx.Request.EnableBuffering();
+		using var reader = new StreamReader(ctx.Request.Body);
+		var rawBody = await reader.ReadToEndAsync();
+		Console.WriteLine($">>> 2. Raw body: [{rawBody}]");
+
+		// Reset stream position for deserialization
+		ctx.Request.Body.Position = 0;
+
+		AGUIRequest? req = null;
+		try
+		{
+			req = await JsonSerializer.DeserializeAsync<AGUIRequest>(
+				ctx.Request.Body,
+				new JsonSerializerOptions { PropertyNameCaseInsensitive = true },
+				cancellationToken: abort);
+
+			Console.WriteLine($">>> 3. Deserialized - ThreadId: {req?.ThreadId}, Messages: {req?.Messages?.Count}");
+
+			if (req?.Messages != null)
+			{
+				foreach (var m in req.Messages)
+				{
+					Console.WriteLine($">>>    Message - Role: [{m.Role}], Content: [{m.Content}]");
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($">>> 3. Deserialization FAILED: {ex.Message}");
+			await ctx.Response.WriteAsync($"data: {{\"error\":\"{ex.Message}\"}}\n\n");
+			return;
+		}
+
+
+
+		await ctx.Response.StartAsync();
+
 		// Parse request
-		var req = await JsonSerializer.DeserializeAsync<AGUIRequest>(
-			ctx.Request.Body, cancellationToken: abort);
+		//var req = await JsonSerializer.DeserializeAsync<AGUIRequest>(
+		//	ctx.Request.Body, cancellationToken: abort);
 
 		if (req == null || req.Messages.Count == 0)
 		{
@@ -118,12 +156,35 @@ public static class AIEndpoints
 		bool insideTool = false;
 		var toolBuffer = new StringBuilder();
 
+		var requestAbort = ctx.RequestAborted;
+
+		// Give the model its own lifetime
+		using var modelCts = CancellationTokenSource.CreateLinkedTokenSource(
+			CancellationToken.None // ← important
+		);
+
+		// Still observe disconnects, but don't die instantly
+		requestAbort.Register(() =>
+		{
+			// optional logging
+		});
+
+		// Optional hard safety timeout
+		modelCts.CancelAfter(TimeSpan.FromMinutes(5));
+
+
 		try
 		{
-			await foreach (var update in agent.RunStreamingAsync(prompt, thread).WithCancellation(abort))
-			{
-				foreach (var content in update.Contents)
+				await foreach (var update in agent
+				.RunStreamingAsync(prompt, thread)
+				.WithCancellation(modelCts.Token))
 				{
+					foreach (var content in update.Contents)
+				{
+
+			
+
+
 					if (content is TextContent text)
 					{
 						string t = text.Text;
@@ -145,6 +206,8 @@ public static class AIEndpoints
 								delta = t,
 								type = "TEXT_MESSAGE_CONTENT"
 							}, abort);
+
+							await ctx.Response.Body.FlushAsync(abort);
 						}
 						else
 						{
@@ -171,10 +234,15 @@ public static class AIEndpoints
 					}
 				}
 
-				await ctx.Response.Body.FlushAsync(abort);
+			
 			}
 		}
-		catch (OperationCanceledException)
+		catch (TaskCanceledException te)
+		{
+			// Streaming canceled by client or timeout — expected
+		}
+
+		catch (OperationCanceledException ce)
 		{
 			// ignore — client disconnected
 		}
@@ -259,27 +327,51 @@ public static class AIEndpoints
 	// ============================================================
 	// SSE Writer
 	// ============================================================
+	//private static async Task WriteEvent(
+	//	HttpContext ctx,
+	//	object data,
+	//	CancellationToken connectionToken)
+	//{
+	//	// Connection is gone — silently drop output
+	//	if (connectionToken.IsCancellationRequested)
+	//		return;
+
+	//	if (!ctx.Response.Body.CanWrite)
+	//		return;
+
+	//	try
+	//	{
+	//		var json = JsonSerializer.Serialize(data);
+	//		await ctx.Response.WriteAsync($"event: message\ndata: {json}\n\n");
+	//		await ctx.Response.Body.FlushAsync();
+	//	}
+	//	catch (OperationCanceledException)
+	//	{
+	//		// connection closed — ignore
+	//	}
+	//	catch (IOException)
+	//	{
+	//		// response pipe closed — ignore
+	//	}
+	//}
+
 	private static async Task WriteEvent(HttpContext ctx, object data, CancellationToken ct)
 	{
+		if (!ctx.Response.Body.CanWrite)
+			return;
+
 		try
 		{
-			// Stop immediately if client disconnected
-			ct.ThrowIfCancellationRequested();
-
 			var json = JsonSerializer.Serialize(data);
-
-			await ctx.Response.WriteAsync($"event: message\ndata: {json}\n\n");
+			await ctx.Response.WriteAsync($"data: {json}\n\n");  // Remove "event: message\n"
 			await ctx.Response.Body.FlushAsync();
-		}
-		catch (OperationCanceledException)
-		{
-			// Client disconnected — safe to ignore
 		}
 		catch (IOException)
 		{
-			// Response pipe closed — safe to ignore
+			// client gone — ignore
 		}
 	}
+
 
 	// ============================================================
 	// /ai/reload-models

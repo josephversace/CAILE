@@ -1,28 +1,20 @@
-﻿using System;
-using System.IO;
 using IIM.Shared.Mediator;
 
 namespace IIM.Application.Files;
 
 /// <summary>
-/// Registers an uploaded file, performs deduplication,
-/// writes to storage if required, and enqueues ingestion.
+/// Command to register an uploaded file for ingestion.
 /// </summary>
-public sealed record RegisterUploadedFileCommand : IRequest<Guid>
+public sealed class RegisterUploadedFileCommand : IRequest<RegisterUploadedFileResult>
 {
-	public Guid WorkspaceId { get; init; }
-	public string FileName { get; init; } = string.Empty;
-	public string MimeType { get; init; } = "application/octet-stream";
-	public long FileSize { get; init; }
-
-	/// <summary>
-	/// Stream containing the uploaded file.
-	/// Must be readable and positioned at 0.
-	/// </summary>
-	public Stream InputStream { get; init; } = Stream.Null;
-
-	/// <summary>
-	/// Forces reprocessing even if content already exists.
-	/// </summary>
-	public bool Reprocess { get; init; }
+    public required Guid WorkspaceId { get; init; }
+    public required string FileName { get; init; }
+    public required string MimeType { get; init; }
+    public required long FileSize { get; init; }
+    public required Stream InputStream { get; init; }
+    
+    /// <summary>
+    /// If true, re-run ingestion even for deduplicated files.
+    /// </summary>
+    public bool Reprocess { get; init; }
 }

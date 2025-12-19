@@ -1,7 +1,6 @@
 
 using IIM.Core.Services;
 using IIM.Shared.Enums;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -12,7 +11,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using IIM.Shared.Models;
-using IIM.Core.AI;
+
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models.Core;
 

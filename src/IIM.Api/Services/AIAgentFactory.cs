@@ -20,6 +20,8 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 
 	private AIAgent? _chatAgent;
 	private AIAgent? _reasoningAgent;
+	private IChatClient? _chatClient;      // NEW
+	private IChatClient? _reasoningClient; // NEW
 
 	private string _chatModel = "";
 	private string _reasoningModel = "";
@@ -40,21 +42,16 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 		_logger = logger;
 	}
 
-	// ---------------------------------------------------------
-	// FORCE REBUILD ON NEXT CALL
-	// ---------------------------------------------------------
 	public void Invalidate()
 	{
 		_chatAgent = null;
 		_reasoningAgent = null;
+		_chatClient = null;      // NEW
+		_reasoningClient = null; // NEW
 	}
 
-	// ---------------------------------------------------------
-	// Getters — async AND thread-safe
-	// ---------------------------------------------------------
 	public async Task<AIAgent> GetChatAgentAsync()
 	{
-
 		await EnsureInitializedAsync();
 		return _chatAgent!;
 	}
@@ -67,28 +64,34 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 		return _reasoningAgent;
 	}
 
+	// NEW METHOD
+	public async Task<IChatClient> GetChatClientAsync()
+	{
+		await EnsureInitializedAsync();
+		return _chatClient!;
+	}
 
-	// ---------------------------------------------------------
-	// Thread-safe lazy initialization
-	// ---------------------------------------------------------
+	// NEW METHOD (optional, if you need reasoning client too)
+	public async Task<IChatClient?> GetReasoningClientAsync()
+	{
+		await EnsureInitializedAsync();
+		return _reasoningClient;
+	}
+
 	private async Task EnsureInitializedAsync()
 	{
-		// Fast-path (agent exists)
-		if (_chatAgent != null && (_reasoningModelLoaded == false || _reasoningAgent != null))
+		if (_chatAgent != null && _chatClient != null &&
+			(_reasoningModelLoaded == false || _reasoningAgent != null))
 			return;
-
 
 		await _initLock.WaitAsync();
 		try
 		{
-			// Re-check inside the lock
-			if (_chatAgent == null ||
-		(_reasoningModelLoaded && _reasoningAgent == null))
+			if (_chatAgent == null || _chatClient == null ||
+				(_reasoningModelLoaded && _reasoningAgent == null))
 			{
 				await ReloadModelsInternalAsync();
 			}
-
-
 		}
 		finally
 		{
@@ -96,17 +99,11 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 		}
 	}
 
-	// ---------------------------------------------------------
-	// Internal reload (lock already held)
-	// ---------------------------------------------------------
 	private async Task ReloadModelsInternalAsync()
 	{
 		using var scope = _services.CreateScope();
 		var resolver = scope.ServiceProvider.GetRequiredService<IModelTemplateResolver>();
-
-		// SAFE: this is singleton, so resolve normally
 		var foundry = _services.GetRequiredService<IFoundryEndpointProvider>();
-
 
 		var newEndpoint = foundry.GetBaseUrl();
 
@@ -121,26 +118,29 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 
 		var template = await resolver.GetActiveTemplateAsync();
 
-
 		_chatModel = template.Models.Chat.FoundryModelId;
-		_chatAgent = CreateAgent(_chatModel, "ChatAssistant", GetChatInstructions());
+
+		// CHANGED: Create client first, store it, then create agent
+		_chatClient = CreateChatClient(_chatModel);
+		_chatAgent = CreateAgent(_chatClient, "ChatAssistant", GetChatInstructions());
 
 		bool hasReasoning = template.Models.Reasoning?.FoundryModelId is { Length: > 0 };
 
 		if (hasReasoning)
 		{
-			_reasoningModel = template.Models.Reasoning.FoundryModelId;
-			_reasoningAgent = CreateAgent(_reasoningModel, "ReasoningAssistant", GetReasoningInstructions());
+			_reasoningModel = template.Models.Reasoning!.FoundryModelId;
+			_reasoningClient = CreateChatClient(_reasoningModel);
+			_reasoningAgent = CreateAgent(_reasoningClient, "ReasoningAssistant", GetReasoningInstructions());
 			_reasoningModelLoaded = true;
 		}
 		else
 		{
+			_reasoningClient = null;
 			_reasoningAgent = null;
 			_reasoningModelLoaded = false;
 		}
 
-
-		_logger.LogInformation("Agents rebuilt. Endpoint now {Endpoint}", _endpoint);
+		_logger.LogInformation("Agents rebuilt. Endpoint: {Endpoint}", _endpoint);
 	}
 
 	public async Task ReloadModelsAsync()
@@ -148,12 +148,10 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 		await EnsureInitializedAsync();
 	}
 
-	// ---------------------------------------------------------
-	// Construct agent
-	// ---------------------------------------------------------
-	private AIAgent CreateAgent(string model, string name, string instructions)
+	// NEW: Separate method to create the raw client
+	private IChatClient CreateChatClient(string model)
 	{
-		var chatClient = new ChatClient(
+		return new ChatClient(
 			model: model,
 			credential: new ApiKeyCredential("local"),
 			options: new OpenAIClientOptions
@@ -163,14 +161,18 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 					new HttpClient { Timeout = TimeSpan.FromMinutes(10) })
 			}
 		).AsIChatClient();
+	}
 
+	// CHANGED: Now takes IChatClient instead of model string
+	private AIAgent CreateAgent(IChatClient chatClient, string name, string instructions)
+	{
 		var tools = _tools.GetAIFunctions();
 
 		return chatClient.CreateAIAgent(new ChatClientAgentOptions
 		{
 			Name = name,
 			Instructions = instructions,
-			Description = $"AG-UI Agent using {model}",
+			Description = $"AG-UI Agent",
 			ChatOptions = new ChatOptions
 			{
 				MaxOutputTokens = 4096,

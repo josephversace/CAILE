@@ -7,12 +7,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="4.0.13.1" />
-    <PackageReference Include="BERTTokenizers" Version="1.2.0" />
     <PackageReference Include="Blake3" Version="2.0.0" />
     <PackageReference Include="Hangfire" Version="1.8.22" />
     <PackageReference Include="Hangfire.PostgreSql" Version="1.20.12" />
-    <PackageReference Include="ManagedCode.GraphRag" Version="10.0.7" />
-    <PackageReference Include="ManagedCode.GraphRag.Neo4j" Version="10.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
@@ -34,6 +31,8 @@
 
 	  <PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI.Foundry" Version="0.11.3" />
 
+	  <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.0" />
+
 
 	  <PackageReference Include="OpenIddict.Abstractions" Version="7.2.0" />
     <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="7.2.0" />
@@ -53,6 +52,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\external\graphrag\src\ManagedCode.GraphRag.Neo4j\ManagedCode.GraphRag.Neo4j.csproj" />
+    <ProjectReference Include="..\external\graphrag\src\ManagedCode.GraphRag\ManagedCode.GraphRag.csproj" />
     <ProjectReference Include="..\IIM.Core\IIM.Core.csproj" />
     <ProjectReference Include="..\IIM.Shared\IIM.Shared.csproj" />
   </ItemGroup>

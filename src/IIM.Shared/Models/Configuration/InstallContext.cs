@@ -10,7 +10,7 @@ namespace IIM.Shared.Models
 	public class InstallContext
 	{
 
-		public string ApiUrl => $"http://localhost:5080";
+		public string ApiUrl => $"https://localhost:5080";
 
 		// SYSTEM
 		public SystemCheckResult SystemCheck { get; set; }

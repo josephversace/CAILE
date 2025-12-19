@@ -23,7 +23,7 @@
 		/// <summary>
 		/// Base API URL for the router/server.
 		/// </summary>
-		public string ApiUrl { get; set; } = "http://localhost:5080";
+		public string ApiUrl { get; set; } = "https://localhost:5080";
 
 		/// <summary>
 		/// Admin contact for system provisioning.

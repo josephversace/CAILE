@@ -3,6 +3,7 @@ using IIM.Api.Services;
 using IIM.Infrastructure.Embeddings;
 using IIM.Infrastructure.Services;
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,15 +20,14 @@ namespace IIM.Api.Extensions
 			// Agent factory
 			services.AddSingleton<IAIAgentFactory, AIAgentFactory>();
 
-
-
-			services.AddSingleton<IMultimodalVisionService, MultimodalVisionService>();
-
-			services.AddSingleton<IEmbeddingService, EmbeddingService>();
-
-			services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
+			// ---- SINGLE embedding generator instance ----
+			services.AddSingleton<OnnxEmbeddingGenerator>(sp =>
 			{
-				var templates = sp.GetRequiredService<IModelConfigurationTemplateService>();
+
+				var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
+
+				using var scope = scopeFactory.CreateScope();
+				var templates = scope.ServiceProvider.GetRequiredService<IModelConfigurationTemplateService>();
 				var template = templates.GetDefaultTemplateAsync().GetAwaiter().GetResult();
 
 				var cfg = template?.Models?.Embedding
@@ -36,8 +36,38 @@ namespace IIM.Api.Extensions
 				return new OnnxEmbeddingGenerator(cfg);
 			});
 
+			// ---- Interface mappings (NO new instances) ----
+			services.AddSingleton<IEmbeddingGenerator<EmbeddingWorkItem, Embedding<float>>>(sp =>
+				sp.GetRequiredService<OnnxEmbeddingGenerator>());
+
+			services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
+				sp.GetRequiredService<OnnxEmbeddingGenerator>());
+
+			services.AddKeyedSingleton<IEmbeddingGenerator<string, Embedding<float>>>(
+				"embedding_model",
+				(sp, _) => sp.GetRequiredService<OnnxEmbeddingGenerator>());
+
+			// Other services
+			services.AddSingleton<IMultimodalVisionService, MultimodalVisionService>();
+			services.AddSingleton<IEmbeddingService, EmbeddingService>();
+
+
+			services.AddSingleton<IChatClient>(sp =>
+			{
+				var factory = sp.GetRequiredService<IAIAgentFactory>();
+
+				// Build once, synchronously, fail fast if misconfigured
+				return factory.GetChatClientAsync()
+					.GetAwaiter()
+					.GetResult();
+			});
+
+			services.AddKeyedSingleton<IChatClient>(
+		"chat_model",
+		(sp, _) => sp.GetRequiredService<IChatClient>());
 
 			return services;
 		}
 	}
+
 }

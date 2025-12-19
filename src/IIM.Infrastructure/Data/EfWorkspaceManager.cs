@@ -390,9 +390,9 @@ namespace IIM.Infrastructure.Data
 		}
 
 		public async Task<bool> MoveStoredFileAsync(
-	string blake3Hash,
-	string newBucket,
-	CancellationToken ct = default)
+		string blake3Hash,
+		string newBucket,
+		CancellationToken ct = default)
 		{
 			var stored = await _db.StoredFiles
 				.FirstOrDefaultAsync(s => s.Blake3Hash == blake3Hash, ct);
@@ -400,29 +400,21 @@ namespace IIM.Infrastructure.Data
 			if (stored == null)
 				return false;
 
-			// Original path
-			var oldPath = stored.StoragePath;
+			var oldBucket = stored.Bucket;
+			var objectKey = stored.StoragePath;
 
-			// New path (folder based on new bucket)
-			var newPath = $"{newBucket}/{stored.Blake3Hash}";
+			if (oldBucket == newBucket)
+				return true;
 
-			// Read original bytes
-			var bytes = await _fileStore.ReadAsync(oldPath, ct);
+			// Atomic server-side move between collections
+			await _fileStore.PromoteAsync(oldBucket, newBucket, objectKey, ct);
 
-			// Write to new location
-			await _fileStore.WriteAsync(bytes, newPath, ct);
-
-			// Delete original
-			await _fileStore.DeleteAsync(oldPath, ct);
-
-			// Update metadata
+			// Update metadata (only bucket changes, objectKey stays same)
 			stored.Bucket = newBucket;
-			stored.StoragePath = newPath;
 
 			await _db.SaveChangesAsync(ct);
 
-			// Optionally: write chain-of-custody record
-			// Optionally: write timeline event
+			// TODO: chain-of-custody + timeline event
 
 			return true;
 		}

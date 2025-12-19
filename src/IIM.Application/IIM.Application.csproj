@@ -9,8 +9,6 @@
   <ItemGroup>
     <PackageReference Include="Hangfire" Version="1.8.22" />
     <PackageReference Include="MagikaSharp" Version="9.0.1" />
-    <PackageReference Include="ManagedCode.GraphRag" Version="10.0.7" />
-    <PackageReference Include="ManagedCode.GraphRag.Neo4j" Version="10.0.7" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
 

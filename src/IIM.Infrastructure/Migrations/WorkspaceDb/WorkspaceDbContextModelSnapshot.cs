@@ -216,106 +216,6 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                     b.ToTable("StoredFiles");
                 });
 
-            modelBuilder.Entity("IIM.Shared.Models.InvestigationSession", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("InvestigationSession");
-                });
-
-            modelBuilder.Entity("IIM.Shared.Models.Message", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Author")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("HiddenReasoning")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid?>("InvestigationSessionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsPinned")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsReasoning")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Tag")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InvestigationSessionId");
-
-                    b.ToTable("Message");
-                });
-
-            modelBuilder.Entity("IIM.Shared.Models.MessageAttachment", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<byte[]>("Data")
-                        .HasColumnType("bytea");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("MessageId")
-                        .HasColumnType("text");
-
-                    b.Property<long>("Size")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MessageId");
-
-                    b.ToTable("MessageAttachment");
-                });
-
             modelBuilder.Entity("IIM.Shared.Models.TimelineEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -467,8 +367,6 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
 
                     b.HasKey("WorkspaceId", "SessionId");
 
-                    b.HasIndex("SessionId");
-
                     b.ToTable("WorkspaceSessions");
                 });
 
@@ -589,20 +487,6 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                     b.Navigation("VirtualFile");
                 });
 
-            modelBuilder.Entity("IIM.Shared.Models.Message", b =>
-                {
-                    b.HasOne("IIM.Shared.Models.InvestigationSession", null)
-                        .WithMany("Messages")
-                        .HasForeignKey("InvestigationSessionId");
-                });
-
-            modelBuilder.Entity("IIM.Shared.Models.MessageAttachment", b =>
-                {
-                    b.HasOne("IIM.Shared.Models.Message", null)
-                        .WithMany("Attachments")
-                        .HasForeignKey("MessageId");
-                });
-
             modelBuilder.Entity("IIM.Shared.Models.TimelineEvent", b =>
                 {
                     b.HasOne("IIM.Shared.Models.Workspace", null)
@@ -633,19 +517,11 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
 
             modelBuilder.Entity("IIM.Shared.Models.WorkspaceSession", b =>
                 {
-                    b.HasOne("IIM.Shared.Models.InvestigationSession", "Session")
-                        .WithMany()
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("IIM.Shared.Models.Workspace", "Workspace")
                         .WithMany("Sessions")
                         .HasForeignKey("WorkspaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Session");
 
                     b.Navigation("Workspace");
                 });
@@ -674,16 +550,6 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                     b.Navigation("ProcessedVersions");
 
                     b.Navigation("VirtualFiles");
-                });
-
-            modelBuilder.Entity("IIM.Shared.Models.InvestigationSession", b =>
-                {
-                    b.Navigation("Messages");
-                });
-
-            modelBuilder.Entity("IIM.Shared.Models.Message", b =>
-                {
-                    b.Navigation("Attachments");
                 });
 
             modelBuilder.Entity("IIM.Shared.Models.Workspace", b =>

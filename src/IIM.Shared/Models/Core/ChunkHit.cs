@@ -4,14 +4,47 @@ using System.Text;
 
 namespace IIM.Shared.Models;
 
-public record ChunkHit
+
+/// <summary>
+/// Metadata stored with each chunk.
+/// </summary>
+public sealed class ChunkMetadata
 {
-	public Guid FileId { get; init; }
-	public string ChunkId { get; init; } = default!;
-	public string WorkspaceId { get; init; } = default!;
-	public float Score { get; init; }
-	public string Text { get; init; } = default!;
+	public Guid WorkspaceId { get; init; }
+	public Guid VirtualFileId { get; init; }
+
+	// Optional / derived
 	public string? Classification { get; init; }
-	public string? MediaType { get; init; }
+	public List<string>? Entities { get; init; }
+
+	public DateTimeOffset IndexedAt { get; init; } = DateTime.UtcNow;
+}
+
+
+/// <summary>
+/// Chunk data for batch storage.
+/// </summary>
+public class ChunkData
+{
+	public required int ChunkIndex { get; init; }
+	public required float[] Embedding { get; init; }
+	public required string Text { get; init; }
+	public ChunkMetadata? Metadata { get; init; }
+}
+
+/// <summary>
+/// Search result.
+/// </summary>
+public class ChunkHit
+{
+	public required string Blake3Hash { get; init; }
+	public required int ChunkIndex { get; init; }
+	public required string Text { get; init; }
+	public required float Score { get; init; }
+
+	public string? FileName { get; init; }
+	public string? MimeType { get; init; }
+	public string? Classification { get; init; }
+	public List<string>? Entities { get; init; }
 }
 

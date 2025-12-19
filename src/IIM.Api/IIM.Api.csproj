@@ -8,8 +8,6 @@
 
 	<ItemGroup>
 		<!-- Agent Framework packages -->
-		<PackageReference Include="ManagedCode.GraphRag" Version="10.0.7" />
-		<PackageReference Include="ManagedCode.GraphRag.Neo4j" Version="10.0.7" />
 		<PackageReference Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.0.0-preview.251125.1" />
 		<PackageReference Include="Microsoft.Agents.AI" Version="1.0.0-preview.251125.1" />
 		<PackageReference Include="Microsoft.Agents.AI.AGUI" Version="1.0.0-preview.251125.1" />
@@ -65,6 +63,10 @@
 
 
 	<ItemGroup>
+
+		<ProjectReference Include="..\external\graphrag\src\ManagedCode.GraphRag.Neo4j\ManagedCode.GraphRag.Neo4j.csproj" />
+
+		<ProjectReference Include="..\external\graphrag\src\ManagedCode.GraphRag\ManagedCode.GraphRag.csproj" />
 
 		<ProjectReference Include="..\IIM.Application\IIM.Application.csproj" />
 		<ProjectReference Include="..\IIM.Core\IIM.Core.csproj" />

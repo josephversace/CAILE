@@ -8,11 +8,12 @@ public class GraphRagConfig
 	public GraphRagClusterGraph ClusterGraph { get; set; } = new();
 	public GraphRagCache Cache { get; set; } = new();
 	public GraphRagExtractClaims ExtractClaims { get; set; } = new();
+	public GraphRagExtractGraph ExtractGraph { get; set; } = new(); // MISSING
 }
 
 public class GraphRagStores
 {
-	public GraphRagStoreConfig Neo4j { get; set; } = new();
+	public GraphRagStoreConfig neo4j { get; set; } = new(); // lowercase 'neo4j'
 }
 
 public class GraphRagStoreConfig
@@ -38,7 +39,6 @@ public class GraphRagHeuristics
 	public double RelationshipConfidenceFloor { get; set; }
 }
 
-
 public class GraphRagClusterGraph
 {
 	public string Algorithm { get; set; } = "";
@@ -59,3 +59,9 @@ public class GraphRagExtractClaims
 	public string ModelId { get; set; } = "";
 }
 
+public class GraphRagExtractGraph  // MISSING CLASS
+{
+	public string ModelId { get; set; } = "";
+	public string[] EntityTypes { get; set; } = new string[0];  // "person", "organization", "location"
+	public int MaxGleanings { get; set; }
+}
