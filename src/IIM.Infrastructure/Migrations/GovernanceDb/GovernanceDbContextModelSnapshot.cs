@@ -139,46 +139,6 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
                     b.ToTable("ClassificationTags");
                 });
 
-            modelBuilder.Entity("IIM.Shared.Models.Core.ProcessedFile", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Dictionary<string, string>>("Metadata")
-                        .IsRequired()
-                        .HasColumnType("hstore");
-
-                    b.Property<string>("MetadataJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("ProcessedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ProcessorName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("StoredFileBlake3Hash")
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("StoredFileHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("VirtualFileId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StoredFileBlake3Hash");
-
-                    b.HasIndex("VirtualFileId");
-
-                    b.ToTable("ProcessedFile");
-                });
-
             modelBuilder.Entity("IIM.Shared.Models.Core.StorageTier", b =>
                 {
                     b.Property<Guid>("Id")
@@ -207,7 +167,51 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
                     b.ToTable("StorageTiers");
                 });
 
-            modelBuilder.Entity("IIM.Shared.Models.Core.StoredFile", b =>
+            modelBuilder.Entity("IIM.Shared.Models.ProcessedFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DerivedHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MetadataJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ParametersHash")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProcessorKind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProcessorName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProcessorVersion")
+                        .HasColumnType("text");
+
+                    b.Property<string>("StoredFileBlake3Hash")
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("StoredFileHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoredFileBlake3Hash");
+
+                    b.ToTable("ProcessedFile");
+                });
+
+            modelBuilder.Entity("IIM.Shared.Models.StoredFile", b =>
                 {
                     b.Property<string>("Blake3Hash")
                         .HasMaxLength(64)
@@ -356,7 +360,7 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("IIM.Shared.Models.Core.StoredFile", null)
+                    b.HasOne("IIM.Shared.Models.StoredFile", null)
                         .WithMany()
                         .HasForeignKey("StoredFilesBlake3Hash")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -391,33 +395,25 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
                     b.Navigation("ClassificationTag");
                 });
 
-            modelBuilder.Entity("IIM.Shared.Models.Core.ProcessedFile", b =>
+            modelBuilder.Entity("IIM.Shared.Models.ProcessedFile", b =>
                 {
-                    b.HasOne("IIM.Shared.Models.Core.StoredFile", "StoredFile")
+                    b.HasOne("IIM.Shared.Models.StoredFile", "StoredFile")
                         .WithMany("ProcessedVersions")
                         .HasForeignKey("StoredFileBlake3Hash");
 
-                    b.HasOne("VirtualFile", "VirtualFile")
-                        .WithMany()
-                        .HasForeignKey("VirtualFileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("StoredFile");
-
-                    b.Navigation("VirtualFile");
                 });
 
             modelBuilder.Entity("VirtualFile", b =>
                 {
-                    b.HasOne("IIM.Shared.Models.Core.StoredFile", "StoredFile")
+                    b.HasOne("IIM.Shared.Models.StoredFile", "StoredFile")
                         .WithMany("VirtualFiles")
                         .HasForeignKey("StoredFileBlake3Hash");
 
                     b.Navigation("StoredFile");
                 });
 
-            modelBuilder.Entity("IIM.Shared.Models.Core.StoredFile", b =>
+            modelBuilder.Entity("IIM.Shared.Models.StoredFile", b =>
                 {
                     b.Navigation("ProcessedVersions");
 

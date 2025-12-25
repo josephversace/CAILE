@@ -150,8 +150,8 @@ namespace IIM.Shared.Models
         public int RetentionDays { get; set; }
         public float Confidence { get; set; }
         public string Reasoning { get; set; } = string.Empty;
-        public string Criteria { get; set; } = string.Empty; // Added missing property
-        public int EstimatedFileCount { get; set; } // Added missing property
+        public string Criteria { get; set; } = string.Empty; 
+        public int EstimatedFileCount { get; set; } 
     }
 
     // Fix for SuggestedDataHandlingRule (was missing)

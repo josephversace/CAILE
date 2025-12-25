@@ -13,6 +13,10 @@ public sealed class ChunkMetadata
 	public Guid WorkspaceId { get; init; }
 	public Guid VirtualFileId { get; init; }
 
+	public string? FileName { get; init; }
+
+	public string? MimeType { get; init; }
+
 	// Optional / derived
 	public string? Classification { get; init; }
 	public List<string>? Entities { get; init; }
@@ -46,5 +50,10 @@ public class ChunkHit
 	public string? MimeType { get; init; }
 	public string? Classification { get; init; }
 	public List<string>? Entities { get; init; }
+	public List<string>? EntityIds { get; set; }
+
+	public List<string>? WorkspaceIds { get; set; }
+	public List<string>? VirtualFileIds { get; set; }
+
 }
 

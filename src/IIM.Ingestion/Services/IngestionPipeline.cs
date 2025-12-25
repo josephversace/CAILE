@@ -1,5 +1,8 @@
 ﻿using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using IIM.Ingestion.Extensions;
+using IIM.Ingestion.Indicators;
 using IIM.Ingestion.Interfaces;
 using IIM.Ingestion.Models;
 using IIM.Shared.Interfaces;
@@ -13,40 +16,57 @@ public sealed class IngestionPipeline : IIngestionPipeline
 	private readonly IWorkspaceManager _workspace;
 	private readonly IFileStore _files;
 	private readonly IDoclingService _docling;
+	private readonly DocumentShapeDetector _documentShapeDetector;
 	private readonly IMultimodalVisionService _vision;
 	private readonly IGraphRagPipeline? _graphRag;
+	private readonly GraphExtractionJob _graphExtractionJob;
 	private readonly IEmbeddingService _embedding;
 	private readonly IQdrantService _qdrant;
 	private readonly DocumentExtractionRouter _documentRouter;
 	private readonly CaileConfig _caileConfig;
+	private readonly EntityLinkingJob? _entityLinking;
+	private readonly IndicatorExtractor _indicatorExtractor;
+
 	private readonly ILogger<IngestionPipeline> _logger;
+
 
 	public IngestionPipeline(
 		IWorkspaceManager workspace,
 		IFileStore files,
 		IDoclingService docling,
+		DocumentShapeDetector documentShapeDetector,
 		IMultimodalVisionService vision,
 		IGraphRagPipeline? graphRag,
+		GraphExtractionJob graphExtractionJob,
 		IEmbeddingService embedding,
 		DocumentExtractionRouter documentRouter,
 		IQdrantService qdrant,
 		CaileConfig caileConfig,
-		ILogger<IngestionPipeline> logger)
+		ILogger<IngestionPipeline> logger,
+		IndicatorExtractor indicatorExtractor,
+		EntityLinkingJob? entityLinking = null)
 	{
 		_workspace = workspace;
 		_files = files;
 		_docling = docling;
+		_documentShapeDetector = documentShapeDetector;
 		_vision = vision;
 		_graphRag = graphRag;
+		_graphExtractionJob = graphExtractionJob;
 		_embedding = embedding;
 		_qdrant = qdrant;
 		_caileConfig = caileConfig;
 		_documentRouter = documentRouter;
+		_indicatorExtractor = indicatorExtractor;
 		_logger = logger;
+		_entityLinking = entityLinking;
 	}
 
 	public async Task<IngestionResult> IngestAsync(Guid virtualFileId, CancellationToken ct)
 	{
+		// Compute BLAKE3 hash (consumes the stream)
+		using var hasher = new Blake3.Blake3HashAlgorithm();
+
 		// 1. Load VirtualFile + StoredFile
 		var vf = await _workspace.GetVirtualFileByIdAsync(virtualFileId, ct)
 			?? throw new InvalidOperationException($"VirtualFile {virtualFileId} not found.");
@@ -84,9 +104,15 @@ public sealed class IngestionPipeline : IIngestionPipeline
 		// 3. Extract text based on mime type
 		var extractedText = await ExtractTextAsync(bytes, vf.FileName, stored.MimeType, ct);
 
+		extractedText = NormalizeExtractedText(extractedText);
+		extractedText = NormalizeLineBreaks(extractedText);
+
+		var shapeResult = _documentShapeDetector.Detect(extractedText);
+
 		if (string.IsNullOrWhiteSpace(extractedText))
 		{
 			_logger.LogWarning("No extractable text for {FileName}", vf.FileName);
+
 
 			return new IngestionResult
 			{
@@ -94,6 +120,95 @@ public sealed class IngestionPipeline : IIngestionPipeline
 				StoredId = blake3Hash
 			};
 		}
+
+		var extractedBytes = Encoding.UTF8.GetBytes(extractedText);
+
+		// Content-addressed hash of the derived output
+
+		// Create stream once
+		await using var derivedStream = new MemoryStream(extractedBytes);
+
+
+		var hashBytes = hasher.ComputeHash(derivedStream);
+
+		// Convert to canonical lowercase hex
+		var extractedTextHash = Convert
+			.ToHexString(hashBytes)
+			.ToLowerInvariant();
+
+		// IMPORTANT: rewind stream before reuse
+		derivedStream.Seek(0, SeekOrigin.Begin);
+
+		// Deduplication check
+		var exists = await _files.ExistsAsync(collection: "derived",key: extractedTextHash,	ct);
+
+		if (!await _files.ExistsAsync("derived", extractedTextHash, ct))
+		{
+			derivedStream.Seek(0, SeekOrigin.Begin);
+
+			await _files.WriteAsync(
+				collection: "derived",
+				key: extractedTextHash,
+				data: derivedStream,
+				ct);
+
+		}
+
+
+		else
+		{
+			_logger.LogDebug(
+				"Derived output {Hash} already exists, skipping write",
+				extractedTextHash[..12]);
+		}
+
+		// Always record provenance
+		await _workspace.AddProcessedFileAsync(
+			new ProcessedFile
+			{
+				StoredFileHash = stored.Blake3Hash,
+				DerivedHash = extractedTextHash,
+
+				ProcessorName = "TextExtraction",
+				ProcessorKind = "extraction",
+				ProcessorVersion = "docling/kreuzberg",
+
+				ProcessedAt = DateTimeOffset.UtcNow,
+
+				// Small, indexed, UI-friendly metadata only
+				MetadataJson = JsonSerializer.Serialize(new
+				{
+					
+					chars = extractedText.Length,
+					lines = extractedText.Count(c => c == '\n') + 1,
+					preview = extractedText.Length > 10000
+						? extractedText[..10000]
+						: extractedText,
+					shape = new
+					{
+						flags = shapeResult.Shapes.ToString(),
+						confidence = shapeResult.Confidence,
+
+						hasNumericHeaders = shapeResult.HasNumericHeaders,
+						headerPattern = shapeResult.HeaderPattern,
+						hasBulletLists = shapeResult.HasBulletLists,
+						hasDates = shapeResult.HasDates,
+						hasTimestamps = shapeResult.HasTimestamps
+					},
+
+					sections = shapeResult.Sections.Select(s => new
+					{
+						id = s.Id,
+						start = s.StartOffset,
+						end = s.EndOffset
+					}),
+
+					evidence = shapeResult.EvidenceCounts,
+				})
+			},
+			ct);
+
+
 
 		// 4. CRITICAL PATH: Vector indexing (must succeed)
 		var vectorResult = await IndexVectorsAsync(
@@ -103,30 +218,57 @@ public sealed class IngestionPipeline : IIngestionPipeline
 			stored.MimeType,
 			ct);
 
-		// 5. BEST-EFFORT: Knowledge graph extraction (failure doesn't block ingestion)
-		GraphExtractionResult? graphResult = null;
+		//Regex ExtractionResult? regexResult = null;
 
-		if (_graphRag != null)
+		if (!string.IsNullOrWhiteSpace(extractedText))
 		{
-			graphResult = await TryExtractKnowledgeGraphAsync(
-				blake3Hash,
-				extractedText,
-				vf,
-				ct);
+			var extracted = _indicatorExtractor.Extract(extractedText);
+
+		await _workspace.AddProcessedFileAsync(
+			new ProcessedFile
+			{
+				StoredFileHash = stored.Blake3Hash,
+				DerivedHash = extractedTextHash,
+
+				ProcessorName = "RegExtraction",
+				ProcessorKind = "extraction",
+				ProcessorVersion = "0.1",
+
+				ProcessedAt = DateTimeOffset.UtcNow,
+
+				// Small, indexed, UI-friendly metadata only
+				MetadataJson = JsonSerializer.Serialize(extracted)
+			},
+			ct);
+
+
+			// 5. BEST-EFFORT: Knowledge graph extraction (failure doesn't block ingestion)
+			GraphExtractionResult? graphResult = null;
+			
+			if (_graphRag != null)
+			{
+				await _graphExtractionJob.EnqueueAsync(blake3Hash, extractedTextHash, vf.Id);
+			}
+
+
+
+
+			return new IngestionResult
+			{
+				StoredId = blake3Hash,
+				ChunkCount = vectorResult.ChunkCount,
+				VectorCount = vectorResult.VectorCount,
+				CompletedAt = DateTime.UtcNow
+			};
 		}
 
 		return new IngestionResult
 		{
 			StoredId = blake3Hash,
-			ChunkCount = vectorResult.ChunkCount,
-			VectorCount = vectorResult.VectorCount,
-			EntityCount = graphResult?.EntityCount ?? 0,
-			RelationshipCount = graphResult?.RelationshipCount ?? 0,
-			GraphExtractionFailed = graphResult == null && _graphRag != null,
 			CompletedAt = DateTime.UtcNow
 		};
-	}
 
+	}
 	// ────────────────────────────────────────────────────────────────
 	// TEXT EXTRACTION
 	// ────────────────────────────────────────────────────────────────
@@ -162,6 +304,87 @@ public sealed class IngestionPipeline : IIngestionPipeline
 		_logger.LogInformation("Unsupported type {Mime}; metadata-only ingestion.", mimeType);
 		return null;
 	}
+
+	private static string NormalizeExtractedText(string text)
+	{
+		if (string.IsNullOrWhiteSpace(text))
+			return text;
+
+		// 1. Normalize Unicode (important)
+		text = text.Normalize(NormalizationForm.FormKC);
+
+		// 2. Replace non-breaking & thin spaces with regular space
+		text = text
+			.Replace('\u00A0', ' ')  // NBSP
+			.Replace('\u2007', ' ')  // Figure space
+			.Replace('\u2009', ' ')  // Thin space
+			.Replace('\u202F', ' '); // Narrow NBSP
+
+		// 3. Collapse repeated spaces (but NOT newlines)
+		text = Regex.Replace(text, @"[ ]{2,}", " ");
+
+		// 4. Trim trailing spaces per line
+		text = Regex.Replace(text, @"[ \t]+\r?$", "", RegexOptions.Multiline);
+
+		return text;
+	}
+	private static string NormalizeLineBreaks(string text)
+	{
+		if (string.IsNullOrWhiteSpace(text))
+			return text;
+
+		var lines = text.Split('\n');
+		var sb = new StringBuilder(text.Length);
+
+		for (int i = 0; i < lines.Length; i++)
+		{
+			var line = lines[i].TrimEnd();
+
+			if (i == lines.Length - 1)
+			{
+				sb.AppendLine(line);
+				break;
+			}
+
+			var next = lines[i + 1].TrimStart();
+
+			// --- Heuristics ---
+			bool endsWithSentencePunctuation =
+				line.EndsWith('.') || line.EndsWith(':') ||
+				line.EndsWith(';') || line.EndsWith('?') ||
+				line.EndsWith('!');
+
+			bool nextStartsLowercase =
+				next.Length > 0 && char.IsLower(next[0]);
+
+			bool looksLikeList =
+				line.TrimStart().StartsWith("-") ||
+				line.TrimStart().StartsWith("•") ||
+				Regex.IsMatch(line.TrimStart(), @"^\d+(\.|-)");
+
+			bool looksLikeHeader =
+				Regex.IsMatch(line, @"^\s*[A-Z0-9 ._-]{3,}\s*$");
+
+			bool shouldMerge =
+				!endsWithSentencePunctuation &&
+				nextStartsLowercase &&
+				!looksLikeList &&
+				!looksLikeHeader;
+
+			if (shouldMerge)
+			{
+				sb.Append(line);
+				sb.Append(' ');
+			}
+			else
+			{
+				sb.AppendLine(line);
+			}
+		}
+
+		return sb.ToString();
+	}
+
 
 	private async Task<string?> HandleImageAsync(byte[] bytes, CancellationToken ct)
 	{
@@ -208,8 +431,10 @@ public sealed class IngestionPipeline : IIngestionPipeline
 			Text = chunk.Text,
 			Metadata = new ChunkMetadata
 			{
-				// Use the properties that ChunkMetadata actually has
-				Entities = null, // Will be populated by entity linking later
+				// CRITICAL: You must populate these so MapResults can find them
+				FileName = vf.FileName,
+				MimeType = mimeType,
+				Classification = chunk.SemanticType, // Use the detected type (table, list, etc)
 				IndexedAt = DateTimeOffset.UtcNow
 			}
 		}).ToList();
@@ -227,6 +452,7 @@ public sealed class IngestionPipeline : IIngestionPipeline
 			VectorCount = chunkData.Count
 		};
 	}
+
 
 	// ────────────────────────────────────────────────────────────────
 	// KNOWLEDGE GRAPH EXTRACTION (Best-Effort)
@@ -292,27 +518,23 @@ public sealed class IngestionPipeline : IIngestionPipeline
 	/// This runs AFTER both Qdrant and Neo4j have their data,
 	/// maintaining eventual consistency without blocking ingestion.
 	/// </summary>
-	private Task QueueEntityLinkingAsync(
+	private async Task QueueEntityLinkingAsync(
 		string blake3Hash,
 		Guid workspaceId,
 		CancellationToken ct)
 	{
-		// TODO: Implement with your job queue (Hangfire, etc.)
-		// The job would:
-		// 1. Fetch entities from Neo4j for this hash
-		// 2. Fetch chunks from Qdrant for this hash
-		// 3. For each chunk, find which entities are mentioned (text matching or NER)
-		// 4. Update Qdrant payloads with entity references
-		// 5. Update Neo4j with MENTIONED_IN relationships
+		if (_entityLinking == null)
+		{
+			_logger.LogDebug("Entity linking not configured, skipping for {Hash}", blake3Hash[..12]);
+			return;
+		}
 
-		_logger.LogDebug(
-			"Queued entity linking for {Hash} in workspace {Workspace}",
-			blake3Hash[..12],
-			workspaceId);
+		// Option A: Run inline (simple, blocks ingestion slightly)
+		await _entityLinking.ExecuteAsync(blake3Hash, workspaceId, ct);
 
-		return Task.CompletedTask;
+		// Option B: Queue with Hangfire (non-blocking)
+		// BackgroundJob.Enqueue(() => _entityLinking.ExecuteAsync(blake3Hash, workspaceId, CancellationToken.None));
 	}
-
 	// ────────────────────────────────────────────────────────────────
 	// CHUNKING (Semantic-Aware)
 	// ────────────────────────────────────────────────────────────────
@@ -380,12 +602,14 @@ public sealed class IngestionPipeline : IIngestionPipeline
 		return chunks;
 	}
 
-	// ... (all the chunking helper methods remain unchanged) ...
+
 
 	private static List<string> SplitIntoSemanticBlocks(string text)
 	{
 		var blocks = new List<string>();
-		var paragraphs = text.Split(["\n\n", "\r\n\r\n"], StringSplitOptions.RemoveEmptyEntries);
+
+		// Use a more robust split that handles multiple newlines
+		var paragraphs = text.Split(new[] { "\n\n", "\r\n\r\n", "\n\r\n" }, StringSplitOptions.RemoveEmptyEntries);
 
 		foreach (var para in paragraphs)
 		{
@@ -393,25 +617,13 @@ public sealed class IngestionPipeline : IIngestionPipeline
 			if (string.IsNullOrEmpty(trimmed))
 				continue;
 
-			if (LooksLikeTable(trimmed))
-			{
-				blocks.Add(trimmed);
-				continue;
-			}
-
-			if (LooksLikeList(trimmed))
-			{
-				blocks.Add(trimmed);
-				continue;
-			}
-
-			var sentences = SplitIntoSentences(trimmed);
-			blocks.AddRange(sentences);
+			// BUG FIX: Do NOT split into sentences here. 
+			// Keep the paragraph together so the '1.47' stays with its description.
+			blocks.Add(trimmed);
 		}
 
 		return blocks;
 	}
-
 	private static List<string> SplitIntoSentences(string text)
 	{
 		var sentences = new List<string>();
@@ -605,19 +817,5 @@ public sealed class IngestionPipeline : IIngestionPipeline
 		return "prose";
 	}
 
-	// ────────────────────────────────────────────────────────────────
-	// RESULT TYPES
-	// ────────────────────────────────────────────────────────────────
 
-	private record VectorIndexResult
-	{
-		public int ChunkCount { get; init; }
-		public int VectorCount { get; init; }
-	}
-
-	private record GraphExtractionResult
-	{
-		public int EntityCount { get; init; }
-		public int RelationshipCount { get; init; }
-	}
 }

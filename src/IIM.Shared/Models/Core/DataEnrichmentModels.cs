@@ -22,11 +22,11 @@ namespace IIM.Shared.Models
     {
         public List<TagSuggestion> SuggestedTags { get; set; } = new();
         public DataSensitivityLevel SuggestedSensitivity { get; set; }
-        public DataSensitivityLevel SensitivityLevel { get; set; } // Added missing property
+        public DataSensitivityLevel SensitivityLevel { get; set; } 
         public string StorageTier { get; set; } = string.Empty;
-        public string RecommendedStorageTier { get; set; } = string.Empty; // Added missing property
-        public int RetentionDays { get; set; } // Added missing property
-        public bool RequiresHumanReview { get; set; } // Added missing property
+        public string RecommendedStorageTier { get; set; } = string.Empty; 
+        public int RetentionDays { get; set; } 
+        public bool RequiresHumanReview { get; set; } 
         public float ConfidenceScore { get; set; }
         public string Reasoning { get; set; } = string.Empty;
         public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
@@ -38,10 +38,10 @@ namespace IIM.Shared.Models
         public string Question { get; set; } = string.Empty;
         public string Insight { get; set; } = string.Empty;
         public List<InsightSupport> SupportingEvidence { get; set; } = new();
-        public List<InsightMetric> Metrics { get; set; } = new(); // Added missing property
-        public List<string> Recommendations { get; set; } = new(); // Added missing property
+        public List<InsightMetric> Metrics { get; set; } = new(); 
+        public List<string> Recommendations { get; set; } = new(); 
         public float Confidence { get; set; }
-        public float ConfidenceScore { get; set; } // Added missing property (alias for Confidence)
+        public float ConfidenceScore { get; set; } // (alias for Confidence)
         public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
         public Dictionary<string, object>? Metadata { get; set; }
     }
@@ -53,7 +53,7 @@ namespace IIM.Shared.Models
         public List<SimilarFile> SimilarFiles { get; set; } = new();
         public DateTime AnalyzedAt { get; set; } = DateTime.UtcNow;
         public string SimilarityMethod { get; set; } = string.Empty;
-        public TimeSpan SearchTime { get; set; } // Added missing property
+        public TimeSpan SearchTime { get; set; } 
     }
 
     // Updated PolicySuggestion to include missing properties
@@ -62,28 +62,28 @@ namespace IIM.Shared.Models
         public List<string> SuggestedRules { get; set; } = new();
         public List<string> SuggestedClassifications { get; set; } = new();
         public List<string> SuggestedRetentionPolicies { get; set; } = new();
-        public List<SuggestedClassificationTag> SuggestedTags { get; set; } = new(); // Added missing property
-        public List<SuggestedStorageTier> SuggestedTiers { get; set; } = new(); // Added missing property
+        public List<SuggestedClassificationTag> SuggestedTags { get; set; } = new(); 
+        public List<SuggestedStorageTier> SuggestedTiers { get; set; } = new(); 
         public string Reasoning { get; set; } = string.Empty;
         public float Confidence { get; set; }
-        public float ConfidenceScore { get; set; } // Added missing property (alias for Confidence)
+        public float ConfidenceScore { get; set; }  //(alias for Confidence)
         public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
     }
 
     // Updated ComplianceCheck to include missing properties
     public class ComplianceCheck
     {
-        public string FileId { get; set; } = string.Empty; // Added missing property
+        public string FileId { get; set; } = string.Empty; 
         public bool IsCompliant { get; set; }
         public List<ComplianceIssue> Issues { get; set; } = new();
         public List<string> Recommendations { get; set; } = new();
-        public List<string> AppliedRules { get; set; } = new(); // Added missing property
-        public RiskLevel OverallRisk { get; set; } // Added missing property
+        public List<string> AppliedRules { get; set; } = new(); 
+        public RiskLevel OverallRisk { get; set; } 
         public DateTime CheckedAt { get; set; } = DateTime.UtcNow;
         public string FrameworkVersion { get; set; } = string.Empty;
     }
 
-    // Keep existing models unchanged
+
     public class TagSuggestion
     {
         public string Name { get; set; } = string.Empty;

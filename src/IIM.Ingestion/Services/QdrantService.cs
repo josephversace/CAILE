@@ -131,19 +131,17 @@ public class QdrantService : IQdrantService
 	}
 
 	public async Task AttachFileToExistingChunksAsync(
-	string blake3Hash,
-	Guid workspaceId,
-	Guid virtualFileId,
-	CancellationToken ct = default)
+		string blake3Hash,
+		Guid workspaceId,
+		Guid virtualFileId,
+		CancellationToken ct = default)
 	{
+		// 1. Define the filter to find all chunks for this file hash
 		var filter = new Filter
 		{
-			Must =
-		{
-			new Condition
-			{
-				Field = new FieldCondition
-				{
+			Must = {
+			new Condition {
+				Field = new FieldCondition {
 					Key = "blake3_hash",
 					Match = new Match { Keyword = blake3Hash }
 				}
@@ -151,35 +149,26 @@ public class QdrantService : IQdrantService
 		}
 		};
 
-		var scrollResponse = await _client.ScrollAsync(
-			collectionName: _collectionName,
-			filter: filter,
-			payloadSelector: new WithPayloadSelector { Enable = true },
-			limit: 1024,
-			cancellationToken: ct);
-
-		var updates = new List<PointStruct>();
-
-		foreach (var p in scrollResponse.Result)  // Note: .Result to get the points
+		// 2. Prepare the partial update payload
+		// We use SetPayload because it merges with existing keys
+		var updatePayload = new Dictionary<string, Value>
 		{
-			var payload = p.Payload.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-
-			AddToList(payload, "workspace_ids", workspaceId.ToString());
-			AddToList(payload, "virtual_file_ids", virtualFileId.ToString());
-
-			updates.Add(new PointStruct
+			["workspace_ids"] = new Value
 			{
-				Id = p.Id,
-				Payload = { payload }
-			});
-		}
+				ListValue = new ListValue { Values = { new Value { StringValue = workspaceId.ToString() } } }
+			},
+			["virtual_file_ids"] = new Value
+			{
+				ListValue = new ListValue { Values = { new Value { StringValue = virtualFileId.ToString() } } }
+			}
+		};
 
-		if (updates.Count > 0)
-			await _client.UpsertAsync(_collectionName, updates, cancellationToken: ct);
+		// 3. Apply the update to all points matching the hash filter
+		await _client.SetPayloadAsync(_collectionName, updatePayload, filter, cancellationToken: ct);
 
 		_logger.LogInformation(
-			"Attached existing chunks for hash {Hash} to workspace {WorkspaceId}",
-			blake3Hash[..12],
+			"Attached hash {Hash} to workspace {WorkspaceId} (Atomic Update)",
+			blake3Hash[..Math.Min(12, blake3Hash.Length)],
 			workspaceId);
 	}
 
@@ -305,6 +294,178 @@ public class QdrantService : IQdrantService
 					}
 				})
 			}
+		};
+
+		var results = await _client.SearchAsync(
+			_collectionName,
+			embedding,
+			filter: filter,
+			limit: (ulong)limit,
+			payloadSelector: true,
+			cancellationToken: ct);
+
+		return MapResults(results);
+	}
+	//RoundRobin
+	public async Task<List<ChunkHit>> SearchByHashesBalancedAsync(
+	float[] embedding,
+	List<string> blake3Hashes,
+	int totalLimit = 12,
+	int minPerFile = 2,
+	CancellationToken ct = default)
+	{
+		if (blake3Hashes.Count == 0) return [];
+
+		// 1. Fetch more than we need from each file in parallel
+		// This ensures we have enough 'candidates' to pick from.
+		var tasks = blake3Hashes.Select(hash =>
+			SearchSingleHashAsync(embedding, hash, minPerFile + 2, ct));
+
+		var resultsPerFile = await Task.WhenAll(tasks);
+
+		// 2. Interleave the results (Round-Robin)
+		// This gives every file a "fair shot" at the top spots.
+		var interleaved = new List<ChunkHit>();
+		int depth = 0;
+		bool addedAny;
+
+		do
+		{
+			addedAny = false;
+			foreach (var fileResults in resultsPerFile)
+			{
+				if (depth < fileResults.Count)
+				{
+					interleaved.Add(fileResults[depth]);
+					addedAny = true;
+				}
+				if (interleaved.Count >= totalLimit) break;
+			}
+			depth++;
+		} while (addedAny && interleaved.Count < totalLimit);
+
+		return interleaved;
+	}
+
+	//public async Task<List<ChunkHit>> SearchByHashesBalancedAsync(
+	//float[] embedding,
+	//List<string> blake3Hashes,
+	//int totalLimit = 12,
+	//int minPerFile = 2,
+	//CancellationToken ct = default)
+	//{
+	//	if (blake3Hashes.Count == 0)
+	//		return [];
+
+	//	// Single file - just use normal search
+	//	if (blake3Hashes.Count == 1)
+	//	{
+	//		return await SearchByHashesAsync(embedding, blake3Hashes, totalLimit, ct);
+	//	}
+
+	//	var fileCount = blake3Hashes.Count;
+
+	//	// ════════════════════════════════════════════════════════════
+	//	// Tier 1: Small sets (2-10 files) - parallel per-file search
+	//	// ════════════════════════════════════════════════════════════
+	//	if (fileCount <= 10)
+	//	{
+	//		var perFileK = Math.Max(minPerFile, (totalLimit / fileCount) + 1);
+
+	//		var tasks = blake3Hashes.Select(hash =>
+	//			SearchSingleHashAsync(embedding, hash, perFileK, ct));
+
+	//		var results = await Task.WhenAll(tasks);
+
+	//		return results
+	//			.SelectMany(r => r)
+	//			.GroupBy(h => $"{h.Blake3Hash}:{h.ChunkIndex}")
+	//			.Select(g => g.First())
+	//			.OrderByDescending(h => h.Score)
+	//			.Take(totalLimit)
+	//			.ToList();
+	//	}
+
+	//	// ════════════════════════════════════════════════════════════
+	//	// Tier 2: Medium sets (11-100 files) - global search + backfill
+	//	// ════════════════════════════════════════════════════════════
+	//	if (fileCount <= 100)
+	//	{
+	//		// Phase 1: Global search with over-fetch
+	//		var globalHits = await SearchByHashesAsync(
+	//			embedding, blake3Hashes, totalLimit * 2, ct);
+
+	//		// Check coverage
+	//		var coveredFiles = globalHits
+	//			.Select(h => h.Blake3Hash)
+	//			.ToHashSet();
+
+	//		var uncoveredFiles = blake3Hashes
+	//			.Where(h => !coveredFiles.Contains(h))
+	//			.ToList();
+
+	//		// Phase 2: Backfill if coverage is poor (< 50% of files)
+	//		if (uncoveredFiles.Count > fileCount / 2)
+	//		{
+	//			// Sample up to 10 uncovered files for backfill
+	//			var toBackfill = uncoveredFiles.Take(10).ToList();
+
+	//			var backfillTasks = toBackfill.Select(hash =>
+	//				SearchSingleHashAsync(embedding, hash, 1, ct));
+
+	//			var backfillResults = await Task.WhenAll(backfillTasks);
+
+	//			globalHits.AddRange(backfillResults.SelectMany(r => r));
+
+	//			_logger.LogDebug(
+	//				"Backfilled {Count} uncovered files out of {Total}",
+	//				toBackfill.Count, uncoveredFiles.Count);
+	//		}
+
+	//		return globalHits
+	//			.GroupBy(h => $"{h.Blake3Hash}:{h.ChunkIndex}")
+	//			.Select(g => g.First())
+	//			.OrderByDescending(h => h.Score)
+	//			.Take(totalLimit)
+	//			.ToList();
+	//	}
+
+	//	// ════════════════════════════════════════════════════════════
+	//	// Tier 3: Large sets (100+ files) - global search, trust vectors
+	//	// ════════════════════════════════════════════════════════════
+	//	_logger.LogDebug(
+	//		"Large file set ({Count} files) - using global semantic ranking",
+	//		fileCount);
+
+	//	var hits = await SearchByHashesAsync(embedding, blake3Hashes, totalLimit, ct);
+
+	//	var representedCount = hits.Select(h => h.Blake3Hash).Distinct().Count();
+	//	_logger.LogDebug(
+	//		"Global search covered {Represented}/{Total} files",
+	//		representedCount, fileCount);
+
+	//	return hits;
+	//}
+
+	private async Task<List<ChunkHit>> SearchSingleHashAsync(
+		float[] embedding,
+		string blake3Hash,
+		int limit,
+		CancellationToken ct)
+	{
+		var filter = new Filter
+		{
+			Must =
+		{
+			new Condition
+			{
+				Field = new FieldCondition
+				{
+					Key = "blake3_hash",
+					Match = new Match { Keyword = blake3Hash }
+				}
+			}
+		}
 		};
 
 		var results = await _client.SearchAsync(
@@ -443,10 +604,16 @@ public class QdrantService : IQdrantService
 			ChunkIndex = GetPayloadInt(r.Payload, "chunk_index"),
 			Text = GetPayloadString(r.Payload, "text") ?? "",
 			Score = r.Score,
+
+			// Added these to ensure RAG context has full metadata
 			FileName = GetPayloadString(r.Payload, "file_name"),
 			MimeType = GetPayloadString(r.Payload, "mime_type"),
 			Classification = GetPayloadString(r.Payload, "classification"),
-			Entities = GetPayloadStringList(r.Payload, "entities")
+
+			// Ensure lists are mapped correctly
+			Entities = GetPayloadStringList(r.Payload, "entities"),
+			WorkspaceIds = GetPayloadStringList(r.Payload, "workspace_ids"),
+			VirtualFileIds = GetPayloadStringList(r.Payload, "virtual_file_ids")
 		}).ToList();
 	}
 
@@ -491,5 +658,110 @@ public class QdrantService : IQdrantService
 			.Select(v => v.StringValue)
 			.Where(s => !string.IsNullOrEmpty(s))
 			.ToList();
+	}
+
+	// src/IIM.Ingestion/Services/QdrantService.cs
+	// ADD these methods to your existing QdrantService class
+
+	public async Task<List<ChunkRecord>> GetChunksByHashAsync(string blake3Hash, CancellationToken ct = default)
+	{
+		var filter = new Filter
+		{
+			Must =
+		{
+			new Condition
+			{
+				Field = new FieldCondition
+				{
+					Key = "blake3_hash",
+					Match = new Match { Keyword = blake3Hash }
+				}
+			}
+		}
+		};
+
+		var scrollResponse = await _client.ScrollAsync(
+			collectionName: _collectionName,
+			filter: filter,
+			payloadSelector: new WithPayloadSelector { Enable = true },
+			limit: 1000,
+			cancellationToken: ct);
+
+		var results = new List<ChunkRecord>();
+
+		foreach (var point in scrollResponse.Result)
+		{
+			var chunkIndex = GetPayloadInt(point.Payload, "chunk_index");
+			var text = GetPayloadString(point.Payload, "text") ?? "";
+			var entityIds = GetPayloadStringList(point.Payload, "entity_ids");
+
+			results.Add(new ChunkRecord(blake3Hash, chunkIndex, text, entityIds));
+		}
+
+		return results.OrderBy(c => c.ChunkIndex).ToList();
+	}
+
+	public async Task UpdateChunkPayloadAsync(
+	string blake3Hash,
+	int chunkIndex,
+	Dictionary<string, object> payload,
+	CancellationToken ct = default)
+	{
+		var qdrantPayload = new Dictionary<string, Value>();
+
+		foreach (var (key, value) in payload)
+		{
+			qdrantPayload[key] = value switch
+			{
+				string s => new Value { StringValue = s },
+				int i => new Value { IntegerValue = i },
+				long l => new Value { IntegerValue = l },
+				double d => new Value { DoubleValue = d },
+				bool b => new Value { BoolValue = b },
+				IEnumerable<string> list => new Value
+				{
+					ListValue = new ListValue
+					{
+						Values = { list.Select(s => new Value { StringValue = s }) }
+					}
+				},
+				_ => new Value { StringValue = value?.ToString() ?? "" }
+			};
+		}
+
+		// Use filter to target the specific point instead of ID
+		var filter = new Filter
+		{
+			Must =
+		{
+			new Condition
+			{
+				Field = new FieldCondition
+				{
+					Key = "blake3_hash",
+					Match = new Match { Keyword = blake3Hash }
+				}
+			},
+			new Condition
+			{
+				Field = new FieldCondition
+				{
+					Key = "chunk_index",
+					Match = new Match { Integer = chunkIndex }
+				}
+			}
+		}
+		};
+
+		await _client.SetPayloadAsync(
+			collectionName: _collectionName,
+			payload: qdrantPayload,
+			filter: filter,
+			cancellationToken: ct);
+
+		_logger.LogDebug(
+			"Updated payload for chunk {ChunkIndex} of {Hash}",
+			chunkIndex,
+			blake3Hash[..Math.Min(12, blake3Hash.Length)]);
 	}
 }

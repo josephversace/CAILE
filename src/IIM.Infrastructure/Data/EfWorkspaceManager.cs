@@ -673,10 +673,7 @@ namespace IIM.Infrastructure.Data
 		}
 
 
-		public async Task<WorkspaceUser?> GetWorkspaceUserAsync(
-			Guid workspaceId,
-			string userId,
-			CancellationToken cancellationToken = default)
+		public async Task<WorkspaceUser?> GetWorkspaceUserAsync(Guid workspaceId,	string userId, CancellationToken cancellationToken = default)
 		{
 			var wu = await _db.WorkspaceUsers
 				.AsNoTracking()
@@ -703,9 +700,7 @@ namespace IIM.Infrastructure.Data
 		// ============================================================
 		// Processed Files
 		// ============================================================
-		public async Task<ProcessedFile> AddProcessedFileAsync(
-	ProcessedFile pf,
-	CancellationToken ct = default)
+		public async Task<ProcessedFile> AddProcessedFileAsync(ProcessedFile pf,CancellationToken ct = default)
 		{
 			_db.ProcessedFiles.Add(pf);
 			await _db.SaveChangesAsync(ct);
@@ -716,11 +711,33 @@ namespace IIM.Infrastructure.Data
 			Guid virtualFileId,
 			CancellationToken ct = default)
 		{
-			return await _db.ProcessedFiles
-				.Include(p => p.StoredFile)
-				.Where(p => p.VirtualFileId == virtualFileId)
+			var processedVersions = await (from v in _db.VirtualFiles join p in _db.ProcessedFiles	on v.StoredFileHash equals p.StoredFileHash where v.Id == virtualFileId	select p).ToListAsync();
+
+			return processedVersions;
+		}
+
+		public async Task<List<string>> GetMetadataJsonAsync(string blake3,string processorName, bool latestOnly, CancellationToken ct = default)
+		{
+			var query = _db.ProcessedFiles
+				.Where(pf =>
+					pf.StoredFileHash == blake3 &&
+					pf.ProcessorName == processorName);
+
+			if (latestOnly)
+			{
+				return await query
+					.OrderByDescending(pf => pf.ProcessedAt)
+					.Select(pf => pf.MetadataJson)
+					.Take(1)
+					.ToListAsync(ct);
+			}
+
+			return await query
+				.OrderBy(pf => pf.ProcessedAt)
+				.Select(pf => pf.MetadataJson)
 				.ToListAsync(ct);
 		}
+
 
 	}
 }

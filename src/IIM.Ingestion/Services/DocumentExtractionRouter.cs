@@ -28,6 +28,9 @@ public sealed class DocumentExtractionRouter
 		string mimeType,
 		CancellationToken ct)
 	{
+
+		return await _docling.ExtractAsync(bytes, fileName, mimeType, ct);
+
 		if (!_config.Kreuzberg.Preferred)
 		{
 			return await _docling.ExtractAsync(bytes, fileName, mimeType, ct);

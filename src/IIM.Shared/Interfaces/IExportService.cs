@@ -12,15 +12,7 @@ namespace IIM.Shared.Interfaces;
 
 public interface IExportService
 {
-    Task<ExportResult> ExportResponseAsync(
-        InvestigationResponse response,
-        ExportFormat format,
-        ExportOptions? options = null);
 
-    Task<ExportResult> ExportMessageAsync(
-        InvestigationMessage message,
-        ExportFormat format,
-        ExportOptions? options = null);
 
 
 

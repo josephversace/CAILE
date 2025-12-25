@@ -309,80 +309,6 @@ public class InvestigationQuery
 }
 
 
-/// <summary>
-/// Message in an investigation session
-/// </summary>
-public class InvestigationMessage
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string? SessionId { get; set; }
-    public MessageRole Role { get; set; }
-    public string Content { get; set; } = string.Empty;
-    public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
-
-    // Optional content
-    public List<Attachment>? Attachments { get; set; }
-    public List<ToolResult>? ToolResults { get; set; }
-    public List<Citation>? Citations { get; set; }
-    public RAGSearchResult? RAGResults { get; set; }
-    public List<TranscriptionResult>? Transcriptions { get; set; }
-    public List<ImageAnalysisResult>? ImageAnalyses { get; set; }
-
-    // Metadata
-    public string? ModelUsed { get; set; }
-    public double? Confidence { get; set; }
-    public MessageStatus? Status { get; set; }
-    public Dictionary<string, object>? Metadata { get; set; }
-
-    // Edit tracking
-    public bool IsEdited { get; set; }
-    public DateTimeOffset? EditedAt { get; set; }
-    public string? EditedBy { get; set; }
-
-    // Threading
-    public string? ParentMessageId { get; set; }
-    public List<string>? ChildMessageIds { get; set; }
-
-    // References
-    public List<string>? EvidenceIds { get; set; }
-    public List<string>? EntityIds { get; set; }
-}
-
-/// <summary>
-/// Investigation response with analysis results
-/// </summary>
-public class InvestigationResponse
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string? SessionId { get; set; }
-    public string? QueryId { get; set; }
-    public string Message { get; set; } = string.Empty;
-    public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
-
-    // Analysis results
-    public RAGSearchResult? RAGResults { get; set; }
-    public List<TranscriptionResult>? Transcriptions { get; set; }
-    public List<ImageAnalysisResult>? ImageAnalyses { get; set; }
-    public List<ToolResult>? ToolResults { get; set; }
-    public List<Citation>? Citations { get; set; }
-    public Visualization Visualization { get; set; }
-
-    // References
-    public List<string>? FileIds { get; set; }
-    public List<string>? EntityIds { get; set; }
-
-    public string Hash { get; set; } = string.Empty;
-
-    public HashType HashType { get; set; } = HashType.SHA256;
-
-    // Metadata
-    public double? Confidence { get; set; }
-    public string? ModelUsed { get; set; }
-    public TimeSpan? ProcessingTime { get; set; }
-    public ResponseDisplayType DisplayType { get; set; } = ResponseDisplayType.Auto;
-    public Dictionary<string, object>? Metadata { get; set; }
-    public List<VirtualFile> RelatedFiles { get; set; }
-}
 
 #endregion
 
@@ -609,19 +535,7 @@ public class SimilarImage
 
 #region RAG and Knowledge Graph
 
-/// <summary>
-/// RAG search result with retrieved documents
-/// </summary>
-public class RAGSearchResult
-{
-    public List<RAGDocument> Documents { get; set; } = new();
-    public List<Entity> Entities { get; set; } = new();
-    public List<Relationship> Relationships { get; set; } = new();
-    public KnowledgeGraph? KnowledgeGraph { get; set; }
-    public QueryUnderstanding QueryUnderstanding { get; set; } = new();
-    public List<string> SuggestedFollowUps { get; set; } = new();
-    public Dictionary<string, object> CaseContext { get; set; } = new();
-}
+
 
 /// <summary>
 /// Retrieved RAG document
@@ -670,38 +584,9 @@ public class Relationship
     public Dictionary<string, object> Properties { get; set; } = new();
 }
 
-/// <summary>
-/// Knowledge graph representation
-/// </summary>
-public class KnowledgeGraph
-{
-    public List<GraphNode> Nodes { get; set; } = new();
-    public List<GraphEdge> Edges { get; set; } = new();
-    public Dictionary<string, object> Properties { get; set; } = new();
-}
 
-/// <summary>
-/// Graph node
-/// </summary>
-public class GraphNode
-{
-    public string Id { get; set; } = string.Empty;
-    public string Label { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
-    public Dictionary<string, object> Properties { get; set; } = new();
-}
 
-/// <summary>
-/// Graph edge
-/// </summary>
-public class GraphEdge
-{
-    public string Source { get; set; } = string.Empty;
-    public string Target { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
-    public double Weight { get; set; }
-    public Dictionary<string, object> Properties { get; set; } = new();
-}
+
 
 /// <summary>
 /// Query understanding analysis

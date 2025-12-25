@@ -6,6 +6,7 @@ using Hangfire;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Mediator;
+using IIM.Shared.Models;
 using IIM.Shared.Models.Core;
 using Microsoft.Extensions.Logging;
 

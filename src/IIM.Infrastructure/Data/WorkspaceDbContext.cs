@@ -54,27 +54,52 @@ namespace IIM.Infrastructure.Data
 			});
 
 			// ProcessedFile
-			// ProcessedFile
 			modelBuilder.Entity<ProcessedFile>(e =>
 			{
 				e.HasKey(p => p.Id);
 
+				// ---- Required scalar fields ----
+				e.Property(p => p.StoredFileHash)
+					.IsRequired();
+
+				e.Property(p => p.DerivedHash)
+					.IsRequired();
+
+				e.Property(p => p.ProcessorName)
+					.IsRequired();
+
+				e.Property(p => p.ProcessorKind)
+					.IsRequired();
+
+				e.Property(p => p.ProcessedAt)
+					.IsRequired();
+
+				// ---- JSON metadata ----
 				e.Property(p => p.MetadataJson)
-					.HasColumnType("jsonb");
+					.HasColumnType("jsonb")
+					.IsRequired();
 
-				// OPTIONAL: a processed file may reference the VirtualFile that triggered processing
-				e.HasOne(p => p.VirtualFile)
-					.WithMany()
-					.HasForeignKey(p => p.VirtualFileId)
-					.OnDelete(DeleteBehavior.SetNull);
-
-				// PRIMARY: processed files belong to the StoredFile whose bytes they derive from
+				// ---- Relationship: StoredFile (content-addressed) ----
 				e.HasOne(p => p.StoredFile)
 					.WithMany(f => f.ProcessedVersions)
 					.HasForeignKey(p => p.StoredFileHash)
 					.HasPrincipalKey(s => s.Blake3Hash)
 					.OnDelete(DeleteBehavior.Restrict);
+
+				// ---- Deduplication / identity constraint ----
+				e.HasIndex(p => new
+				{
+					p.StoredFileHash,
+					p.ProcessorName,
+					p.ProcessorVersion,
+					p.ParametersHash
+				})
+					.IsUnique();
+
+				// ---- Optional: fast lookup by derived output ----
+				e.HasIndex(p => p.DerivedHash);
 			});
+
 
 
 			// Classification tags many-to-many

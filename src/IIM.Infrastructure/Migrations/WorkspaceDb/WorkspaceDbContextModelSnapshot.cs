@@ -102,33 +102,41 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Dictionary<string, string>>("Metadata")
+                    b.Property<string>("DerivedHash")
                         .IsRequired()
-                        .HasColumnType("hstore");
+                        .HasColumnType("text");
 
                     b.Property<string>("MetadataJson")
                         .IsRequired()
                         .HasColumnType("jsonb");
 
+                    b.Property<string>("ParametersHash")
+                        .HasColumnType("text");
+
                     b.Property<DateTimeOffset>("ProcessedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("ProcessorKind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("ProcessorName")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProcessorVersion")
                         .HasColumnType("text");
 
                     b.Property<string>("StoredFileHash")
                         .IsRequired()
                         .HasColumnType("character varying(64)");
 
-                    b.Property<Guid>("VirtualFileId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("StoredFileHash");
+                    b.HasIndex("DerivedHash");
 
-                    b.HasIndex("VirtualFileId");
+                    b.HasIndex("StoredFileHash", "ProcessorName", "ProcessorVersion", "ParametersHash")
+                        .IsUnique();
 
                     b.ToTable("ProcessedFiles");
                 });
@@ -476,15 +484,7 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("VirtualFile", "VirtualFile")
-                        .WithMany()
-                        .HasForeignKey("VirtualFileId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
-
                     b.Navigation("StoredFile");
-
-                    b.Navigation("VirtualFile");
                 });
 
             modelBuilder.Entity("IIM.Shared.Models.TimelineEvent", b =>

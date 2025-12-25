@@ -36,11 +36,18 @@ namespace IIM.Api.Extensions
 				client.BaseAddress = new Uri(cfg.FilerUrl);
 			});
 
-			// FOUNDRY
-			services.AddSingleton<IFoundryEndpointProvider, FoundryEndpointProvider>();
-			services.AddSingleton<IFoundryStatusChecker, FoundryStatusChecker>();
-			services.AddSingleton<IFoundryModelService, FoundryModelService>();
-			services.AddHostedService<FoundryStartupService>();
+			// Foundry
+
+			//services.AddHttpClient();
+			//services.AddSingleton<IFoundryModelService>(sp =>
+			//{
+			//	var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
+			//	var log = sp.GetRequiredService<ILogger<FoundryModelService>>();
+			//	return new FoundryModelService(http, log, "http://127.0.0.1:5273");
+			//});
+
+			services.AddSingleton<IFoundryModelService, CliFoundryModelService>();
+
 
 			// DOCLING
 			services.AddHttpClient<IDoclingService, DoclingService>((sp, client) =>

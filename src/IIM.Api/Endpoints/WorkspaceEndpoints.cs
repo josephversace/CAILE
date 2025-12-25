@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Routing;
 using NPOI.OpenXmlFormats.Spreadsheet;
 using IIM.Shared.Extensions;
 using Org.BouncyCastle.Ocsp;
+using IIM.Application;
 
 namespace IIM.Api.Endpoints
 {
@@ -288,7 +289,30 @@ namespace IIM.Api.Endpoints
 				return ok ? Results.NoContent() : Results.NotFound();
 			});
 
+			// ─────────────────────────────────────────────────────────────
+			// Derived
+			// Route base: /api/workspaces/{workspaceId}/artifacts
+			// ─────────────────────────────────────────────────────────────
+			var derived = app.MapGroup("/api/workspaces/{workspaceId:guid}/derived")
+				.WithTags("Derived")
+				.WithOpenApi();
 
+			// GET ALL ARTIFACTS FOR Virtualfile
+			derived.MapGet("/{virtualfileid:guid}", async (
+				Guid workspaceId,
+				Guid virtualfileid,
+				IMediator mediator,
+				CancellationToken ct) =>
+			{
+				var items = await mediator.Send(
+					new GetProcessedFilesByVirtualFileId(virtualfileid),
+					ct
+				);
+
+				return Results.Ok(items);
+			});
+
+		
 
 
 

@@ -1,5 +1,6 @@
 ﻿using IIM.Infrastructure.Docling;
 using IIM.Infrastructure.Embeddings;
+using IIM.Ingestion.Indicators;
 using IIM.Ingestion.Interfaces;
 using IIM.Ingestion.Services;
 using IIM.Shared.Dtos;
@@ -20,7 +21,15 @@ public static class IngestionExtensions
 		services.AddTransient<IIngestionPipeline, IngestionPipeline>();
 		services.AddTransient<IGraphRagPipeline, InMemoryGraphRagPipeline>();
 		services.AddTransient<IDoclingService, DoclingService>();
+		services.AddTransient<DocumentShapeDetector>();
 		services.AddTransient<ChunkingService>();
+		services.AddTransient<GraphExtractionJob, GraphExtractionJob>();
+		services.AddTransient<IndicatorExtractor>();
+
+
+
+		// In your DI setup
+		services.AddTransient<EntityLinkingJob>();
 
 		services.AddTransient<AnalysisService>();
 		services.AddTransient<KreuzbergExtractionService>();

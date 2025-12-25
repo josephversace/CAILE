@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using IIM.Shared.Mediator;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
-using IIM.Shared.Models.Core;
+
 using IIM.Shared.Models;
 
 namespace IIM.Application.Case
@@ -15,7 +15,7 @@ namespace IIM.Application.Case
     // Commands
     // =================================================================================================
 
-    public record CreateWorkspaceCommand : IRequest<Workspace>
+    public record CreateWorkspaceCommand : IRequest<IIM.Shared.Models.Workspace>
     {
         public string Name { get; init; } = string.Empty;
         public string Description { get; init; } = string.Empty;
@@ -29,15 +29,15 @@ namespace IIM.Application.Case
     // Queries
     // =================================================================================================
 
-    public record GetWorkspaceQuery(Guid WorkspaceId) : IQuery<Workspace?>;
+    public record GetWorkspaceQuery(Guid WorkspaceId) : IQuery<IIM.Shared.Models.Workspace?>;
 
-    public record GetRecentWorkspacesQuery(int Count) : IQuery<IEnumerable<Workspace>>;
+    public record GetRecentWorkspacesQuery(int Count) : IQuery<IEnumerable<IIM.Shared.Models.Workspace>>;
 
     // =================================================================================================
     // Command Handlers
     // =================================================================================================
 
-    public class CreateWorkspaceCommandHandler : IRequestHandler<CreateWorkspaceCommand, Workspace>
+    public class CreateWorkspaceCommandHandler : IRequestHandler<CreateWorkspaceCommand, IIM.Shared.Models.Workspace>
     {
         private readonly IWorkspaceManager _workspaceManager;
 
@@ -46,7 +46,7 @@ namespace IIM.Application.Case
             _workspaceManager = workspaceManager;
         }
 
-        public async Task<Workspace> Handle(CreateWorkspaceCommand request, CancellationToken cancellationToken)
+        public async Task<IIM.Shared.Models.Workspace> Handle(CreateWorkspaceCommand request, CancellationToken cancellationToken)
         {
             // Delegate the creation to the manager, which handles the database interaction.
             var newWorkspace = await _workspaceManager.CreateWorkspaceAsync(
@@ -85,7 +85,7 @@ namespace IIM.Application.Case
     // Query Handlers
     // =================================================================================================
 
-    public class GetWorkspaceQueryHandler : IRequestHandler<GetWorkspaceQuery, Workspace?>
+    public class GetWorkspaceQueryHandler : IRequestHandler<GetWorkspaceQuery, IIM.Shared.Models.Workspace?>
     {
         private readonly IWorkspaceManager _workspaceManager;
 
@@ -94,13 +94,13 @@ namespace IIM.Application.Case
             _workspaceManager = workspaceManager;
         }
 
-        public async Task<Workspace?> Handle(GetWorkspaceQuery request, CancellationToken cancellationToken)
+        public async Task<IIM.Shared.Models.Workspace?> Handle(GetWorkspaceQuery request, CancellationToken cancellationToken)
         {
             return await _workspaceManager.GetWorkspaceAsync(request.WorkspaceId, cancellationToken);
         }
     }
 
-    public class GetRecentWorkspacesQueryHandler : IRequestHandler<GetRecentWorkspacesQuery, IEnumerable<Workspace>>
+    public class GetRecentWorkspacesQueryHandler : IRequestHandler<GetRecentWorkspacesQuery, IEnumerable<IIM.Shared.Models.Workspace>>
     {
         private readonly IWorkspaceManager _workspaceManager;
 
@@ -109,7 +109,7 @@ namespace IIM.Application.Case
             _workspaceManager = workspaceManager;
         }
 
-        public async Task<IEnumerable<Workspace>> Handle(GetRecentWorkspacesQuery request, CancellationToken cancellationToken)
+        public async Task<IEnumerable<IIM.Shared.Models.Workspace>> Handle(GetRecentWorkspacesQuery request, CancellationToken cancellationToken)
         {
             return await _workspaceManager.GetRecentWorkspacesAsync(request.Count, cancellationToken);
         }

@@ -11,7 +11,13 @@ public enum ArtifactType
 	Code,
 	Plan,
 	Research,
-	File
+	File,
+	Entity,
+	ExifData,
+	TextData,
+	RegexData,
+	GraphData
+
 }
 
 public enum FileClass
@@ -20,7 +26,8 @@ public enum FileClass
 	Evidence,
 	Intelligence,
 	Reference,
-	Output
+	Reports,
+	Derived
 }
 
 /// <summary>
@@ -73,9 +80,18 @@ public sealed class CanvasArtifact
 	/// True if file is ready to be added to context.
 	/// </summary>
 	public bool CanAddToContext =>
-		Type == ArtifactType.File &&
-		Status == FileUploadStatus.Completed &&
-		!string.IsNullOrEmpty(Blake3Hash);
+	Type switch
+	{
+		ArtifactType.File =>
+			Status == FileUploadStatus.Completed &&
+			!string.IsNullOrEmpty(Blake3Hash),
+
+		ArtifactType.Entity =>
+			!string.IsNullOrWhiteSpace(Id),
+
+		_ => false
+	};
+
 
 	/// <summary>
 	/// Convert to context chip for chat.

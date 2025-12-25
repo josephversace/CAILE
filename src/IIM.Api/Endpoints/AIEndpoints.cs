@@ -2,12 +2,14 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using IIM.Api.Models;
+using IIM.Infrastructure.Services;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
+using MagikaSharp;
 using Microsoft.Agents.AI;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
-using MagikaSharp;
+using Org.BouncyCastle.Ocsp;
 
 
 
@@ -31,17 +33,21 @@ public static class AIEndpoints
 	private static async Task HandleChatAsync(
 		HttpContext ctx,
 		IAIAgentFactory agentFactory,
+		IWorkspaceEvidencePlanner evidencePlanner,
+		IWorkspaceContextManager contextManager,
 		IToolRegistry tools)
 	{
-		await RunAgentAsync(ctx, agentFactory.GetChatAgentAsync, tools);
+		await RunAgentAsync(ctx, agentFactory.GetChatAgentAsync, evidencePlanner, contextManager, tools);
 	}
 
 	private static async Task HandleReasoningAsync(
 		HttpContext ctx,
 		IAIAgentFactory agentFactory,
+		IWorkspaceEvidencePlanner evidencePlanner,
+		IWorkspaceContextManager contextManager,
 		IToolRegistry tools)
 	{
-		await RunAgentAsync(ctx, agentFactory.GetReasoningAgentAsync, tools);
+		await RunAgentAsync(ctx, agentFactory.GetReasoningAgentAsync, evidencePlanner, contextManager, tools);
 	}
 
 	// ============================================================
@@ -50,6 +56,8 @@ public static class AIEndpoints
 	private static async Task RunAgentAsync(
 		HttpContext ctx,
 		Func<Task<AIAgent>> agentResolver,
+		IWorkspaceEvidencePlanner agentEvidencePlanner,
+		IWorkspaceContextManager workspaceContext,
 		IToolRegistry toolRegistry)
 	{
 		// SSE headers
@@ -70,6 +78,7 @@ public static class AIEndpoints
 		ctx.Request.Body.Position = 0;
 
 		AGUIRequest? req = null;
+		WorkspaceContext? wsContext = null;
 		try
 		{
 			req = await JsonSerializer.DeserializeAsync<AGUIRequest>(
@@ -86,6 +95,25 @@ public static class AIEndpoints
 					Console.WriteLine($">>>    Message - Role: [{m.Role}], Content: [{m.Content}]");
 				}
 			}
+
+			var (workspaceId, fileHashes) = ExtractContextChips(req);
+			var cache = ExtractCache(req);
+
+			
+
+			if (workspaceId != Guid.Empty || fileHashes.Count > 0)
+			{
+				var intentEngine = ctx.RequestServices.GetRequiredService<IWorkspaceIntentEngine>();
+				var intent = await intentEngine.ClassifyAsync(req.Messages, req.Context, abort);
+				var plan = await agentEvidencePlanner.BuildPlan(intent, req.Context, workspaceId, fileHashes);
+
+				var lastMessage = req.Messages.LastOrDefault(m => m.Role == "user");
+
+				wsContext = await workspaceContext.BuildAsync(workspaceId,fileHashes,lastMessage?.Content ?? "", intent, plan, cache, abort);
+			}
+
+
+
 		}
 		catch (Exception ex)
 		{
@@ -98,10 +126,7 @@ public static class AIEndpoints
 
 		await ctx.Response.StartAsync();
 
-		// Parse request
-		//var req = await JsonSerializer.DeserializeAsync<AGUIRequest>(
-		//	ctx.Request.Body, cancellationToken: abort);
-
+	
 		if (req == null || req.Messages.Count == 0)
 		{
 			await WriteEvent(ctx, new { type = "RUN_FINISHED" }, abort);
@@ -109,6 +134,7 @@ public static class AIEndpoints
 		}
 
 		var userMsg = req.Messages.LastOrDefault(m => m.Role == "user");
+
 		if (userMsg == null)
 		{
 			await WriteEvent(ctx, new { type = "RUN_FINISHED" }, abort);
@@ -127,12 +153,11 @@ public static class AIEndpoints
 			return;
 		}
 
-		// Build full conversation context
-		string prompt = string.Join("\n", req.Messages.Select(m =>
-			$"<|{m.Role}|>\n{m.Content}"));
 
+		//string prompt = BuildAugmentedPrompt(req.Messages, wsContext);
 
-		
+		var cleanMessages = BuildAugmentedPrompt(req.Messages, wsContext);
+
 		string messageId = $"msg_{Guid.NewGuid():N}";
 
 
@@ -175,14 +200,12 @@ public static class AIEndpoints
 
 		try
 		{
-				await foreach (var update in agent
-				.RunStreamingAsync(prompt, thread)
-				.WithCancellation(modelCts.Token))
-				{
-					foreach (var content in update.Contents)
+			await foreach (var update in agent.RunStreamingAsync(cleanMessages, thread).WithCancellation(modelCts.Token))
+			{
+				foreach (var content in update.Contents)
 				{
 
-			
+
 
 
 					if (content is TextContent text)
@@ -226,7 +249,7 @@ public static class AIEndpoints
 									await ExecuteToolCallAsync(
 										ctx, call, toolRegistry,
 										agent, thread,
-										messageId, prompt, abort
+										messageId, "", abort
 									);
 								}
 							}
@@ -234,7 +257,7 @@ public static class AIEndpoints
 					}
 				}
 
-			
+
 			}
 		}
 		catch (TaskCanceledException te)
@@ -265,9 +288,15 @@ public static class AIEndpoints
 			threadId = req.ThreadId,
 			runId = req.RunId,
 			type = "RUN_FINISHED",
-			result = (object?)null
+			result = (object?)null,
+			newRetrievedChunks = wsContext?.NewChunkIds ?? [],
+			newRetrievedEntities = wsContext?.NewEntityIds ?? [],
+			newRetrievedRelationships = wsContext?.NewRelationshipIds ?? []
 		}, abort);
 	}
+
+
+
 
 	// ============================================================
 	// TOOL CALL EXECUTION (Stable for all models: Qwen, Phi, Llama)
@@ -324,37 +353,7 @@ public static class AIEndpoints
 		}
 	}
 
-	// ============================================================
-	// SSE Writer
-	// ============================================================
-	//private static async Task WriteEvent(
-	//	HttpContext ctx,
-	//	object data,
-	//	CancellationToken connectionToken)
-	//{
-	//	// Connection is gone — silently drop output
-	//	if (connectionToken.IsCancellationRequested)
-	//		return;
-
-	//	if (!ctx.Response.Body.CanWrite)
-	//		return;
-
-	//	try
-	//	{
-	//		var json = JsonSerializer.Serialize(data);
-	//		await ctx.Response.WriteAsync($"event: message\ndata: {json}\n\n");
-	//		await ctx.Response.Body.FlushAsync();
-	//	}
-	//	catch (OperationCanceledException)
-	//	{
-	//		// connection closed — ignore
-	//	}
-	//	catch (IOException)
-	//	{
-	//		// response pipe closed — ignore
-	//	}
-	//}
-
+	
 	private static async Task WriteEvent(HttpContext ctx, object data, CancellationToken ct)
 	{
 		if (!ctx.Response.Body.CanWrite)
@@ -398,23 +397,149 @@ public static class AIEndpoints
 			reasoningModel = factory.CurrentReasoningModel
 		});
 	}
+
+	// ============================================================
+	// CONTEXT EXTRACTION
+	// ============================================================
+
+
+	private static (Guid WorkspaceId, List<string> FileHashes) ExtractContextChips(AGUIRequest req)
+	{
+		Guid workspaceId = Guid.Empty;
+		var fileHashes = new List<string>();
+
+		if (req.Context == null)
+			return (workspaceId, fileHashes);
+
+		foreach (var item in req.Context)
+		{
+			if (item is not JsonElement je)
+				continue;
+
+			if (!je.TryGetProperty("type", out var typeProp))
+				continue;
+
+			var type = typeProp.GetString();
+
+			if (type == "workspace" && je.TryGetProperty("id", out var wsIdProp))
+			{
+				if (Guid.TryParse(wsIdProp.GetString(), out var wsId))
+					workspaceId = wsId;
+			}
+			else if (type == "file" && je.TryGetProperty("id", out var fileIdProp))
+			{
+				var hash = fileIdProp.GetString();
+				if (!string.IsNullOrEmpty(hash))
+					fileHashes.Add(hash);
+			}
+		}
+
+		return (workspaceId, fileHashes);
+	}
+
+	private static RetrievedContextCache ExtractCache(AGUIRequest req)
+	{
+		return new RetrievedContextCache(
+			Chunks: new HashSet<string>(req.RetrievedChunks ?? []),
+			Entities: new HashSet<string>(req.RetrievedEntities ?? []),
+			Relationships: new HashSet<string>(req.RetrievedRelationships ?? [])
+		);
+	}
+
+	private static List<ChatMessage> BuildCleanChatMessages(List<AGUIMessage> messages, WorkspaceContext? ctx)
+	{
+		var chatMessages = new List<ChatMessage>();
+
+		var systemBuilder = new StringBuilder();
+		systemBuilder.AppendLine("### ROLE");
+		systemBuilder.AppendLine("You are a professional investigative analyst.");
+
+		systemBuilder.AppendLine("\n### TASK");
+		systemBuilder.AppendLine("Summarize provided documents. No Chain-of-Thought. No LaTeX. Final answer only.");
+
+		if (ctx != null && ctx.SemanticChunks.Any())
+		{
+			systemBuilder.AppendLine("\n### CONTEXT DOCUMENTS");
+			foreach (var chunk in ctx.SemanticChunks.Take(5))
+			{
+				systemBuilder.AppendLine($"<DOC name=\"{chunk.FileName}\">");
+				systemBuilder.AppendLine(chunk.Text);
+				systemBuilder.AppendLine("</DOC>");
+			}
+		}
+
+		chatMessages.Add(new ChatMessage(ChatRole.System, systemBuilder.ToString()));
+
+		// Add user messages...
+		return chatMessages;
+	}
+
+	private static string BuildAugmentedPrompt(List<AGUIMessage> messages, WorkspaceContext ctx)
+	{
+
+		if (ctx == null) {
+
+			return string.Join("\n", messages.Select(m => $"<|{m.Role}|>\n{m.Content}"));
+		}
+
+		var sb = new StringBuilder();
+
+		// System context block
+		sb.AppendLine("<context>");
+
+		if (ctx.SemanticChunks.Count > 0)
+		{
+			sb.AppendLine("<relevant_documents>");
+			foreach (var chunk in ctx.SemanticChunks.Take(5))
+			{
+				sb.AppendLine($"[{chunk.FileName ?? "unknown"}] {chunk.Text}");
+			}
+			sb.AppendLine("</relevant_documents>");
+		}
+
+		if (ctx.Entities.Count > 0)
+		{
+			sb.AppendLine("<entities>");
+			foreach (var e in ctx.Entities.Take(20))
+			{
+				sb.AppendLine($"- {e.Name} ({e.Type})");
+			}
+			sb.AppendLine("</entities>");
+		}
+
+		if (ctx.Relationships.Count > 0)
+		{
+			sb.AppendLine("<relationships>");
+			foreach (var r in ctx.Relationships.Take(20))
+			{
+				sb.AppendLine($"- {r.SourceId} --[{r.Type}]--> {r.TargetId}");
+			}
+			sb.AppendLine("</relationships>");
+		}
+
+	
+
+		if (ctx.Timeline.Count > 0)
+		{
+			sb.AppendLine("<timeline>");
+			foreach (var t in ctx.Timeline.OrderByDescending(t => t.Timestamp).Take(10))
+			{
+				sb.AppendLine($"- [{t.Timestamp:yyyy-MM-dd HH:mm}] {t.EventType}: {t.Description}");
+			}
+			sb.AppendLine("</timeline>");
+		}
+
+		sb.AppendLine("</context>");
+		sb.AppendLine();
+
+		// Conversation history
+		foreach (var msg in messages)
+		{
+			sb.AppendLine($"<|{msg.Role}|>");
+			sb.AppendLine(msg.Content);
+		}
+
+		return sb.ToString();
+	}
 }
 
-// ======================================================================
-// AG-UI DTOs (Stable)
-// ======================================================================
-public class AGUIRequest
-{
-	[JsonPropertyName("threadId")] public string ThreadId { get; set; } = "";
-	[JsonPropertyName("runId")] public string RunId { get; set; } = "";
-	[JsonPropertyName("messages")] public List<AGUIMessage> Messages { get; set; } = new();
-	[JsonPropertyName("context")] public List<object> Context { get; set; } = new();
-}
-
-public class AGUIMessage
-{
-	[JsonPropertyName("id")] public string Id { get; set; } = "";
-	[JsonPropertyName("role")] public string Role { get; set; } = "";
-	[JsonPropertyName("content")] public string Content { get; set; } = "";
-	[JsonPropertyName("name")] public string? Name { get; set; }
-}

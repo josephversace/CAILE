@@ -20,10 +20,10 @@ public sealed class AgentGraphRagChatClient
 		// IMPORTANT: this must return something that implements IChatClient
 		var chatClient = await _agentFactory.GetChatClientAsync();
 
-		options = new ChatOptions();
-
+		options ??= new ChatOptions();
 		options.MaxOutputTokens ??= 8192;
-		
+
+
 
 		// Delegate directly — no transformation, no guessing
 		return await chatClient.GetResponseAsync(

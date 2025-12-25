@@ -128,7 +128,7 @@ namespace IIM.Application.AI.DataEnrichment.Services
             }
         }
 
-        private async Task AssessAccessControlRisks(Workspace workspace, RiskAssessment assessment, CancellationToken cancellationToken)
+        private async Task AssessAccessControlRisks(IIM.Shared.Models.Workspace workspace, RiskAssessment assessment, CancellationToken cancellationToken)
         {
             // Check for overly broad access permissions
             if (workspace.IsPublic)

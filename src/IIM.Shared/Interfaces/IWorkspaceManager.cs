@@ -109,5 +109,7 @@ namespace IIM.Shared.Interfaces
 		Task<ProcessedFile> AddProcessedFileAsync(ProcessedFile pf, CancellationToken ct = default);
 		Task<IEnumerable<ProcessedFile>> GetProcessedFilesAsync(Guid virtualFileId, CancellationToken ct = default);
 
+		Task<List<string>> GetMetadataJsonAsync(string blake3, string processorName, bool latestOnly, CancellationToken ct = default);
+
 	}
 }

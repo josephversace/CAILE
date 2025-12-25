@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using IIM.Shared.Models.Core;
 
-namespace IIM.Shared.Models.Core
+namespace IIM.Shared.Models
 {
 	public class StoredFile
 	{

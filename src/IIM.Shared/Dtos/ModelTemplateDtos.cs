@@ -24,6 +24,7 @@ namespace IIM.Shared.Dtos
 			if (Models.Embedding is not null) yield return Models.Embedding;
 			if (Models.Vision is not null) yield return Models.Vision;
 			if (Models.Audio is not null) yield return Models.Audio;
+			if (Models.Intent is not null) yield return Models.Intent;
 		}
 
 	}
@@ -37,6 +38,8 @@ namespace IIM.Shared.Dtos
 		public EmbeddingModelDto? Embedding { get; set; }
 		public ModelDefinitionDto? Vision { get; set; }
 		public ModelDefinitionDto? Audio { get; set; }
+
+		public EmbeddingModelDto? Intent { get; set; }
 	}
 
 	public class ModelDefinitionDto

@@ -17,44 +17,42 @@ public static class ModelRegistryEndpoints
 			.WithTags("Foundry Models")
 			.WithOpenApi();
 
-		// AVAILABLE
-		foundry.MapGet("/available", async (
-			IFoundryModelService svc, CancellationToken ct) =>
-		{
-			return Results.Ok(await svc.GetAvailableModelsAsync(ct));
-		});
+		//// AVAILABLE
+		//foundry.MapGet("/available", async (
+		//	IFoundryModelService svc, CancellationToken ct) =>
+		//{
+		//	return Results.Ok(await svc.GetAvailableModelsAsync(ct));
+		//});
 
 		// CACHED
-		foundry.MapGet("/cached", async (
-			[FromServices] IFoundryModelService svc, CancellationToken ct) =>
-		{
-			return Results.Ok(await svc.GetCachedModelsAsync(ct));
-		});
+		//foundry.MapGet("/cached", async (
+		//	[FromServices] IFoundryModelService svc, CancellationToken ct) =>
+		//{
+		//	return Results.Ok(await svc.GetCachedModelDtosAsync(ct));
+		//});
 
 		// LOADED
 		foundry.MapGet("/loaded", async (
 			[FromServices] IFoundryModelService svc, CancellationToken ct) =>
 		{
-			return Results.Ok(await svc.GetLoadedModelsAsync(ct));
+			return Results.Ok(await svc.GetLoadedModelsDtoAsync(ct));
 		});
 
 		// ALL (available + flags)
-		foundry.MapGet("/all", async (
-			[FromServices] IFoundryModelService svc, CancellationToken ct) =>
-		{
-			return Results.Ok(await svc.GetAllWithStatusAsync(ct));
-		});
+		//foundry.MapGet("/all", async (
+		//	[FromServices] IFoundryModelService svc, CancellationToken ct) =>
+		//{
+		//	return Results.Ok(await svc.GetAllWithStatusAsync(ct));
+		//});
 
 		// LOAD MODEL
-		foundry.MapPost("/load/{id}", async (
-			string id,
-			[FromServices] IFoundryModelService svc,
-			[FromQuery] string? ep,
-			[FromQuery] int? ttl,
-			CancellationToken ct) =>
+		foundry.MapPost("/load/{alias}", async (
+		string alias,
+		[FromServices] IFoundryModelService svc,
+		CancellationToken ct) =>
 		{
-			await svc.LoadModelAsync(id, ep, ttl, ct);
-			return Results.Ok(new { message = $"Loaded {id}" });
+			await svc.LoadModelAsync(alias, ct);
+			return Results.Ok(new { message = $"Ensured model running: {alias}" });
 		});
 
 		// UNLOAD MODEL

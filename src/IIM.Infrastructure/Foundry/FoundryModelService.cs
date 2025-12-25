@@ -1,256 +1,387 @@
-﻿using System.Diagnostics;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using IIM.Shared.Dtos;
 using IIM.Shared.Interfaces;
+using Microsoft.AI.Foundry.Local;
 using Microsoft.Extensions.Logging;
+
+// Alias to avoid conflict with EF Core's IModel
+using FoundryModel = Microsoft.AI.Foundry.Local.IModel;
+using LogLevel = Microsoft.Extensions.AI;
 
 namespace IIM.Infrastructure.Foundry;
 
 public interface IFoundryModelService
 {
-	Task<IReadOnlyList<FoundryModelDto>> GetAvailableModelsAsync(CancellationToken ct = default);
-	Task<IReadOnlyList<FoundryModelDto>> GetCachedModelsAsync(CancellationToken ct = default);
-	Task<IReadOnlyList<FoundryModelDto>> GetLoadedModelsAsync(CancellationToken ct = default);
-	Task<IReadOnlyList<FoundryModelDto>> GetAllWithStatusAsync(CancellationToken ct = default);
-
-	Task LoadModelAsync(string modelId, string? ep = null, int? ttl = null, CancellationToken ct = default);
+	Task<IReadOnlyList<FoundryModelDto>> GetAvailableModelsDtoAsync(CancellationToken ct = default);
+	Task<IReadOnlyList<FoundryModelDto>> GetCachedModelsDtoAsync(CancellationToken ct = default);
+	Task<IReadOnlyList<FoundryModelDto>> GetLoadedModelsDtoAsync(CancellationToken ct = default);
+	Task<IReadOnlyList<FoundryModelDto>> GetAllWithStatusDtoAsync(CancellationToken ct = default);
+	Task LoadModelAsync(string modelId, CancellationToken ct = default);
 	Task UnloadModelAsync(string modelId, bool force = false, CancellationToken ct = default);
-
-	/// <summary>
-	/// Unload all models then load all models referenced by the template
-	/// using <c>foundry model run &lt;name&gt; --retain</c>.
-	/// </summary>
+	Task<string> GetLoadedModelForAliasAsync(string alias, CancellationToken ct = default);
 	Task ApplyTemplateAsync(ModelTemplateDto template, CancellationToken ct = default);
+	Task<IReadOnlyList<(string Alias, string ModelId)>> GetCachedModelsAsync();
+	Task EnsureInitializedAsync(CancellationToken ct = default);
+
+	string BaseUrl { get; }
+	string InferenceEndpoint { get; }
 }
 
-
-
-public sealed class FoundryModelService : IFoundryModelService
+public sealed class FoundryModelService : IFoundryModelService, IAsyncDisposable
 {
 	private readonly HttpClient _http;
-	private readonly IFoundryEndpointProvider _endpoint;
 	private readonly ILogger<FoundryModelService> _log;
+	private readonly string _baseUrl;
+	private readonly SemaphoreSlim _initLock = new(1, 1);
+
+	private bool _initialized;
 
 	public FoundryModelService(
 		HttpClient http,
-		IFoundryEndpointProvider endpoint,
-		ILogger<FoundryModelService> log)
+		ILogger<FoundryModelService> log,
+		string baseUrl = "http://127.0.0.1:5273")
 	{
 		_http = http;
-		_endpoint = endpoint;
 		_log = log;
+		_baseUrl = baseUrl.TrimEnd('/');
 	}
 
-	/// <summary>
-	/// Build a full URL for a Foundry Local REST path, using the
-	/// current base URL from IFoundryEndpointProvider (no caching).
-	/// </summary>
-	private async Task<string> ApiAsync(string path, CancellationToken ct)
+	public string BaseUrl => _baseUrl;
+	public string InferenceEndpoint => $"{_baseUrl}/v1";
+
+	// ════════════════════════════════════════════════════════════════
+	// INITIALIZATION
+	// ════════════════════════════════════════════════════════════════
+
+	public async Task EnsureInitializedAsync(CancellationToken ct = default)
 	{
-		var baseUrl = _endpoint.GetBaseUrl();
-		return $"{baseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
-	}
+		if (_initialized)
+			return;
 
-	// ------------------------------------------------------------------------
-	// AVAILABLE MODELS (/foundry/list)
-	// ------------------------------------------------------------------------
-	public async Task<IReadOnlyList<FoundryModelDto>> GetAvailableModelsAsync(CancellationToken ct = default)
-	{
-		var url = await ApiAsync("foundry/list", ct);
-
-		// /foundry/list returns a bare array, NOT { models: [...] }
-		var resp = await _http.GetFromJsonAsync<List<FoundryCatalogModel>>(url, ct)
-				   ?? new List<FoundryCatalogModel>();
-
-		return resp.Select(MapCatalogModel).ToList();
-	}
-
-	// ------------------------------------------------------------------------
-	// CACHED MODELS (from CLI: `foundry cache ls`)
-	// ------------------------------------------------------------------------
-	public async Task<IReadOnlyList<FoundryModelDto>> GetCachedModelsAsync(CancellationToken ct = default)
-	{
-		// 1. Parse CLI output
-		var cachedEntries = await GetCachedModelEntriesAsync(ct);
-		if (cachedEntries.Count == 0)
+		await _initLock.WaitAsync(ct);
+		try
 		{
-			_log.LogInformation("No cached models detected via `foundry cache ls`.");
-			return Array.Empty<FoundryModelDto>();
-		}
+			if (_initialized)
+				return;
 
-		// 2. Get catalog from REST to enrich DTOs
-		var url = await ApiAsync("foundry/list", ct);
-		var catalog = await _http.GetFromJsonAsync<List<FoundryCatalogModel>>(url, ct)
-					  ?? new List<FoundryCatalogModel>();
-
-		var byName = catalog.ToDictionary(m => m.Name, StringComparer.OrdinalIgnoreCase);
-
-		// 3. Also get loaded models so we can mark IsLoaded on cached models
-		var loadedNames = await GetLoadedModelNamesAsync(ct);
-		var loadedSet = new HashSet<string>(loadedNames, StringComparer.OrdinalIgnoreCase);
-
-		var result = new List<FoundryModelDto>();
-
-		foreach (var (alias, modelId) in cachedEntries)
-		{
-			FoundryModelDto dto;
-
-			if (byName.TryGetValue(modelId, out var catalogModel))
+			var config = new Configuration
 			{
-				dto = MapCatalogModel(catalogModel);
-			}
-			else
-			{
-				// Fallback if catalog doesn't know about this cached model
-				dto = new FoundryModelDto
+				AppName = "iim",
+				Web = new Configuration.WebService
 				{
-					Id = !string.IsNullOrWhiteSpace(alias) ? alias : modelId,
-					Alias = alias,
-					DisplayName = $"{alias ?? modelId} (cached)",
-					FoundryModelId = modelId,
-					Device = "",
-					Task = "",
-					ProviderType = null,
-					Version = null
-				};
+					Urls = _baseUrl
+				}
+			};
+
+			try
+			{
+				await FoundryLocalManager.CreateAsync(config, _log, ct);
+			}
+			catch (FoundryLocalException ex) when (ex.Message.Contains("already been created"))
+			{
+				_log.LogDebug("FoundryLocalManager already initialized.");
 			}
 
-			dto.IsLoaded = loadedSet.Contains(dto.FoundryModelId) ||
-						   (!string.IsNullOrEmpty(dto.Alias) && loadedSet.Contains(dto.Alias));
+			var mgr = FoundryLocalManager.Instance;
+			await mgr.EnsureEpsDownloadedAsync();
+			await mgr.StartWebServiceAsync();
 
-			result.Add(dto);
+			_initialized = true;
+			_log.LogInformation("FoundryLocalManager initialized with endpoint {Url}", _baseUrl);
 		}
-
-		return result;
+		finally
+		{
+			_initLock.Release();
+		}
 	}
 
-	// ------------------------------------------------------------------------
-	// LOADED MODELS (REST: /openai/loadedmodels)
-	// ------------------------------------------------------------------------
-	public async Task<IReadOnlyList<FoundryModelDto>> GetLoadedModelsAsync(CancellationToken ct = default)
+	private async Task<FoundryLocalManager> GetManagerAsync(CancellationToken ct = default)
 	{
-		// Reuse GetAllWithStatusAsync to avoid double REST calls
-		var all = await GetAllWithStatusAsync(ct);
+		await EnsureInitializedAsync(ct);
+		return FoundryLocalManager.Instance;
+	}
+
+	private async Task<ICatalog> GetCatalogAsync(CancellationToken ct = default)
+	{
+		var mgr = await GetManagerAsync(ct);
+		return await mgr.GetCatalogAsync();
+	}
+
+	// ════════════════════════════════════════════════════════════════
+	// MODEL LOADING
+	// ════════════════════════════════════════════════════════════════
+
+	public async Task LoadModelAsync(string modelId, CancellationToken ct = default)
+	{
+		var catalog = await GetCatalogAsync(ct);
+
+		// 1. Check if already loaded
+		var loaded = await catalog.GetLoadedModelsAsync();
+		var alreadyLoaded = loaded.FirstOrDefault(m =>
+			(m.Alias?.Equals(modelId, StringComparison.OrdinalIgnoreCase) ?? false) ||
+			m.Id.Equals(modelId, StringComparison.OrdinalIgnoreCase));
+
+		if (alreadyLoaded != null)
+		{
+			_log.LogDebug("Model {Model} already loaded.", modelId);
+			return;
+		}
+
+		// 2. Check cached models (returns ModelVariant)
+		var cached = await catalog.GetCachedModelsAsync();
+		var cachedCandidates = cached
+			.Where(m =>
+				(m.Alias?.Equals(modelId, StringComparison.OrdinalIgnoreCase) ?? false) ||
+				m.Id.Equals(modelId, StringComparison.OrdinalIgnoreCase))
+			.ToList();
+
+		ModelVariant? variant = null;
+
+		if (cachedCandidates.Count > 0)
+		{
+			variant = SelectBestVariant(cachedCandidates);
+			_log.LogDebug("Found cached model variant: {Id}", variant.Id);
+		}
+		else
+		{
+			// 3. Not cached - need to download
+			_log.LogInformation("Model {Model} not in cache, attempting to download...", modelId);
+
+			var catalogModel = await catalog.GetModelAsync(modelId);
+
+			if (catalogModel == null)
+			{
+				var allModels = await catalog.ListModelsAsync();
+				catalogModel = allModels.FirstOrDefault(m =>
+					(m.Alias?.Equals(modelId, StringComparison.OrdinalIgnoreCase) ?? false) ||
+					m.Id.Equals(modelId, StringComparison.OrdinalIgnoreCase));
+			}
+
+			if (catalogModel == null)
+			{
+				throw new InvalidOperationException(
+					$"Model {modelId} not found in Foundry catalog.");
+			}
+
+			_log.LogInformation("Downloading model {Model}...", catalogModel.Id);
+
+			variant = SelectBestVariant(catalogModel.Variants);
+
+			await variant.DownloadAsync(
+				progress =>
+				{
+					if (progress % 10 < 1)
+					{
+						_log.LogDebug("Download progress: {Progress:F1}%", progress);
+					}
+				},
+				ct);
+
+			_log.LogInformation("Model {Model} downloaded.", catalogModel.Id);
+
+			// After download, get the variant
+			cached = await catalog.GetCachedModelsAsync();
+			variant = cached.FirstOrDefault(m =>
+				(m.Alias?.Equals(modelId, StringComparison.OrdinalIgnoreCase) ?? false) ||
+				m.Id.Equals(modelId, StringComparison.OrdinalIgnoreCase));
+
+			if (variant == null)
+			{
+				throw new InvalidOperationException(
+					$"Model {modelId} downloaded but not found in cache.");
+			}
+		}
+
+		// 4. Load the model
+		_log.LogInformation("Loading model {Alias} → {Id}...", modelId, variant.Id);
+
+		try
+		{
+			await variant.LoadAsync(ct);
+			_log.LogInformation("Model loaded: {Id}", variant.Id);
+		
+		}
+		catch (Exception ex)
+		{
+			_log.LogError(ex, "Failed to load model {Model}.", variant.Id);
+			throw;
+		}
+	}
+
+	public async Task UnloadModelAsync(string modelId, bool force = false, CancellationToken ct = default)
+	{
+		var catalog = await GetCatalogAsync(ct);
+		var loaded = await catalog.GetLoadedModelsAsync();
+
+		var model = loaded.FirstOrDefault(m =>
+			(m.Alias?.Equals(modelId, StringComparison.OrdinalIgnoreCase) ?? false) ||
+			m.Id.Equals(modelId, StringComparison.OrdinalIgnoreCase));
+
+		if (model == null)
+		{
+			_log.LogWarning("Model {Model} not currently loaded.", modelId);
+			return;
+		}
+
+		await model.UnloadAsync(ct);
+		_log.LogInformation("Model {Model} unloaded.", modelId);
+	}
+
+	// ════════════════════════════════════════════════════════════════
+	// VARIANT SELECTION
+	// ════════════════════════════════════════════════════════════════
+
+	private ModelVariant SelectBestVariant(List<ModelVariant> candidates)
+	{
+		if (candidates.Count == 1)
+			return candidates[0];
+
+		// 1. NPU - XDNA 2 should work
+		var npuVariant = candidates.FirstOrDefault(m =>
+			m.Id.Contains("npu", StringComparison.OrdinalIgnoreCase));
+
+		if (npuVariant != null)
+		{
+			_log.LogInformation("Using NPU variant: {Id}", npuVariant.Id);
+			return npuVariant;
+		}
+
+		// 2. CPU - Zen 5 fallback (skip GPU/DirectML - not supported in SDK on .NET 10)
+		var cpuVariant = candidates.FirstOrDefault(m =>
+			m.Id.Contains("cpu", StringComparison.OrdinalIgnoreCase));
+
+		if (cpuVariant != null)
+		{
+			_log.LogInformation("Using CPU variant (NPU not available): {Id}", cpuVariant.Id);
+			return cpuVariant;
+		}
+
+		// 3. Last resort
+		_log.LogWarning("No NPU/CPU variant found, trying first available: {Id}", candidates[0].Id);
+		return candidates[0];
+	}
+
+	// ════════════════════════════════════════════════════════════════
+	// QUERIES
+	// ════════════════════════════════════════════════════════════════
+
+	public async Task<IReadOnlyList<(string Alias, string ModelId)>> GetCachedModelsAsync()
+	{
+		var catalog = await GetCatalogAsync();
+		var cached = await catalog.GetCachedModelsAsync();
+		return cached.Select(m => (m.Alias ?? "", m.Id)).ToList();
+	}
+
+	private async Task<IReadOnlyList<(string Alias, string ModelId)>> GetLoadedModelsInternalAsync(
+		CancellationToken ct = default)
+	{
+		var catalog = await GetCatalogAsync(ct);
+		var loaded = await catalog.GetLoadedModelsAsync();
+		return loaded.Select(m => (m.Alias ?? "", m.Id)).ToList();
+	}
+
+	public async Task<string> GetLoadedModelForAliasAsync(string alias, CancellationToken ct = default)
+	{
+		var catalog = await GetCatalogAsync(ct);
+		var loaded = await catalog.GetLoadedModelsAsync();
+
+		if (loaded.Count == 0)
+			throw new InvalidOperationException("No Foundry models are currently loaded.");
+
+		var match = loaded.FirstOrDefault(m =>
+			m.Alias?.Equals(alias, StringComparison.OrdinalIgnoreCase) ?? false);
+
+		if (match != null)
+			return match.Id;
+
+		// Fall back to cached
+		var cached = await GetCachedModelsAsync();
+		var candidates = cached
+			.Where(m => m.Alias.Equals(alias, StringComparison.OrdinalIgnoreCase))
+			.Select(m => m.ModelId)
+			.ToList();
+
+		if (candidates.Count > 0)
+		{
+			return candidates.FirstOrDefault(v => v.Contains("npu", StringComparison.OrdinalIgnoreCase))
+				?? candidates.FirstOrDefault(v => v.Contains("cpu", StringComparison.OrdinalIgnoreCase))
+				?? candidates[0];
+		}
+
+		throw new InvalidOperationException($"No model found for alias {alias}.");
+	}
+
+	// ════════════════════════════════════════════════════════════════
+	// DTO QUERIES
+	// ════════════════════════════════════════════════════════════════
+
+	public async Task<IReadOnlyList<FoundryModelDto>> GetAvailableModelsDtoAsync(CancellationToken ct = default)
+	{
+		var catalog = await GetCatalogAsync(ct);
+		var models = await catalog.ListModelsAsync();
+
+		return models.Select(m => new FoundryModelDto
+		{
+			Id = m.Alias ?? m.Id,
+			Alias = m.Alias,
+			DisplayName = m.Id,
+			FoundryModelId = m.Id
+		}).ToList();
+	}
+
+	public async Task<IReadOnlyList<FoundryModelDto>> GetCachedModelsDtoAsync(CancellationToken ct = default)
+	{
+		var loaded = await GetLoadedModelsInternalAsync(ct);
+		var loadedAliases = loaded
+			.Select(m => m.Alias)
+			.Where(a => !string.IsNullOrEmpty(a))
+			.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+		var cached = await GetCachedModelsAsync();
+
+		return cached.Select(m => new FoundryModelDto
+		{
+			Id = !string.IsNullOrWhiteSpace(m.Alias) ? m.Alias : m.ModelId,
+			Alias = m.Alias,
+			DisplayName = $"{m.Alias ?? m.ModelId} (cached)",
+			FoundryModelId = m.ModelId,
+			IsLoaded = loadedAliases.Contains(m.Alias)
+		}).ToList();
+	}
+
+	public async Task<IReadOnlyList<FoundryModelDto>> GetLoadedModelsDtoAsync(CancellationToken ct = default)
+	{
+		var all = await GetAllWithStatusDtoAsync(ct);
 		return all.Where(m => m.IsLoaded).ToList();
 	}
 
-	// ------------------------------------------------------------------------
-	// ALL MODELS WITH STATUS (available + loaded)
-	// ------------------------------------------------------------------------
-	public async Task<IReadOnlyList<FoundryModelDto>> GetAllWithStatusAsync(CancellationToken ct = default)
+	public async Task<IReadOnlyList<FoundryModelDto>> GetAllWithStatusDtoAsync(CancellationToken ct = default)
 	{
-		var available = await GetAvailableModelsAsync(ct);
+		var available = await GetAvailableModelsDtoAsync(ct);
+		var loaded = await GetLoadedModelsInternalAsync(ct);
 
-		// Get loaded names
-		var loadedNames = await GetLoadedModelNamesAsync(ct);
-		var loadedSet = new HashSet<string>(loadedNames, StringComparer.OrdinalIgnoreCase);
+		var loadedAliases = loaded
+			.Where(l => !string.IsNullOrWhiteSpace(l.Alias))
+			.Select(l => l.Alias)
+			.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-		foreach (var m in available)
+		foreach (var model in available)
 		{
-			if (loadedSet.Contains(m.DisplayName) ||
-				(!string.IsNullOrEmpty(m.Alias) && loadedSet.Contains(m.Alias)))
-			{
-				m.IsLoaded = true;
-			}
+			model.IsLoaded = model.Alias != null && loadedAliases.Contains(model.Alias);
 		}
 
 		return available;
 	}
 
-	private async Task<List<string>> GetLoadedModelNamesAsync(CancellationToken ct)
-	{
-		var url = await ApiAsync("openai/loadedmodels", ct);
+	// ════════════════════════════════════════════════════════════════
+	// TEMPLATE
+	// ════════════════════════════════════════════════════════════════
 
-		var loaded = await _http.GetFromJsonAsync<List<string>>(url, ct)
-					 ?? new List<string>();
-
-		return loaded;
-	}
-
-	// ------------------------------------------------------------------------
-	// LOAD MODEL (REST: /openai/load/{name})
-	//
-	// NOTE:
-	//  - This is a generic “load” for ad-hoc operations.
-	//  - Template application uses CLI `foundry model run ... --retain`
-	//    so models are pinned.
-	// ------------------------------------------------------------------------
-	public async Task LoadModelAsync(string modelId, string? ep = null, int? ttl = null, CancellationToken ct = default)
-	{
-		var qs = new List<string>();
-
-		if (ttl.HasValue)
-			qs.Add($"ttl={ttl.Value}");
-
-		if (!string.IsNullOrWhiteSpace(ep))
-			qs.Add($"ep={Uri.EscapeDataString(ep)}");
-
-		var suffix = qs.Count > 0 ? $"?{string.Join("&", qs)}" : "";
-
-		var url = await ApiAsync($"openai/load/{Uri.EscapeDataString(modelId)}{suffix}", ct);
-
-		_log.LogInformation("Loading Foundry model {Model} via REST {Url}", modelId, url);
-		var resp = await _http.GetAsync(url, ct);
-		resp.EnsureSuccessStatusCode();
-	}
-
-	// ------------------------------------------------------------------------
-	// UNLOAD MODEL (REST: /openai/unload/{name})
-	// ------------------------------------------------------------------------
-	public async Task UnloadModelAsync(string modelId, bool force = false, CancellationToken ct = default)
-	{
-		var qs = force ? "?force=true" : "";
-		var url = await ApiAsync($"openai/unload/{Uri.EscapeDataString(modelId)}{qs}", ct);
-
-		_log.LogInformation("Unloading Foundry model {Model} via REST {Url}", modelId, url);
-		var resp = await _http.GetAsync(url, ct);
-		resp.EnsureSuccessStatusCode();
-	}
-
-	private async Task UnloadAllAsync(CancellationToken ct)
-	{
-		var url = await ApiAsync("openai/unloadall", ct);
-
-		_log.LogInformation("Unloading ALL Foundry models via REST {Url}", url);
-		var resp = await _http.GetAsync(url, ct);
-		resp.EnsureSuccessStatusCode();
-	}
-
-	// ------------------------------------------------------------------------
-	// APPLY TEMPLATE
-	//
-	// - Unloads ALL models via /openai/unloadall
-	// - For each required Foundry model:
-	//     foundry model run {modelId} --retain
-	//
-	// This ensures all template models are pinned in memory simultaneously.
-	// ------------------------------------------------------------------------
 	public async Task ApplyTemplateAsync(ModelTemplateDto template, CancellationToken ct = default)
 	{
 		if (template.Models is null)
-			throw new InvalidOperationException("Template has no model definitions");
+			throw new InvalidOperationException("Template has no model definitions.");
 
-		// ------------------------------------------------------------
-		// 1. Unload ALL currently loaded models
-		// ------------------------------------------------------------
-		var unloadAllUrl = await ApiAsync("openai/unloadall", ct);
-
-		_log.LogInformation("Applying template: unloading all existing models via {Url}", unloadAllUrl);
-
-		try
-		{
-			var unloadResp = await _http.GetAsync(unloadAllUrl);
-			unloadResp.EnsureSuccessStatusCode();
-		}
-		catch (Exception ex)
-		{
-			_log.LogError(ex, "Failed to unload all current models.");
-			throw;
-		}
-
-		// ------------------------------------------------------------
-		// 2. Build the list of required model IDs
-		// ------------------------------------------------------------
 		var required = template
 			.GetAllSlots()
 			.Where(m => !string.IsNullOrWhiteSpace(m.FoundryModelId))
@@ -260,248 +391,41 @@ public sealed class FoundryModelService : IFoundryModelService
 
 		if (required.Count == 0)
 		{
-			_log.LogWarning("Template has no model slots requiring model loading.");
+			_log.LogWarning("Template has no model slots requiring loading.");
 			return;
 		}
 
-		// ------------------------------------------------------------
-		// 3. Load each model with "infinite" retention
-		//    This emulates: `foundry model run MODEL --retain`
-		// ------------------------------------------------------------
 		foreach (var modelId in required)
 		{
-			string normalizedModel = modelId.Replace(" ", "");
-			
-			var url = await ApiAsync($"openai/load/{Uri.EscapeDataString(normalizedModel)}?ttl=999999", ct);
-
-			_log.LogInformation("Applying template: loading model {ModelId} via {Url}", modelId, url);
-
 			try
 			{
-				var resp = await _http.GetAsync(url);
-				resp.EnsureSuccessStatusCode();
-
-				_log.LogInformation("Model {ModelId} successfully loaded and retained.", modelId);
+				await LoadModelAsync(modelId, ct);
 			}
 			catch (Exception ex)
 			{
-				_log.LogError(ex, "Failed to load model {ModelId}", modelId);
-				throw;
+				_log.LogError(ex, "Failed to load model {Model} from template.", modelId);
 			}
 		}
 
 		_log.LogInformation("Template applied successfully.");
 	}
 
+	// ════════════════════════════════════════════════════════════════
+	// CLEANUP
+	// ════════════════════════════════════════════════════════════════
 
-	// ------------------------------------------------------------------------
-	// MAPPING: Foundry catalog → DTO
-	// ------------------------------------------------------------------------
-	private static FoundryModelDto MapCatalogModel(FoundryCatalogModel m)
+	public async ValueTask DisposeAsync()
 	{
-		var device = m.Runtime?.DeviceType ?? "Unknown/CPU";
-		var task = m.Task ?? string.Empty;
-
-		long sizeBytes = (long)(m.FileSizeMb * 1024 * 1024);
-
-		// heuristics
-		bool isCoder =
-		(m.Name ?? "").Contains("coder", StringComparison.OrdinalIgnoreCase) ||
-		(task?.Contains("code", StringComparison.OrdinalIgnoreCase) ?? false) ||
-		(task?.Contains("coding", StringComparison.OrdinalIgnoreCase) ?? false) ||
-		(task?.Contains("programming", StringComparison.OrdinalIgnoreCase) ?? false) ||
-		(m.ModelType ?? "").Contains("code", StringComparison.OrdinalIgnoreCase);
-
-		bool isEmbed =
-	(task?.Contains("embed", StringComparison.OrdinalIgnoreCase) ?? false) ||
-	(task?.Contains("embedding", StringComparison.OrdinalIgnoreCase) ?? false) ||
-	(task?.Contains("vectorize", StringComparison.OrdinalIgnoreCase) ?? false) ||
-	(m.ModelType ?? "").Contains("embedding", StringComparison.OrdinalIgnoreCase) ||
-	(m.ModelType ?? "").Contains("embeddings", StringComparison.OrdinalIgnoreCase) ||
-	(m.ModelType ?? "").Contains("embed", StringComparison.OrdinalIgnoreCase) ||
-	(m.Name ?? "").Contains("embed", StringComparison.OrdinalIgnoreCase);
-
-
-
-		bool isVision = (task.Contains("vision", StringComparison.OrdinalIgnoreCase) ||
-						 task.Contains("image", StringComparison.OrdinalIgnoreCase));
-		bool isMultimodal =
-	task.Contains("multimodal", StringComparison.OrdinalIgnoreCase) ||
-	task.Contains("vision", StringComparison.OrdinalIgnoreCase) ||
-	task.Contains("image", StringComparison.OrdinalIgnoreCase) ||
-	task.Contains("audio", StringComparison.OrdinalIgnoreCase) ||
-	task.Contains("video", StringComparison.OrdinalIgnoreCase) ||
-	(m.ModelType ?? "").Contains("multimodal", StringComparison.OrdinalIgnoreCase) ||
-	(m.ModelType ?? "").Contains("vision", StringComparison.OrdinalIgnoreCase) ||
-	(m.Name ?? "").Contains("vlm", StringComparison.OrdinalIgnoreCase) ||
-	(m.Name ?? "").Contains("multimodal", StringComparison.OrdinalIgnoreCase);
-
-
-		// choose short ID: alias if present, else full name
-		var id = !string.IsNullOrWhiteSpace(m.Alias) ? m.Alias! : m.Name;
-
-		var display = $"{m.DisplayName ?? m.Name} ({device})";
-
-		return new FoundryModelDto
+		if (_initialized)
 		{
-			Id = id,
-			Alias = m.Alias,
-			DisplayName = m.Name,
-			FoundryModelId = m.DisplayName,
-			Device = m.ModelType,
-			Task = task,
-			License = m.License,
-			ProviderType = m.ProviderType,
-			Version = m.Version,
-			FileSizeMb = m.FileSizeMb,
-
-			SupportsToolCalling = m.SupportsToolCalling,
-			SupportsChat = task.Contains("chat", StringComparison.OrdinalIgnoreCase) ||
-						   task.Contains("completion", StringComparison.OrdinalIgnoreCase),
-			SupportsCoding = isCoder,
-			SupportsEmbedding = isEmbed,
-			SupportsVision = isVision,
-			SupportsMultimodal = isMultimodal
-		};
-	}
-
-	// ------------------------------------------------------------------------
-	// CLI: `foundry cache ls`
-	// ------------------------------------------------------------------------
-	private async Task<List<(string Alias, string ModelId)>> GetCachedModelEntriesAsync(CancellationToken ct)
-	{
-		var result = new List<(string Alias, string ModelId)>();
-
-		var psi = new ProcessStartInfo
-		{
-			FileName = "foundry",
-			Arguments = "cache ls",
-			RedirectStandardOutput = true,
-			RedirectStandardError = true,
-			UseShellExecute = false,
-			CreateNoWindow = true
-		};
-
-		using var proc = new Process { StartInfo = psi };
-
-		try
-		{
-			if (!proc.Start())
+			try
 			{
-				_log.LogError("Failed to start `foundry cache ls` process.");
-				return result;
+				var mgr = FoundryLocalManager.Instance;
+				await mgr.StopWebServiceAsync();
 			}
-		}
-		catch (Exception ex)
-		{
-			_log.LogError(ex, "Error starting `foundry cache ls`. Is the Foundry CLI installed and on PATH?");
-			return result;
+			catch { }
 		}
 
-		var stdoutTask = proc.StandardOutput.ReadToEndAsync();
-		var stderrTask = proc.StandardError.ReadToEndAsync();
-
-		await proc.WaitForExitAsync(ct);
-
-		var stdout = await stdoutTask;
-		var stderr = await stderrTask;
-
-		if (proc.ExitCode != 0)
-		{
-			_log.LogWarning("`foundry cache ls` exited with code {Code}. stderr: {Err}", proc.ExitCode, stderr);
-			return result;
-		}
-
-		// Parse lines like:
-		// "💾 deepseek-r1-14b                                   deepseek-r1-distill-qwen-14b-generic-gpu:3"
-		var lines = stdout
-			.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-			.ToList();
-
-		foreach (var rawLine in lines)
-		{
-			var line = rawLine.Trim();
-			if (string.IsNullOrWhiteSpace(line))
-				continue;
-
-			// Skip header lines
-			if (line.StartsWith("Models cached", StringComparison.OrdinalIgnoreCase) ||
-				line.StartsWith("Alias", StringComparison.OrdinalIgnoreCase))
-			{
-				continue;
-			}
-
-			//// Lines with data usually start with "💾"
-			//if (line.StartsWith("💾"))
-			//{
-			//	line = line.TrimStart("💾").Trim();
-			//}
-
-			var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-			if (parts.Length < 2)
-				continue;
-
-			var modelId = parts[^1];
-			var alias = string.Join(' ', parts.Take(parts.Length - 1));
-
-			result.Add((alias, modelId));
-		}
-
-		return result;
-	}
-
-	// ------------------------------------------------------------------------
-	// CLI: `foundry model run {modelId} --retain`
-	//
-	// Returns true/false only (per your choice).
-	// ------------------------------------------------------------------------
-	private async Task<bool> RunFoundryModelRunRetainAsync(string modelId, CancellationToken ct)
-	{
-		var psi = new ProcessStartInfo
-		{
-			FileName = "foundry",
-			Arguments = $"model run {modelId} --retain",
-			RedirectStandardOutput = true,
-			RedirectStandardError = true,
-			UseShellExecute = false,
-			CreateNoWindow = true
-		};
-
-		using var proc = new Process { StartInfo = psi };
-
-		try
-		{
-			if (!proc.Start())
-			{
-				_log.LogError("Failed to start `foundry model run {Model} --retain`.", modelId);
-				return false;
-			}
-		}
-		catch (Exception ex)
-		{
-			_log.LogError(ex, "Error starting `foundry model run {Model} --retain`. Is Foundry CLI installed?", modelId);
-			return false;
-		}
-
-		var stdoutTask = proc.StandardOutput.ReadToEndAsync();
-		var stderrTask = proc.StandardError.ReadToEndAsync();
-
-		await proc.WaitForExitAsync(ct);
-
-		var stdout = await stdoutTask;
-		var stderr = await stderrTask;
-
-		if (proc.ExitCode != 0)
-		{
-			_log.LogError(
-				"Foundry CLI `model run {Model} --retain` failed with exit code {Code}. stderr: {Err}",
-				modelId, proc.ExitCode, stderr);
-			return false;
-		}
-
-		_log.LogInformation("Foundry CLI `model run {Model} --retain` succeeded. Output: {Out}", modelId, stdout);
-		return true;
+		_initLock.Dispose();
 	}
 }
-
-

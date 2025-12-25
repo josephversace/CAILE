@@ -17,6 +17,7 @@ using IIM.Ingestion.Services;
 using IIM.Shared.Configuration;
 using IIM.Shared.Interfaces;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
+using Microsoft.AI.Foundry.Local;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.AI;   
@@ -37,8 +38,8 @@ builder.Services
 	.AddBoundConfiguration(builder.Configuration)
 	.AddIdentityAndAuth(builder.Configuration, deployment)
 	.AddIIMDatabases(builder.Configuration)
-	.AddInfrastructureLayer(builder.Configuration)
 	.AddCoreLayer(builder.Configuration, deployment)
+	.AddInfrastructureLayer(builder.Configuration)
 	.AddAgentsLayer()
 	.AddApplicationLayer()
 	.AddApiLayer(builder.Configuration, deployment)
@@ -246,15 +247,23 @@ app.MapSetupEndpoints();
 app.MapAIEndpoints();
 app.MapAttachmentEndpoints();
 
-// AG-UI endpoint for reasoning (uses MapAGUI directly)
-//using (var scope = app.Services.CreateScope())
-//{
+var config = new Configuration
+{
+	AppName = "foundry",
+	Web = new Configuration.WebService
+	{
+		Urls = "http://127.0.0.1:63953"
+	},
+	LogLevel = Microsoft.AI.Foundry.Local.LogLevel.Information
+};
 
-//	var agentFactory = scope.ServiceProvider.GetRequiredService<IAIAgentFactory>();
-//	var agent = await agentFactory.GetChatAgentAsync();
-//	app.MapAGUI("/ai/reason-ui", agent);
-//}
 
+
+// On application startup
+var foundry = app.Services.GetRequiredService<IFoundryModelService>();
+
+// Optionally pre-load models
+await foundry.EnsureInitializedAsync();
 
 // ============================================
 // Start the application

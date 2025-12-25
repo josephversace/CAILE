@@ -1,4 +1,5 @@
-﻿using IIM.Shared.Models.Core;
+﻿using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 using Microsoft.EntityFrameworkCore;
 
 namespace IIM.Infrastructure.Data;

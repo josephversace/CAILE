@@ -32,10 +32,20 @@ public interface IQdrantService
         List<ChunkData> chunks,
         CancellationToken ct = default);
 
-    /// <summary>
-    /// Search for similar chunks filtered by specific file hashes.
-    /// </summary>
-    Task<List<ChunkHit>> SearchByHashesAsync(
+	/// <summary>
+	/// Search for similar chunks filtered by specific file hashes.
+	/// </summary>
+	/// 
+	// Add this method to your interface
+	Task<List<ChunkHit>> SearchByHashesBalancedAsync(
+		float[] embedding,
+		List<string> blake3Hashes,
+		int totalLimit = 12,
+		int minPerFile = 2,
+		CancellationToken ct = default);
+
+
+	Task<List<ChunkHit>> SearchByHashesAsync(
         float[] embedding,
         List<string> blake3Hashes,
         int limit = 10,
@@ -75,4 +85,17 @@ public interface IQdrantService
     /// Health check.
     /// </summary>
     Task<bool> IsHealthyAsync(CancellationToken ct = default);
+
+	// src/IIM.Shared/Interfaces/IQdrantService.cs
+	// ADD these methods to the existing interface
+
+	/// <summary>Get all chunks for a specific document hash.</summary>
+	Task<List<ChunkRecord>> GetChunksByHashAsync(string blake3Hash, CancellationToken ct = default);
+
+	/// <summary>Update payload fields on an existing chunk.</summary>
+	Task UpdateChunkPayloadAsync(
+		string blake3Hash,
+		int chunkIndex,
+		Dictionary<string, object> payload,
+		CancellationToken ct = default);
 }
