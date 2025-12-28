@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace IIM.Shared.Models
@@ -19,7 +20,15 @@ namespace IIM.Shared.Models
 		public Dictionary<string, string>? Metadata { get; set; }
 	}
 
+	public sealed class EntityGroup
+	{
+		public Guid GroupId { get; set; } = Guid.NewGuid();
 
+		public EntityCategory Category { get; set; }
+		public string Label { get; set; } // e.g., "User Profile", "Contact Info"
+		public List<IndicatorOccurrence> Members { get; set; } = new();
+		public float GroupConfidence => Members.Any() ? Members.Average(m => m.Confidence) : 0f;
+	}
 
 	public sealed class IndicatorOccurrence
 	{
@@ -54,11 +63,13 @@ namespace IIM.Shared.Models
 		public required List<IndicatorOccurrence> Occurrences { get; set; }
 		public ExtractionStatistics Statistics { get; set; } = new();
 
+		public List<EntityGroup>? IdentityGroups { get; set; }
 		public static ExtractionResult Empty() => new()
 		{
 			Indicators = new List<Indicator>(),
 			Occurrences = new List<IndicatorOccurrence>(),
-			Statistics = new ExtractionStatistics()
+			Statistics = new ExtractionStatistics(),
+			IdentityGroups = new List<EntityGroup>()
 		};
 	}
 
@@ -81,4 +92,38 @@ namespace IIM.Shared.Models
 		public float Average { get; set; }
 	}
 
+
+	/// Content model for IndicatorCollection workspace artifacts.
+	/// Serialized to JSON and stored in WorkspaceArtifact.Content.
+	/// </summary>
+	public class IndicatorCollectionContent
+	{
+		public IndicatorType IndicatorType { get; set; }
+		public List<CollectedIndicator> Indicators { get; set; } = new();
+	}
+
+	/// <summary>
+	/// A single indicator collected into a workspace, with provenance tracking.
+	/// </summary>
+	public class CollectedIndicator
+	{
+		public Guid Id { get; set; } = Guid.NewGuid();
+		public string Value { get; set; } = "";
+		public string? Subtype { get; set; }  // IPv4, SHA256, Bitcoin, etc.
+		public float HighestConfidence { get; set; }
+		public DateTimeOffset FirstSeen { get; set; }
+		public DateTimeOffset LastSeen { get; set; }
+		public List<IndicatorSource> Sources { get; set; } = new();
+	}
+
+	/// <summary>
+	/// Tracks where an indicator was found - for chain of custody / auditability.
+	/// </summary>
+	public class IndicatorSource
+	{
+		public Guid FileId { get; set; }
+		public string FileName { get; set; } = "";
+		public Guid? ExtractionArtifactId { get; set; }
+		public DateTimeOffset AddedUtc { get; set; }
+	}
 }

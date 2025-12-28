@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using IIM.Ingestion.Models;
+using IIM.Shared.Models;
 
 namespace IIM.Ingestion.Services
 {

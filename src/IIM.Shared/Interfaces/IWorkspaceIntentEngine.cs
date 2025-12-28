@@ -11,7 +11,13 @@ namespace IIM.Shared.Interfaces
 {
 	public interface IWorkspaceIntentEngine
 	{
-		Task<WorkspaceIntent> ClassifyAsync(IReadOnlyList<AGUIMessage> messages,IReadOnlyList<object> context, CancellationToken ct);
+		/// <summary>
+		/// Classify the intent of the user's query.
+		/// </summary>
+		Task<WorkspaceIntent> ClassifyAsync(
+			IReadOnlyList<AGUIMessage> messages,
+			IReadOnlyList<object> context,
+			CancellationToken ct);
 	}
 
 }

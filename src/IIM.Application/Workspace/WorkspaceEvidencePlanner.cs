@@ -19,85 +19,184 @@ namespace IIM.Application.Workspace
             _workspaceManager = workspaceManager;
         }
 
-        public async Task<WorkspaceEvidencePlan> BuildPlan(WorkspaceIntent intent, IReadOnlyList<object> context, Guid? workspaceid, List<string?> filehashes)
+		public async Task<WorkspaceEvidencePlan> BuildPlan(
+		 WorkspaceIntent intent,
+		 IReadOnlyList<object> context,
+		 Guid? workspaceId,
+		 List<string?> fileHashes,
+		 string? modelId = null)
 		{
-			// This method translates a high-level workspace intent into
-			// a deterministic evidence retrieval plan.
-			//
-			// IMPORTANT:
-			// - This is POLICY, not inference
-			// - No models are called here
-			// - No data is retrieved here
-			// - The intent is treated as authoritative and immutable
-			//
-			// The returned plan controls:
-			// - which backends may be queried (Qdrant, Neo4j)
-			// - which categories of evidence are allowed
-			// - how broad or narrow retrieval should be
-			if (filehashes != null && filehashes.Count == 1)
-			{
-				var filehash = filehashes[0];
-				if (!string.IsNullOrEmpty(filehash))
-				{
-					var result = await _workspaceManager.GetMetadataJsonAsync(
-						filehash,
-						processorName: "TextExtraction",
-						latestOnly: true,
-						CancellationToken.None);
+			// Clean up null hashes
+			var validHashes = fileHashes.Where(h => !string.IsNullOrEmpty(h)).ToList();
 
-					string? metadata = result[0];
-					;
-					if (!string.IsNullOrEmpty(metadata))
-					{
-						// ✅ We KNOW there is extracted text for exactly one file
-						// → no vector search needed
-						return new WorkspaceEvidencePlan(
-							UseQdrant: false,
-							UseNeo4j: false,
-							IncludeFiles: true,
-							IncludeEntities: false,
-							IncludeRelationships: false,
-							IncludeTimeline: false,
-							QdrantTopK: 0,
-							UseDeterministicSection: true
-						);
-					}
-				}
+			// ════════════════════════════════════════════════════════════════════
+			// SINGLE FILE: Let context manager decide full-text vs chunked
+			// ════════════════════════════════════════════════════════════════════
+			if (validHashes.Count == 1)
+			{
+				return intent switch
+				{
+					WorkspaceIntent.EntityInquiry => new WorkspaceEvidencePlan(
+						UseQdrant: true,
+						UseNeo4j: true,
+						IncludeFiles: true,
+						IncludeEntities: true,
+						IncludeRelationships: true,
+						IncludeTimeline: false,
+						UseDeterministicSection: false,
+						QdrantTopK: 10,
+						ModelId: modelId
+					),
+
+					WorkspaceIntent.TimelineAnalysis => new WorkspaceEvidencePlan(
+						UseQdrant: true,
+						UseNeo4j: false,
+						IncludeFiles: true,
+						IncludeEntities: false,
+						IncludeRelationships: false,
+						IncludeTimeline: true,
+						UseDeterministicSection: false,
+						QdrantTopK: 12,
+						ModelId: modelId
+					),
+
+					_ => new WorkspaceEvidencePlan(
+						UseQdrant: true,
+						UseNeo4j: false,
+						IncludeFiles: true,
+						IncludeEntities: false,
+						IncludeRelationships: false,
+						IncludeTimeline: false,
+						UseDeterministicSection: false,
+						QdrantTopK: 10,
+						ModelId: modelId
+					)
+				};
 			}
 
+			// ════════════════════════════════════════════════════════════════════
+			// MULTIPLE FILES: Balance coverage across files
+			// ════════════════════════════════════════════════════════════════════
+			if (validHashes.Count > 1)
+			{
+				return intent switch
+				{
+					WorkspaceIntent.WorkspaceSummary => new WorkspaceEvidencePlan(
+						UseQdrant: true,
+						UseNeo4j: true,
+						IncludeFiles: true,
+						IncludeEntities: true,
+						IncludeRelationships: true,
+						IncludeTimeline: false,
+						UseDeterministicSection: false,
+						QdrantTopK: Math.Min(validHashes.Count * 3, 15),
+						ModelId: modelId
+					),
 
+					WorkspaceIntent.RelationshipAnalysis => new WorkspaceEvidencePlan(
+						UseQdrant: true,
+						UseNeo4j: true,
+						IncludeFiles: true,
+						IncludeEntities: true,
+						IncludeRelationships: true,
+						IncludeTimeline: false,
+						UseDeterministicSection: false,
+						QdrantTopK: Math.Min(validHashes.Count * 2, 12),
+						ModelId: modelId
+					),
 
+					_ => new WorkspaceEvidencePlan(
+						UseQdrant: true,
+						UseNeo4j: false,
+						IncludeFiles: true,
+						IncludeEntities: false,
+						IncludeRelationships: false,
+						IncludeTimeline: false,
+						UseDeterministicSection: false,
+						QdrantTopK: Math.Min(validHashes.Count * 2, 12),
+						ModelId: modelId
+					)
+				};
+			}
+
+			// ════════════════════════════════════════════════════════════════════
+			// WORKSPACE-LEVEL (no specific files): Search all files
+			// ════════════════════════════════════════════════════════════════════
 			return intent switch
 			{
-				// User wants a high-level understanding of the workspace.
-				// We allow:
-				// - semantic chunks (Qdrant)
-				// - entities + relationships (Neo4j)
-				// We do NOT include timeline by default to avoid noise.
-				WorkspaceIntent.WorkspaceSummary =>
-					new WorkspaceEvidencePlan(true, true, true, true, true, false, false, 12),
+				WorkspaceIntent.WorkspaceSummary => new WorkspaceEvidencePlan(
+					UseQdrant: true,
+					UseNeo4j: true,
+					IncludeFiles: true,
+					IncludeEntities: true,
+					IncludeRelationships: true,
+					IncludeTimeline: false,
+					UseDeterministicSection: false,
+					QdrantTopK: 15,
+					ModelId: modelId
+				),
 
-				// User is explicitly asking about people, organizations, or concepts.
-				// We skip semantic text retrieval and focus on the graph.
-				WorkspaceIntent.EntityInquiry =>
-					new WorkspaceEvidencePlan(false, true, false, true, true, false, false, 0),
+				WorkspaceIntent.EntityInquiry => new WorkspaceEvidencePlan(
+					UseQdrant: true,
+					UseNeo4j: true,
+					IncludeFiles: false,
+					IncludeEntities: true,
+					IncludeRelationships: true,
+					IncludeTimeline: false,
+					UseDeterministicSection: false,
+					QdrantTopK: 8,
+					ModelId: modelId
+				),
 
-				// User wants a chronological view.
-				// We include timeline events and supporting semantic context,
-				// but skip entity expansion to keep the output focused.
-				WorkspaceIntent.TimelineAnalysis =>
-					new WorkspaceEvidencePlan(true, true, false, false, false, true, false, 8),
+				WorkspaceIntent.TimelineAnalysis => new WorkspaceEvidencePlan(
+					UseQdrant: true,
+					UseNeo4j: false,
+					IncludeFiles: false,
+					IncludeEntities: false,
+					IncludeRelationships: false,
+					IncludeTimeline: true,
+					UseDeterministicSection: false,
+					QdrantTopK: 10,
+					ModelId: modelId
+				),
 
-				// Default fallback for ambiguous or unknown intents.
-				// We take a conservative approach:
-				// - limited semantic context
-				// - no graph expansion
-				// - safe for general Q&A
-				_ =>
-					new WorkspaceEvidencePlan(true, false, true, false, false, false, false, 6)
+				WorkspaceIntent.FactLookup => new WorkspaceEvidencePlan(
+					UseQdrant: true,
+					UseNeo4j: false,
+					IncludeFiles: true,
+					IncludeEntities: false,
+					IncludeRelationships: false,
+					IncludeTimeline: false,
+					UseDeterministicSection: false,
+					QdrantTopK: 6,
+					ModelId: modelId
+				),
+
+				WorkspaceIntent.HypothesisTesting => new WorkspaceEvidencePlan(
+					UseQdrant: true,
+					UseNeo4j: true,
+					IncludeFiles: true,
+					IncludeEntities: true,
+					IncludeRelationships: true,
+					IncludeTimeline: true,
+					UseDeterministicSection: false,
+					QdrantTopK: 12,
+					ModelId: modelId
+				),
+
+				_ => new WorkspaceEvidencePlan(
+					UseQdrant: true,
+					UseNeo4j: false,
+					IncludeFiles: true,
+					IncludeEntities: false,
+					IncludeRelationships: false,
+					IncludeTimeline: false,
+					UseDeterministicSection: false,
+					QdrantTopK: 8,
+					ModelId: modelId
+				)
 			};
 		}
-
 		private static bool AsksForLatest(IReadOnlyList<object> context)
 		{
 			var userText = context

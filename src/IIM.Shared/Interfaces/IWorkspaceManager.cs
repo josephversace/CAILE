@@ -111,5 +111,7 @@ namespace IIM.Shared.Interfaces
 
 		Task<List<string>> GetMetadataJsonAsync(string blake3, string processorName, bool latestOnly, CancellationToken ct = default);
 
+		Task<List<string>> GetDerivedHashForProcessedFile(string blake3, string processorName, bool latestOnly, CancellationToken ct = default);
+
 	}
 }

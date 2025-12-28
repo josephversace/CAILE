@@ -9,7 +9,15 @@ namespace IIM.Shared.Interfaces
 {
 	public interface IWorkspaceEvidencePlanner
 	{
-		Task<WorkspaceEvidencePlan> BuildPlan(WorkspaceIntent intent, IReadOnlyList<object> context, Guid? workspaceid, List<string?> filehashes);
+		/// <summary>
+		/// Build a retrieval plan based on intent and context.
+		/// </summary>
+		Task<WorkspaceEvidencePlan> BuildPlan(
+			WorkspaceIntent intent,
+			IReadOnlyList<object> context,
+			Guid? workspaceId,
+			List<string?> fileHashes,
+			string? modelId = null);
 	}
 
 }

@@ -26,6 +26,8 @@ namespace IIM.Shared.Models
         public ICollection<WorkspaceSession> Sessions { get; set; } = new List<WorkspaceSession>();
 		public ICollection<TimelineEvent> TimelineEvents { get; set; } = new List<TimelineEvent>();
 
+		public ICollection<WorkspaceArtifact> Artifacts { get; set; } = new List<WorkspaceArtifact>();
+
 	}
 
 	/// <summary>

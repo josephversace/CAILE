@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace IIM.Ingestion.Models
+namespace IIM.Shared.Models
 {
 	public sealed record ExtractedDocument(
 		  string Text,

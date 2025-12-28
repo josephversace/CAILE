@@ -16,7 +16,9 @@ public enum ArtifactType
 	ExifData,
 	TextData,
 	RegexData,
-	GraphData
+	GraphData,
+	IndicatorCollection,
+	EntityGroup
 
 }
 

@@ -738,6 +738,28 @@ namespace IIM.Infrastructure.Data
 				.ToListAsync(ct);
 		}
 
+		public async Task<List<string>> GetDerivedHashForProcessedFile(string blake3, string processorName, bool latestOnly, CancellationToken ct = default)
+		{
+			var query = _db.ProcessedFiles
+				.Where(pf =>
+					pf.StoredFileHash == blake3 &&
+					pf.ProcessorName == processorName);
+
+			if (latestOnly)
+			{
+				return await query
+					.OrderByDescending(pf => pf.ProcessedAt)
+					.Select(pf => pf.DerivedHash)
+					.Take(1)
+					.ToListAsync(ct);
+			}
+
+			return await query
+				.OrderBy(pf => pf.ProcessedAt)
+				.Select(pf => pf.DerivedHash)
+				.ToListAsync(ct);
+		}
+
 
 	}
 }

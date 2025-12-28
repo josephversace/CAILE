@@ -1,4 +1,7 @@
-﻿public record IngestionResult
+﻿using System;
+
+namespace IIM.Shared;
+public record IngestionResult
 {
 	public required string StoredId { get; init; }
 	public bool Deduplicated { get; init; }

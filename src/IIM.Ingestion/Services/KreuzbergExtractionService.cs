@@ -1,5 +1,6 @@
 ﻿using IIM.Ingestion.Models;
 using IIM.Ingestion.Services;
+using IIM.Shared.Models;
 
 public sealed class KreuzbergExtractionService : IDocumentExtractionService
 {

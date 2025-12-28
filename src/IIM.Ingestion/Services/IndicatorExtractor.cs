@@ -43,7 +43,8 @@ public sealed partial class IndicatorExtractor
 	#region IP Addresses
 
 	// Ensures the IP is not immediately preceded or followed by a '.' or '/' (prevents partial path matches)
-	[GeneratedRegex(@"(?<![\d\./])\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b(?![\d\./])")]
+	// IMPROVED: Added negative lookbehind for date-like patterns (MM-DD- or DD-MM-)
+	[GeneratedRegex(@"(?<![\d\./-]|\d{2}-\d{2}-)\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b(?![\d\./-])")]
 	private static partial Regex Ipv4Regex();
 
 	[GeneratedRegex(@"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)/(?:3[0-2]|[12]?\d)\b")]
@@ -57,18 +58,18 @@ public sealed partial class IndicatorExtractor
 	private static partial Regex Ipv6CidrRegex();
 
 	private static readonly HashSet<string> ReservedIpPrefixes = new()
-{
-	"0.",          // Software/Internal noise
-    "127.",        // Loopback
-    "169.254.",    // APIPA (Link-local)
-    "224.", "239.", // Multicast
-    "255.255.255.255" // Broadcast
-};
+	{
+		"0.",          // Software/Internal noise
+        "127.",        // Loopback
+        "169.254.",    // APIPA (Link-local)
+        "224.", "239.", // Multicast
+        "255.255.255.255" // Broadcast
+    };
 
 	private static readonly HashSet<string> SoftwareVersionKeywords = new(StringComparer.OrdinalIgnoreCase)
-{
-	"version", "v.", "build", "release", "v1.", "v2.", "v4."
-};
+	{
+		"version", "v.", "build", "release", "v1.", "v2.", "v4."
+	};
 
 	#endregion
 
@@ -91,14 +92,14 @@ public sealed partial class IndicatorExtractor
 	private static partial Regex DomainRegex();
 
 	private static readonly FrozenSet<string> ValidTlds = new[]
-{
-	"com", "net", "org", "edu", "gov", "io", "co", "uk", "de", "ru", "info", "top", "xyz"
-}.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+	{
+		"com", "net", "org", "edu", "gov", "io", "co", "uk", "de", "ru", "info", "top", "xyz"
+	}.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
 	private static readonly FrozenSet<string> ForbiddenExtensions = new[]
 	{
-	"php", "asp", "aspx", "html", "js", "css", "jpg", "png", "exe", "dll", "bin", "sh", "py"
-}.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+		"php", "asp", "aspx", "html", "js", "css", "jpg", "png", "exe", "dll", "bin", "sh", "py"
+	}.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
 	#endregion
 
@@ -107,23 +108,64 @@ public sealed partial class IndicatorExtractor
 	[GeneratedRegex(@"\b[A-Z0-9._%+-]+(?:@|\[@\])[A-Z0-9.-]+(?:\.|\[\.\])[A-Z]{2,}\b", RegexOptions.IgnoreCase)]
 	private static partial Regex EmailRegex();
 
-	// Context-aware phone pattern - requires country code or context
-	[GeneratedRegex(@"(?:(?:phone|tel|call|contact|fax|mobile|cell)\s*[:\s]?\s*)?\+?\d{1,3}[\s.-]?\(?\d{2,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{4}\b", RegexOptions.IgnoreCase)]
+	// IMPROVED: More flexible phone pattern that handles "Mobile Phone:" format
+	// Matches international format with optional country code
+	[GeneratedRegex(@"(?i)(?:(?:mobile\s*)?phone|tel|call|contact|fax|mobile|cell)\s*[:\s]?\s*(\+?\d{1,4}[\s.-]?\(?\d{1,4}\)?[\s.-]?\d{1,4}[\s.-]?\d{1,4}[\s.-]?\d{1,9})\b")]
 	private static partial Regex PhoneRegex();
+
+	// NEW: Direct phone number pattern for numbers with country code (high confidence)
+	[GeneratedRegex(@"\+1\d{10}\b")]
+	private static partial Regex UsPhoneDirectRegex();
 
 	#endregion
 
 	#region Cryptocurrency
 
-	// Updated Bitcoin Regex: Added a check to ensure "MD5" or "Hash" doesn't precede it
-	[GeneratedRegex(@"(?i)(?<!(?:md5|hash|file)[:\s]*)\b(?:bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}\b")]
-	private static partial Regex BitcoinRegex();
+	// Bitcoin address pattern (P2PKH, P2SH, Bech32)
+	[GeneratedRegex(@"\b(?:bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}\b")]
+	private static partial Regex BitcoinAddressRegex();
 
+	// Ethereum address pattern (0x + 40 hex)
 	[GeneratedRegex(@"\b0x[a-fA-F0-9]{40}\b")]
-	private static partial Regex EthereumRegex();
+	private static partial Regex EthereumAddressRegex();
 
+	// Monero address pattern
 	[GeneratedRegex(@"\b4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}\b")]
-	private static partial Regex MoneroRegex();
+	private static partial Regex MoneroAddressRegex();
+
+	// Ethereum Transaction ID (0x + 64 hex chars)
+	[GeneratedRegex(@"\b0x[a-fA-F0-9]{64}\b")]
+	private static partial Regex EthereumTxIdRegex();
+
+	// Bitcoin Transaction ID (64 hex chars - same as SHA256, differentiated by context)
+	// Note: This is handled via SHA256 regex with context-based type determination
+
+	#endregion
+
+	#region Crypto Context Keywords
+
+	private static readonly FrozenSet<string> BitcoinContextKeywords = FrozenSet.ToFrozenSet(new[]
+	{
+		"btc", "bitcoin", "satoshi", "sats", "wallet", "address", "sending", "receiving",
+		"bc1", "segwit", "bech32", "p2pkh", "p2sh", "utxo", "blockchain"
+	}, StringComparer.OrdinalIgnoreCase);
+
+	private static readonly FrozenSet<string> EthereumContextKeywords = FrozenSet.ToFrozenSet(new[]
+	{
+		"eth", "ether", "ethereum", "gwei", "wei", "wallet", "address", "erc20", "erc721",
+		"contract", "defi", "metamask", "etherscan"
+	}, StringComparer.OrdinalIgnoreCase);
+
+	private static readonly FrozenSet<string> TransactionContextKeywords = FrozenSet.ToFrozenSet(new[]
+	{
+		"tx", "txid", "txhash", "transaction", "transfer", "sent", "received", "payment",
+		"block", "confirmation", "mempool", "fee", "input", "output"
+	}, StringComparer.OrdinalIgnoreCase);
+
+	private static readonly FrozenSet<string> GenericCryptoKeywords = FrozenSet.ToFrozenSet(new[]
+	{
+		"crypto", "cryptocurrency", "coin", "token", "exchange", "deposit", "withdrawal"
+	}, StringComparer.OrdinalIgnoreCase);
 
 	#endregion
 
@@ -151,15 +193,20 @@ public sealed partial class IndicatorExtractor
 	[GeneratedRegex(@"(?:^|[\s(])@([a-zA-Z][a-zA-Z0-9_]{1,38})\b")]
 	private static partial Regex SocialHandleRegex();
 
-	// Captures the Label (Group 1) and the Username/ID (Group 2)
-	// Update this in your Regex region
-	[GeneratedRegex(@"(?i)(ESP\s*User\s*ID|User\s*ID|Display\s*Name|UUID|(?<!file)Name)\s*[:=-]\s*([^\s,;]+)", RegexOptions.Compiled)]
+	// IMPROVED: Handle multi-word values and more label variations
+	// Captures Label (Group 1) and Value (Group 2) - allows spaces in value for names
+	[GeneratedRegex(@"(?i)(ESP\s*User\s*ID|User\s*ID|Display\s*Name|UUID|Screen/?User\s*Name|(?<!file\s*)(?:Full\s*)?Name)\s*[:=-]\s*(.+?)(?=\r?\n|$)", RegexOptions.Compiled)]
 	private static partial Regex HardenedUsernameRegex();
 
+	// NEW: Specifically for "Name: First Last" pattern in structured reports
+	[GeneratedRegex(@"(?i)^(?:Suspect\s*)?Name\s*:\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\s*$", RegexOptions.Multiline)]
+	private static partial Regex FullNameRegex();
+
 	public FrozenSet<string> UsernameStopWords { get; set; } = FrozenSet.ToFrozenSet(new[]
-{
-	"the", "system", "agent", "child", "members", "identifier", "company", "unknown", "null", "undefined"
-}, StringComparer.OrdinalIgnoreCase);
+	{
+		"the", "system", "agent", "child", "members", "identifier", "company", "unknown", "null", "undefined",
+		"verified", "not", "verified)", "(verified", "(verified)", "utc", "at"
+	}, StringComparer.OrdinalIgnoreCase);
 
 	#endregion
 
@@ -192,6 +239,69 @@ public sealed partial class IndicatorExtractor
 
 	#endregion
 
+	#region Dates (for filtering false positives)
+
+	// NEW: Pattern to identify date strings that might be confused with other indicators
+	[GeneratedRegex(@"\b(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])-(?:19|20)\d{2}\b")]
+	private static partial Regex DateMmDdYyyyRegex();
+
+	[GeneratedRegex(@"\b(?:19|20)\d{2}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])\b")]
+	private static partial Regex DateYyyyMmDdRegex();
+
+	// NEW: Date of Birth specific pattern
+	[GeneratedRegex(@"(?i)(?:date\s*of\s*birth|dob|birth\s*date|birthday)\s*[:\s]\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})")]
+	private static partial Regex DateOfBirthRegex();
+
+	#endregion
+
+	#region Darknet and Anonymity
+
+	// Onion v2 (16 chars) and v3 (56 chars) addresses
+	[GeneratedRegex(@"\b[a-z2-7]{16}(?:[a-z2-7]{40})?\.onion\b", RegexOptions.IgnoreCase)]
+	private static partial Regex OnionAddressRegex();
+
+	// IPFS CID v0 (Qm + 44 base58) and v1 (bafy... base32)
+	[GeneratedRegex(@"\b(?:Qm[1-9A-HJ-NP-Za-km-z]{44}|b[a-z2-7]{58})\b")]
+	private static partial Regex IpfsCidRegex();
+
+	#endregion
+
+	#region Cryptographic Identifiers
+
+	// PGP/GPG Key ID (short 8 hex or long 16 hex, often prefixed with 0x)
+	[GeneratedRegex(@"(?i)(?:pgp|gpg|key\s*id)[:\s]*(?:0x)?([a-fA-F0-9]{8}(?:[a-fA-F0-9]{8})?)\b")]
+	private static partial Regex PgpKeyIdRegex();
+
+	// PGP Fingerprint (40 hex chars, often with spaces)
+	[GeneratedRegex(@"\b(?:[a-fA-F0-9]{4}\s+){9}[a-fA-F0-9]{4}\b")]
+	private static partial Regex PgpFingerprintRegex();
+
+	#endregion
+
+	#region Mobile Device Identifiers
+
+	// IMEI (15 digits, sometimes with hyphens)
+	[GeneratedRegex(@"(?i)(?:imei)[:\s]*(\d{2}[-\s]?\d{6}[-\s]?\d{6}[-\s]?\d)\b")]
+	private static partial Regex ImeiRegex();
+
+	#endregion
+
+	#region ESP Report Specific
+
+	// NEW: ESP User ID that may have value on next line
+	[GeneratedRegex(@"(?i)ESP\s*User\s*ID\s*:\s*(?:(\S+)|[\r\n]+(\S+))")]
+	private static partial Regex EspUserIdRegex();
+
+	// NEW: Profile URL pattern
+	[GeneratedRegex(@"(?i)Profile\s*URL\s*[:\s]\s*(https?://[^\s]+)")]
+	private static partial Regex ProfileUrlRegex();
+
+	// NEW: Approximate/Estimated Age
+	[GeneratedRegex(@"(?i)(?:Approximate|Estimated)?\s*Age\s*[:\s]\s*(\d{1,3})")]
+	private static partial Regex AgeRegex();
+
+	#endregion
+
 	// ═══════════════════════════════════════════════════════════════════════════
 	// PLUGGABLE PATTERN REGISTRY
 	// ═══════════════════════════════════════════════════════════════════════════
@@ -204,6 +314,7 @@ public sealed partial class IndicatorExtractor
 		patterns.Add(new RegexPattern(IndicatorType.Cidr, Ipv4CidrRegex(), "IPv4", 0.9f));
 		patterns.Add(new RegexPattern(IndicatorType.Cidr, Ipv6CidrRegex(), "IPv6", 0.9f));
 		patterns.Add(new RegexPattern(IndicatorType.IpAddress, Ipv4Regex(), "IPv4", 0.8f,
+			filter: v => !IsLikelyDate(v),
 			confidenceAdjuster: (v, ctx, opts) => CalculateIpConfidence(v, ctx, opts)));
 		patterns.Add(new RegexPattern(IndicatorType.IpAddress, Ipv6Regex(), "IPv6", 0.8f,
 			confidenceAdjuster: (v, ctx, opts) => CalculateIpConfidence(v, ctx, opts)));
@@ -226,22 +337,44 @@ public sealed partial class IndicatorExtractor
 
 		if (options.ExtractPhoneNumbers)
 		{
+			// High-confidence direct US phone numbers with country code
+			patterns.Add(new RegexPattern(IndicatorType.PhoneNumber, UsPhoneDirectRegex(), "US", 0.9f,
+				confidenceAdjuster: (v, ctx, opts) => CalculatePhoneConfidence(v, ctx, opts)));
+
+			// Context-based phone extraction
 			patterns.Add(new RegexPattern(IndicatorType.PhoneNumber, PhoneRegex(), null, 0.5f,
 				confidenceAdjuster: (v, ctx, opts) => CalculatePhoneConfidence(v, ctx, opts)));
 		}
 
-		// Cryptocurrency
-		patterns.Add(new RegexPattern(IndicatorType.CryptoAddress, BitcoinRegex(), "Bitcoin", 0.95f));
-		patterns.Add(new RegexPattern(IndicatorType.CryptoAddress, EthereumRegex(), "Ethereum", 0.85f,
-			filter: v => !IsLikelyNonCryptoHex(v)));
-		patterns.Add(new RegexPattern(IndicatorType.CryptoAddress, MoneroRegex(), "Monero", 0.95f));
+		// Cryptocurrency - Order matters: more specific patterns first
+
+		// Ethereum Transaction ID (0x + 64 hex) - check BEFORE ETH address
+		patterns.Add(new RegexPattern(IndicatorType.CryptoTransaction, EthereumTxIdRegex(), "Ethereum", 0.6f,
+			confidenceAdjuster: (v, ctx, opts) => CalculateEthTxConfidence(v, ctx)));
+
+		// Ethereum Address (0x + 40 hex)
+		patterns.Add(new RegexPattern(IndicatorType.CryptoAddress, EthereumAddressRegex(), "Ethereum", 0.5f,
+			filter: v => !IsLikelyNonCryptoHex(v),
+			confidenceAdjuster: (v, ctx, opts) => CalculateEthAddressConfidence(v, ctx)));
+
+		// Bitcoin Address (bc1, 1, or 3 prefix)
+		patterns.Add(new RegexPattern(IndicatorType.CryptoAddress, BitcoinAddressRegex(), "Bitcoin", 0.6f,
+			confidenceAdjuster: (v, ctx, opts) => CalculateBtcAddressConfidence(v, ctx)));
+
+		// Monero Address
+		patterns.Add(new RegexPattern(IndicatorType.CryptoAddress, MoneroAddressRegex(), "Monero", 0.95f));
+
+		// Darknet / Anonymity
+		patterns.Add(new RegexPattern(IndicatorType.OnionAddress, OnionAddressRegex(), null, 0.95f));
+		patterns.Add(new RegexPattern(IndicatorType.IpfsCid, IpfsCidRegex(), null, 0.9f));
 
 		// Hashes - ordered by length (longest first)
+		// Note: SHA256 (64 hex) can also be BTC transaction - handled by confidence adjuster
 		patterns.Add(new RegexPattern(IndicatorType.FileHash, Sha512Regex(), "SHA512", 0.9f,
 			filter: v => IsLikelyHash(v, options)));
-		patterns.Add(new RegexPattern(IndicatorType.FileHash, Sha256Regex(), "SHA256", 0.85f,
+		patterns.Add(new RegexPattern(IndicatorType.FileHash, Sha256Regex(), "SHA256", 0.7f,
 			filter: v => IsLikelyHash(v, options),
-			confidenceAdjuster: (v, ctx, opts) => CalculateHashConfidence(v, ctx, "SHA256", opts)));
+			confidenceAdjuster: (v, ctx, opts) => CalculateSha256Confidence(v, ctx, opts)));
 		patterns.Add(new RegexPattern(IndicatorType.FileHash, Sha1Regex(), "SHA1", 0.7f,
 			filter: v => IsLikelyHash(v, options) && !IsEthereumAddress(v),
 			confidenceAdjuster: (v, ctx, opts) => CalculateHashConfidence(v, ctx, "SHA1", opts)));
@@ -249,16 +382,13 @@ public sealed partial class IndicatorExtractor
 			IndicatorType.FileHash,
 			Md5Regex(),
 			"MD5",
-			0.7f, // Higher baseline
+			0.7f,
 			filter: v => IsLikelyHash(v, options) && !IsLikelyGuid(v),
 			confidenceAdjuster: (v, ctx, opts) =>
 			{
 				var score = CalculateHashConfidence(v, ctx, "MD5", opts);
-
-				// If the word "MD5" is right next to it, boost to near certainty
 				if (ctx.SurroundingLower.Contains("md5"))
 					score = Math.Max(score, 0.95f);
-
 				return score;
 			}));
 
@@ -266,7 +396,6 @@ public sealed partial class IndicatorExtractor
 		patterns.Add(new RegexPattern(IndicatorType.FilePath, WindowsPathRegex(), "Windows", 0.75f));
 		patterns.Add(new RegexPattern(IndicatorType.RegistryKey, RegistryKeyRegex(), null, 0.9f));
 
-		// Add this inside BuildPatternRegistry
 		patterns.Add(new RegexPattern(
 			IndicatorType.FileName,
 			FilenameRegex(),
@@ -274,15 +403,25 @@ public sealed partial class IndicatorExtractor
 			0.85f,
 			confidenceAdjuster: (v, ctx, opts) =>
 			{
-				// Boost if preceded by "Filename:" or "File:"
 				if (ctx.SurroundingLower.Contains("filename") || ctx.SurroundingLower.Contains("file:"))
 					return 0.95f;
 				return 0.85f;
 			}));
+
 		// Security identifiers
 		patterns.Add(new RegexPattern(IndicatorType.Cve, CveRegex(), null, 0.99f));
 		patterns.Add(new RegexPattern(IndicatorType.MitreAttack, MitreAttackRegex(), null, 0.5f,
 			confidenceAdjuster: (v, ctx, opts) => CalculateMitreConfidence(v, ctx, opts)));
+
+		// Cryptographic identifiers
+		patterns.Add(new CaptureGroupPattern(IndicatorType.PgpKeyId, PgpKeyIdRegex(), 1, null, 0.9f));
+		patterns.Add(new RegexPattern(IndicatorType.PgpFingerprint, PgpFingerprintRegex(), null, 0.85f));
+
+		// Mobile device identifiers
+		if (options.ExtractDeviceIdentifiers)
+		{
+			patterns.Add(new CaptureGroupPattern(IndicatorType.Imei, ImeiRegex(), 1, null, 0.9f));
+		}
 
 		// Add custom patterns from options
 		patterns.AddRange(options.CustomPatterns);
@@ -331,6 +470,9 @@ public sealed partial class IndicatorExtractor
 		// Precompute text boundaries for efficient context extraction
 		var boundaries = new TextBoundaries(text);
 
+		// Pre-extract date positions to filter false positives
+		var datePositions = ExtractDatePositions(normalizedText);
+
 		var occurrences = new List<IndicatorOccurrence>();
 		var matchCountsByType = new Dictionary<IndicatorType, int>();
 
@@ -355,6 +497,10 @@ public sealed partial class IndicatorExtractor
 				if (currentCount >= _options.MaxMatchesPerType)
 					break;
 
+				// Skip if this overlaps with a known date position
+				if (OverlapsWithDate(match.Offset, match.Length, datePositions))
+					continue;
+
 				// Store both raw and normalized values
 				if (wasDefanged && match.Value != GetOriginalValue(text, match.Offset, match.Length))
 				{
@@ -372,16 +518,33 @@ public sealed partial class IndicatorExtractor
 		// Extract usernames (special handling for capture groups)
 		ExtractUsernames(normalizedText, text, boundaries, occurrences);
 
+		// Extract full names from structured reports
+		ExtractFullNames(normalizedText, boundaries, occurrences);
+
 		// Extract Unix paths (special handling)
 		ExtractUnixPaths(normalizedText, text, boundaries, occurrences);
 
+		// Extract ESP-specific fields
 		ExtractEspFields(normalizedText, boundaries, occurrences);
+
+		// Extract phone numbers with "Mobile Phone:" prefix
+		if (_options.ExtractPhoneNumbers)
+		{
+			ExtractMobilePhones(normalizedText, boundaries, occurrences);
+		}
+
+		// Extract Date of Birth as PII
+		ExtractDateOfBirth(normalizedText, boundaries, occurrences);
+
+		// Extract Bitcoin transactions (SHA256-like patterns with BTC context)
+		ExtractBitcoinTransactions(normalizedText, boundaries, occurrences);
 
 		// Extract domains from URLs
 		if (_options.ExtractDomainsFromUrls)
 			ExtractDomainsFromUrlOccurrences(occurrences);
 
 		ResolveCollisions(occurrences);
+
 		// Filter by confidence
 		var filteredOccurrences = occurrences
 			.Where(o => o.Confidence >= _options.MinimumConfidence)
@@ -409,28 +572,171 @@ public sealed partial class IndicatorExtractor
 					Average = g.Average(x => x.Confidence)
 				});
 
+		var identityGroup = GroupOccurrencesSemantically(filteredOccurrences, text);
+
 		return new ExtractionResult
 		{
 			Indicators = indicators,
 			Occurrences = filteredOccurrences,
-			Statistics = statistics
+			Statistics = statistics,
+			IdentityGroups = identityGroup
 		};
 	}
 
-	// Inside BuildIndicators or a post-processing step
+	// ═══════════════════════════════════════════════════════════════════════════
+	// DATE FILTERING HELPERS
+	// ═══════════════════════════════════════════════════════════════════════════
+
+	private List<(int Start, int End)> ExtractDatePositions(string text)
+	{
+		var positions = new List<(int Start, int End)>();
+
+		foreach (Match m in DateMmDdYyyyRegex().Matches(text))
+		{
+			positions.Add((m.Index, m.Index + m.Length));
+		}
+
+		foreach (Match m in DateYyyyMmDdRegex().Matches(text))
+		{
+			positions.Add((m.Index, m.Index + m.Length));
+		}
+
+		// Also capture timestamps like "01-18-2025 14:53:27"
+		var timestampRegex = new Regex(@"\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2}:\d{2}");
+		foreach (Match m in timestampRegex.Matches(text))
+		{
+			positions.Add((m.Index, m.Index + m.Length));
+		}
+
+		return positions;
+	}
+
+	private static bool OverlapsWithDate(int start, int length, List<(int Start, int End)> datePositions)
+	{
+		var end = start + length;
+		return datePositions.Any(d => start < d.End && end > d.Start);
+	}
+
+	private static bool IsLikelyDate(string value)
+	{
+		// Check if the value looks like a date (e.g., "07-17-1990" parsed as IP-like)
+		var parts = value.Split('.');
+		if (parts.Length == 4)
+		{
+			// If any part looks like a year (1900-2099), it's probably a date
+			foreach (var part in parts)
+			{
+				if (int.TryParse(part, out var num) && num >= 1900 && num <= 2099)
+					return true;
+			}
+		}
+		return false;
+	}
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// COLLISION RESOLUTION
+	// ═══════════════════════════════════════════════════════════════════════════
+
 	private void ResolveCollisions(List<IndicatorOccurrence> occurrences)
 	{
-		foreach (var occ in occurrences.Where(o => o.Type == IndicatorType.CryptoAddress))
-		{
-			// If this same string was also flagged as an MD5
-			var hasMd5Match = occurrences.Any(o =>
-				o.Value == occ.Value &&
-				o.Type == IndicatorType.FileHash);
+		// Group by value to find conflicts
+		var byValue = occurrences.GroupBy(o => o.Value).Where(g => g.Count() > 1);
 
-			// Or if the context explicitly says "MD5"
-			if (hasMd5Match || occ.Context.SurroundingLower.Contains("md5"))
+		foreach (var group in byValue)
+		{
+			var items = group.ToList();
+
+			// Handle Crypto Address vs Hash conflicts
+			var cryptoMatch = items.FirstOrDefault(o => o.Type == IndicatorType.CryptoAddress);
+			var hashMatch = items.FirstOrDefault(o => o.Type == IndicatorType.FileHash);
+
+			if (cryptoMatch != null && hashMatch != null)
 			{
-				occ.Confidence = 0.1f; // Effectively kill the Bitcoin match
+				// If hash context is stronger, demote crypto
+				if (hashMatch.Confidence > cryptoMatch.Confidence)
+				{
+					cryptoMatch.Confidence = 0.1f;
+				}
+				// If crypto context is stronger, demote hash
+				else if (cryptoMatch.Confidence > hashMatch.Confidence)
+				{
+					hashMatch.Confidence = 0.1f;
+				}
+			}
+
+			// Handle SHA256 Hash vs BTC Transaction conflicts
+			var sha256Match = items.FirstOrDefault(o => o.Type == IndicatorType.FileHash && o.Subtype == "SHA256");
+			var btcTxMatch = items.FirstOrDefault(o => o.Type == IndicatorType.CryptoTransaction && o.Subtype == "Bitcoin");
+
+			if (sha256Match != null && btcTxMatch != null)
+			{
+				if (btcTxMatch.Confidence > sha256Match.Confidence)
+				{
+					sha256Match.Confidence = 0.1f;
+				}
+				else
+				{
+					btcTxMatch.Confidence = 0.1f;
+				}
+			}
+
+			// Handle ETH Transaction (0x + 64 hex) vs SHA256
+			var ethTxMatch = items.FirstOrDefault(o => o.Type == IndicatorType.CryptoTransaction && o.Subtype == "Ethereum");
+			if (ethTxMatch != null && sha256Match != null)
+			{
+				if (ethTxMatch.Confidence > sha256Match.Confidence)
+				{
+					sha256Match.Confidence = 0.1f;
+				}
+				else
+				{
+					ethTxMatch.Confidence = 0.1f;
+				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Extract Bitcoin transactions from SHA256-like patterns with BTC context
+	/// </summary>
+	private void ExtractBitcoinTransactions(string text, TextBoundaries boundaries, List<IndicatorOccurrence> occurrences)
+	{
+		// Find all 64-char hex strings that might be BTC transactions
+		foreach (Match m in Sha256Regex().Matches(text))
+		{
+			var value = m.Value;
+			var ctx = boundaries.BuildContext(m.Index);
+
+			// Check for BTC transaction context
+			bool hasBtcContext = ContainsAnyKeyword(ctx.SurroundingLower, BitcoinContextKeywords);
+			bool hasTxContext = ContainsAnyKeyword(ctx.SurroundingLower, TransactionContextKeywords);
+
+			if (hasBtcContext && hasTxContext)
+			{
+				float confidence = 0.5f;
+				confidence += hasBtcContext ? 0.3f : 0f;
+				confidence += hasTxContext ? 0.2f : 0f;
+
+				// Penalty if hash keywords present
+				if (ctx.SurroundingLower.Contains("sha256") || ctx.SurroundingLower.Contains("hash:"))
+				{
+					confidence -= 0.3f;
+				}
+
+				if (confidence >= 0.6f)
+				{
+					occurrences.Add(new IndicatorOccurrence
+					{
+						Id = Guid.NewGuid(),
+						Type = IndicatorType.CryptoTransaction,
+						Subtype = "Bitcoin",
+						Value = value,
+						Offset = m.Index,
+						Length = m.Length,
+						Context = ctx,
+						Confidence = Math.Clamp(confidence, 0.1f, 1.0f)
+					});
+				}
 			}
 		}
 	}
@@ -452,10 +758,17 @@ public sealed partial class IndicatorExtractor
 		foreach (Match m in HardenedUsernameRegex().Matches(text))
 		{
 			string label = m.Groups[1].Value;
-			string username = m.Groups[2].Value.Trim().TrimEnd('.', ',');
+			string rawValue = m.Groups[2].Value.Trim();
+
+			// Clean up trailing punctuation and verification notes
+			string username = CleanUsernameValue(rawValue);
 
 			// Hardening Check: Skip noise, short strings, or common stop-words
-			if (username.Length < 3 || UsernameStopWords.Contains(username))
+			if (username.Length < 2 || UsernameStopWords.Contains(username))
+				continue;
+
+			// Skip if it looks like a date or timestamp
+			if (Regex.IsMatch(username, @"^\d{2}[-/]\d{2}[-/]\d{2,4}"))
 				continue;
 
 			var ctx = boundaries.BuildContext(m.Index);
@@ -463,11 +776,11 @@ public sealed partial class IndicatorExtractor
 			{
 				Id = Guid.NewGuid(),
 				Type = IndicatorType.Username,
-				Subtype = "Contextual",
-				Value = username, // Fixed: Required member set
+				Subtype = DetermineUsernameSubtype(label),
+				Value = username,
 				Offset = m.Index,
 				Length = m.Length,
-				Context = ctx,    // Fixed: Required member set
+				Context = ctx,
 				Confidence = CalculateHardenedConfidence(username, label, ctx, _options)
 			});
 		}
@@ -477,7 +790,6 @@ public sealed partial class IndicatorExtractor
 		{
 			var rawHandle = m.Groups[1].Value;
 
-			// Hardening: Skip if the handle itself is a stop-word (e.g., "@system")
 			if (UsernameStopWords.Contains(rawHandle)) continue;
 
 			var handle = "@" + rawHandle;
@@ -488,16 +800,81 @@ public sealed partial class IndicatorExtractor
 				Id = Guid.NewGuid(),
 				Type = IndicatorType.Username,
 				Subtype = "SocialHandle",
-				Value = handle,   // Fixed: Required member set
+				Value = handle,
 				Offset = m.Index,
 				Length = m.Length,
-				Context = ctx,    // Fixed: Required member set
+				Context = ctx,
 				Confidence = 0.85f
 			});
 		}
 	}
 
+	/// <summary>
+	/// Extract full names from "Name: First Last" patterns in structured reports
+	/// </summary>
+	private void ExtractFullNames(string text, TextBoundaries boundaries, List<IndicatorOccurrence> sink)
+	{
+		foreach (Match m in FullNameRegex().Matches(text))
+		{
+			var fullName = m.Groups[1].Value.Trim();
 
+			// Validate it looks like a real name (2-4 words, each capitalized)
+			var nameParts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+			if (nameParts.Length < 2 || nameParts.Length > 4)
+				continue;
+
+			// Check if already extracted to avoid duplicates
+			if (sink.Any(s => s.Type == IndicatorType.Username &&
+							  s.Value.Equals(fullName, StringComparison.OrdinalIgnoreCase)))
+				continue;
+
+			var ctx = boundaries.BuildContext(m.Index);
+			sink.Add(new IndicatorOccurrence
+			{
+				Id = Guid.NewGuid(),
+				Type = IndicatorType.Username,
+				Subtype = "FullName",
+				Value = fullName,
+				Offset = m.Groups[1].Index,
+				Length = m.Groups[1].Length,
+				Context = ctx,
+				Confidence = 0.95f,
+				Metadata = new Dictionary<string, string>
+				{
+					["NameType"] = "PersonName",
+					["FirstName"] = nameParts[0],
+					["LastName"] = nameParts[^1]
+				}
+			});
+		}
+	}
+
+	/// <summary>
+	/// Clean up username values by removing trailing punctuation and verification notes
+	/// </summary>
+	private static string CleanUsernameValue(string value)
+	{
+		// Remove common suffixes like "(Verified)", "(Not Verified)", timestamps
+		var cleaned = Regex.Replace(value, @"\s*\((?:Not\s+)?Verified.*?\)\s*$", "", RegexOptions.IgnoreCase);
+		cleaned = Regex.Replace(cleaned, @"\s*\d{2}-\d{2}-\d{4}.*$", ""); // Remove trailing dates
+		cleaned = cleaned.TrimEnd('.', ',', ';', ':', ' ');
+		return cleaned.Trim();
+	}
+
+	/// <summary>
+	/// Determine the appropriate subtype based on the label
+	/// </summary>
+	private static string DetermineUsernameSubtype(string label)
+	{
+		var lower = label.ToLower();
+		if (lower.Contains("esp user id")) return "EspUserId";
+		if (lower.Contains("user id")) return "UserId";
+		if (lower.Contains("uuid")) return "UUID";
+		if (lower.Contains("display name")) return "DisplayName";
+		if (lower.Contains("screen") || lower.Contains("user name")) return "ScreenName";
+		if (lower.Contains("name")) return "Name";
+		return "Contextual";
+	}
 
 	private void ExtractUnixPaths(string text, string original, TextBoundaries boundaries, List<IndicatorOccurrence> sink)
 	{
@@ -559,6 +936,132 @@ public sealed partial class IndicatorExtractor
 		}
 	}
 
+	/// <summary>
+	/// Extract ESP-specific fields like Filename, MD5, ESP User ID
+	/// </summary>
+	private void ExtractEspFields(string text, TextBoundaries boundaries, List<IndicatorOccurrence> sink)
+	{
+		// Filename and MD5 extraction
+		var espRegex = new Regex(@"(?i)(Filename|MD5|Original Filename)\s*:\s*([^\s\r\n]+)");
+
+		foreach (Match m in espRegex.Matches(text))
+		{
+			var label = m.Groups[1].Value.ToLower();
+			var value = m.Groups[2].Value.Trim();
+			var ctx = boundaries.BuildContext(m.Index);
+
+			if (label.Contains("filename"))
+			{
+				sink.Add(new IndicatorOccurrence
+				{
+					Id = Guid.NewGuid(),
+					Type = IndicatorType.FileName,
+					Value = value,
+					Confidence = 0.98f,
+					Context = ctx,
+					Offset = m.Groups[2].Index,
+					Length = value.Length
+				});
+			}
+		}
+
+		// ESP User ID (may have value on next line)
+		foreach (Match m in EspUserIdRegex().Matches(text))
+		{
+			var value = m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value;
+			if (string.IsNullOrWhiteSpace(value)) continue;
+
+			value = value.Trim();
+			var ctx = boundaries.BuildContext(m.Index);
+
+			// Avoid duplicates
+			if (sink.Any(s => s.Type == IndicatorType.Username &&
+							  s.Subtype == "EspUserId" &&
+							  s.Value == value))
+				continue;
+
+			sink.Add(new IndicatorOccurrence
+			{
+				Id = Guid.NewGuid(),
+				Type = IndicatorType.Username,
+				Subtype = "EspUserId",
+				Value = value,
+				Confidence = 0.98f,
+				Context = ctx,
+				Offset = m.Index,
+				Length = m.Length
+			});
+		}
+	}
+
+	/// <summary>
+	/// Extract phone numbers with "Mobile Phone:" prefix specifically
+	/// </summary>
+	private void ExtractMobilePhones(string text, TextBoundaries boundaries, List<IndicatorOccurrence> sink)
+	{
+		var mobilePhoneRegex = new Regex(@"(?i)Mobile\s*Phone\s*:\s*(\+?\d[\d\s\-\(\)]{8,20})");
+
+		foreach (Match m in mobilePhoneRegex.Matches(text))
+		{
+			var phoneNumber = m.Groups[1].Value.Trim();
+
+			// Normalize: remove spaces and dashes for comparison
+			var normalized = Regex.Replace(phoneNumber, @"[\s\-\(\)]", "");
+
+			// Skip if too short or too long
+			if (normalized.Length < 10 || normalized.Length > 15)
+				continue;
+
+			// Check for duplicates
+			if (sink.Any(s => s.Type == IndicatorType.PhoneNumber &&
+							  Regex.Replace(s.Value, @"[\s\-\(\)]", "") == normalized))
+				continue;
+
+			var ctx = boundaries.BuildContext(m.Index);
+
+			sink.Add(new IndicatorOccurrence
+			{
+				Id = Guid.NewGuid(),
+				Type = IndicatorType.PhoneNumber,
+				Subtype = "Mobile",
+				Value = phoneNumber,
+				Confidence = 0.95f, // High confidence due to explicit label
+				Context = ctx,
+				Offset = m.Groups[1].Index,
+				Length = m.Groups[1].Length,
+				Metadata = new Dictionary<string, string>
+				{
+					["Normalized"] = normalized,
+					["HasCountryCode"] = normalized.StartsWith("+") ? "true" : "false"
+				}
+			});
+		}
+	}
+
+	/// <summary>
+	/// Extract Date of Birth as a PII indicator
+	/// </summary>
+	private void ExtractDateOfBirth(string text, TextBoundaries boundaries, List<IndicatorOccurrence> sink)
+	{
+		foreach (Match m in DateOfBirthRegex().Matches(text))
+		{
+			var dob = m.Groups[1].Value.Trim();
+			var ctx = boundaries.BuildContext(m.Index);
+
+			sink.Add(new IndicatorOccurrence
+			{
+				Id = Guid.NewGuid(),
+				Type = IndicatorType.DateOfBirth,
+				Subtype = "DOB",
+				Value = dob,
+				Confidence = 0.95f,
+				Context = ctx,
+				Offset = m.Groups[1].Index,
+				Length = m.Groups[1].Length
+			});
+		}
+	}
+
 	// ═══════════════════════════════════════════════════════════════════════════
 	// DEFANGING
 	// ═══════════════════════════════════════════════════════════════════════════
@@ -568,7 +1071,6 @@ public sealed partial class IndicatorExtractor
 		if (string.IsNullOrEmpty(text))
 			return text;
 
-		// Use span-based replacement for better performance on large texts
 		return text
 			.Replace("hxxp://", "http://", StringComparison.OrdinalIgnoreCase)
 			.Replace("hxxps://", "https://", StringComparison.OrdinalIgnoreCase)
@@ -587,31 +1089,31 @@ public sealed partial class IndicatorExtractor
 
 	private static float CalculateIpConfidence(string value, IndicatorContext ctx, IndicatorExtractorOptions opts)
 	{
-		// 1. Initial baseline
 		float confidence = 0.8f;
 
-		// 2. Reject Reserved/Noise Ranges
 		if (ReservedIpPrefixes.Any(p => value.StartsWith(p)))
 		{
-			return 0.1f; // Effectively discard
+			return 0.1f;
 		}
 
-		// 3. Handle Private/Internal IPs (RFC1918)
 		bool isPrivate = opts.PrivateIpPrefixes.Any(p => value.StartsWith(p));
 		if (isPrivate)
 		{
-			// If it's private but we see "Source" or "Remote", keep it. 
-			// Otherwise, drop confidence significantly.
 			confidence = ContainsAnyKeyword(ctx.SurroundingLower, opts.NetworkKeywords) ? 0.4f : 0.2f;
 		}
 
-		// 4. Filter Software Versions (e.g., "Product Version: 1.2.3.4")
 		if (ContainsAnyKeyword(ctx.PrecedingWords.Select(w => w.ToLower()).ToList(), SoftwareVersionKeywords))
 		{
 			return 0.2f;
 		}
 
-		// 5. Context Boost (e.g., "Source IP:", "Attacker Host:")
+		// Penalty if near "Date of Birth" or "DOB"
+		if (ctx.SurroundingLower.Contains("birth") || ctx.SurroundingLower.Contains("dob") ||
+			ctx.SurroundingLower.Contains("age"))
+		{
+			return 0.1f;
+		}
+
 		if (ContainsAnyKeyword(ctx.SurroundingLower, opts.NetworkKeywords))
 		{
 			confidence = Math.Min(1.0f, confidence + 0.15f);
@@ -625,7 +1127,6 @@ public sealed partial class IndicatorExtractor
 		return confidence;
 	}
 
-	// Helper for List<string> keyword checks
 	private static bool ContainsAnyKeyword(List<string> words, IEnumerable<string> keywords)
 	{
 		return words.Any(w => keywords.Contains(w, StringComparer.OrdinalIgnoreCase));
@@ -646,36 +1147,25 @@ public sealed partial class IndicatorExtractor
 
 	private static float CalculateDomainConfidence(string value, IndicatorContext ctx)
 	{
-		// 1. Basic Structure Check
 		if (!value.Contains('.') || value.EndsWith(".") || value.StartsWith("."))
 			return 0.1f;
 
-		// 2. Extract the Suffix (TLD)
 		var parts = value.Split('.');
 		var suffix = parts.Last();
 
-		// 3. Filter: Is it a valid TLD?
-		// This kills "janelle.mcmillian" because "mcmillian" is not in our list.
 		if (!ValidTlds.Contains(suffix))
 		{
-			// If it's a very long suffix (> 6 chars), it's likely a name or internal noise
 			if (suffix.Length > 6) return 0.1f;
-
-			// Otherwise, penalize heavily but don't kill (handles newer/obscure gTLDs)
 			return 0.3f;
 		}
 
-		// 4. Filter: Is it a common file extension?
-		// This kills "profile.php"
 		if (ForbiddenExtensions.Contains(suffix))
 		{
 			return 0.1f;
 		}
 
-		// 5. Baseline for valid-looking domains
 		float confidence = 0.8f;
 
-		// 6. Context Boost (e.g., "URL:", "Domain:", "Connect to:")
 		if (ctx.SurroundingLower.Contains("url") || ctx.SurroundingLower.Contains("domain") || ctx.SurroundingLower.Contains("http"))
 		{
 			confidence = Math.Min(1.0f, confidence + 0.15f);
@@ -684,46 +1174,23 @@ public sealed partial class IndicatorExtractor
 		return confidence;
 	}
 
-	// Add this to your special extraction methods
-	private void ExtractEspFields(string text, TextBoundaries boundaries, List<IndicatorOccurrence> sink)
-	{
-		// Regex to find "Filename: [value]" or "MD5: [value]"
-		var espRegex = new Regex(@"(?i)(Filename|MD5|Original Filename)\s*:\s*([^\s\r\n]+)");
-
-		foreach (Match m in espRegex.Matches(text))
-		{
-			var label = m.Groups[1].Value.ToLower();
-			var value = m.Groups[2].Value.Trim();
-			var ctx = boundaries.BuildContext(m.Index);
-
-			if (label.Contains("filename"))
-			{
-				sink.Add(new IndicatorOccurrence
-				{
-					Type = IndicatorType.FileName,
-					Value = value,
-					Confidence = 0.98f, // Very high because of the explicit label
-					Context = ctx,
-					Offset = m.Groups[2].Index,
-					Length = value.Length
-				});
-			}
-		}
-	}
-
 	private static float CalculatePhoneConfidence(string value, IndicatorContext ctx, IndicatorExtractorOptions opts)
 	{
 		var confidence = 0.5f;
 
-		// Boost if has country code
 		if (value.StartsWith("+"))
-			confidence += 0.2f;
+			confidence += 0.3f;
 
-		// Boost if has context keywords
-		if (ContainsAnyKeyword(ctx.SurroundingLower, opts.PhoneContextKeywords))
-			confidence += 0.25f;
+		if (ctx.SurroundingLower.Contains("mobile") || ctx.SurroundingLower.Contains("phone") ||
+			ctx.SurroundingLower.Contains("cell") || ctx.SurroundingLower.Contains("tel"))
+			confidence += 0.4f;
 
-		return Math.Min(1f, confidence);
+		// Strong penalty if near date-related context
+		if (ctx.SurroundingLower.Contains("birth") || ctx.SurroundingLower.Contains("dob") ||
+			ctx.SurroundingLower.Contains("date"))
+			confidence -= 0.5f;
+
+		return Math.Clamp(confidence, 0.1f, 1.0f);
 	}
 
 	private static float CalculateHashConfidence(string value, IndicatorContext ctx, string hashType, IndicatorExtractorOptions opts)
@@ -733,11 +1200,10 @@ public sealed partial class IndicatorExtractor
 			"SHA512" => 0.9f,
 			"SHA256" => 0.85f,
 			"SHA1" => 0.7f,
-			"MD5" => 0.65f, // Baseline
+			"MD5" => 0.65f,
 			_ => 0.5f
 		};
 
-		// HARDENING: Look for explicit labels like "MD5: " or "Hash: "
 		if (ctx.SurroundingLower.Contains(hashType.ToLower() + ":") ||
 			ctx.SurroundingLower.Contains(hashType.ToLower() + " "))
 		{
@@ -751,6 +1217,127 @@ public sealed partial class IndicatorExtractor
 			confidence += 0.1f;
 
 		return Math.Min(1.0f, confidence);
+	}
+
+	/// <summary>
+	/// Special handling for SHA256 - could be hash OR BTC transaction
+	/// </summary>
+	private static float CalculateSha256Confidence(string value, IndicatorContext ctx, IndicatorExtractorOptions opts)
+	{
+		// Check for BTC transaction context first
+		bool hasBtcContext = ContainsAnyKeyword(ctx.SurroundingLower, BitcoinContextKeywords);
+		bool hasTxContext = ContainsAnyKeyword(ctx.SurroundingLower, TransactionContextKeywords);
+
+		// If it looks like a BTC transaction, reduce hash confidence
+		if (hasBtcContext && hasTxContext)
+		{
+			return 0.3f; // Low confidence as hash - likely a BTC tx
+		}
+
+		if (hasTxContext && !ContainsAnyKeyword(ctx.SurroundingLower, opts.HashKeywords))
+		{
+			return 0.4f; // Probably a transaction, not a hash
+		}
+
+		// Otherwise, calculate normal hash confidence
+		return CalculateHashConfidence(value, ctx, "SHA256", opts);
+	}
+
+	/// <summary>
+	/// Calculate confidence for Bitcoin addresses vs other base58 strings
+	/// </summary>
+	private static float CalculateBtcAddressConfidence(string value, IndicatorContext ctx)
+	{
+		float confidence = 0.5f; // Start lower - many false positives possible
+
+		// Strong boost for explicit BTC context
+		if (ContainsAnyKeyword(ctx.SurroundingLower, BitcoinContextKeywords))
+		{
+			confidence += 0.4f;
+		}
+
+		// Boost for generic crypto context
+		if (ContainsAnyKeyword(ctx.SurroundingLower, GenericCryptoKeywords))
+		{
+			confidence += 0.2f;
+		}
+
+		// Penalty if hash context is present (likely not a BTC address)
+		if (ctx.SurroundingLower.Contains("md5") || ctx.SurroundingLower.Contains("sha") ||
+			ctx.SurroundingLower.Contains("hash") || ctx.SurroundingLower.Contains("checksum"))
+		{
+			confidence -= 0.4f;
+		}
+
+		// bc1 addresses (Bech32) are more definitively Bitcoin
+		if (value.StartsWith("bc1", StringComparison.OrdinalIgnoreCase))
+		{
+			confidence += 0.2f;
+		}
+
+		return Math.Clamp(confidence, 0.1f, 1.0f);
+	}
+
+	/// <summary>
+	/// Calculate confidence for Ethereum addresses (0x + 40 hex)
+	/// </summary>
+	private static float CalculateEthAddressConfidence(string value, IndicatorContext ctx)
+	{
+		float confidence = 0.5f;
+
+		// Strong boost for ETH context
+		if (ContainsAnyKeyword(ctx.SurroundingLower, EthereumContextKeywords))
+		{
+			confidence += 0.4f;
+		}
+
+		// Boost for generic crypto context
+		if (ContainsAnyKeyword(ctx.SurroundingLower, GenericCryptoKeywords))
+		{
+			confidence += 0.2f;
+		}
+
+		// Penalty if it looks like a memory address or debug output
+		if (ctx.SurroundingLower.Contains("0x00000") || ctx.SurroundingLower.Contains("memory") ||
+			ctx.SurroundingLower.Contains("pointer") || ctx.SurroundingLower.Contains("address:"))
+		{
+			// "address:" alone could be crypto, but with other indicators it's likely not
+			if (!ContainsAnyKeyword(ctx.SurroundingLower, EthereumContextKeywords))
+			{
+				confidence -= 0.3f;
+			}
+		}
+
+		return Math.Clamp(confidence, 0.1f, 1.0f);
+	}
+
+	/// <summary>
+	/// Calculate confidence for Ethereum transaction IDs (0x + 64 hex)
+	/// </summary>
+	private static float CalculateEthTxConfidence(string value, IndicatorContext ctx)
+	{
+		float confidence = 0.4f; // Start low - could be SHA256 hash
+
+		// Strong boost for ETH context
+		if (ContainsAnyKeyword(ctx.SurroundingLower, EthereumContextKeywords))
+		{
+			confidence += 0.4f;
+		}
+
+		// Strong boost for transaction context
+		if (ContainsAnyKeyword(ctx.SurroundingLower, TransactionContextKeywords))
+		{
+			confidence += 0.3f;
+		}
+
+		// Penalty if hash context
+		if (ctx.SurroundingLower.Contains("sha256") || ctx.SurroundingLower.Contains("hash:") ||
+			ctx.SurroundingLower.Contains("file"))
+		{
+			confidence -= 0.4f;
+		}
+
+		return Math.Clamp(confidence, 0.1f, 1.0f);
 	}
 
 	private static float CalculateUsernameConfidence(string value, IndicatorContext ctx, IndicatorExtractorOptions opts)
@@ -768,12 +1355,12 @@ public sealed partial class IndicatorExtractor
 	{
 		label = label.ToLower();
 
-		// Reward high-value structural matches
 		if (label.Contains("esp user id") || label.Contains("uuid")) return 0.98f;
 		if (label.Contains("user id")) return 0.95f;
 		if (label.Contains("display name")) return 0.90f;
+		if (label.Contains("screen") || label.Contains("user name")) return 0.92f;
+		if (label.Contains("name") && value.Contains(' ')) return 0.90f; // Full name
 
-		// Fallback to your original keyword logic
 		if (ContainsAnyKeyword(ctx.SurroundingLower, opts.ActorKeywords)) return 0.85f;
 
 		return 0.70f;
@@ -824,8 +1411,20 @@ public sealed partial class IndicatorExtractor
 		if (value.Length != 32)
 			return false;
 
-		var formatted = $"{value[..8]}-{value[8..12]}-{value[12..16]}-{value[16..20]}-{value[20..]}";
-		return Guid.TryParse(formatted, out _);
+		// Check if it has GUID version indicator (char at position 12 is typically 1-5)
+		// and variant indicator (char at position 16 is typically 8, 9, a, or b)
+		var versionChar = value[12];
+		var variantChar = char.ToLower(value[16]);
+
+		// Standard GUIDs have version 1-5 at position 12
+		bool hasVersionMarker = versionChar >= '1' && versionChar <= '5';
+
+		// Standard GUIDs have variant marker (8, 9, a, b) at position 16
+		bool hasVariantMarker = variantChar == '8' || variantChar == '9' ||
+								variantChar == 'a' || variantChar == 'b';
+
+		// Only consider it a GUID if it has BOTH markers (real GUIDs do)
+		return hasVersionMarker && hasVariantMarker;
 	}
 
 	private static bool IsEthereumAddress(string value)
@@ -835,7 +1434,6 @@ public sealed partial class IndicatorExtractor
 
 	private static bool IsLikelyNonCryptoHex(string value)
 	{
-		// Check if it might be a memory address or other non-crypto hex
 		return value.StartsWith("0x00000", StringComparison.OrdinalIgnoreCase);
 	}
 
@@ -911,7 +1509,6 @@ public sealed partial class IndicatorExtractor
 	{
 		var ipv6Groups = occurrences
 			.Where(o => o.Type == IndicatorType.IpAddress && o.Subtype == "IPv6")
-			// Filter out noise ranges before grouping
 			.Where(o => !IsReservedIpv6(o.Value))
 			.GroupBy(o => GetIpv6Prefix(o.Value))
 			.Where(g => g.Key != null);
@@ -919,11 +1516,8 @@ public sealed partial class IndicatorExtractor
 		foreach (var group in ipv6Groups)
 		{
 			var prefix = group.Key!;
-
-			// HARDENING: Count DISTINCT address values, not total occurrences
 			var distinctAddresses = group.Select(g => g.Value).Distinct().ToList();
 
-			// Only create a prefix indicator if there's actual "lateral" spread (more than 1 unique IP)
 			if (distinctAddresses.Count > 1)
 			{
 				indicators[$"ipv6prefix:{prefix}"] = new Indicator
@@ -934,7 +1528,6 @@ public sealed partial class IndicatorExtractor
 					Value = prefix,
 					NormalizedValue = prefix,
 					RelatedValues = distinctAddresses,
-					// Boost confidence because multiple IPs in one prefix suggests a scanning pattern
 					Confidence = Math.Min(1.0f, group.Max(g => g.Confidence) + 0.05f),
 					Metadata = new Dictionary<string, string>
 					{
@@ -950,15 +1543,11 @@ public sealed partial class IndicatorExtractor
 	{
 		if (!IPAddress.TryParse(ip, out var address)) return true;
 
-		// Check for Loopback (::1)
 		if (IPAddress.IsLoopback(address)) return true;
 
 		var bytes = address.GetAddressBytes();
 
-		// fe80:: (Link-local)
 		if (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80) return true;
-
-		// ff00:: (Multicast)
 		if (bytes[0] == 0xff) return true;
 
 		return false;
@@ -973,13 +1562,374 @@ public sealed partial class IndicatorExtractor
 		if (bytes.Length != 16)
 			return null;
 
-		// Zero lower 64 bits
 		Array.Clear(bytes, 8, 8);
 
 		var prefix = new IPAddress(bytes).ToString();
 		return prefix + "/64";
 	}
 
+	private List<EntityGroup> GroupOccurrencesSemantically(List<IndicatorOccurrence> occurrences, string text)
+	{
+		if (occurrences.Count == 0) return new List<EntityGroup>();
+
+		var groups = new Dictionary<EntityCategory, EntityGroup>();
+
+		foreach (var occ in occurrences)
+		{
+			var category = DetermineOccurrenceCategory(occ);
+
+			if (!groups.TryGetValue(category, out var group))
+			{
+				group = new EntityGroup
+				{
+					GroupId = Guid.NewGuid(),
+					Category = category,
+					Label = GetLabelForCategory(category),
+					Members = new List<IndicatorOccurrence>()
+				};
+				groups[category] = group;
+			}
+
+			var isDuplicate = group.Members.Any(m =>
+				m.Type == occ.Type &&
+				m.Value.Equals(occ.Value, StringComparison.OrdinalIgnoreCase));
+
+			if (!isDuplicate)
+			{
+				group.Members.Add(occ);
+			}
+		}
+
+		// Try to identify related identities within PII group
+		if (groups.TryGetValue(EntityCategory.Identity, out var identityGroup))
+		{
+			var subGroups = ClusterIdentities(identityGroup.Members, text);
+
+			if (subGroups.Count > 1)
+			{
+				groups.Remove(EntityCategory.Identity);
+				foreach (var (index, subGroup) in subGroups.Select((g, i) => (i, g)))
+				{
+					var key = (EntityCategory)(100 + index);
+					groups[key] = new EntityGroup
+					{
+						GroupId = Guid.NewGuid(),
+						Category = EntityCategory.Identity,
+						Label = $"Identity",
+						Members = subGroup
+					};
+				}
+			}
+		}
+
+		// Cluster FileArtifacts by proximity (filename + hash + path that appear together)
+		if (groups.TryGetValue(EntityCategory.FileArtifact, out var fileGroup))
+		{
+			var fileSubGroups = ClusterFileArtifacts(fileGroup.Members, text);
+
+			if (fileSubGroups.Count > 0)
+			{
+				groups.Remove(EntityCategory.FileArtifact);
+				foreach (var (index, subGroup) in fileSubGroups.Select((g, i) => (i, g)))
+				{
+					var key = (EntityCategory)(200 + index); // Synthetic key for file groups
+					var fileName = subGroup.FirstOrDefault(m => m.Type == IndicatorType.FileName)?.Value;
+					var label = "File Artifact";
+
+					groups[key] = new EntityGroup
+					{
+						GroupId = Guid.NewGuid(),
+						Category = EntityCategory.FileArtifact,
+						Label = label,
+						Members = subGroup
+					};
+				}
+			}
+		}
+
+		return groups.Values
+			.Where(g => g.Members.Count > 0)
+			.OrderBy(g => g.Category)
+			.ToList();
+	}
+
+	/// <summary>
+	/// Cluster file-related indicators (FileName, FileHash, FilePath) that appear in proximity
+	/// </summary>
+	private List<List<IndicatorOccurrence>> ClusterFileArtifacts(List<IndicatorOccurrence> fileIndicators, string text)
+	{
+		if (fileIndicators.Count == 0) return new List<List<IndicatorOccurrence>>();
+
+		var sorted = fileIndicators.OrderBy(o => o.Offset).ToList();
+		var clusters = new List<List<IndicatorOccurrence>>();
+		var currentCluster = new List<IndicatorOccurrence> { sorted[0] };
+
+		for (int i = 1; i < sorted.Count; i++)
+		{
+			var previous = sorted[i - 1];
+			var current = sorted[i];
+
+			// Check proximity - file indicators within 300 chars are likely related
+			int gap = current.Offset - (previous.Offset + previous.Length);
+			bool closeEnough = gap < 300;
+
+			// Also check if they share context (same block/paragraph)
+			bool sameContext = SharesContext(previous, current);
+
+			if (closeEnough || sameContext)
+			{
+				currentCluster.Add(current);
+			}
+			else
+			{
+				// Only keep clusters that have meaningful combinations
+				if (IsValidFileCluster(currentCluster))
+				{
+					clusters.Add(currentCluster);
+				}
+				currentCluster = new List<IndicatorOccurrence> { current };
+			}
+		}
+
+		// Don't forget the last cluster
+		if (IsValidFileCluster(currentCluster))
+		{
+			clusters.Add(currentCluster);
+		}
+		else if (currentCluster.Count > 0)
+		{
+			// Single items still get added as individual clusters
+			clusters.Add(currentCluster);
+		}
+
+		return clusters;
+	}
+
+	/// <summary>
+	/// A valid file cluster should ideally have at least a filename OR a hash
+	/// </summary>
+	private bool IsValidFileCluster(List<IndicatorOccurrence> cluster)
+	{
+		if (cluster.Count == 0) return false;
+
+		// Single items are valid
+		if (cluster.Count == 1) return true;
+
+		// Multiple items: prefer clusters with diverse types
+		var hasFileName = cluster.Any(m => m.Type == IndicatorType.FileName);
+		var hasHash = cluster.Any(m => m.Type == IndicatorType.FileHash);
+		var hasPath = cluster.Any(m => m.Type == IndicatorType.FilePath);
+
+		// A cluster with filename+hash or path+hash is very meaningful
+		return (hasFileName && hasHash) || (hasPath && hasHash) || cluster.Count >= 2;
+	}
+
+	private EntityCategory DetermineOccurrenceCategory(IndicatorOccurrence occ)
+	{
+		return occ.Type switch
+		{
+			// Identity / PII
+			IndicatorType.EmailAddress => EntityCategory.Identity,
+			IndicatorType.PhoneNumber => EntityCategory.Identity,
+			IndicatorType.DateOfBirth => EntityCategory.Identity,
+			IndicatorType.Imei => EntityCategory.Identity,
+
+			// Accounts - but FullName subtypes go to Identity
+			IndicatorType.Username when occ.Subtype == "FullName" => EntityCategory.Identity,
+			IndicatorType.Username => EntityCategory.Account,
+			IndicatorType.CryptoAddress => EntityCategory.Account,
+			IndicatorType.CryptoTransaction => EntityCategory.Account,
+			IndicatorType.PgpKeyId => EntityCategory.Account,
+			IndicatorType.PgpFingerprint => EntityCategory.Account,
+
+			// Organization & Infrastructure
+			IndicatorType.Domain => EntityCategory.Org,
+			IndicatorType.Url => EntityCategory.Org,
+			IndicatorType.IpAddress => EntityCategory.Org,
+			IndicatorType.Asn => EntityCategory.Org,
+			IndicatorType.MacAddress => EntityCategory.Org,
+			IndicatorType.OnionAddress => EntityCategory.Org,
+
+			// File Artifacts (separate category for grouping)
+			IndicatorType.FileHash => EntityCategory.FileArtifact,
+			IndicatorType.FileName => EntityCategory.FileArtifact,
+			IndicatorType.FilePath => EntityCategory.FileArtifact,
+
+			// Threat Indicators
+			IndicatorType.RegistryKey => EntityCategory.Threat,
+			IndicatorType.Cve => EntityCategory.Threat,
+			IndicatorType.MitreAttack => EntityCategory.Threat,
+			IndicatorType.Cidr => EntityCategory.Threat,
+			IndicatorType.IpfsCid => EntityCategory.Threat,
+
+			_ => EntityCategory.Threat
+		};
+	}
+
+	private List<List<IndicatorOccurrence>> ClusterIdentities(List<IndicatorOccurrence> identityIndicators, string text)
+	{
+		if (identityIndicators.Count == 0)
+			return new List<List<IndicatorOccurrence>>();
+
+		if (identityIndicators.Count <= 3)
+			return new List<List<IndicatorOccurrence>> { identityIndicators };
+
+		// 1. First pass: build raw clusters based on proximity
+		var sorted = identityIndicators.OrderBy(o => o.Offset).ToList();
+		var rawClusters = new List<List<IndicatorOccurrence>>();
+		var currentCluster = new List<IndicatorOccurrence> { sorted[0] };
+
+		for (int i = 1; i < sorted.Count; i++)
+		{
+			var previous = sorted[i - 1];
+			var current = sorted[i];
+
+			bool sameContext = SharesContext(previous, current);
+			int gap = current.Offset - (previous.Offset + previous.Length);
+			bool closeEnough = gap < 500;
+
+			if (sameContext || closeEnough)
+			{
+				currentCluster.Add(current);
+			}
+			else
+			{
+				rawClusters.Add(currentCluster);
+				currentCluster = new List<IndicatorOccurrence> { current };
+			}
+		}
+		rawClusters.Add(currentCluster);
+
+		// 2. If only one cluster, no dedup needed
+		if (rawClusters.Count <= 1)
+			return rawClusters;
+
+		// 3. Second pass: deduplicate - assign each unique (Type, Value) to the best cluster
+		var uniqueIndicators = identityIndicators
+			.GroupBy(o => (o.Type, Value: o.Value.ToLowerInvariant()))
+			.Select(g => g.First())
+			.ToList();
+
+		var finalClusters = new List<List<IndicatorOccurrence>>();
+
+		foreach (var rawCluster in rawClusters)
+		{
+			finalClusters.Add(new List<IndicatorOccurrence>());
+		}
+
+		var assigned = new HashSet<(IndicatorType, string)>();
+
+		foreach (var indicator in uniqueIndicators)
+		{
+			var key = (indicator.Type, indicator.Value.ToLowerInvariant());
+			if (assigned.Contains(key))
+				continue;
+
+			// Find the best cluster for this indicator
+			int bestClusterIndex = FindBestCluster(indicator, rawClusters);
+			finalClusters[bestClusterIndex].Add(indicator);
+			assigned.Add(key);
+		}
+
+		// 4. Remove empty clusters
+		return finalClusters.Where(c => c.Count > 0).ToList();
+	}
+
+	private int FindBestCluster(IndicatorOccurrence indicator, List<List<IndicatorOccurrence>> clusters)
+	{
+		int bestIndex = 0;
+		int bestScore = -1;
+
+		for (int i = 0; i < clusters.Count; i++)
+		{
+			var cluster = clusters[i];
+			int score = 0;
+
+			// Check if this indicator appears in this cluster (by offset proximity)
+			bool appearsInCluster = cluster.Any(c =>
+				c.Type == indicator.Type &&
+				c.Value.Equals(indicator.Value, StringComparison.OrdinalIgnoreCase));
+
+			if (appearsInCluster)
+			{
+				// Bonus for direct membership
+				score += 100;
+			}
+
+			// Score based on type diversity (prefer clusters with complementary types)
+			var clusterTypes = cluster.Select(c => c.Type).Distinct().ToHashSet();
+
+			// Reward clusters that have related PII types
+			if (indicator.Type == IndicatorType.PhoneNumber)
+			{
+				if (clusterTypes.Contains(IndicatorType.EmailAddress)) score += 20;
+				if (clusterTypes.Contains(IndicatorType.DateOfBirth)) score += 20;
+				if (cluster.Any(c => c.Type == IndicatorType.Username && c.Subtype == "FullName")) score += 30;
+			}
+			else if (indicator.Type == IndicatorType.EmailAddress)
+			{
+				if (clusterTypes.Contains(IndicatorType.PhoneNumber)) score += 20;
+				if (cluster.Any(c => c.Type == IndicatorType.Username && c.Subtype == "FullName")) score += 30;
+			}
+			else if (indicator.Type == IndicatorType.Username && indicator.Subtype == "FullName")
+			{
+				if (clusterTypes.Contains(IndicatorType.EmailAddress)) score += 20;
+				if (clusterTypes.Contains(IndicatorType.PhoneNumber)) score += 20;
+				if (clusterTypes.Contains(IndicatorType.DateOfBirth)) score += 20;
+			}
+
+			// Prefer larger clusters (more context)
+			score += cluster.Count * 5;
+
+			if (score > bestScore)
+			{
+				bestScore = score;
+				bestIndex = i;
+			}
+		}
+
+		return bestIndex;
+	}
+
+	private bool SharesContext(IndicatorOccurrence a, IndicatorOccurrence b)
+	{
+		return a.Context.Sentence == b.Context.Sentence ||
+			   a.Context.Block == b.Context.Block;
+	}
+
+	private EntityCategory DetermineCategory(List<IndicatorOccurrence> members)
+	{
+		var types = members.Select(m => m.Type).ToHashSet();
+		var subtypes = members.Select(m => m.Subtype?.ToLower()).ToHashSet();
+
+		if (subtypes.Contains("csam") || subtypes.Contains("photodna"))
+			return EntityCategory.Identity;
+
+		if (types.Contains(IndicatorType.Domain) || types.Contains(IndicatorType.IpAddress) || types.Contains(IndicatorType.Asn))
+			return EntityCategory.Org;
+
+		if (types.Contains(IndicatorType.PhoneNumber) || types.Contains(IndicatorType.EmailAddress) ||
+			types.Contains(IndicatorType.DateOfBirth))
+			return EntityCategory.Identity;
+
+		if (types.Contains(IndicatorType.CryptoAddress) || types.Contains(IndicatorType.Username))
+			return EntityCategory.Account;
+
+		return EntityCategory.Threat;
+	}
+
+	private string GetLabelForCategory(EntityCategory category)
+	{
+		return category switch
+		{
+			EntityCategory.Identity => "PII",
+			EntityCategory.Org => "Organization & Infrastructure",
+			EntityCategory.Account => "Accounts & Financial Access",
+			EntityCategory.FileArtifact => "File Artifacts",
+			EntityCategory.Threat => "Threat Indicators",
+			_ => "Uncategorized"
+		};
+	}
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1076,9 +2026,6 @@ public sealed class TextBoundaries
 // PLUGGABLE PATTERN INTERFACE
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// <summary>
-/// Interface for pluggable indicator extraction patterns.
-/// </summary>
 public interface IIndicatorPattern
 {
 	IndicatorType Type { get; }
@@ -1086,9 +2033,6 @@ public interface IIndicatorPattern
 	IEnumerable<IndicatorOccurrence> Extract(string text, string originalText, TextBoundaries boundaries, IndicatorExtractorOptions options);
 }
 
-/// <summary>
-/// Regex-based indicator pattern implementation.
-/// </summary>
 public sealed class RegexPattern : IIndicatorPattern
 {
 	private readonly Regex _regex;
@@ -1142,6 +2086,72 @@ public sealed class RegexPattern : IIndicatorPattern
 	}
 }
 
+/// <summary>
+/// Pattern that extracts a specific capture group from the regex match.
+/// Useful for patterns where the label/context is part of the match but we only want the value.
+/// </summary>
+public sealed class CaptureGroupPattern : IIndicatorPattern
+{
+	private readonly Regex _regex;
+	private readonly int _captureGroupIndex;
+	private readonly float _baseConfidence;
+	private readonly Func<string, bool>? _filter;
+	private readonly Func<string, IndicatorContext, IndicatorExtractorOptions, float>? _confidenceAdjuster;
+
+	public IndicatorType Type { get; }
+	public string? Subtype { get; }
+
+	public CaptureGroupPattern(
+		IndicatorType type,
+		Regex regex,
+		int captureGroupIndex,
+		string? subtype = null,
+		float baseConfidence = 0.7f,
+		Func<string, bool>? filter = null,
+		Func<string, IndicatorContext, IndicatorExtractorOptions, float>? confidenceAdjuster = null)
+	{
+		Type = type;
+		_regex = regex;
+		_captureGroupIndex = captureGroupIndex;
+		Subtype = subtype;
+		_baseConfidence = baseConfidence;
+		_filter = filter;
+		_confidenceAdjuster = confidenceAdjuster;
+	}
+
+	public IEnumerable<IndicatorOccurrence> Extract(string text, string originalText, TextBoundaries boundaries, IndicatorExtractorOptions options)
+	{
+		foreach (Match m in _regex.Matches(text))
+		{
+			if (!m.Groups[_captureGroupIndex].Success)
+				continue;
+
+			var value = m.Groups[_captureGroupIndex].Value.Trim();
+
+			if (string.IsNullOrEmpty(value))
+				continue;
+
+			if (_filter != null && !_filter(value))
+				continue;
+
+			var ctx = boundaries.BuildContext(m.Index);
+			var confidence = _confidenceAdjuster?.Invoke(value, ctx, options) ?? _baseConfidence;
+
+			yield return new IndicatorOccurrence
+			{
+				Id = Guid.NewGuid(),
+				Type = Type,
+				Subtype = Subtype,
+				Value = value,
+				Offset = m.Groups[_captureGroupIndex].Index,
+				Length = m.Groups[_captureGroupIndex].Length,
+				Context = ctx,
+				Confidence = confidence
+			};
+		}
+	}
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // OPTIONS
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1156,7 +2166,8 @@ public sealed class IndicatorExtractorOptions
 	public float MinimumConfidence { get; set; } = 0.7f;
 	public bool ExtractDomainsFromUrls { get; set; } = true;
 	public bool ExtractStandaloneDomains { get; set; } = true;
-	public bool ExtractPhoneNumbers { get; set; } = false; // Opt-in due to false positive rate
+	public bool ExtractPhoneNumbers { get; set; } = true; // Changed default to true for ESP reports
+	public bool ExtractDeviceIdentifiers { get; set; } = true; // IMEI, etc.
 	public bool GroupIpv6ByPrefix { get; set; } = true;
 	public bool ReduceConfidenceForPrivateIps { get; set; } = true;
 
@@ -1164,7 +2175,7 @@ public sealed class IndicatorExtractorOptions
 	// Limits and Timeouts
 	// ─────────────────────────────────────────────
 
-	public int MaxTextLength { get; set; } = 10_000_000; // 10MB
+	public int MaxTextLength { get; set; } = 10_000_000;
 	public int MaxMatchesPerType { get; set; } = 10_000;
 	public TimeSpan ExtractionTimeout { get; set; } = TimeSpan.FromSeconds(30);
 
@@ -1175,7 +2186,7 @@ public sealed class IndicatorExtractorOptions
 	public FrozenSet<string> NetworkKeywords { get; set; } = FrozenSet.ToFrozenSet(new[]
 	{
 		"ip", "address", "host", "server", "source", "destination",
-		"c2", "command", "control", "beacon", "callback", "proxy"
+		"c2", "command", "control", "beacon", "callback", "proxy", "login"
 	});
 
 	public FrozenSet<string> ThreatKeywords { get; set; } = FrozenSet.ToFrozenSet(new[]
@@ -1188,7 +2199,7 @@ public sealed class IndicatorExtractorOptions
 	public FrozenSet<string> ActorKeywords { get; set; } = FrozenSet.ToFrozenSet(new[]
 	{
 		"actor", "threat actor", "attacker", "adversary", "group",
-		"operator", "criminal", "hacker", "apt", "nation-state"
+		"operator", "criminal", "hacker", "apt", "nation-state", "suspect"
 	});
 
 	public FrozenSet<string> HashKeywords { get; set; } = FrozenSet.ToFrozenSet(new[]
@@ -1212,8 +2223,6 @@ public sealed class IndicatorExtractorOptions
 		"twitter", "telegram", "discord", "forum", "reddit", "facebook", "instagram", "tiktok"
 	});
 
-
-
 	public FrozenSet<string> MitreKeywords { get; set; } = FrozenSet.ToFrozenSet(new[]
 	{
 		"mitre", "att&ck", "attack", "technique", "tactic", "procedure", "ttp"
@@ -1230,10 +2239,10 @@ public sealed class IndicatorExtractorOptions
 
 	public FrozenSet<string> HashExclusions { get; set; } = FrozenSet.ToFrozenSet(new[]
 	{
-		"d41d8cd98f00b204e9800998ecf8427e", // MD5 empty
-        "da39a3ee5e6b4b0d3255bfef95601890afd80709", // SHA1 empty
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", // SHA256 empty
-        "00000000000000000000000000000000",
+		"d41d8cd98f00b204e9800998ecf8427e",
+		"da39a3ee5e6b4b0d3255bfef95601890afd80709",
+		"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		"00000000000000000000000000000000",
 		"ffffffffffffffffffffffffffffffff",
 		"0000000000000000000000000000000000000000",
 		"ffffffffffffffffffffffffffffffffffffffff"
@@ -1262,7 +2271,3 @@ public sealed class IndicatorExtractorOptions
 
 	public List<IIndicatorPattern> CustomPatterns { get; set; } = new();
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// MODELS
-// ═══════════════════════════════════════════════════════════════════════════════

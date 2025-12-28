@@ -598,23 +598,37 @@ public class QdrantService : IQdrantService
 
 	private static List<ChunkHit> MapResults(IReadOnlyList<ScoredPoint> results)
 	{
-		return results.Select(r => new ChunkHit
+		return results.Select(r =>
 		{
-			Blake3Hash = GetPayloadString(r.Payload, "blake3_hash") ?? "",
-			ChunkIndex = GetPayloadInt(r.Payload, "chunk_index"),
-			Text = GetPayloadString(r.Payload, "text") ?? "",
-			Score = r.Score,
+			var embeddingRole =
+				GetPayloadString(r.Payload, "embedding_role") ?? "authoritative";
 
-			// Added these to ensure RAG context has full metadata
-			FileName = GetPayloadString(r.Payload, "file_name"),
-			MimeType = GetPayloadString(r.Payload, "mime_type"),
-			Classification = GetPayloadString(r.Payload, "classification"),
+			int? sourceChunkIndex = null;
+			var sourceIdx = GetPayloadString(r.Payload, "source_chunk_index");
+			if (int.TryParse(sourceIdx, out var parsed))
+				sourceChunkIndex = parsed;
 
-			// Ensure lists are mapped correctly
-			Entities = GetPayloadStringList(r.Payload, "entities"),
-			WorkspaceIds = GetPayloadStringList(r.Payload, "workspace_ids"),
-			VirtualFileIds = GetPayloadStringList(r.Payload, "virtual_file_ids")
+			return new ChunkHit
+			{
+				Blake3Hash = GetPayloadString(r.Payload, "blake3_hash") ?? "",
+				ChunkIndex = GetPayloadInt(r.Payload, "chunk_index"),
+				Text = GetPayloadString(r.Payload, "text") ?? "",
+				Score = r.Score,
+
+				FileName = GetPayloadString(r.Payload, "file_name"),
+				MimeType = GetPayloadString(r.Payload, "mime_type"),
+				Classification = GetPayloadString(r.Payload, "classification"),
+
+				Entities = GetPayloadStringList(r.Payload, "entities"),
+				WorkspaceIds = GetPayloadStringList(r.Payload, "workspace_ids"),
+				VirtualFileIds = GetPayloadStringList(r.Payload, "virtual_file_ids"),
+
+				// 🔒 FIX #5 FIELDS
+				EmbeddingRole = embeddingRole,
+				SourceChunkIndex = sourceChunkIndex
+			};
 		}).ToList();
+
 	}
 
 	private static string? GetPayloadString(

@@ -31,7 +31,8 @@ public sealed class DoclingExtractionService : IDocumentExtractionService
 		  {
 			  ["pages"] = result.Pages?.Count,
 			  ["title"] = result.Title,
-			  ["mime"] = mimeType
+			  ["mime"] = mimeType,
+			  ["docling_document"] =result
 		  },
 		  Artifacts: ProjectArtifacts(result)
 	  );

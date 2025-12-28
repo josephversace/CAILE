@@ -554,20 +554,7 @@ public class RAGDocument
 /// <summary>
 /// Entity extracted from analysis
 /// </summary>
-public class Entity
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string Name { get; set; } = string.Empty;
-    public EntityType Type { get; set; }
-    public Dictionary<string, object> Properties { get; set; } = new();
-    public List<string> Aliases { get; set; } = new();
-    public List<Relationship> Relationships { get; set; } = new();
-    public List<string> AssociatedCaseIds { get; set; } = new();
-    public double RiskScore { get; set; }
-    public DateTimeOffset FirstSeen { get; set; }
-    public DateTimeOffset LastSeen { get; set; }
-    public Dictionary<string, object> Attributes { get; set; } = new();
-}
+
 
 /// <summary>
 /// Relationship between entities
