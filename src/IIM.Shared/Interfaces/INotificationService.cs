@@ -13,9 +13,7 @@ namespace IIM.Shared.Interfaces
     public interface INotificationService
     {
         // Notification Management
-        Task<string> CreateNotificationAsync(CreateNotificationRequest request, CancellationToken cancellationToken = default);
-        Task<Notification?> GetNotificationAsync(string notificationId, CancellationToken cancellationToken = default);
-        Task<List<Notification>> GetNotificationsAsync(NotificationFilter? filter = null, CancellationToken cancellationToken = default);
+  
         Task<int> GetUnreadCountAsync(CancellationToken cancellationToken = default);
         Task<bool> MarkAsReadAsync(string notificationId, CancellationToken cancellationToken = default);
         Task<bool> MarkAllAsReadAsync(CancellationToken cancellationToken = default);
@@ -34,9 +32,5 @@ namespace IIM.Shared.Interfaces
         Task SendNotificationAsync(string title, string message, NotificationType type, CancellationToken cancellationToken = default);
 
 
-        // Events
-        event EventHandler<NotificationReceivedEventArgs>? NotificationReceived;
-        event EventHandler<NotificationReadEventArgs>? NotificationRead;
-        event EventHandler<NotificationDeletedEventArgs>? NotificationDeleted;
     }
 }

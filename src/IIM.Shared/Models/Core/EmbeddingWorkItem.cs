@@ -8,13 +8,16 @@ namespace IIM.Shared.Models
 	{
 		public required string Blake3Hash { get; init; }
 		public required int ChunkIndex { get; init; }
-
-		public required string Text { get; init; } // bounded by construction
-
+		public required string Text { get; init; }
 		public required int MaxTokens { get; init; }
+		public required string SemanticType { get; init; }
 
-		public required string SemanticType { get; init; } // paragraph, table, caption
-		public required IReadOnlyDictionary<string, string> Metadata { get; init; }
+		public IReadOnlyDictionary<string, string> Metadata { get; init; }
+			= Empty;
+
+		private static readonly IReadOnlyDictionary<string, string> Empty
+			= new Dictionary<string, string>();
 	}
+
 
 }

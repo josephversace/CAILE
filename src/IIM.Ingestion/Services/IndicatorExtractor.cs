@@ -5,10 +5,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using IIM.Ingestion.Extensions;
 using IIM.Ingestion.Models;
+using IIM.Shared.Dtos;
 using IIM.Shared.Models;
 
-namespace IIM.Ingestion.Indicators;
+namespace IIM.Ingestion.Services;
 
 /// <summary>
 /// Extracts Indicators of Compromise (IoCs) from text with contextual analysis,
@@ -572,15 +574,33 @@ public sealed partial class IndicatorExtractor
 					Average = g.Average(x => x.Confidence)
 				});
 
-		var identityGroup = GroupOccurrencesSemantically(filteredOccurrences, text);
+		var identityGroups = GroupOccurrencesSemantically(filteredOccurrences, text);
 
-		return new ExtractionResult
+		var proposedEvents = BuildProposedEvents(filteredOccurrences, text);
+
+
+		var result = new ExtractionResult
 		{
 			Indicators = indicators,
-			Occurrences = filteredOccurrences,
-			Statistics = statistics,
-			IdentityGroups = identityGroup
+
+			Occurrences = occurrences, // The only place with "Heavy" context
+
+			IdentityGroups = identityGroups.Select(g => new EntityGroupDto
+			{
+				GroupId = g.GroupId,
+				Category = g.Category.ToString(),
+				Label = g.Label,
+				GroupConfidence = g.GroupConfidence,
+				Members = g.Members.Select(m => new IndicatorSummary(m.Type.ToString(), m.Value)).ToList()
+			}).ToList(),
+
+			ProposedEvents = ProposedEventsMapper.MapToDto(proposedEvents)
 		};
+
+		
+		return result;
+	
+
 	}
 
 	// ═══════════════════════════════════════════════════════════════════════════
@@ -1460,6 +1480,163 @@ public sealed partial class IndicatorExtractor
 
 		return false;
 	}
+
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// Event AGGREGATION
+	// ═══════════════════════════════════════════════════════════════════════════
+	private List<ProposedEvent> BuildProposedEvents(List<IndicatorOccurrence> occurrences, string text)
+	{
+		var events = new List<ProposedEvent>();
+
+		var timestamps = occurrences.Where(o => o.Type == IndicatorType.Timestamp).OrderBy(o => o.Offset).ToList();
+		var others = occurrences.Where(o => o.Type != IndicatorType.Timestamp).ToList();
+
+		if (timestamps.Count == 0 || others.Count == 0)
+			return events;
+
+		// 1. Group every indicator with its NEAREST timestamp anchor
+		var groupings = others.GroupBy(o =>
+		{
+			return timestamps
+				.OrderBy(ts => Math.Abs(o.Offset - ts.Offset))
+				.First();
+		});
+
+		foreach (var group in groupings)
+		{
+			var ts = group.Key;
+
+			// 2. Structural Analysis: Are we inside a table?
+			// Look at the context around the timestamp for table markers
+			bool isTableContext = ts.Context.SurroundingLower.Contains("|") ||
+								  ts.Context.SurroundingLower.Contains("---");
+
+			// 3. Dynamic Filtering based on structure
+			var validNearby = group.Where(o =>
+			{
+				var distance = Math.Abs(o.Offset - ts.Offset);
+
+				// Maximum distance allowed
+				if (distance > 500) return false;
+
+				int start = Math.Min(o.Offset, ts.Offset);
+				string gap = text.Substring(start, distance);
+				int newlineCount = gap.Count(c => c == '\n');
+
+				if (isTableContext)
+				{
+					// Strict Row-Boundaries: Indicators MUST be on the same line in a table
+					return newlineCount == 0;
+				}
+				else
+				{
+					// Conversational/List logic: Allow 1 newline for adjacent lines
+					return newlineCount <= 1;
+				}
+			}).ToList();
+
+			if (!validNearby.Any()) continue;
+
+			// 4. Assemble with your existing dictionary logic
+			events.Add(new ProposedEvent
+			{
+				Id = Guid.NewGuid(),
+				EventType = DetermineTimestampSubtype(ts.Context) ?? ts.Subtype ?? "Event",
+				Timestamp = ts,
+				Who = validNearby.Where(o => IsWhoIndicator(o.Type)).ToList(),
+				What = validNearby.Where(o => IsWhatIndicator(o.Type)).ToList(),
+				Where = validNearby.Where(o => IsWhereIndicator(o.Type)).ToList(),
+				Context = ts.Context,
+				Confidence = ts.Confidence
+			});
+		}
+
+		return events;
+	}
+
+
+	private static readonly Dictionary<string, string> EventKeywords = new(StringComparer.OrdinalIgnoreCase)
+{
+	{ "upload", "Upload" },
+	{ "uploaded", "Upload" },
+	{ "download", "Download" },
+	{ "downloaded", "Download" },
+	{ "login", "Login" },
+	{ "logged in", "Login" },
+	{ "log in", "Login" },
+	{ "signin", "Login" },
+	{ "signed in", "Login" },
+	{ "sign in", "Login" },
+	{ "logout", "Logout" },
+	{ "logged out", "Logout" },
+	{ "log out", "Logout" },
+	{ "signout", "Logout" },
+	{ "signed out", "Logout" },
+	{ "sign out", "Logout" },
+	{ "sent", "Sent" },
+	{ "send", "Sent" },
+	{ "received", "Received" },
+	{ "receive", "Received" },
+	{ "access", "Access" },
+	{ "accessed", "Access" },
+	{ "created", "Created" },
+	{ "create", "Created" },
+	{ "modified", "Modified" },
+	{ "modify", "Modified" },
+	{ "updated", "Modified" },
+	{ "deleted", "Deleted" },
+	{ "delete", "Deleted" },
+	{ "posted", "Posted" },
+	{ "post", "Posted" },
+	{ "registered", "Registered" },
+	{ "register", "Registered" },
+	{ "transaction", "Transaction" },
+	{ "transfer", "Transaction" },
+	{ "payment", "Transaction" }
+};
+
+	private static string DetermineTimestampSubtype(IndicatorContext ctx)
+	{
+		var lower = ctx.SurroundingLower;
+
+		// Find all matching keywords and their positions
+		var matches = new List<(int position, string eventType)>();
+
+		foreach (var kvp in EventKeywords)
+		{
+			var idx = lower.IndexOf(kvp.Key, StringComparison.Ordinal);
+			if (idx >= 0)
+			{
+				matches.Add((idx, kvp.Value));
+			}
+		}
+
+		if (matches.Count == 0)
+			return "Event";
+
+		// Return the first one found (closest to start of context)
+		// Could also pick closest to timestamp offset if we passed that in
+		return matches.OrderBy(m => m.position).First().eventType;
+	}
+
+
+	private static bool IsWhoIndicator(IndicatorType type) =>
+		type is IndicatorType.Username or
+			   IndicatorType.EmailAddress or
+			   IndicatorType.PhoneNumber;
+
+	private static bool IsWhatIndicator(IndicatorType type) =>
+		type is IndicatorType.FileHash or
+			   IndicatorType.FileName or
+			   IndicatorType.FilePath or
+			   IndicatorType.Url or
+			   IndicatorType.CryptoTransaction;
+
+	private static bool IsWhereIndicator(IndicatorType type) =>
+		type is IndicatorType.Domain or
+			   IndicatorType.IpAddress or
+			   IndicatorType.OnionAddress;
 
 	// ═══════════════════════════════════════════════════════════════════════════
 	// INDICATOR AGGREGATION

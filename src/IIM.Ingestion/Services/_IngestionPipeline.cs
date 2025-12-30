@@ -2,7 +2,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using IIM.Ingestion.Extensions;
-using IIM.Ingestion.Indicators;
 using IIM.Ingestion.Interfaces;
 using IIM.Ingestion.Models;
 using IIM.Shared.Interfaces;

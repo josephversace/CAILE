@@ -68,13 +68,12 @@ namespace IIM.Shared.Models
 		public bool? ColimaInstalled { get; set; }
 
 		// -------------------------------------------------------
-		// FOUNDRY AI RUNTIME
+		// Ollama AI RUNTIME
 		// -------------------------------------------------------
-		public bool? HasFoundry { get; set; }
-		public string? FoundryVersion { get; set; }
-		public string? FoundryPath { get; set; }
+		public bool? HasOllama { get; set; }
+	
 
-		public string? FoundryRecommendedTier { get; set; } = "mini";
+		public string? RecommendedTier { get; set; } = "mini";
 		// -------------------------------------------------------
 		// DISK + MEMORY
 		// -------------------------------------------------------

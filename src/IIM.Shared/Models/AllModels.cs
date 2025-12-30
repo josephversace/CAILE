@@ -246,31 +246,6 @@ public class FileContext
 
 
 
-/// <summary>
-/// Request to create new investigation session
-/// Purpose: Initialize new investigation with context
-/// Used by: Investigation UI, session manager
-/// </summary>
-public class CreateSessionRequest
-{
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string Title { get; set; } = string.Empty;
-    public string InvestigationType { get; set; } = string.Empty;
-    public Dictionary<string, ModelConfiguration>? Models { get; set; }
-    public List<string>? EnabledTools { get; set; }
-    public SessionContext? Context { get; set; }
-    public string? TemplateId { get; set; }
-    public Dictionary<string, object>? InitialParameters { get; set; }
-
-    public CreateSessionRequest() { }
-
-    public CreateSessionRequest(string workspaceId, string title, string investigationType)
-    {
-        WorkspaceId = workspaceId;
-        Title = title;
-        InvestigationType = investigationType;
-    }
-}
 
     /// <summary>
     /// Session context information
@@ -931,52 +906,6 @@ public class ServiceOperationResponse
         public int Status { get; set; } = 422;
         public Dictionary<string, List<string>> Errors { get; set; } = new();
         public string Instance { get; set; } = string.Empty;
-    }
-
-    /// <summary>
-    /// Start WSL command model
-    /// </summary>
-    public class StartWslCommand
-    {
-        public string DistroName { get; set; } = "IIM-Ubuntu";
-        public bool StartServices { get; set; } = true;
-        public List<string>? ServicesToStart { get; set; }
-        public int TimeoutSeconds { get; set; } = 60;
-    }
-
-    /// <summary>
-    /// Stop WSL command model
-    /// </summary>
-    public class StopWslCommand
-    {
-        public string DistroName { get; set; } = "IIM-Ubuntu";
-        public bool ForceStop { get; set; } = false;
-        public bool SaveState { get; set; } = true;
-        public int GracePeriodSeconds { get; set; } = 30;
-    }
-
-    /// <summary>
-    /// WSL health response model
-    /// </summary>
-    public class WslHealthResponse
-    {
-        public bool IsHealthy { get; set; }
-        public WslStatus Status { get; set; } = new();
-        public Dictionary<string, ServiceStatus> Services { get; set; } = new();
-        public List<string> Issues { get; set; } = new();
-        public DateTimeOffset CheckedAt { get; set; } = DateTimeOffset.UtcNow;
-    }
-
-    /// <summary>
-    /// WSL status response model
-    /// </summary>
-    public class WslStatusResponse
-    {
-        public bool WslInstalled { get; set; }
-        public bool DistroRunning { get; set; }
-        public string? DistroName { get; set; }
-        public string? WslVersion { get; set; }
-        public List<string> RunningServices { get; set; } = new();
     }
 
 

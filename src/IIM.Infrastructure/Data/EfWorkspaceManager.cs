@@ -1,4 +1,5 @@
-﻿using IIM.Shared.Enums;
+﻿using System.Linq.Expressions;
+using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
 using IIM.Shared.Models.Core;
@@ -760,6 +761,16 @@ namespace IIM.Infrastructure.Data
 				.ToListAsync(ct);
 		}
 
+        public async Task<string?> GetDerivedHashAsync(string storedFileHash, string processorName, CancellationToken ct)
+        {
+			var query = _db.ProcessedFiles
+				.Where(pf =>
+					pf.StoredFileHash == storedFileHash &&
+					pf.ProcessorName == processorName);
 
-	}
+			return await query
+					 .Select(pf => pf.DerivedHash).SingleOrDefaultAsync(ct);
+
+		}
+    }
 }

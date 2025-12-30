@@ -5,6 +5,7 @@
 using System.Text.RegularExpressions;
 using IIM.Shared.Models;
 
+
 namespace IIM.Ingestion.Chunking.Utilities;
 
 /// <summary>
@@ -131,12 +132,7 @@ public static partial class MarkdownParser
         for (int i = 0; i < lines.Length; i++)
         {
             var line = lines[i].TrimStart();
-			var isTableLine =
-	 !string.IsNullOrEmpty(line) &&
-	 line.Length > 1 &&
-	 line[0] == '|' &&
-	 line.IndexOf('|', 1) >= 0;
-
+			var isTableLine = line.StartsWith('|') && line.IndexOf('|', 1) >= 0;
 
 			if (isTableLine && tableStart < 0)
             {

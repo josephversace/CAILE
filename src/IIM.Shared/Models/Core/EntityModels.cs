@@ -48,6 +48,11 @@ namespace IIM.Shared.Models
 		/// <summary>
 		/// Threat Indicators: CVEs, MITRE ATT&CK, registry keys
 		/// </summary>
-		Threat = 4
+		Threat = 4,
+
+		/// <summary>
+		/// Event or Activity: logins, uploads, transactions
+		/// </summary>
+		Event = 5
 	}
 }

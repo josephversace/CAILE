@@ -5,11 +5,10 @@ using GraphRag.Storage.Neo4j;
 using IIM.Api.Services;
 using IIM.Application.Services;
 using IIM.Infrastructure.Docling;
-using IIM.Infrastructure.Foundry;
 using IIM.Infrastructure.Models;
+using IIM.Infrastructure.Ollama;
 using IIM.Infrastructure.Services;
 using IIM.Infrastructure.Storage;
-using IIM.Infrastructure.Templates;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
 
@@ -39,15 +38,20 @@ namespace IIM.Api.Extensions
 			// Foundry
 
 			//services.AddHttpClient();
-			//services.AddSingleton<IFoundryModelService>(sp =>
+			//services.AddSingleton<IModelService>(sp =>
 			//{
 			//	var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
 			//	var log = sp.GetRequiredService<ILogger<FoundryModelService>>();
 			//	return new FoundryModelService(http, log, "http://127.0.0.1:5273");
 			//});
 
-			services.AddSingleton<IFoundryModelService, CliFoundryModelService>();
+			//services.AddSingleton<IModelService, ClIModelService>();
 
+			services.AddSingleton<IModelService>(sp =>
+			{
+				var log = sp.GetRequiredService<ILogger<OllamaModelService>>();
+				return new OllamaModelService(log, "http://localhost:11434");
+			});
 
 			// DOCLING
 			services.AddHttpClient<IDoclingService, DoclingService>((sp, client) =>
@@ -86,8 +90,8 @@ namespace IIM.Api.Extensions
 				sp.GetRequiredKeyedService<IGraphStore>("neo4j"));
 
 			// MODEL TEMPLATES
-			services.AddScoped<IModelConfigurationTemplateService, ModelTemplateService>();
-			services.AddScoped<IModelTemplateResolver, ModelTemplateResolver>();
+			services.AddScoped<IModelConfigurationService, ModelConfigurationService>();
+			services.AddScoped<IModelResolver, ModelResolver>();
 
 			// INGESTION NOTIFICATIONS
 			services.AddScoped<IIngestionNotifier, SignalRIngestionNotifier>();

@@ -11,7 +11,7 @@
 		<PackageReference Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.0.0-preview.251125.1" />
 		<PackageReference Include="Microsoft.Agents.AI" Version="1.0.0-preview.251125.1" />
 		<PackageReference Include="Microsoft.Agents.AI.AGUI" Version="1.0.0-preview.251125.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.1">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
@@ -20,45 +20,39 @@
 		<PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.0.1-preview.1.25571.5" />
 
 		<!-- OpenAI SDK - MUST match version required by Microsoft.Extensions.AI.OpenAI (>= 2.6.0) -->
-		<PackageReference Include="OpenAI" Version="2.7.0" />
+		<PackageReference Include="OpenAI" Version="2.8.0" />
 
-		<!-- Foundry Local -->
-		<PackageReference Include="Microsoft.AI.Foundry.Local" Version="0.8.2.1" />
+	
 		<!-- Base CPU library -->
 		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.2" />
 
-
-
-		<PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI.Foundry" Version="0.11.3" />
-
-
 		<!-- Other packages -->
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
 		<PackageReference Include="AspNetCore.HealthChecks.Npgsql" Version="9.0.0" />
 		<PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
 		<PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
 		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.22" />
 		<PackageReference Include="Hangfire.Core" Version="1.8.22" />
-		<PackageReference Include="Hangfire.PostgreSql" Version="1.20.12" />
+		<PackageReference Include="Hangfire.PostgreSql" Version="1.20.13" />
 	
 		<PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.2" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.1" />
 		<PackageReference Include="OpenIddict.AspNetCore" Version="7.2.0" />
 		<PackageReference Include="OpenIddict.EntityFrameworkCore" Version="7.2.0" />
 		<PackageReference Include="QRCoder" Version="1.7.0" />
 		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
 		<PackageReference Include="StackExchange.Redis" Version="2.10.1" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
-		<PackageReference Include="System.IO.Packaging" Version="10.0.0" />
-		<PackageReference Include="PdfPig" Version="0.1.12" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.0" />
+		<PackageReference Include="System.IO.Packaging" Version="10.0.1" />
+		<PackageReference Include="PdfPig" Version="0.1.13" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.14.0" />
-		<PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.14.0" />
-		<PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.14.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="5.0.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.0.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="5.0.0" />
+	
 	</ItemGroup>
 
 
@@ -79,4 +73,13 @@
 	<ItemGroup>
 	  <Folder Include="Configuration\" />
 	</ItemGroup>
+
+	<PropertyGroup>
+		<!-- Prevent Roslyn / MSBuild tooling from being published -->
+		<ExcludeRoslynFromPublish>true</ExcludeRoslynFromPublish>
+		<SuppressRoslynAnalyzers>true</SuppressRoslynAnalyzers>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+	</PropertyGroup>
+
+
 </Project>

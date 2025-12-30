@@ -1,26 +1,19 @@
-﻿using IIM.Api.Models;
-using IIM.Api.Services;
-using IIM.Application.Workspace;
+﻿using IIM.Api.Services;
 using IIM.Infrastructure.AI.Intent;
 using IIM.Infrastructure.Embeddings;
 using IIM.Infrastructure.Services;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
-using Microsoft.AI.Foundry.Local;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.ML.OnnxRuntime;
-using UglyToad.PdfPig.Tokenization;
+using Microsoft.Extensions.Options;
 
 namespace IIM.Api.Extensions
 {
-
 	public static class AgentsLayer
 	{
 		public static IServiceCollection AddAgentsLayer(this IServiceCollection services)
 		{
-
-	
 			// Tool registry
 			services.AddSingleton<IToolRegistry, ToolRegistry>();
 
@@ -28,36 +21,41 @@ namespace IIM.Api.Extensions
 			services.AddSingleton<IAIAgentFactory, AIAgentFactory>();
 
 			// ---- SINGLE embedding generator instance ----
-			services.AddSingleton<OnnxEmbeddingGenerator>(sp =>
+
+
+			services.AddSingleton<OllamaEmbeddingGenerator>(sp =>
 			{
+				var config = sp.GetRequiredService<IOptions<CaileConfig>>().Value;
 
-				var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
+				var embeddingConfig = config.Models.Infrastructure.Embedding;
+				var providerConfig = config.Models.Provider;
 
-				using var scope = scopeFactory.CreateScope();
-				var templates = scope.ServiceProvider.GetRequiredService<IModelConfigurationTemplateService>();
-				var template = templates.GetDefaultTemplateAsync().GetAwaiter().GetResult();
-
-				var cfg = template?.Models?.Embedding
-					?? throw new InvalidOperationException("Embedding model not configured.");
-
-				return new OnnxEmbeddingGenerator(cfg);
+				return new OllamaEmbeddingGenerator(embeddingConfig, providerConfig);
 			});
 
-			// ---- Interface mappings (NO new instances) ----
 			services.AddSingleton<IEmbeddingGenerator<EmbeddingWorkItem, Embedding<float>>>(sp =>
-				sp.GetRequiredService<OnnxEmbeddingGenerator>());
+				sp.GetRequiredService<OllamaEmbeddingGenerator>());
 
 			services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
-				sp.GetRequiredService<OnnxEmbeddingGenerator>());
+				sp.GetRequiredService<OllamaEmbeddingGenerator>());
 
 			services.AddKeyedSingleton<IEmbeddingGenerator<string, Embedding<float>>>(
 				"embedding_model",
-				(sp, _) => sp.GetRequiredService<OnnxEmbeddingGenerator>());
+				(sp, _) => sp.GetRequiredService<OllamaEmbeddingGenerator>());
+			// Update interface mappings
+			services.AddSingleton<IEmbeddingGenerator<EmbeddingWorkItem, Embedding<float>>>(sp =>
+				sp.GetRequiredService<OllamaEmbeddingGenerator>());
+
+			services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
+				sp.GetRequiredService<OllamaEmbeddingGenerator>());
+
+			services.AddKeyedSingleton<IEmbeddingGenerator<string, Embedding<float>>>(
+				"embedding_model",
+				(sp, _) => sp.GetRequiredService<OllamaEmbeddingGenerator>());
 
 			// Other services
-			services.AddSingleton<IMultimodalVisionService, MultimodalVisionService>();
-			services.AddSingleton<IEmbeddingService, EmbeddingService>();
 
+			services.AddSingleton<IEmbeddingService, EmbeddingService>();
 
 			services.AddSingleton<IChatClient>(sp =>
 			{
@@ -70,39 +68,33 @@ namespace IIM.Api.Extensions
 			});
 
 			services.AddKeyedSingleton<IChatClient>(
-		"chat_model",
-		(sp, _) => sp.GetRequiredService<IChatClient>());
+				"chat_model",
+				(sp, _) => sp.GetRequiredService<IChatClient>());
 
-
-
-			// Intent (control-plane model)
-			// Single instance of the intent engine
+			// Intent engine using Ollama
 			services.AddSingleton<IWorkspaceIntentEngine>(sp =>
 			{
 				var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
 
-				// One-time scoped resolution just to read from EF
 				using var scope = scopeFactory.CreateScope();
-				var templates = scope.ServiceProvider.GetRequiredService<IModelConfigurationTemplateService>();
-				var template = templates.GetDefaultTemplateAsync().GetAwaiter().GetResult();
+				var configService = scope.ServiceProvider.GetRequiredService<IModelConfigurationService>();
+				var config = configService.GetConfigurationAsync().GetAwaiter().GetResult();
 
-				var modelPath = template.Models.Intent.LocalPath; // plain string, no EF dependency
+				var endpoint = config.Provider.Endpoint;
 
-				return new Phi3WorkspaceIntentEngine(modelPath);
+				// Use the primary model for intent classification
+				// It's lightweight enough and avoids loading another model
+				var modelId = config.Active.Primary.ModelId;
+
+				return new OllamaWorkspaceIntentEngine(endpoint, modelId);
 			});
-
-
-
 			// Policy (pure decision logic)
 			services.AddScoped<IWorkspaceEvidencePlanner, WorkspaceEvidencePlanner>();
 
 			// Context orchestration (per request)
 			services.AddScoped<IWorkspaceContextManager, WorkspaceContextManager>();
 
-
-
 			return services;
 		}
 	}
-
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -347,105 +347,7 @@ public class QdrantService : IQdrantService
 		return interleaved;
 	}
 
-	//public async Task<List<ChunkHit>> SearchByHashesBalancedAsync(
-	//float[] embedding,
-	//List<string> blake3Hashes,
-	//int totalLimit = 12,
-	//int minPerFile = 2,
-	//CancellationToken ct = default)
-	//{
-	//	if (blake3Hashes.Count == 0)
-	//		return [];
-
-	//	// Single file - just use normal search
-	//	if (blake3Hashes.Count == 1)
-	//	{
-	//		return await SearchByHashesAsync(embedding, blake3Hashes, totalLimit, ct);
-	//	}
-
-	//	var fileCount = blake3Hashes.Count;
-
-	//	// ════════════════════════════════════════════════════════════
-	//	// Tier 1: Small sets (2-10 files) - parallel per-file search
-	//	// ════════════════════════════════════════════════════════════
-	//	if (fileCount <= 10)
-	//	{
-	//		var perFileK = Math.Max(minPerFile, (totalLimit / fileCount) + 1);
-
-	//		var tasks = blake3Hashes.Select(hash =>
-	//			SearchSingleHashAsync(embedding, hash, perFileK, ct));
-
-	//		var results = await Task.WhenAll(tasks);
-
-	//		return results
-	//			.SelectMany(r => r)
-	//			.GroupBy(h => $"{h.Blake3Hash}:{h.ChunkIndex}")
-	//			.Select(g => g.First())
-	//			.OrderByDescending(h => h.Score)
-	//			.Take(totalLimit)
-	//			.ToList();
-	//	}
-
-	//	// ════════════════════════════════════════════════════════════
-	//	// Tier 2: Medium sets (11-100 files) - global search + backfill
-	//	// ════════════════════════════════════════════════════════════
-	//	if (fileCount <= 100)
-	//	{
-	//		// Phase 1: Global search with over-fetch
-	//		var globalHits = await SearchByHashesAsync(
-	//			embedding, blake3Hashes, totalLimit * 2, ct);
-
-	//		// Check coverage
-	//		var coveredFiles = globalHits
-	//			.Select(h => h.Blake3Hash)
-	//			.ToHashSet();
-
-	//		var uncoveredFiles = blake3Hashes
-	//			.Where(h => !coveredFiles.Contains(h))
-	//			.ToList();
-
-	//		// Phase 2: Backfill if coverage is poor (< 50% of files)
-	//		if (uncoveredFiles.Count > fileCount / 2)
-	//		{
-	//			// Sample up to 10 uncovered files for backfill
-	//			var toBackfill = uncoveredFiles.Take(10).ToList();
-
-	//			var backfillTasks = toBackfill.Select(hash =>
-	//				SearchSingleHashAsync(embedding, hash, 1, ct));
-
-	//			var backfillResults = await Task.WhenAll(backfillTasks);
-
-	//			globalHits.AddRange(backfillResults.SelectMany(r => r));
-
-	//			_logger.LogDebug(
-	//				"Backfilled {Count} uncovered files out of {Total}",
-	//				toBackfill.Count, uncoveredFiles.Count);
-	//		}
-
-	//		return globalHits
-	//			.GroupBy(h => $"{h.Blake3Hash}:{h.ChunkIndex}")
-	//			.Select(g => g.First())
-	//			.OrderByDescending(h => h.Score)
-	//			.Take(totalLimit)
-	//			.ToList();
-	//	}
-
-	//	// ════════════════════════════════════════════════════════════
-	//	// Tier 3: Large sets (100+ files) - global search, trust vectors
-	//	// ════════════════════════════════════════════════════════════
-	//	_logger.LogDebug(
-	//		"Large file set ({Count} files) - using global semantic ranking",
-	//		fileCount);
-
-	//	var hits = await SearchByHashesAsync(embedding, blake3Hashes, totalLimit, ct);
-
-	//	var representedCount = hits.Select(h => h.Blake3Hash).Distinct().Count();
-	//	_logger.LogDebug(
-	//		"Global search covered {Represented}/{Total} files",
-	//		representedCount, fileCount);
-
-	//	return hits;
-	//}
+	
 
 	private async Task<List<ChunkHit>> SearchSingleHashAsync(
 		float[] embedding,

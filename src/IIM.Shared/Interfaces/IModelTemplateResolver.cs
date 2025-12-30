@@ -1,23 +1,17 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using IIM.Shared.Dtos;
+using IIM.Shared.Models;
 
-namespace IIM.Shared.Interfaces
+public interface IModelResolver
 {
-	/// <summary>
-	/// Resolves the active model template used by the orchestrator.
-	/// A thin wrapper around IModelConfigurationTemplateService.
-	/// </summary>
-	public interface IModelTemplateResolver
-	{
-	
-
-		/// <summary>
-		/// Retrieves the ACTIVE model template:
-		/// 1. DB-stored template (full JSON)
-		/// 2. appsettings:ModelTemplates.ActiveTemplateId
-		/// 3. "micro" fallback
-		/// </summary>
-		Task<ModelTemplateDto> GetActiveTemplateAsync(CancellationToken ct = default);
-	}
+	Task<ActiveModelConfig> GetPrimaryModelAsync(CancellationToken ct = default);
+	Task<ActiveModelConfig?> GetSecondaryModelAsync(CancellationToken ct = default);
+	Task<EmbeddingModelConfig> GetEmbeddingModelAsync(CancellationToken ct = default);
+	Task<ModelConfig?> GetFunctionCallingModelAsync(CancellationToken ct = default);
+	Task<ModelConfig> GetIntentModelAsync(CancellationToken ct = default);  // ADD
+	Task<ModelConfig?> GetVisionModelAsync(CancellationToken ct = default);
+	Task<LocalModelConfig?> GetNerModelAsync(CancellationToken ct = default);
+	Task<LocalModelConfig?> GetAudioModelAsync(CancellationToken ct = default);
+	ProviderConfig GetProvider();
+	InferenceDefaults GetDefaults();
 }

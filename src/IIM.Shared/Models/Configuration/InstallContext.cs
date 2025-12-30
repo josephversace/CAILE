@@ -16,7 +16,7 @@ namespace IIM.Shared.Models
 		public SystemCheckResult SystemCheck { get; set; }
 
 		// FOUNDRY
-		public string FoundryTierId { get; set; }
+		public string TierId { get; set; }
 
 		// DB
 		public DatabaseConfig Database { get; set; }
@@ -44,7 +44,7 @@ namespace IIM.Shared.Models
 		// STATUS
 		public bool ReadyForInstall =>
 			SystemCheck != null &&
-			!string.IsNullOrEmpty(FoundryTierId) &&
+			!string.IsNullOrEmpty(TierId) &&
 			Database != null &&
 			Storage != null;
 	}

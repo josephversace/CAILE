@@ -1,7 +1,8 @@
-﻿using IIM.Api.Services;
-using IIM.Infrastructure.Foundry;
-using IIM.Shared.Dtos;
+﻿// IIM.Api/Endpoints/ModelRegistryEndpoints.cs
+using IIM.Api.Services;
+using IIM.Infrastructure.Ollama;
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IIM.Api.Endpoints;
@@ -11,114 +12,133 @@ public static class ModelRegistryEndpoints
 	public static void MapModelRegistryEndpoints(this IEndpointRouteBuilder app)
 	{
 		// -----------------------------------------------------------
-		// GROUP A: Foundry Model Registry
+		// GROUP A: Ollama Model Registry
 		// -----------------------------------------------------------
-		var foundry = app.MapGroup("/api/modelRegistry/foundry")
-			.WithTags("Foundry Models")
+		var ollama = app.MapGroup("/api/models/ollama")
+			.WithTags("Ollama Models")
 			.WithOpenApi();
 
-		//// AVAILABLE
-		//foundry.MapGet("/available", async (
-		//	IFoundryModelService svc, CancellationToken ct) =>
-		//{
-		//	return Results.Ok(await svc.GetAvailableModelsAsync(ct));
-		//});
-
-		// CACHED
-		//foundry.MapGet("/cached", async (
-		//	[FromServices] IFoundryModelService svc, CancellationToken ct) =>
-		//{
-		//	return Results.Ok(await svc.GetCachedModelDtosAsync(ct));
-		//});
-
 		// LOADED
-		foundry.MapGet("/loaded", async (
-			[FromServices] IFoundryModelService svc, CancellationToken ct) =>
+		ollama.MapGet("/loaded", async (
+			[FromServices] IModelService svc,
+			CancellationToken ct) =>
 		{
 			return Results.Ok(await svc.GetLoadedModelsDtoAsync(ct));
 		});
 
-		// ALL (available + flags)
-		//foundry.MapGet("/all", async (
-		//	[FromServices] IFoundryModelService svc, CancellationToken ct) =>
-		//{
-		//	return Results.Ok(await svc.GetAllWithStatusAsync(ct));
-		//});
+		// CACHED (locally available)
+		ollama.MapGet("/cached", async (
+			[FromServices] IModelService svc,
+			CancellationToken ct) =>
+		{
+			return Results.Ok(await svc.GetCachedModelsDtoAsync(ct));
+		});
 
 		// LOAD MODEL
-		foundry.MapPost("/load/{alias}", async (
-		string alias,
-		[FromServices] IFoundryModelService svc,
-		CancellationToken ct) =>
+		ollama.MapPost("/load/{model}", async (
+			string model,
+			[FromServices] IModelService svc,
+			CancellationToken ct) =>
 		{
-			await svc.LoadModelAsync(alias, ct);
-			return Results.Ok(new { message = $"Ensured model running: {alias}" });
+			await svc.LoadModelAsync(model, ct);
+			return Results.Ok(new { message = $"Model loaded: {model}" });
 		});
 
 		// UNLOAD MODEL
-		foundry.MapPost("/unload/{id}", async (
-			string id,
-			[FromServices] IFoundryModelService svc,
+		ollama.MapPost("/unload/{model}", async (
+			string model,
+			[FromServices] IModelService svc,
 			[FromQuery] bool force,
 			CancellationToken ct) =>
 		{
-			await svc.UnloadModelAsync(id, force, ct);
-			return Results.Ok(new { message = $"Unloaded {id}" });
+			await svc.UnloadModelAsync(model, force, ct);
+			return Results.Ok(new { message = $"Unloaded {model}" });
 		});
 
-
 		// -----------------------------------------------------------
-		// GROUP B: Model Templates (micro / mini / small / custom)
+		// GROUP B: Model Configuration
 		// -----------------------------------------------------------
-		var templates = app.MapGroup("/api/modelRegistry/templates")
-			.WithTags("Model Templates")
+		var config = app.MapGroup("/api/models/config")
+			.WithTags("Model Configuration")
 			.WithOpenApi();
 
-		// SYSTEM TEMPLATES
-		templates.MapGet("/system", async (
-			[FromServices] IModelConfigurationTemplateService svc,
+		// GET current configuration
+		config.MapGet("/", async (
+			[FromServices] IModelConfigurationService svc,
 			CancellationToken ct) =>
 		{
-			return Results.Ok(await svc.GetSystemTemplatesAsync(ct));
+			return Results.Ok(await svc.GetConfigurationAsync(ct));
 		});
 
-		// ACTIVE TEMPLATE
-		templates.MapGet("/active", async (
-			[FromServices] IModelTemplateResolver resolver,
+		// GET active models only
+		config.MapGet("/active", async (
+			[FromServices] IModelResolver resolver,
 			CancellationToken ct) =>
 		{
-			return Results.Ok(await resolver.GetActiveTemplateAsync(ct));
+			var primary = await resolver.GetPrimaryModelAsync(ct);
+			var secondary = await resolver.GetSecondaryModelAsync(ct);
+
+			return Results.Ok(new
+			{
+				primary = primary,
+				secondary = secondary
+			});
 		});
 
-		// APPLY TEMPLATE (save + foundry load)
-		templates.MapPost("/apply", async (
-			[FromBody] ModelTemplateDto template,
-			[FromServices] IModelConfigurationTemplateService templates,
-			[FromServices] IFoundryModelService foundry,
+		// UPDATE active models
+		config.MapPut("/active", async (
+			[FromBody] ActiveModelsConfig active,
+			[FromServices] IModelConfigurationService configSvc,
+			[FromServices] IModelService modelSvc,
 			[FromServices] IAIAgentFactory agentFactory,
 			CancellationToken ct) =>
 		{
-			await templates.SaveDefaultTemplateAsync(template, ct);
+			// Save to DB
+			await configSvc.SaveActiveModelsAsync(active, ct);
 
-			// fire and forget — DO NOT await
-			_ = Task.Run(() => foundry.ApplyTemplateAsync(template, CancellationToken.None));
+			// Load models in background
+			_ = Task.Run(async () =>
+			{
+				try
+				{
+					await modelSvc.LoadModelForSlotAsync(active.Primary.ModelId, "primary", CancellationToken.None);
 
-			// also reload model routing, but async
-			_ = Task.Run(() => agentFactory.ReloadModelsAsync());
+					if (active.Secondary != null && !string.IsNullOrEmpty(active.Secondary.ModelId))
+					{
+						await modelSvc.LoadModelForSlotAsync(active.Secondary.ModelId, "secondary", CancellationToken.None);
+					}
 
-			return Results.Ok(new { message = "Template saved. Models are loading in background." });
+					await agentFactory.ReloadModelsAsync();
+				}
+				catch (Exception)
+				{
+					// Log error - fire and forget
+				}
+			});
 
-
-			return Results.Ok(new { message = "Template saved + applied." });
+			return Results.Ok(new { message = "Active models updated. Loading in background." });
 		});
 
-		var local = app.MapGroup("/api/modelRegistry/local")
-		   .WithTags("Local Models")
-		   .WithOpenApi();
+		// RESET to defaults
+		config.MapPost("/reset", async (
+			[FromServices] IModelConfigurationService configSvc,
+			[FromServices] IAIAgentFactory agentFactory,
+			CancellationToken ct) =>
+		{
+			await configSvc.ResetActiveModelsAsync(ct);
+			await agentFactory.ReloadModelsAsync();
 
-		// --------------------------
+			return Results.Ok(new { message = "Reset to default configuration." });
+		});
+
+		// -----------------------------------------------------------
+		// GROUP C: Local ONNX Models
+		// -----------------------------------------------------------
+		var local = app.MapGroup("/api/models/local")
+			.WithTags("Local Models")
+			.WithOpenApi();
+
 		// LIST MODELS PER SLOT
-		// --------------------------
 		local.MapGet("/{slot}", async (
 			string slot,
 			[FromServices] ILocalModelService svc,
@@ -128,9 +148,7 @@ public static class ModelRegistryEndpoints
 			return Results.Ok(list);
 		});
 
-		// --------------------------
 		// UPLOAD A ZIP
-		// --------------------------
 		local.MapPost("/upload/{slot}/{name}", async (
 			string slot,
 			string name,
@@ -143,6 +161,160 @@ public static class ModelRegistryEndpoints
 
 			var info = await svc.UploadModelAsync(slot, name, file, ct);
 			return Results.Ok(info);
+		});
+
+		// -----------------------------------------------------------
+		// GROUP D: Chat Model Selection (for ChatPanel dropdowns)
+		// -----------------------------------------------------------
+		var chatModels = app.MapGroup("/api/models")
+			.WithTags("Chat Models")
+			.WithOpenApi();
+
+		// Get multimodal models for Primary slot
+		chatModels.MapGet("/primary", async (
+			[FromServices] IModelService svc,
+			CancellationToken ct) =>
+		{
+			var models = await svc.GetPrimaryModelsAsync(ct);
+			return Results.Ok(models);
+		});
+
+		// Get reasoning models for Secondary slot
+		chatModels.MapGet("/secondary", async (
+			[FromServices] IModelService svc,
+			CancellationToken ct) =>
+		{
+			var models = await svc.GetSecondaryModelsAsync(ct);
+			return Results.Ok(models);
+		});
+
+		// Get currently active models (simple response for UI)
+		chatModels.MapGet("/active", (
+			[FromServices] IAIAgentFactory factory) =>
+		{
+			return Results.Ok(new
+			{
+				primary = factory.CurrentChatModel,
+				secondary = factory.CurrentReasoningModel
+			});
+		});
+
+		// Pull a model from Ollama registry
+		chatModels.MapPost("/pull/{model}", async (
+			string model,
+			[FromServices] IModelService svc,
+			CancellationToken ct) =>
+		{
+			try
+			{
+				await svc.LoadModelAsync(model, ct);
+				return Results.Ok(new { success = true, message = $"Model {model} pulled and loaded" });
+			}
+			catch (Exception ex)
+			{
+				return Results.BadRequest(new { success = false, message = ex.Message });
+			}
+		});
+
+		// Load model into a specific slot
+		chatModels.MapPost("/load/{slot}/{model}", async (
+			string slot,
+			string model,
+			[FromServices] IModelService modelSvc,
+			[FromServices] IModelConfigurationService configSvc,
+			[FromServices] IAIAgentFactory agentFactory,
+			CancellationToken ct) =>
+		{
+			try
+			{
+				// 1. Load the model (unloads previous in that slot)
+				await modelSvc.LoadModelForSlotAsync(model, slot, ct);
+
+				// 2. Update and persist the configuration
+				var config = await configSvc.GetConfigurationAsync(ct);
+
+				var newActive = new ActiveModelsConfig
+				{
+					Primary = config.Active.Primary,
+					Secondary = config.Active.Secondary
+				};
+
+				switch (slot.ToLowerInvariant())
+				{
+					case "primary":
+					case "chat":
+						newActive.Primary = new ActiveModelConfig
+						{
+							ModelId = model,
+							Temperature = config.Active.Primary.Temperature,
+							MaxTokens = config.Active.Primary.MaxTokens,
+							TopP = config.Active.Primary.TopP,
+							SystemPrompt = config.Active.Primary.SystemPrompt,
+							SupportsVision = config.Active.Primary.SupportsVision
+						};
+						break;
+					case "secondary":
+					case "reasoning":
+						newActive.Secondary = new ActiveModelConfig
+						{
+							ModelId = model,
+							Temperature = config.Active.Secondary?.Temperature,
+							MaxTokens = config.Active.Secondary?.MaxTokens,
+							TopP = config.Active.Secondary?.TopP,
+							SystemPrompt = config.Active.Secondary?.SystemPrompt,
+							SupportsVision = false
+						};
+						break;
+				}
+
+				await configSvc.SaveActiveModelsAsync(newActive, ct);
+
+				// 3. Reload the AI agents
+				await agentFactory.ReloadModelsAsync();
+
+				return Results.Ok(new { success = true, message = $"Loaded {model} into {slot} slot" });
+			}
+			catch (Exception ex)
+			{
+				return Results.BadRequest(new { success = false, message = ex.Message });
+			}
+		});
+
+		// Unload a slot (set to none)
+		chatModels.MapPost("/unload/{slot}", async (
+			string slot,
+			[FromServices] IModelService modelSvc,
+			[FromServices] IModelConfigurationService configSvc,
+			[FromServices] IAIAgentFactory agentFactory,
+			CancellationToken ct) =>
+		{
+			try
+			{
+				// Only secondary can be unloaded
+				if (slot.ToLowerInvariant() is not ("secondary" or "reasoning"))
+				{
+					return Results.BadRequest(new { success = false, message = "Only secondary slot can be unloaded" });
+				}
+
+				await modelSvc.UnloadSlotAsync(slot, ct);
+
+				// Update config
+				var config = await configSvc.GetConfigurationAsync(ct);
+				var newActive = new ActiveModelsConfig
+				{
+					Primary = config.Active.Primary,
+					Secondary = null
+				};
+				await configSvc.SaveActiveModelsAsync(newActive, ct);
+
+				await agentFactory.ReloadModelsAsync();
+
+				return Results.Ok(new { success = true, message = $"Unloaded {slot} slot" });
+			}
+			catch (Exception ex)
+			{
+				return Results.BadRequest(new { success = false, message = ex.Message });
+			}
 		});
 	}
 }

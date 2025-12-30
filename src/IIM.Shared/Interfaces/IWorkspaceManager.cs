@@ -113,5 +113,10 @@ namespace IIM.Shared.Interfaces
 
 		Task<List<string>> GetDerivedHashForProcessedFile(string blake3, string processorName, bool latestOnly, CancellationToken ct = default);
 
+		/// <summary>
+		/// Get the derived hash for a processed file.
+		/// </summary>
+		Task<string?> GetDerivedHashAsync(string storedFileHash, string processorName, CancellationToken ct);
+
 	}
 }

@@ -47,11 +47,7 @@ namespace IIM.Api.Hubs
             await Clients.All.SendAsync("ResourceUsageUpdate", metrics);
         }
         
-        // Model template changes
-        public async Task NotifyTemplateChanged(string templateId, ModelTemplate template)
-        {
-            await Clients.All.SendAsync("ModelTemplateChanged", templateId, template);
-        }
+     
     }
     
     public class SystemStatus

@@ -18,7 +18,7 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "hstore");
@@ -96,7 +96,7 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                     b.ToTable("ClassificationTags");
                 });
 
-            modelBuilder.Entity("IIM.Shared.Models.Core.ProcessedFile", b =>
+            modelBuilder.Entity("IIM.Shared.Models.ProcessedFile", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -141,7 +141,7 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                     b.ToTable("ProcessedFiles");
                 });
 
-            modelBuilder.Entity("IIM.Shared.Models.Core.StoredFile", b =>
+            modelBuilder.Entity("IIM.Shared.Models.StoredFile", b =>
                 {
                     b.Property<string>("Blake3Hash")
                         .HasMaxLength(64)
@@ -341,6 +341,8 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
 
                     b.HasKey("Id");
 
+                    b.HasIndex("WorkspaceId");
+
                     b.ToTable("WorkspaceArtifacts");
                 });
 
@@ -460,7 +462,7 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("IIM.Shared.Models.Core.StoredFile", null)
+                    b.HasOne("IIM.Shared.Models.StoredFile", null)
                         .WithMany()
                         .HasForeignKey("StoredFilesBlake3Hash")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -476,9 +478,9 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("IIM.Shared.Models.Core.ProcessedFile", b =>
+            modelBuilder.Entity("IIM.Shared.Models.ProcessedFile", b =>
                 {
-                    b.HasOne("IIM.Shared.Models.Core.StoredFile", "StoredFile")
+                    b.HasOne("IIM.Shared.Models.StoredFile", "StoredFile")
                         .WithMany("ProcessedVersions")
                         .HasForeignKey("StoredFileHash")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -491,6 +493,15 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                 {
                     b.HasOne("IIM.Shared.Models.Workspace", null)
                         .WithMany("TimelineEvents")
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("IIM.Shared.Models.WorkspaceArtifact", b =>
+                {
+                    b.HasOne("IIM.Shared.Models.Workspace", null)
+                        .WithMany("Artifacts")
                         .HasForeignKey("WorkspaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -537,7 +548,7 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
 
             modelBuilder.Entity("VirtualFile", b =>
                 {
-                    b.HasOne("IIM.Shared.Models.Core.StoredFile", "StoredFile")
+                    b.HasOne("IIM.Shared.Models.StoredFile", "StoredFile")
                         .WithMany("VirtualFiles")
                         .HasForeignKey("StoredFileHash")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -545,7 +556,7 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                     b.Navigation("StoredFile");
                 });
 
-            modelBuilder.Entity("IIM.Shared.Models.Core.StoredFile", b =>
+            modelBuilder.Entity("IIM.Shared.Models.StoredFile", b =>
                 {
                     b.Navigation("ProcessedVersions");
 
@@ -554,6 +565,8 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
 
             modelBuilder.Entity("IIM.Shared.Models.Workspace", b =>
                 {
+                    b.Navigation("Artifacts");
+
                     b.Navigation("Files");
 
                     b.Navigation("Sessions");

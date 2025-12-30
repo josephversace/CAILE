@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using IIM.Api.Models;
 using IIM.Infrastructure.Services;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
@@ -37,6 +36,10 @@ public static class AIEndpoints
 		IWorkspaceContextManager contextManager,
 		IToolRegistry tools)
 	{
+
+
+		//await RunAgentAsync(ctx, agentFactory.GetChatAgentAsync, evidencePlanner, contextManager, tools);
+
 		await RunAgentAsync(ctx, agentFactory.GetChatAgentAsync, evidencePlanner, contextManager, tools);
 	}
 

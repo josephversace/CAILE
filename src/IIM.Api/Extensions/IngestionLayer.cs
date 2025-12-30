@@ -1,9 +1,7 @@
-﻿using IIM.Application.Workspace;
-using IIM.Infrastructure.Docling;
+﻿using IIM.Infrastructure.Docling;
 using IIM.Infrastructure.Embeddings;
 using IIM.Infrastructure.Services;
 using IIM.Ingestion.Chunking;
-using IIM.Ingestion.Indicators;
 using IIM.Ingestion.Interfaces;
 using IIM.Ingestion.Services;
 using IIM.Shared.Dtos;
@@ -79,19 +77,5 @@ public static class IngestionExtensions
 		return services;
 	}
 
-	/// <summary>
-	/// Register V2 context and evidence planning services.
-	/// Call this in addition to AddIngestionLayer.
-	/// </summary>
-	public static IServiceCollection AddWorkspaceContextServices(
-		this IServiceCollection services)
-	{
-		// V2 Context manager with tiered retrieval (full text vs semantic search)
-		services.AddScoped<IWorkspaceContextManager, WorkspaceContextManager>();
-
-		// V2 Evidence planner (intent → retrieval plan)
-		services.AddScoped<IWorkspaceEvidencePlanner, WorkspaceEvidencePlanner>();
-
-		return services;
-	}
+	
 }

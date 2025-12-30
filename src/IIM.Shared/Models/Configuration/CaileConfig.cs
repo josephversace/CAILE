@@ -30,7 +30,7 @@ namespace IIM.Shared.Models
 		public AuditConfig Audit { get; set; } = new();
 		public JwtConfig Jwt { get; set; } = new();
 		public LoggingConfig Logging { get; set; } = new();
-		public ModelTemplatesConfig ModelTemplates { get; set; } = new();
+		public ModelsConfig Models { get; set; } = new();
 
 		public EnrichmentConfig Enrichment { get; set; } = new();
 

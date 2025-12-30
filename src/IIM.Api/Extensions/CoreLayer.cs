@@ -1,8 +1,6 @@
 ﻿using IIM.Core.Services;
 using IIM.Core.Services.Gpu;
-using IIM.Infrastructure.AI.DirectML;
-using IIM.Infrastructure.AI.Execution;
-using IIM.Infrastructure.AI.OnnxRuntime;
+
 using IIM.Shared.Configuration;
 using IIM.Shared.Interfaces;
 
@@ -17,24 +15,7 @@ namespace IIM.Api.Extensions
 		{
 			services.AddSingleton<IGpuProbeService, GpuProbeService>();
 
-			services.AddSingleton<IOnnxExecutionProvider>(sp =>
-			{
-				var gpu = sp.GetRequiredService<IGpuProbeService>();
-
-				if (gpu.HasCuda)
-					return new CudaExecutionProvider();
-
-				if (gpu.HasDirectML)
-					return new DirectMLExecutionProvider(
-						sp.GetRequiredService<IDirectMLDeviceManager>()
-					);
-
-				if (gpu.HasMetal)
-					return new CpuExecutionProvider();
-
-				return new CpuExecutionProvider();
-			});
-
+		
 
 			services.AddScoped<IUserContext, UserContextService>();
 

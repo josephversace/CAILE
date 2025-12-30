@@ -1,468 +1,352 @@
-// ═══════════════════════════════════════════════════════════════════════════════
-// INGESTION PIPELINE V2
-// ═══════════════════════════════════════════════════════════════════════════════
-//
-// Updated ingestion pipeline with:
-//   - Shape-aware chunking
-//   - Rich metadata for query-time decisions
-//   - Section-level tracking for citations
-//
-// ═══════════════════════════════════════════════════════════════════════════════
-
-using System.Text;
-using System.Text.Json;
-using System.Text.RegularExpressions;
+using Blake3;
 using IIM.Ingestion.Chunking;
-using IIM.Ingestion.Extensions;
-using IIM.Ingestion.Indicators;
 using IIM.Ingestion.Interfaces;
 using IIM.Ingestion.Models;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IIM.Ingestion.Services;
 
 public sealed class IngestionPipeline : IIngestionPipeline
 {
-    private readonly IWorkspaceManager _workspace;
-    private readonly IFileStore _files;
-    private readonly IDoclingService _docling;
-    private readonly DocumentShapeDetector _documentShapeDetector;
-    private readonly ChunkingStrategyFactory _chunkingFactory;
-    private readonly IMultimodalVisionService _vision;
-    private readonly IGraphRagPipeline? _graphRag;
-    private readonly GraphExtractionJob _graphExtractionJob;
-    private readonly IEmbeddingService _embedding;
-    private readonly IQdrantService _qdrant;
-    private readonly DocumentExtractionRouter _documentRouter;
-    private readonly CaileConfig _caileConfig;
-    private readonly EntityLinkingJob? _entityLinking;
-    private readonly IndicatorExtractor _indicatorExtractor;
-    private readonly ILogger<IngestionPipeline> _logger;
-
-    private const string PipelineVersion = "2.0";
-
-    public IngestionPipeline(
-        IWorkspaceManager workspace,
-        IFileStore files,
-        IDoclingService docling,
-        DocumentShapeDetector documentShapeDetector,
-        ChunkingStrategyFactory chunkingFactory,
-        IMultimodalVisionService vision,
-        IGraphRagPipeline? graphRag,
-        GraphExtractionJob graphExtractionJob,
-        IEmbeddingService embedding,
-        DocumentExtractionRouter documentRouter,
-        IQdrantService qdrant,
-        CaileConfig caileConfig,
-        ILogger<IngestionPipeline> logger,
-        IndicatorExtractor indicatorExtractor,
-        EntityLinkingJob? entityLinking = null)
-    {
-        _workspace = workspace;
-        _files = files;
-        _docling = docling;
-        _documentShapeDetector = documentShapeDetector;
-        _chunkingFactory = chunkingFactory;
-        _vision = vision;
-        _graphRag = graphRag;
-        _graphExtractionJob = graphExtractionJob;
-        _embedding = embedding;
-        _qdrant = qdrant;
-        _caileConfig = caileConfig;
-        _documentRouter = documentRouter;
-        _indicatorExtractor = indicatorExtractor;
-        _logger = logger;
-        _entityLinking = entityLinking;
-    }
-
-    public async Task<IngestionResult> IngestAsync(Guid virtualFileId, CancellationToken ct)
-    {
-        using var hasher = new Blake3.Blake3HashAlgorithm();
-
-        // ════════════════════════════════════════════════════════════════════
-        // 1. LOAD FILE REFERENCES
-        // ════════════════════════════════════════════════════════════════════
-
-        var vf = await _workspace.GetVirtualFileByIdAsync(virtualFileId, ct)
-            ?? throw new InvalidOperationException($"VirtualFile {virtualFileId} not found.");
-
-        var stored = vf.StoredFile
-            ?? throw new InvalidOperationException("StoredFile missing.");
-
-        var blake3Hash = stored.Blake3Hash;
-
-        _logger.LogInformation(
-            "Ingesting {FileName} [{Hash}] (Pipeline v{Version})",
-            vf.FileName, blake3Hash[..12], PipelineVersion);
-
-        // ════════════════════════════════════════════════════════════════════
-        // 2. CHECK FOR DEDUPLICATION
-        // ════════════════════════════════════════════════════════════════════
-
-        if (await _qdrant.ExistsAsync(blake3Hash, ct))
-        {
-            _logger.LogInformation(
-                "Hash {Hash} already embedded. Attaching to workspace.",
-                blake3Hash[..12]);
-
-            await _qdrant.AttachFileToExistingChunksAsync(
-                blake3Hash,
-                vf.WorkspaceId,
-                vf.Id,
-                ct);
-
-            return new IngestionResult
-            {
-                StoredId = blake3Hash,
-                Deduplicated = true,
-                CompletedAt = DateTime.UtcNow
-            };
-        }
-
-        // ════════════════════════════════════════════════════════════════════
-        // 3. EXTRACT TEXT
-        // ════════════════════════════════════════════════════════════════════
-
-        var bytes = await _files.ReadAsync(stored.Bucket, stored.StoragePath, ct);
-        var extractedText = await ExtractTextAsync(bytes, vf.FileName, stored.MimeType, ct);
-
-        if (string.IsNullOrWhiteSpace(extractedText))
-        {
-            _logger.LogWarning("No extractable text for {FileName}", vf.FileName);
-            return new IngestionResult
-            {
-                CompletedAt = DateTime.UtcNow,
-                StoredId = blake3Hash
-            };
-        }
-
-        // Normalize text
-        extractedText = NormalizeExtractedText(extractedText);
-        extractedText = NormalizeLineBreaks(extractedText);
-
-        // ════════════════════════════════════════════════════════════════════
-        // 4. DETECT SHAPE
-        // ════════════════════════════════════════════════════════════════════
-
-        var shapeResult = _documentShapeDetector.Detect(extractedText);
-
-        _logger.LogDebug(
-            "Shape detected: {Shape} (confidence={Confidence:F2})",
-            shapeResult.Shapes, shapeResult.Confidence);
-
-        // ════════════════════════════════════════════════════════════════════
-        // 5. STORE EXTRACTED TEXT (full text for deterministic retrieval)
-        // ════════════════════════════════════════════════════════════════════
-
-        var extractedBytes = Encoding.UTF8.GetBytes(extractedText);
-        await using var derivedStream = new MemoryStream(extractedBytes);
-
-        var hashBytes = hasher.ComputeHash(derivedStream);
-        var extractedTextHash = Convert.ToHexString(hashBytes).ToLowerInvariant();
-
-        derivedStream.Seek(0, SeekOrigin.Begin);
-
-        if (!await _files.ExistsAsync("derived", extractedTextHash, ct))
-        {
-            await _files.WriteAsync("derived", extractedTextHash, derivedStream, ct);
-            _logger.LogDebug("Stored derived text {Hash}", extractedTextHash[..12]);
-        }
-
-        // ════════════════════════════════════════════════════════════════════
-        // 6. CHUNK USING SHAPE-AWARE STRATEGY
-        // ════════════════════════════════════════════════════════════════════
-
-        var chunkingOptions = ChunkingStrategyFactory.SelectOptionsForShape(shapeResult);
-        chunkingOptions = chunkingOptions with
-        {
-            FileName = vf.FileName,
-            MimeType = stored.MimeType,
-            Blake3Hash = blake3Hash
-        };
-
-        var chunkingResult = _chunkingFactory.Chunk(extractedText, shapeResult, chunkingOptions);
-
-        _logger.LogInformation(
-            "Chunked into {Count} chunks using {Strategy}",
-            chunkingResult.Chunks.Count,
-            chunkingResult.StrategyName);
-
-        // ════════════════════════════════════════════════════════════════════
-        // 7. STORE METADATA
-        // ════════════════════════════════════════════════════════════════════
-
-        var metadata = MetadataExtensions.CreateMetadata(
-            extractedText,
-            shapeResult,
-            chunkingResult,
-            chunkingOptions,
-            "docling");
-
-        await _workspace.AddProcessedFileAsync(
-            new ProcessedFile
-            {
-                StoredFileHash = stored.Blake3Hash,
-                DerivedHash = extractedTextHash,
-                ProcessorName = "TextExtraction",
-                ProcessorKind = "extraction",
-                ProcessorVersion = $"v{PipelineVersion}",
-                ProcessedAt = DateTimeOffset.UtcNow,
-                MetadataJson = JsonSerializer.Serialize(metadata)
-            },
-            ct);
-
-        // ════════════════════════════════════════════════════════════════════
-        // 8. EMBED AND INDEX VECTORS
-        // ════════════════════════════════════════════════════════════════════
-
-        var vectorResult = await IndexVectorsAsync(
-            blake3Hash,
-            chunkingResult,
-            vf,
-            stored.MimeType,
-            ct);
-
-        // ════════════════════════════════════════════════════════════════════
-        // 9. EXTRACT INDICATORS (IOCs)
-        // ════════════════════════════════════════════════════════════════════
-
-        var extracted = _indicatorExtractor.Extract(extractedText);
-
-        await _workspace.AddProcessedFileAsync(
-            new ProcessedFile
-            {
-                StoredFileHash = stored.Blake3Hash,
-                DerivedHash = extractedTextHash,
-                ProcessorName = "RegExtraction",
-                ProcessorKind = "extraction",
-                ProcessorVersion = "0.1",
-                ProcessedAt = DateTimeOffset.UtcNow,
-                MetadataJson = JsonSerializer.Serialize(extracted)
-            },
-            ct);
-
-        // ════════════════════════════════════════════════════════════════════
-        // 10. QUEUE GRAPH EXTRACTION (best-effort)
-        // ════════════════════════════════════════════════════════════════════
-
-        if (_graphRag != null)
-        {
-            await _graphExtractionJob.EnqueueAsync(blake3Hash, extractedTextHash, vf.Id);
-        }
-
-        return new IngestionResult
-        {
-            StoredId = blake3Hash,
-            ChunkCount = chunkingResult.Chunks.Count,
-            VectorCount = vectorResult.VectorCount,
-            CompletedAt = DateTime.UtcNow
-        };
-    }
-
-    // ────────────────────────────────────────────────────────────────────────────
-    // TEXT EXTRACTION
-    // ────────────────────────────────────────────────────────────────────────────
-
-    private async Task<string?> ExtractTextAsync(
-        byte[] bytes,
-        string fileName,
-        string mimeType,
-        CancellationToken ct)
-    {
-        if (mimeType.StartsWith("image/"))
-        {
-            return await HandleImageAsync(bytes, ct);
-        }
-
-        if (mimeType == "application/pdf" || mimeType.Contains("officedocument"))
-        {
-            var extracted = await _documentRouter.ExtractAsync(bytes, fileName, mimeType, ct);
-
-            _logger.LogInformation(
-                "Document extracted using {Engine} (fallback={Fallback})",
-                extracted.Engine,
-                extracted.UsedFallback);
-
-            return extracted.Text;
-        }
-
-        if (mimeType.StartsWith("text/"))
-        {
-            return Encoding.UTF8.GetString(bytes);
-        }
-
-        _logger.LogInformation("Unsupported type {Mime}; metadata-only ingestion.", mimeType);
-        return null;
-    }
-
-    private async Task<string?> HandleImageAsync(byte[] bytes, CancellationToken ct)
-    {
-        if (!_vision.IsReady)
-            return null;
-
-        return await _vision.AnalyzeImageAsync(
-            "Extract all visible text and investigative details.",
-            bytes,
-            ct);
-    }
-
-    // ────────────────────────────────────────────────────────────────────────────
-    // TEXT NORMALIZATION
-    // ────────────────────────────────────────────────────────────────────────────
-
-    private static string NormalizeExtractedText(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-            return text;
-
-        text = text.Normalize(NormalizationForm.FormKC);
-
-        text = text
-            .Replace('\u00A0', ' ')
-            .Replace('\u2007', ' ')
-            .Replace('\u2009', ' ')
-            .Replace('\u202F', ' ');
-
-        text = Regex.Replace(text, @"[ ]{2,}", " ");
-        text = Regex.Replace(text, @"[ \t]+\r?$", "", RegexOptions.Multiline);
-
-        return text;
-    }
-
-    private static string NormalizeLineBreaks(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-            return text;
-
-        var lines = text.Split('\n');
-        var sb = new StringBuilder(text.Length);
-
-        for (int i = 0; i < lines.Length; i++)
-        {
-            var line = lines[i].TrimEnd();
-
-            if (i == lines.Length - 1)
-            {
-                sb.AppendLine(line);
-                break;
-            }
-
-            var next = lines[i + 1].TrimStart();
-
-            bool endsWithSentencePunctuation =
-                line.EndsWith('.') || line.EndsWith(':') ||
-                line.EndsWith(';') || line.EndsWith('?') ||
-                line.EndsWith('!');
-
-            bool nextStartsLowercase =
-                next.Length > 0 && char.IsLower(next[0]);
-
-            bool looksLikeList =
-                line.TrimStart().StartsWith("-") ||
-                line.TrimStart().StartsWith("•") ||
-                Regex.IsMatch(line.TrimStart(), @"^\d+(\.|-)");
-
-            bool looksLikeHeader =
-                Regex.IsMatch(line, @"^\s*[A-Z0-9 ._-]{3,}\s*$");
-
-            bool shouldMerge =
-                !endsWithSentencePunctuation &&
-                nextStartsLowercase &&
-                !looksLikeList &&
-                !looksLikeHeader;
-
-            if (shouldMerge)
-            {
-                sb.Append(line);
-                sb.Append(' ');
-            }
-            else
-            {
-                sb.AppendLine(line);
-            }
-        }
-
-        return sb.ToString();
-    }
-
-    // ────────────────────────────────────────────────────────────────────────────
-    // VECTOR INDEXING
-    // ────────────────────────────────────────────────────────────────────────────
-
-    private async Task<VectorIndexResult> IndexVectorsAsync(
-        string blake3Hash,
-        ChunkingResult chunkingResult,
-        VirtualFile vf,
-        string mimeType,
-        CancellationToken ct)
-    {
-        if (!_embedding.IsReady)
-        {
-            _logger.LogWarning("Embedding service not ready, skipping vector indexing");
-            return new VectorIndexResult { ChunkCount = 0, VectorCount = 0 };
-        }
-
-        if (chunkingResult.Chunks.Count == 0)
-        {
-            return new VectorIndexResult { ChunkCount = 0, VectorCount = 0 };
-        }
-
-        // Convert DocumentChunks to EmbeddingWorkItems
-        var workItems = chunkingResult.Chunks.Select(chunk => new EmbeddingWorkItem
-        {
-            Blake3Hash = blake3Hash,
-            ChunkIndex = chunk.Index,
-            Text = chunk.OverlapPrefix != null
-                ? $"{chunk.OverlapPrefix} {chunk.Text}"
-                : chunk.Text,
-            MaxTokens = 512,
-            SemanticType = chunk.ContentType.ToString().ToLowerInvariant(),
-            Metadata = new Dictionary<string, string>
-            {
-                ["file_name"] = vf.FileName,
-                ["mime_type"] = mimeType,
-                ["content_type"] = chunk.ContentType.ToString(),
-                ["section_path"] = chunk.SectionPath ?? "",
-                ["parent_section"] = chunk.ParentSection ?? ""
-            }
-        }).ToList();
-
-        // Embed
-        var embeddings = await _embedding.EmbedAsync(workItems, ct);
-
-        // Prepare chunk data for Qdrant
-        var chunkData = workItems.Zip(embeddings, (work, embedding) => new ChunkData
-        {
-            ChunkIndex = work.ChunkIndex,
-            Embedding = embedding,
-            Text = work.Text,
-            Metadata = new ChunkMetadata
-            {
-                FileName = vf.FileName,
-                MimeType = mimeType,
-                Classification = work.SemanticType,
-                IndexedAt = DateTimeOffset.UtcNow,
-                WorkspaceId = vf.WorkspaceId,
-                VirtualFileId = vf.Id,
-                // Store section info for citations
-                SectionPath = work.Metadata.GetValueOrDefault("section_path"),
-                ParentSection = work.Metadata.GetValueOrDefault("parent_section")
-            }
-        }).ToList();
-
-        await _qdrant.StoreChunksAsync(blake3Hash, chunkData, ct);
-
-        _logger.LogInformation(
-            "Stored {Count} vectors for hash {Hash}",
-            chunkData.Count,
-            blake3Hash[..12]);
-
-        return new VectorIndexResult
-        {
-            ChunkCount = chunkingResult.Chunks.Count,
-            VectorCount = chunkData.Count
-        };
-    }
+	private readonly IWorkspaceManager _workspace;
+	private readonly IFileStore _files;
+	private readonly IAIAgentFactory _agentFactory;
+	private readonly IDoclingService _docling;
+	private readonly DocumentShapeDetector _documentShapeDetector;
+	private readonly ChunkingStrategyFactory _chunkingFactory;
+	private readonly IGraphRagPipeline? _graphRag;
+	private readonly GraphExtractionJob _graphExtractionJob;
+	private readonly IEmbeddingService _embedding;
+	private readonly IQdrantService _qdrant;
+	private readonly DocumentExtractionRouter _documentRouter;
+	private readonly CaileConfig _caileConfig;
+	private readonly EntityLinkingJob? _entityLinking;
+	private readonly IndicatorExtractor _indicatorExtractor;
+	private readonly ILogger<IngestionPipeline> _logger;
+	private const string PipelineVersion = "2.0";
+
+	public IngestionPipeline(
+	  IWorkspaceManager workspace,
+	  IFileStore files,
+	  IAIAgentFactory agentFactory,
+	  IDoclingService docling,
+	  DocumentShapeDetector documentShapeDetector,
+	  ChunkingStrategyFactory chunkingFactory,
+	  IGraphRagPipeline? graphRag,
+	  GraphExtractionJob graphExtractionJob,
+	  IEmbeddingService embedding,
+	  DocumentExtractionRouter documentRouter,
+	  IQdrantService qdrant,
+	  CaileConfig caileConfig,
+	  ILogger<IngestionPipeline> logger,
+	  IndicatorExtractor indicatorExtractor,
+	  EntityLinkingJob? entityLinking = null)
+	{
+		this._workspace = workspace;
+		this._files = files;
+		this._agentFactory = agentFactory;
+		this._docling = docling;
+		this._documentShapeDetector = documentShapeDetector;
+		this._chunkingFactory = chunkingFactory;
+		this._graphRag = graphRag;
+		this._graphExtractionJob = graphExtractionJob;
+		this._embedding = embedding;
+		this._qdrant = qdrant;
+		this._caileConfig = caileConfig;
+		this._documentRouter = documentRouter;
+		this._indicatorExtractor = indicatorExtractor;
+		this._logger = logger;
+		this._entityLinking = entityLinking;
+	}
+
+	public async Task<IngestionResult> IngestAsync(Guid virtualFileId, CancellationToken ct)
+	{
+		VirtualFile vf;
+		StoredFile stored;
+		string blake3Hash;
+		byte[] bytes;
+		string extractedText;
+		DocumentShapeResult shapeResult;
+		string extractedTextHash;
+		ChunkingResult chunkingResult;
+		VectorIndexResult vectorResult;
+		using (Blake3HashAlgorithm hasher = new Blake3HashAlgorithm())
+		{
+			vf = await this._workspace.GetVirtualFileByIdAsync(virtualFileId, ct) ?? throw new InvalidOperationException($"VirtualFile {virtualFileId} not found.");
+			stored = vf.StoredFile ?? throw new InvalidOperationException("StoredFile missing.");
+			blake3Hash = stored.Blake3Hash;
+			this._logger.LogInformation("Ingesting {FileName} [{Hash}] (Pipeline v{Version})", (object)vf.FileName, (object)blake3Hash.Substring(0, 12), (object)"2.0");
+			if (await this._qdrant.ExistsAsync(blake3Hash, ct))
+			{
+				this._logger.LogInformation("Hash {Hash} already embedded. Attaching to workspace.", (object)blake3Hash.Substring(0, 12));
+				await this._qdrant.AttachFileToExistingChunksAsync(blake3Hash, vf.WorkspaceId, vf.Id, ct);
+				return new IngestionResult()
+				{
+					StoredId = blake3Hash,
+					Deduplicated = true,
+					CompletedAt = DateTime.UtcNow
+				};
+			}
+			bytes = await this._files.ReadAsync(stored.Bucket, stored.StoragePath, ct);
+			if (stored.MimeType.StartsWith("image/"))
+			{
+				IChatClient chatClientAsync = await this._agentFactory.GetChatClientAsync();
+				string modelName = this._agentFactory.CurrentChatModel;
+				List<ChatMessage> messages = new List<ChatMessage>(2)
+		{
+		  new ChatMessage(ChatRole.User, "Describe this image in detail."),
+		  new ChatMessage(ChatRole.User, (IList<AIContent>) new List<AIContent>(1)
+		  {
+			(AIContent) new DataContent((ReadOnlyMemory<byte>) bytes, stored.MimeType)
+		  })
+		};
+				CancellationToken cancellationToken = new CancellationToken();
+				ChatResponse responseAsync = await chatClientAsync.GetResponseAsync((IEnumerable<ChatMessage>)messages, cancellationToken: cancellationToken);
+				if (responseAsync != null)
+				{
+					string text = responseAsync.Text;
+					string lowerInvariant = Convert.ToHexString(hasher.ComputeHash(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
+					IWorkspaceManager workspace = this._workspace;
+					ProcessedFile pf = new ProcessedFile();
+					pf.StoredFileHash = stored.Blake3Hash;
+					pf.DerivedHash = lowerInvariant;
+					pf.ProcessorName = "ImageDescription";
+					pf.ProcessorKind = modelName;
+					pf.ProcessorVersion = "v2.0";
+					pf.ProcessedAt = DateTimeOffset.UtcNow;
+					pf.MetadataJson = JsonSerializer.Serialize<string>(text);
+					CancellationToken ct1 = ct;
+					ProcessedFile processedFile = await workspace.AddProcessedFileAsync(pf, ct1);
+				}
+				modelName = (string)null;
+			}
+			extractedText = await this.ExtractTextAsync(bytes, vf.FileName, stored.MimeType, ct);
+			if (string.IsNullOrWhiteSpace(extractedText))
+			{
+				this._logger.LogWarning("No extractable text for {FileName}", (object)vf.FileName);
+				return new IngestionResult()
+				{
+					CompletedAt = DateTime.UtcNow,
+					StoredId = blake3Hash
+				};
+			}
+			extractedText = IngestionPipeline.NormalizeExtractedText(extractedText);
+			extractedText = IngestionPipeline.NormalizeLineBreaks(extractedText);
+			shapeResult = this._documentShapeDetector.Detect(extractedText);
+			this._logger.LogDebug("Shape detected: {Shape} (confidence={Confidence:F2})", (object)shapeResult.Shapes, (object)shapeResult.Confidence);
+			await using (MemoryStream derivedStream = new MemoryStream(Encoding.UTF8.GetBytes(extractedText)))
+			{
+				extractedTextHash = Convert.ToHexString(hasher.ComputeHash((Stream)derivedStream)).ToLowerInvariant();
+				derivedStream.Seek(0L, SeekOrigin.Begin);
+				if (!await this._files.ExistsAsync("derived", extractedTextHash, ct))
+				{
+					await this._files.WriteAsync("derived", extractedTextHash, (Stream)derivedStream, ct);
+					this._logger.LogDebug("Stored derived text {Hash}", (object)extractedTextHash.Substring(0, 12));
+				}
+				ChunkingOptions options = ChunkingStrategyFactory.SelectOptionsForShape(shapeResult) with
+				{
+					FileName = vf.FileName,
+					MimeType = stored.MimeType,
+					Blake3Hash = blake3Hash
+				};
+				chunkingResult = this._chunkingFactory.Chunk(extractedText, shapeResult, options);
+				this._logger.LogInformation("Chunked into {Count} chunks using {Strategy}", (object)chunkingResult.Chunks.Count, (object)chunkingResult.StrategyName);
+				DocumentIngestionMetadata metadata = MetadataExtensions.CreateMetadata(extractedText, shapeResult, chunkingResult, options, "docling");
+				IWorkspaceManager workspace1 = this._workspace;
+				ProcessedFile pf1 = new ProcessedFile();
+				pf1.StoredFileHash = stored.Blake3Hash;
+				pf1.DerivedHash = extractedTextHash;
+				pf1.ProcessorName = "TextExtraction";
+				pf1.ProcessorKind = "extraction";
+				pf1.ProcessorVersion = "v2.0";
+				pf1.ProcessedAt = DateTimeOffset.UtcNow;
+				pf1.MetadataJson = JsonSerializer.Serialize<DocumentIngestionMetadata>(metadata);
+				CancellationToken ct2 = ct;
+				ProcessedFile processedFile1 = await workspace1.AddProcessedFileAsync(pf1, ct2);
+				vectorResult = await this.IndexVectorsAsync(blake3Hash, chunkingResult, vf, stored.MimeType, ct);
+				ExtractionResult extractionResult = this._indicatorExtractor.Extract(extractedText);
+				IWorkspaceManager workspace2 = this._workspace;
+				ProcessedFile pf2 = new ProcessedFile();
+				pf2.StoredFileHash = stored.Blake3Hash;
+				pf2.DerivedHash = extractedTextHash;
+				pf2.ProcessorName = "RegExtraction";
+				pf2.ProcessorKind = "extraction";
+				pf2.ProcessorVersion = "0.1";
+				pf2.ProcessedAt = DateTimeOffset.UtcNow;
+				pf2.MetadataJson = JsonSerializer.Serialize<ExtractionResult>(extractionResult);
+				CancellationToken ct3 = ct;
+				ProcessedFile processedFile2 = await workspace2.AddProcessedFileAsync(pf2, ct3);
+				if (this._graphRag != null)
+					await this._graphExtractionJob.EnqueueAsync(blake3Hash, extractedTextHash, vf.Id);
+				return new IngestionResult()
+				{
+					StoredId = blake3Hash,
+					ChunkCount = chunkingResult.Chunks.Count,
+					VectorCount = vectorResult.VectorCount,
+					CompletedAt = DateTime.UtcNow
+				};
+			}
+		}
+		vf = (VirtualFile)null;
+		stored = (StoredFile)null;
+		blake3Hash = (string)null;
+		bytes = (byte[])null;
+		extractedText = (string)null;
+		shapeResult = (DocumentShapeResult)null;
+	
+		extractedTextHash = (string)null;
+		chunkingResult = (ChunkingResult)null;
+		vectorResult = (VectorIndexResult)null;
+		throw null;
+	}
+
+	private async Task<string?> ExtractTextAsync(
+	  byte[] bytes,
+	  string fileName,
+	  string mimeType,
+	  CancellationToken ct)
+	{
+		if (mimeType == "application/pdf" || mimeType.Contains("officedocument"))
+		{
+			ExtractedDocument async = await this._documentRouter.ExtractAsync(bytes, fileName, mimeType, ct);
+			this._logger.LogInformation("Document extracted using {Engine} (fallback={Fallback})", (object)async.Engine, (object)async.UsedFallback);
+			return async.Text;
+		}
+		if (mimeType.StartsWith("text/"))
+			return Encoding.UTF8.GetString(bytes);
+		this._logger.LogInformation("Unsupported type {Mime}; metadata-only ingestion.", (object)mimeType);
+		return (string)null;
+	}
+
+	private static string NormalizeExtractedText(string text)
+	{
+		if (string.IsNullOrWhiteSpace(text))
+			return text;
+		text = text.Normalize(NormalizationForm.FormKC);
+		text = text.Replace(' ', ' ').Replace(' ', ' ').Replace(' ', ' ').Replace(' ', ' ');
+		text = Regex.Replace(text, "[ ]{2,}", " ");
+		text = Regex.Replace(text, "[ \\t]+\\r?$", "", RegexOptions.Multiline);
+		return text;
+	}
+
+	private static string NormalizeLineBreaks(string text)
+	{
+		if (string.IsNullOrWhiteSpace(text))
+			return text;
+		string[] strArray = text.Split('\n');
+		StringBuilder stringBuilder = new StringBuilder(text.Length);
+		for (int index = 0; index < strArray.Length; ++index)
+		{
+			string input = strArray[index].TrimEnd();
+			if (index == strArray.Length - 1)
+			{
+				stringBuilder.AppendLine(input);
+				break;
+			}
+			string str = strArray[index + 1].TrimStart();
+			int num = input.EndsWith('.') || input.EndsWith(':') || input.EndsWith(';') || input.EndsWith('?') ? 1 : (input.EndsWith('!') ? 1 : 0);
+			bool flag1 = str.Length > 0 && char.IsLower(str[0]);
+			bool flag2 = input.TrimStart().StartsWith("-") || input.TrimStart().StartsWith("•") || Regex.IsMatch(input.TrimStart(), "^\\d+(\\.|-)");
+			bool flag3 = Regex.IsMatch(input, "^\\s*[A-Z0-9 ._-]{3,}\\s*$");
+			if ((!(num == 0 & flag1) || flag2 ? 0 : (!flag3 ? 1 : 0)) != 0)
+			{
+				stringBuilder.Append(input);
+				stringBuilder.Append(' ');
+			}
+			else
+				stringBuilder.AppendLine(input);
+		}
+		return stringBuilder.ToString();
+	}
+
+	private async Task<VectorIndexResult> IndexVectorsAsync(
+	  string blake3Hash,
+	  ChunkingResult chunkingResult,
+	  VirtualFile vf,
+	  string mimeType,
+	  CancellationToken ct)
+	{
+		if (!this._embedding.IsReady)
+		{
+			this._logger.LogWarning("Embedding service not ready, skipping vector indexing");
+			return new VectorIndexResult()
+			{
+				ChunkCount = 0,
+				VectorCount = 0
+			};
+		}
+		if (chunkingResult.Chunks.Count == 0)
+			return new VectorIndexResult()
+			{
+				ChunkCount = 0,
+				VectorCount = 0
+			};
+		List<EmbeddingWorkItem> workItems =
+			chunkingResult.Chunks
+				.Select(chunk =>
+				{
+					var contentType = chunk.ContentType;
+
+					IReadOnlyDictionary<string, string> metadata =
+						new Dictionary<string, string>
+						{
+							["file_name"] = vf.FileName,
+							["mime_type"] = mimeType,
+							["content_type"] = contentType.ToString(),
+							["section_path"] = chunk.SectionPath ?? "",
+							["parent_section"] = chunk.ParentSection ?? ""
+						};
+
+					return new EmbeddingWorkItem
+					{
+						Blake3Hash = blake3Hash,
+						ChunkIndex = chunk.Index,
+						Text = chunk.OverlapPrefix != null
+							? $"{chunk.OverlapPrefix} {chunk.Text}"
+							: chunk.Text,
+						MaxTokens = 512,
+						SemanticType = contentType.ToString().ToLowerInvariant(),
+						Metadata = metadata
+					};
+				})
+				.ToList();
+
+
+		List<ChunkData> chunkData = workItems.Zip<EmbeddingWorkItem, float[], ChunkData>((IEnumerable<float[]>)await this._embedding.EmbedAsync((IReadOnlyList<EmbeddingWorkItem>)workItems, ct), (Func<EmbeddingWorkItem, float[], ChunkData>)((work, embedding) => new ChunkData()
+		{
+			ChunkIndex = work.ChunkIndex,
+			Embedding = embedding,
+			Text = work.Text,
+			Metadata = new ChunkMetadata()
+			{
+				FileName = vf.FileName,
+				MimeType = mimeType,
+				Classification = work.SemanticType,
+				IndexedAt = DateTimeOffset.UtcNow,
+				WorkspaceId = vf.WorkspaceId,
+				VirtualFileId = vf.Id,
+				SectionPath = work.Metadata.GetValueOrDefault<string, string>("section_path"),
+				ParentSection = work.Metadata.GetValueOrDefault<string, string>("parent_section")
+			}
+		})).ToList<ChunkData>();
+		await this._qdrant.StoreChunksAsync(blake3Hash, chunkData, ct);
+		this._logger.LogInformation("Stored {Count} vectors for hash {Hash}", (object)chunkData.Count, (object)blake3Hash.Substring(0, 12));
+		return new VectorIndexResult()
+		{
+			ChunkCount = chunkingResult.Chunks.Count,
+			VectorCount = chunkData.Count
+		};
+	}
 }

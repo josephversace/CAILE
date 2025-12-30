@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +18,6 @@ namespace IIM.Infrastructure.Services
 		private IEmbeddingGenerator<EmbeddingWorkItem, Embedding<float>> _generator;
 
 		private bool _disposed;
-
 
 		public bool IsReady => _generator != null && !_disposed;
 		public int VectorSize { get; private set; }
@@ -36,21 +36,21 @@ namespace IIM.Infrastructure.Services
 				return;
 
 			using var scope = _scopeFactory.CreateScope();
-			var templates = scope.ServiceProvider
-				.GetRequiredService<IModelConfigurationTemplateService>();
+			var config = scope.ServiceProvider
+				.GetRequiredService<IModelResolver>();
 
-			var template = await templates.GetDefaultTemplateAsync(ct);
-			var embeddingCfg = template?.Models?.Embedding;
+		
+			var embeddingCfg = await config.GetEmbeddingModelAsync();
 
 			if (embeddingCfg == null)
 			{
-				_logger.LogWarning("No embedding model configured for active tier.");
+				_logger.LogWarning("No embedding model configured.");
 				return;
 			}
 
 			_logger.LogInformation(
 				"Initializing embedding model {Id} ({Dims} dims)",
-				embeddingCfg.Id,
+				embeddingCfg.ModelId,
 				embeddingCfg.Dimensions);
 
 			// IMPORTANT: this resolves YOUR OnnxEmbeddingGenerator
@@ -61,8 +61,8 @@ namespace IIM.Infrastructure.Services
 		}
 
 		public async Task<IReadOnlyList<float[]>> EmbedAsync(
-		IReadOnlyList<EmbeddingWorkItem> items,
-		CancellationToken ct = default)
+			IReadOnlyList<EmbeddingWorkItem> items,
+			CancellationToken ct = default)
 		{
 			if (!IsReady)
 				throw new InvalidOperationException("Embedding service not initialized.");
@@ -100,7 +100,6 @@ namespace IIM.Infrastructure.Services
 					}
 				}
 
-
 				var embeddings = await _generator.GenerateAsync(
 					safeItems,
 					options,
@@ -116,8 +115,6 @@ namespace IIM.Infrastructure.Services
 			}
 		}
 
-
-
 		// Character-based hard safety limit to protect tokenizer memory
 		private const int MaxCharsPerChunk = 4000;
 
@@ -132,7 +129,6 @@ namespace IIM.Infrastructure.Services
 			return text.Substring(0, MaxCharsPerChunk);
 		}
 
-
 		public void Dispose()
 		{
 			if (_disposed) return;
@@ -143,5 +139,4 @@ namespace IIM.Infrastructure.Services
 				d.Dispose();
 		}
 	}
-
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using IIM.Shared.Dtos;
 
 namespace IIM.Shared.Models
 {
@@ -63,15 +64,19 @@ namespace IIM.Shared.Models
 		public required List<IndicatorOccurrence> Occurrences { get; set; }
 		public ExtractionStatistics Statistics { get; set; } = new();
 
-		public List<EntityGroup>? IdentityGroups { get; set; }
+		public List<EntityGroupDto> IdentityGroups { get; set; }
+
+		public List<ProposedEventDto> ProposedEvents { get; set; } = new();
 		public static ExtractionResult Empty() => new()
 		{
 			Indicators = new List<Indicator>(),
 			Occurrences = new List<IndicatorOccurrence>(),
 			Statistics = new ExtractionStatistics(),
-			IdentityGroups = new List<EntityGroup>()
+			IdentityGroups = new List<EntityGroupDto>(),
+			ProposedEvents = new List<ProposedEventDto>(),
 		};
 	}
+
 
 	public sealed class ExtractionStatistics
 	{

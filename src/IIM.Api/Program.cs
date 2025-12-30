@@ -10,14 +10,13 @@ using IIM.Api.Hubs;
 using IIM.Api.Services;
 using IIM.Infrastructure.Data;
 using IIM.Infrastructure.Embeddings;
-using IIM.Infrastructure.Foundry;
+using IIM.Infrastructure.Ollama;
 using IIM.Infrastructure.Services;
 using IIM.Ingestion.Interfaces;
 using IIM.Ingestion.Services;
 using IIM.Shared.Configuration;
 using IIM.Shared.Interfaces;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
-using Microsoft.AI.Foundry.Local;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.AI;   
@@ -121,12 +120,14 @@ builder.Services.AddCors(options =>
 builder.Services.AddAGUI();
 
 
+var apiUri = new Uri(deployment?.ApiUrl ?? "https://localhost:5080");
 
 builder.WebHost.ConfigureKestrel(k =>
 {
-	k.ListenLocalhost(5080, opt => {
-
-		opt.UseHttps();
+	k.ListenLocalhost(apiUri.Port, opt =>
+	{
+		if (apiUri.Scheme == "https")
+			opt.UseHttps();
 	});
 });
 
@@ -142,9 +143,7 @@ using (var scope = app.Services.CreateScope())
 		.GetRequiredService<DatabaseMigrationRunner>();
 	await migrator.ApplyAllMigrationsAsync();
 
-	var vision = scope.ServiceProvider
-		.GetRequiredService<IMultimodalVisionService>();
-	_ = Task.Run(() => vision.InitializeAsync());
+
 
 	var embedding = scope.ServiceProvider
 		.GetRequiredService<IEmbeddingService>();
@@ -247,23 +246,13 @@ app.MapSetupEndpoints();
 app.MapAIEndpoints();
 app.MapAttachmentEndpoints();
 
-var config = new Configuration
-{
-	AppName = "foundry",
-	Web = new Configuration.WebService
-	{
-		Urls = "http://127.0.0.1:63953"
-	},
-	LogLevel = Microsoft.AI.Foundry.Local.LogLevel.Information
-};
-
 
 
 // On application startup
-var foundry = app.Services.GetRequiredService<IFoundryModelService>();
+var ollama = app.Services.GetRequiredService<IModelService>();
 
-// Optionally pre-load models
-await foundry.EnsureInitializedAsync();
+//// Optionally pre-load models
+await ollama.EnsureInitializedAsync();
 
 // ============================================
 // Start the application

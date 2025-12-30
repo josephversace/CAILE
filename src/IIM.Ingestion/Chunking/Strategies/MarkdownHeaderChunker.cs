@@ -12,6 +12,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 using System.Text;
+
 using IIM.Ingestion.Chunking.Utilities;
 using IIM.Shared.Models;
 
@@ -259,178 +260,31 @@ public sealed class MarkdownHeaderChunker : IChunkingStrategy
 
         foreach (var segment in segments)
         {
-			// Protected segments (code, tables) with semantic awareness
-			if (segment.IsProtected)
-			{
-				// CASE 1: CODE blocks should always stand alone
-				if (segment.ContentType == ChunkContentType.Code)
-				{
-					if (buffer.Length > 0)
-					{
-						chunks.Add(buffer.ToChunk(chunkIndex++, sectionTree, options));
-						buffer.Clear();
-					}
+            // Protected segments (code, tables) should stay together if possible
+            if (segment.IsProtected)
+            {
+                // Flush buffer first
+                if (buffer.Length > 0)
+                {
+                    chunks.Add(buffer.ToChunk(chunkIndex++, sectionTree, options));
+                    buffer.Clear();
+                }
 
-					if (segment.Text.Length <= options.MaxChunkSize)
-					{
-						chunks.Add(CreateChunk(chunkIndex++, segment, sectionTree, options));
-					}
-					else
-					{
-						chunks.AddRange(SplitLargeSegment(segment, ref chunkIndex, sectionTree, options));
-					}
+                // If protected block fits in max size, keep it whole
+                if (segment.Text.Length <= options.MaxChunkSize)
+                {
+                    chunks.Add(CreateChunk(chunkIndex++, segment, sectionTree, options));
+                }
+                else
+                {
+                    // Protected block too large - must split (rare)
+                    chunks.AddRange(SplitLargeSegment(segment, ref chunkIndex, sectionTree, options));
+                }
+                continue;
+            }
 
-					continue;
-				}
-
-			
-				// CASE 2: TABLE blocks — attempt semantic glue with surrounding prose
-				if (segment.ContentType == ChunkContentType.Table)
-				{
-					// Infer buffer section from last segment already added
-					var bufferSection =
-						buffer.Length > 0
-							? buffer.ToChunk(chunkIndex, sectionTree, options).ParentSection
-							: null;
-
-					// Try to glue table to explanatory prose in same section
-					if (buffer.Length > 0 &&
-						bufferSection == segment.HeaderTitle &&
-						buffer.Length + segment.Text.Length <= options.MaxChunkSize)
-					{
-						buffer.Add(segment);
-						continue;
-					}
-
-					// Otherwise flush buffer first
-					if (buffer.Length > 0)
-					{
-						chunks.Add(buffer.ToChunk(chunkIndex++, sectionTree, options));
-						buffer.Clear();
-					}
-
-					// ─────────────────────────────────────────────
-					// Emit table chunk
-					// ─────────────────────────────────────────────
-					var tableChunk = CreateChunk(chunkIndex++, segment, sectionTree, options);
-					chunks.Add(tableChunk);
-
-					// ─────────────────────────────────────────────
-					// Emit derived prose chunk (structural description)
-					// ─────────────────────────────────────────────
-					var derivedText = TableProseGenerator.Generate(segment.Text);
-
-					chunks.Add(new DocumentChunk
-					{
-						Index = chunkIndex++,
-						Text = derivedText,
-						StartOffset = segment.StartOffset,
-						EndOffset = segment.EndOffset,
-						ContentType = ChunkContentType.Prose,
-						ParentSection = segment.HeaderTitle,
-						ParentSectionLevel = segment.HeaderLevel,
-						SectionPath = FindSectionPath(segment.StartOffset, sectionTree),
-						Metadata = new Dictionary<string, string>
-						{
-							["derived_from"] = "table",
-							["source_chunk_index"] = tableChunk.Index.ToString(),
-							["derivation_type"] = "structural_description",
-							["embedding_role"] = "search_only"
-
-						}
-					});
-
-					continue;
-				}
-
-				// CASE 3: LIST blocks — emit list + derived prose
-				if (segment.ContentType == ChunkContentType.List)
-				{
-					// Flush buffer first
-					if (buffer.Length > 0)
-					{
-						chunks.Add(buffer.ToChunk(chunkIndex++, sectionTree, options));
-						buffer.Clear();
-					}
-
-					// Emit list chunk
-					var listChunk = CreateChunk(chunkIndex++, segment, sectionTree, options);
-					chunks.Add(listChunk);
-
-					// Emit derived prose chunk
-					var derivedText = ListProseGenerator.Generate(segment.Text);
-
-					chunks.Add(new DocumentChunk
-					{
-						Index = chunkIndex++,
-						Text = derivedText,
-						StartOffset = segment.StartOffset,
-						EndOffset = segment.EndOffset,
-						ContentType = ChunkContentType.Prose,
-						ParentSection = segment.HeaderTitle,
-						ParentSectionLevel = segment.HeaderLevel,
-						SectionPath = FindSectionPath(segment.StartOffset, sectionTree),
-						Metadata = new Dictionary<string, string>
-						{
-							["derived_from"] = "list",
-							["source_chunk_index"] = listChunk.Index.ToString(),
-							["derivation_type"] = "structural_description",
-							["embedding_role"] = "search_only"
-
-						}
-					});
-
-					continue;
-				}
-
-				// CASE 4: KEY/VALUE blocks — emit derived prose
-				if (!segment.IsProtected &&
-					segment.ContentType == ChunkContentType.Prose &&
-					KeyValueProseGenerator.IsKeyValueBlock(segment.Text))
-				{
-					// Flush buffer first
-					if (buffer.Length > 0)
-					{
-						chunks.Add(buffer.ToChunk(chunkIndex++, sectionTree, options));
-						buffer.Clear();
-					}
-
-					// Emit original key/value chunk
-					var kvChunk = CreateChunk(chunkIndex++, segment, sectionTree, options);
-					chunks.Add(kvChunk);
-
-					// Emit derived prose chunk
-					var derivedText = KeyValueProseGenerator.Generate(segment.Text);
-
-					chunks.Add(new DocumentChunk
-					{
-						Index = chunkIndex++,
-						Text = derivedText,
-						StartOffset = segment.StartOffset,
-						EndOffset = segment.EndOffset,
-						ContentType = ChunkContentType.Prose,
-						ParentSection = segment.HeaderTitle,
-						ParentSectionLevel = segment.HeaderLevel,
-						SectionPath = FindSectionPath(segment.StartOffset, sectionTree),
-						Metadata = new Dictionary<string, string>
-						{
-							["derived_from"] = "key_value",
-							["source_chunk_index"] = kvChunk.Index.ToString(),
-							["derivation_type"] = "structural_description",
-							["embedding_role"] = "search_only"
-
-						}
-					});
-
-					continue;
-				}
-
-
-			}
-
-
-			// Non-protected segment - check if it fits in buffer
-			if (buffer.Length + segment.Text.Length <= options.TargetChunkSize)
+            // Non-protected segment - check if it fits in buffer
+            if (buffer.Length + segment.Text.Length <= options.TargetChunkSize)
             {
                 buffer.Add(segment);
             }

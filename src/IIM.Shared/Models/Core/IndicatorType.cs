@@ -48,6 +48,9 @@ public enum IndicatorType
 	// Device Identifiers
 	Imei,               // NEW: Mobile device IMEI
 
+	//Timestamp
+	Timestamp,          // NEW: Generic timestamp indicator
+
 	// Generic
 	Custom
 }
