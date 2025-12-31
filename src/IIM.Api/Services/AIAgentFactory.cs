@@ -20,9 +20,13 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 	private AIAgent? _reasoningAgent;
 	private IChatClient? _chatClient;
 	private IChatClient? _reasoningClient;
+	private IChatClient? _functionClient;
+
+
 
 	private string _chatModel = "";
 	private string _reasoningModel = "";
+	private string _functionModel = "";
 	private string _endpoint = "";
 
 	public string CurrentChatModel => _chatModel;
@@ -71,6 +75,13 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 		await EnsureInitializedAsync();
 		return _reasoningClient;
 	}
+
+	public async Task<IChatClient?> GetFunctionClientAsync()
+	{
+		await EnsureInitializedAsync();
+		return _functionClient;
+	}
+
 
 	private bool _initialized;
 
@@ -128,6 +139,23 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 				_reasoningClient = null;
 				_reasoningAgent = null;
 			}
+			var functionCfg = await resolver.GetFunctionCallingModelAsync();
+
+			if (functionCfg != null && !string.IsNullOrWhiteSpace(functionCfg.ModelId))
+			{
+				_logger.LogInformation(
+					"Initializing function-calling model: {Model}",
+					functionCfg.ModelId);
+
+				var functionModel = await resolver.GetFunctionCallingModelAsync();
+
+				_functionClient = CreateChatClient(functionModel.ModelId);
+			}
+			else
+			{
+				_functionClient = null;
+			}
+
 
 			_initialized = true;
 

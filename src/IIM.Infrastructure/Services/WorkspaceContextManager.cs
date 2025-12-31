@@ -481,10 +481,11 @@ public sealed class WorkspaceContextManager : IWorkspaceContextManager
             latestOnly: true,
             ct);
 
-        // The derived hash should be stored in ProcessedFile.DerivedHash
-        // We need a method to get it - for now, parse from metadata or add new method
-        // This is a simplified approach - you may need to add a dedicated method
-        return await _workspace.GetDerivedHashAsync(fileHash, "TextExtraction", ct);
+        var hashes = await _workspace.GetDerivedHashForProcessedFile(fileHash, "TextExtraction", true, ct);
+
+        if (hashes.Count == 0) return null;
+
+		return hashes[0];
     }
 
     private async Task<float[]?> EmbedQueryAsync(string query, CancellationToken ct)

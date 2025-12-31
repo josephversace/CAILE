@@ -12,7 +12,7 @@ namespace IIM.Shared.Interfaces
 		void Register(string name, Func<IDictionary<string, object?>, Task<string>> handler);
 		Task<string> InvokeAsync(string name, IDictionary<string, object?>? args);
 		IList<AITool> GetAIFunctions();
-		ToolCall? TryParseToolCall(string content);
+
 	}
 
 }

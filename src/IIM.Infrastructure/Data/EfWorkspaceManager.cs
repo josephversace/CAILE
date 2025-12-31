@@ -761,16 +761,19 @@ namespace IIM.Infrastructure.Data
 				.ToListAsync(ct);
 		}
 
-        public async Task<string?> GetDerivedHashAsync(string storedFileHash, string processorName, CancellationToken ct)
-        {
-			var query = _db.ProcessedFiles
-				.Where(pf =>
-					pf.StoredFileHash == storedFileHash &&
-					pf.ProcessorName == processorName);
+		public async Task<string?> GetDerivedContentAsync(string processedFileHash, string processorName, CancellationToken ct)
+		{
+			try
+			{
 
-			return await query
-					 .Select(pf => pf.DerivedHash).SingleOrDefaultAsync(ct);
-
+				var fileBytes = await _fileStore.ReadAsync("derived", processedFileHash);
+				return System.Text.Encoding.UTF8.GetString(fileBytes);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error retrieving derived content for {StoredFileHash}", processedFileHash, processorName);
+				return null;
+			}
 		}
-    }
+	}
 }

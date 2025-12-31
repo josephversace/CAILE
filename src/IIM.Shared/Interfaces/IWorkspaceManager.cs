@@ -116,7 +116,7 @@ namespace IIM.Shared.Interfaces
 		/// <summary>
 		/// Get the derived hash for a processed file.
 		/// </summary>
-		Task<string?> GetDerivedHashAsync(string storedFileHash, string processorName, CancellationToken ct);
+		Task<string?> GetDerivedContentAsync(string storedFileHash, string processorName, CancellationToken ct);
 
 	}
 }

@@ -32,6 +32,8 @@ namespace IIM.Shared.Models
 		public LoggingConfig Logging { get; set; } = new();
 		public ModelsConfig Models { get; set; } = new();
 
+		public ToolsConfig Tools { get; set; } = new();
+
 		public EnrichmentConfig Enrichment { get; set; } = new();
 
 	}

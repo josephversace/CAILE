@@ -18,7 +18,9 @@ public enum ArtifactType
 	RegexData,
 	GraphData,
 	IndicatorCollection,
-	EntityGroup
+	EntityGroup,
+	ImageDescription,
+	TextAnalysis
 
 }
 
@@ -91,7 +93,7 @@ public sealed class CanvasArtifact
 		ArtifactType.Entity =>
 			!string.IsNullOrWhiteSpace(Id),
 
-		_ => false
+		_ => !string.IsNullOrWhiteSpace(Content)
 	};
 
 

@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using IIM.Infrastructure.Services;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
+using IIM.Shared.Models.Core;
 using MagikaSharp;
 using Microsoft.Agents.AI;
 using Microsoft.AspNetCore.Mvc;
@@ -100,10 +101,10 @@ public static class AIEndpoints
 			}
 
 			var (workspaceId, fileHashes) = ExtractContextChips(req);
+			
 			var cache = ExtractCache(req);
 
 			
-
 			if (workspaceId != Guid.Empty || fileHashes.Count > 0)
 			{
 				var intentEngine = ctx.RequestServices.GetRequiredService<IWorkspaceIntentEngine>();
@@ -144,6 +145,35 @@ public static class AIEndpoints
 			return;
 		}
 
+		var router =
+		ctx.RequestServices.GetRequiredService<IToolRoutingService>();
+
+		var toolDecision =
+			await router.DecideAsync(userMsg.Content, abort);
+
+		if (toolDecision.ShouldCallTool)
+		{
+			var args = toolDecision.Arguments.HasValue
+				? JsonSerializer.Deserialize<Dictionary<string, object?>>(
+					toolDecision.Arguments.Value.GetRawText())
+				: null;
+
+			var result =
+				await toolRegistry.InvokeAsync(
+					toolDecision.ToolName!,
+					args);
+
+			req.Messages.Add(new AGUIMessage
+			{
+				Role = "system",
+				Content = BuildToolResultBlock(
+					toolDecision.ToolName!,
+					result)
+			});
+		}
+
+
+
 		// Load agent + create thread
 		var agent = await agentResolver();
 
@@ -180,9 +210,7 @@ public static class AIEndpoints
 			type = "TEXT_MESSAGE_START"
 		}, abort);
 
-		// Streaming loop
-		bool insideTool = false;
-		var toolBuffer = new StringBuilder();
+
 
 		var requestAbort = ctx.RequestAborted;
 
@@ -208,55 +236,20 @@ public static class AIEndpoints
 				foreach (var content in update.Contents)
 				{
 
-
-
-
 					if (content is TextContent text)
 					{
 						string t = text.Text;
 
-						// ================ TOOL-CALL DETECTION ==================
-						if (!insideTool)
+						// Regular text delta
+						await WriteEvent(ctx, new
 						{
-							if (t.Contains("<tool_call>"))
-							{
-								insideTool = true;
-								toolBuffer.Append(t);
-								continue;
-							}
+							messageId,
+							delta = t,
+							type = "TEXT_MESSAGE_CONTENT"
+						}, abort);
 
-							// Regular text delta
-							await WriteEvent(ctx, new
-							{
-								messageId,
-								delta = t,
-								type = "TEXT_MESSAGE_CONTENT"
-							}, abort);
+						await ctx.Response.Body.FlushAsync(abort);
 
-							await ctx.Response.Body.FlushAsync(abort);
-						}
-						else
-						{
-							// Collect tool-call XML chunk-by-chunk
-							toolBuffer.Append(t);
-
-							if (toolBuffer.ToString().Contains("</tool_call>"))
-							{
-								insideTool = false;
-								string xml = toolBuffer.ToString();
-								toolBuffer.Clear();
-
-								ToolCall call = toolRegistry.TryParseToolCall(xml);
-								if (call != null)
-								{
-									await ExecuteToolCallAsync(
-										ctx, call, toolRegistry,
-										agent, thread,
-										messageId, "", abort
-									);
-								}
-							}
-						}
 					}
 				}
 
@@ -299,64 +292,6 @@ public static class AIEndpoints
 	}
 
 
-
-
-	// ============================================================
-	// TOOL CALL EXECUTION (Stable for all models: Qwen, Phi, Llama)
-	// ============================================================
-	private static async Task ExecuteToolCallAsync(
-		HttpContext ctx,
-		ToolCall call,
-		IToolRegistry registry,
-		AIAgent agent,
-		AgentThread thread,
-		string messageId,
-		string userPrompt,
-		CancellationToken abort)
-	{
-		try
-		{
-			// Execute tool
-			var result = await registry.InvokeAsync(call.Name, call.Arguments);
-
-			// Build follow-up prompt manually
-			string followup = $"""
-            The user asked: "{userPrompt}"
-            The tool {call.Name} returned: {result}
-            Now answer normally without more tool calls.
-            """;
-
-			// Stream model response
-			await foreach (var update in agent.RunStreamingAsync(followup, thread).WithCancellation(abort))
-			{
-				foreach (var c in update.Contents.OfType<TextContent>())
-				{
-					if (c.Text.Contains("<tool_call>"))
-						continue;
-
-					await WriteEvent(ctx, new
-					{
-						messageId,
-						delta = c.Text,
-						type = "TEXT_MESSAGE_CONTENT"
-					}, abort);
-				}
-
-				await ctx.Response.Body.FlushAsync(abort);
-			}
-		}
-		catch (Exception ex)
-		{
-			await WriteEvent(ctx, new
-			{
-				messageId,
-				delta = $"Tool error: {ex.Message}",
-				type = "TEXT_MESSAGE_CONTENT"
-			}, abort);
-		}
-	}
-
-	
 	private static async Task WriteEvent(HttpContext ctx, object data, CancellationToken ct)
 	{
 		if (!ctx.Response.Body.CanWrite)
@@ -476,6 +411,18 @@ public static class AIEndpoints
 		// Add user messages...
 		return chatMessages;
 	}
+
+
+	private static string BuildToolResultBlock(string toolName, object result)
+	{
+		return $"""
+    <tool_result name="{toolName}">
+    {JsonSerializer.Serialize(result)}
+    </tool_result>
+    """;
+	}
+
+
 
 	private static string BuildAugmentedPrompt(List<AGUIMessage> messages, WorkspaceContext ctx)
 	{

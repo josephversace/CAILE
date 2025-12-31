@@ -94,6 +94,9 @@ namespace IIM.Api.Extensions
 			// Context orchestration (per request)
 			services.AddScoped<IWorkspaceContextManager, WorkspaceContextManager>();
 
+			//Tool Routering Service
+			services.AddScoped<IToolRoutingService, ToolRoutingService>();
+
 			return services;
 		}
 	}

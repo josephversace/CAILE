@@ -48,6 +48,8 @@ public static class IngestionExtensions
 		services.AddTransient<KreuzbergExtractionService>();
 		services.AddTransient<DoclingExtractionService>();
 		services.AddTransient<DocumentExtractionRouter>();
+		services.AddSingleton<IExifToolService, ExifToolService>();
+
 
 		// ════════════════════════════════════════════════════════════════════
 		// QDRANT

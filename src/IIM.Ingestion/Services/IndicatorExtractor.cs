@@ -9,6 +9,7 @@ using IIM.Ingestion.Extensions;
 using IIM.Ingestion.Models;
 using IIM.Shared.Dtos;
 using IIM.Shared.Models;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace IIM.Ingestion.Services;
 
@@ -110,7 +111,7 @@ public sealed partial class IndicatorExtractor
 	[GeneratedRegex(@"\b[A-Z0-9._%+-]+(?:@|\[@\])[A-Z0-9.-]+(?:\.|\[\.\])[A-Z]{2,}\b", RegexOptions.IgnoreCase)]
 	private static partial Regex EmailRegex();
 
-	// IMPROVED: More flexible phone pattern that handles "Mobile Phone:" format
+
 	// Matches international format with optional country code
 	[GeneratedRegex(@"(?i)(?:(?:mobile\s*)?phone|tel|call|contact|fax|mobile|cell)\s*[:\s]?\s*(\+?\d{1,4}[\s.-]?\(?\d{1,4}\)?[\s.-]?\d{1,4}[\s.-]?\d{1,4}[\s.-]?\d{1,9})\b")]
 	private static partial Regex PhoneRegex();
@@ -304,6 +305,16 @@ public sealed partial class IndicatorExtractor
 
 	#endregion
 
+	#region Events and Timestamps
+
+	// IMPROVED: Matches timestamps with optional UTC/Timezone and handles log/table formatting
+
+	[GeneratedRegex(@"\b(?:\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}[-/]\d{2,4})[\sT_]\d{1,2}:\d{2}(?::\d{2})?(?:\s?[APMapm]{2})?(?:\s+[A-Z]{3,4})?\b")]
+	private static partial Regex GeneralTimestampRegex();
+
+
+	#endregion
+
 	// ═══════════════════════════════════════════════════════════════════════════
 	// PLUGGABLE PATTERN REGISTRY
 	// ═══════════════════════════════════════════════════════════════════════════
@@ -425,6 +436,8 @@ public sealed partial class IndicatorExtractor
 			patterns.Add(new CaptureGroupPattern(IndicatorType.Imei, ImeiRegex(), 1, null, 0.9f));
 		}
 
+		patterns.Add(new RegexPattern(IndicatorType.Timestamp,GeneralTimestampRegex(),"DateTime", 1.0f));
+
 		// Add custom patterns from options
 		patterns.AddRange(options.CustomPatterns);
 
@@ -435,8 +448,9 @@ public sealed partial class IndicatorExtractor
 	// PUBLIC API
 	// ═══════════════════════════════════════════════════════════════════════════
 
-	public ExtractionResult Extract(string text)
+	public ExtractionResult Extract(string text, DocumentShapeResult shape = null)
 	{
+		
 		var stopwatch = Stopwatch.StartNew();
 
 		if (string.IsNullOrWhiteSpace(text))
@@ -499,9 +513,9 @@ public sealed partial class IndicatorExtractor
 				if (currentCount >= _options.MaxMatchesPerType)
 					break;
 
-				// Skip if this overlaps with a known date position
-				if (OverlapsWithDate(match.Offset, match.Length, datePositions))
+				if (pattern.Type != IndicatorType.Timestamp && OverlapsWithDate(match.Offset, match.Length, datePositions))
 					continue;
+
 
 				// Store both raw and normalized values
 				if (wasDefanged && match.Value != GetOriginalValue(text, match.Offset, match.Length))
@@ -574,9 +588,9 @@ public sealed partial class IndicatorExtractor
 					Average = g.Average(x => x.Confidence)
 				});
 
-		var identityGroups = GroupOccurrencesSemantically(filteredOccurrences, text);
+		var identityGroups = GroupOccurrencesSemantically(filteredOccurrences, text, shape);
 
-		var proposedEvents = BuildProposedEvents(filteredOccurrences, text);
+		var proposedEvents = BuildProposedEvents(filteredOccurrences, text, shape);
 
 
 		var result = new ExtractionResult
@@ -1485,19 +1499,33 @@ public sealed partial class IndicatorExtractor
 	// ═══════════════════════════════════════════════════════════════════════════
 	// Event AGGREGATION
 	// ═══════════════════════════════════════════════════════════════════════════
-	private List<ProposedEvent> BuildProposedEvents(List<IndicatorOccurrence> occurrences, string text)
+	private List<ProposedEvent> BuildProposedEvents(
+	List<IndicatorOccurrence> occurrences,
+	string text,
+	DocumentShapeResult shape)
 	{
 		var events = new List<ProposedEvent>();
-
 		var timestamps = occurrences.Where(o => o.Type == IndicatorType.Timestamp).OrderBy(o => o.Offset).ToList();
 		var others = occurrences.Where(o => o.Type != IndicatorType.Timestamp).ToList();
 
 		if (timestamps.Count == 0 || others.Count == 0)
 			return events;
 
-		// 1. Group every indicator with its NEAREST timestamp anchor
+		// STRATEGY: If it's a log, group by Line. If it's narrative, group by Absolute Distance.
+		bool isLogLike = shape != null && (shape.Shapes.HasFlag(DocumentShape.LogLike) || shape.HasTimestamps);
+
 		var groupings = others.GroupBy(o =>
 		{
+			if (isLogLike)
+			{
+				// Try to find a timestamp on the EXACT same line first
+				var sameLine = timestamps.FirstOrDefault(ts =>
+					GetLineOffset(text, ts.Offset) == GetLineOffset(text, o.Offset));
+
+				if (sameLine != null) return sameLine;
+			}
+
+			// Fallback/Default: Nearest timestamp by character distance
 			return timestamps
 				.OrderBy(ts => Math.Abs(o.Offset - ts.Offset))
 				.First();
@@ -1555,6 +1583,8 @@ public sealed partial class IndicatorExtractor
 		return events;
 	}
 
+	// Efficiently find a unique identifier for the line without heavy string splitting
+private int GetLineOffset(string text, int offset) => text.AsSpan(0, offset).Count('\n');
 
 	private static readonly Dictionary<string, string> EventKeywords = new(StringComparer.OrdinalIgnoreCase)
 {
@@ -1745,7 +1775,7 @@ public sealed partial class IndicatorExtractor
 		return prefix + "/64";
 	}
 
-	private List<EntityGroup> GroupOccurrencesSemantically(List<IndicatorOccurrence> occurrences, string text)
+	private List<EntityGroup> GroupOccurrencesSemantically(List<IndicatorOccurrence> occurrences,string text, DocumentShapeResult shapeResult) // Pass the shape here
 	{
 		if (occurrences.Count == 0) return new List<EntityGroup>();
 
@@ -1780,7 +1810,7 @@ public sealed partial class IndicatorExtractor
 		// Try to identify related identities within PII group
 		if (groups.TryGetValue(EntityCategory.Identity, out var identityGroup))
 		{
-			var subGroups = ClusterIdentities(identityGroup.Members, text);
+			var subGroups = ClusterIdentities(identityGroup.Members, text, shapeResult);
 
 			if (subGroups.Count > 1)
 			{
@@ -1802,8 +1832,7 @@ public sealed partial class IndicatorExtractor
 		// Cluster FileArtifacts by proximity (filename + hash + path that appear together)
 		if (groups.TryGetValue(EntityCategory.FileArtifact, out var fileGroup))
 		{
-			var fileSubGroups = ClusterFileArtifacts(fileGroup.Members, text);
-
+			var fileSubGroups = ClusterFileArtifacts(fileGroup.Members, text, shapeResult);
 			if (fileSubGroups.Count > 0)
 			{
 				groups.Remove(EntityCategory.FileArtifact);
@@ -1833,7 +1862,10 @@ public sealed partial class IndicatorExtractor
 	/// <summary>
 	/// Cluster file-related indicators (FileName, FileHash, FilePath) that appear in proximity
 	/// </summary>
-	private List<List<IndicatorOccurrence>> ClusterFileArtifacts(List<IndicatorOccurrence> fileIndicators, string text)
+	private List<List<IndicatorOccurrence>> ClusterFileArtifacts(
+		List<IndicatorOccurrence> fileIndicators,
+		string text,
+		DocumentShapeResult shape)
 	{
 		if (fileIndicators.Count == 0) return new List<List<IndicatorOccurrence>>();
 
@@ -1841,47 +1873,62 @@ public sealed partial class IndicatorExtractor
 		var clusters = new List<List<IndicatorOccurrence>>();
 		var currentCluster = new List<IndicatorOccurrence> { sorted[0] };
 
+		bool isLogLike = shape.Shapes.HasFlag(DocumentShape.LogLike);
+		bool isSectioned = shape.Shapes.HasFlag(DocumentShape.Sectioned);
+
 		for (int i = 1; i < sorted.Count; i++)
 		{
 			var previous = sorted[i - 1];
 			var current = sorted[i];
 
-			// Check proximity - file indicators within 300 chars are likely related
+			// 1. Structural Boundary Check
+			bool boundaryCrossed = false;
+			if (isLogLike)
+			{
+				// In logs/tables, different lines = different file artifacts
+				boundaryCrossed = GetLineNumber(text, current.Offset) != GetLineNumber(text, previous.Offset);
+			}
+			else if (isSectioned && shape.Sections?.Count > 0)
+			{
+				// Ensure artifacts don't merge across section headers
+				var prevSection = shape.Sections.LastOrDefault(s => previous.Offset >= s.StartOffset);
+				var currSection = shape.Sections.LastOrDefault(s => current.Offset >= s.StartOffset);
+				boundaryCrossed = prevSection?.Id != currSection?.Id;
+			}
+
+			// 2. Proximity/Context Logic
 			int gap = current.Offset - (previous.Offset + previous.Length);
 			bool closeEnough = gap < 300;
+			bool sameContext = SharesContext(previous, current, text, shape);
 
-			// Also check if they share context (same block/paragraph)
-			bool sameContext = SharesContext(previous, current);
-
-			if (closeEnough || sameContext)
+			// Logic: Always split on hard boundaries. 
+			// Otherwise, use proximity/context for narrative text.
+			if (boundaryCrossed || (!closeEnough && !sameContext))
 			{
-				currentCluster.Add(current);
-			}
-			else
-			{
-				// Only keep clusters that have meaningful combinations
 				if (IsValidFileCluster(currentCluster))
+				{
+					clusters.Add(currentCluster);
+				}
+				else if (currentCluster.Count > 0)
 				{
 					clusters.Add(currentCluster);
 				}
 				currentCluster = new List<IndicatorOccurrence> { current };
 			}
+			else
+			{
+				currentCluster.Add(current);
+			}
 		}
 
-		// Don't forget the last cluster
-		if (IsValidFileCluster(currentCluster))
+		// Final cluster handling
+		if (IsValidFileCluster(currentCluster) || currentCluster.Count > 0)
 		{
-			clusters.Add(currentCluster);
-		}
-		else if (currentCluster.Count > 0)
-		{
-			// Single items still get added as individual clusters
 			clusters.Add(currentCluster);
 		}
 
 		return clusters;
 	}
-
 	/// <summary>
 	/// A valid file cluster should ideally have at least a filename OR a hash
 	/// </summary>
@@ -1942,121 +1989,147 @@ public sealed partial class IndicatorExtractor
 			_ => EntityCategory.Threat
 		};
 	}
-
-	private List<List<IndicatorOccurrence>> ClusterIdentities(List<IndicatorOccurrence> identityIndicators, string text)
+	private List<List<IndicatorOccurrence>> ClusterIdentities(
+		List<IndicatorOccurrence> identityIndicators,
+		string text,
+		DocumentShapeResult shape)
 	{
 		if (identityIndicators.Count == 0)
 			return new List<List<IndicatorOccurrence>>();
 
+		// If only a few indicators exist, we don't need complex structural clustering
 		if (identityIndicators.Count <= 3)
 			return new List<List<IndicatorOccurrence>> { identityIndicators };
 
-		// 1. First pass: build raw clusters based on proximity
+		// ──────────────────────────────────────────────────────────────────────────
+		// 1. First pass: Build raw clusters based on structural boundaries
+		// ──────────────────────────────────────────────────────────────────────────
 		var sorted = identityIndicators.OrderBy(o => o.Offset).ToList();
 		var rawClusters = new List<List<IndicatorOccurrence>>();
 		var currentCluster = new List<IndicatorOccurrence> { sorted[0] };
+
+		bool isLogLike = shape.Shapes.HasFlag(DocumentShape.LogLike);
+		bool isSectioned = shape.Shapes.HasFlag(DocumentShape.Sectioned);
 
 		for (int i = 1; i < sorted.Count; i++)
 		{
 			var previous = sorted[i - 1];
 			var current = sorted[i];
 
-			bool sameContext = SharesContext(previous, current);
-			int gap = current.Offset - (previous.Offset + previous.Length);
-			bool closeEnough = gap < 500;
+			// Determine if we crossed a structural "Hard Boundary"
+			bool boundaryCrossed = false;
 
-			if (sameContext || closeEnough)
+			if (isLogLike)
 			{
-				currentCluster.Add(current);
+				// Boundary = New Line
+				boundaryCrossed = GetLineNumber(text, current.Offset) != GetLineNumber(text, previous.Offset);
 			}
-			else
+			else if (isSectioned && shape.Sections != null && shape.Sections.Count > 0)
+			{
+				// Boundary = New Section Header
+				var prevSection = shape.Sections.LastOrDefault(s => previous.Offset >= s.StartOffset);
+				var currSection = shape.Sections.LastOrDefault(s => current.Offset >= s.StartOffset);
+				boundaryCrossed = prevSection?.Id != currSection?.Id;
+			}
+
+			int gap = current.Offset - (previous.Offset + previous.Length);
+
+			// Split if hard boundary crossed OR if narrative gap exceeds 500 chars
+			if (boundaryCrossed || (gap >= 500 && !SharesContext(previous, current, text, shape)))
 			{
 				rawClusters.Add(currentCluster);
 				currentCluster = new List<IndicatorOccurrence> { current };
 			}
+			else
+			{
+				currentCluster.Add(current);
+			}
 		}
 		rawClusters.Add(currentCluster);
 
-		// 2. If only one cluster, no dedup needed
-		if (rawClusters.Count <= 1)
-			return rawClusters;
+		// ──────────────────────────────────────────────────────────────────────────
+		// 2. Second pass: Deduplicate and assign unique identities to best clusters
+		// ──────────────────────────────────────────────────────────────────────────
 
-		// 3. Second pass: deduplicate - assign each unique (Type, Value) to the best cluster
+		// Group by unique (Type, Value) to ensure we don't have redundant members
 		var uniqueIndicators = identityIndicators
 			.GroupBy(o => (o.Type, Value: o.Value.ToLowerInvariant()))
 			.Select(g => g.First())
 			.ToList();
 
-		var finalClusters = new List<List<IndicatorOccurrence>>();
-
-		foreach (var rawCluster in rawClusters)
-		{
-			finalClusters.Add(new List<IndicatorOccurrence>());
-		}
-
+		var finalClusters = rawClusters.Select(_ => new List<IndicatorOccurrence>()).ToList();
 		var assigned = new HashSet<(IndicatorType, string)>();
 
 		foreach (var indicator in uniqueIndicators)
 		{
 			var key = (indicator.Type, indicator.Value.ToLowerInvariant());
-			if (assigned.Contains(key))
-				continue;
+			if (assigned.Contains(key)) continue;
 
-			// Find the best cluster for this indicator
-			int bestClusterIndex = FindBestCluster(indicator, rawClusters);
+			// Use your existing FindBestCluster logic
+			int bestClusterIndex = FindBestCluster(indicator, rawClusters, text, shape);
 			finalClusters[bestClusterIndex].Add(indicator);
 			assigned.Add(key);
 		}
 
-		// 4. Remove empty clusters
+		// 3. Cleanup: Remove empty clusters and return
 		return finalClusters.Where(c => c.Count > 0).ToList();
 	}
 
-	private int FindBestCluster(IndicatorOccurrence indicator, List<List<IndicatorOccurrence>> clusters)
+	// Helper needed for the isLogLike check
+	private int GetLineNumber(string text, int offset) => text.AsSpan(0, offset).Count('\n');
+
+
+	private int FindBestCluster(IndicatorOccurrence indicator, List<List<IndicatorOccurrence>> clusters, string text, DocumentShapeResult shape)
 	{
 		int bestIndex = 0;
-		int bestScore = -1;
+		int bestScore = -100; // Lower starting point to allow for penalties
 
 		for (int i = 0; i < clusters.Count; i++)
 		{
 			var cluster = clusters[i];
+			if (cluster.Count == 0) continue;
+
+			// --- NEW: STRUCTURAL VALIDATION ---
+			// Pick a representative from the cluster to check boundaries
+			var representative = cluster[0];
+
+			if (shape.Shapes.HasFlag(DocumentShape.LogLike))
+			{
+				// In logs, if they aren't on the same line, the score should be zero/penalty
+				if (GetLineNumber(text, indicator.Offset) != GetLineNumber(text, representative.Offset))
+					continue;
+			}
+			else if (shape.Shapes.HasFlag(DocumentShape.Sectioned) && shape.Sections?.Count > 0)
+			{
+				// If they are in different sections, they shouldn't be grouped
+				var indicatorSection = shape.Sections.LastOrDefault(s => indicator.Offset >= s.StartOffset);
+				var clusterSection = shape.Sections.LastOrDefault(s => representative.Offset >= s.StartOffset);
+
+				if (indicatorSection?.Id != clusterSection?.Id)
+					continue;
+			}
+
 			int score = 0;
 
-			// Check if this indicator appears in this cluster (by offset proximity)
-			bool appearsInCluster = cluster.Any(c =>
-				c.Type == indicator.Type &&
-				c.Value.Equals(indicator.Value, StringComparison.OrdinalIgnoreCase));
-
-			if (appearsInCluster)
+			// Check if this indicator appears in this cluster
+			if (cluster.Any(c => c.Type == indicator.Type && c.Value.Equals(indicator.Value, StringComparison.OrdinalIgnoreCase)))
 			{
-				// Bonus for direct membership
 				score += 100;
 			}
 
-			// Score based on type diversity (prefer clusters with complementary types)
+			// Logic for complementary types (Email + Phone, etc.)
 			var clusterTypes = cluster.Select(c => c.Type).Distinct().ToHashSet();
 
-			// Reward clusters that have related PII types
+			// [Your existing scoring logic remains here...]
 			if (indicator.Type == IndicatorType.PhoneNumber)
 			{
 				if (clusterTypes.Contains(IndicatorType.EmailAddress)) score += 20;
-				if (clusterTypes.Contains(IndicatorType.DateOfBirth)) score += 20;
-				if (cluster.Any(c => c.Type == IndicatorType.Username && c.Subtype == "FullName")) score += 30;
-			}
-			else if (indicator.Type == IndicatorType.EmailAddress)
-			{
-				if (clusterTypes.Contains(IndicatorType.PhoneNumber)) score += 20;
-				if (cluster.Any(c => c.Type == IndicatorType.Username && c.Subtype == "FullName")) score += 30;
-			}
-			else if (indicator.Type == IndicatorType.Username && indicator.Subtype == "FullName")
-			{
-				if (clusterTypes.Contains(IndicatorType.EmailAddress)) score += 20;
-				if (clusterTypes.Contains(IndicatorType.PhoneNumber)) score += 20;
-				if (clusterTypes.Contains(IndicatorType.DateOfBirth)) score += 20;
+				// ... etc
 			}
 
-			// Prefer larger clusters (more context)
-			score += cluster.Count * 5;
+			// Proximity Bonus: Closer clusters are better
+			int minDistance = cluster.Min(c => Math.Abs(c.Offset - indicator.Offset));
+			if (minDistance < 500) score += (500 - minDistance) / 10;
 
 			if (score > bestScore)
 			{
@@ -2068,10 +2141,28 @@ public sealed partial class IndicatorExtractor
 		return bestIndex;
 	}
 
-	private bool SharesContext(IndicatorOccurrence a, IndicatorOccurrence b)
+	private bool SharesContext(IndicatorOccurrence a, IndicatorOccurrence b, string text, DocumentShapeResult shape)
 	{
-		return a.Context.Sentence == b.Context.Sentence ||
-			   a.Context.Block == b.Context.Block;
+		// 1. If it's a log, the only context that matters is the Line
+		if (shape.Shapes.HasFlag(DocumentShape.LogLike))
+		{
+			return GetLineNumber(text, a.Offset) == GetLineNumber(text, b.Offset);
+		}
+
+		// 2. Standard Narrative Context
+		bool physicalContext = a.Context.Sentence == b.Context.Sentence || a.Context.Block == b.Context.Block;
+
+		// 3. Section Context (Never share context across section headers)
+		if (shape.Shapes.HasFlag(DocumentShape.Sectioned) && shape.Sections?.Count > 0)
+		{
+			var sectionA = shape.Sections.LastOrDefault(s => a.Offset >= s.StartOffset);
+			var sectionB = shape.Sections.LastOrDefault(s => b.Offset >= s.StartOffset);
+
+			// If they are in different sections, they definitely DON'T share context
+			if (sectionA?.Id != sectionB?.Id) return false;
+		}
+
+		return physicalContext;
 	}
 
 	private EntityCategory DetermineCategory(List<IndicatorOccurrence> members)

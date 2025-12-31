@@ -14,9 +14,18 @@ namespace IIM.Api.Endpoints
 				.WithTags("Files")
 				.WithOpenApi();
 
-		
 
-			
+			// ------------------------------------------------------------
+			// Get derived file content
+			// ------------------------------------------------------------
+			files.MapGet("/derived/{storedFileHash}/{processorName}",
+				async (string storedFileHash, string processorName, IWorkspaceManager workspaces, CancellationToken ct) =>
+				{
+					var content = await workspaces.GetDerivedContentAsync(storedFileHash, processorName, ct);
+
+					return content is null ? Results.NotFound() : Results.Ok(content);
+				})
+			.WithName("GetDerivedContent");
 
 			// ------------------------------------------------------------
 			// Get metadata
@@ -95,6 +104,8 @@ namespace IIM.Api.Endpoints
 					return Results.Ok(updated);
 				})
 			.WithName("MoveFileToBucket");
+
+		
 		}
 	}
 }

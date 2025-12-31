@@ -14,8 +14,10 @@ public interface IAIAgentFactory
 {
 	Task<AIAgent> GetChatAgentAsync();
 	Task<AIAgent> GetReasoningAgentAsync();
-	Task<IChatClient> GetChatClientAsync();  // Add this
-	Task<IChatClient?> GetReasoningClientAsync();  // Optional
+	Task<IChatClient> GetChatClientAsync(); 
+	Task<IChatClient?> GetReasoningClientAsync();  
+
+	Task<IChatClient?> GetFunctionClientAsync();
 	string CurrentChatModel { get; }
 	string CurrentReasoningModel { get; }
 	void Invalidate();
