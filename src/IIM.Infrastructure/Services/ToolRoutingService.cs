@@ -1,14 +1,9 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text.Json;
-using DocumentFormat.OpenXml.Office.SpreadSheetML.Y2023.MsForms;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Vml.Office;
+﻿using System.Text.Json;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
 using Microsoft.Extensions.AI;
-using NPOI.SS.Formula.Functions;
-using OllamaSharp;
 using OllamaSharp.Models.Chat;
+
 
 namespace IIM.Infrastructure.Services;
 
@@ -49,27 +44,68 @@ public sealed class ToolRoutingService : IToolRoutingService
 		var response = await client.GetResponseAsync(
 			new[]
 			{
-			new ChatMessage(
-				Microsoft.Extensions.AI.ChatRole.System,
-				"You can call software functions using the provided schemas."),
-			new ChatMessage(Microsoft.Extensions.AI.ChatRole.User, userInput)
+		new ChatMessage(
+			Microsoft.Extensions.AI.ChatRole.System,
+			@"You are a STRICT TOOL ROUTER. Select the appropriate tool based on the query.
+
+TOOL SELECTION RULES:
+
+1. SELECT ""web_search"" when:
+   - Query asks about current events, news, or recent happenings
+   - Query mentions specific dates, ""today"", ""yesterday"", ""this week"", ""latest"", ""recent""
+   - Query asks about current status (""who is the president"", ""current price"", ""latest score"")
+   - Query asks ""why did X happen"" about real-world events
+   - Query asks about anything after 2023 (your knowledge cutoff)
+   - Query involves people's current roles, positions, or status
+   - You are unsure or the topic might have changed
+
+2. SELECT ""ingest_url"" when:
+   - Query contains a URL (http:// or https://)
+   - Query asks to summarize, read, or analyze a specific link
+
+3. SELECT ""no_tool"" ONLY when:
+   - Query is purely conversational (""hello"", ""thanks"")
+   - Query asks about timeless facts (""what is photosynthesis"")
+   - Query asks about historical events with fixed outcomes (""when was WW2"")
+   - Query is about definitions or concepts (""what is a neural network"")
+   - Query asks you to translate, write, or create content
+
+CRITICAL: When in doubt, SELECT ""web_search"". It is better to search and confirm than to guess.
+
+OUTPUT: Only a function call. No natural language."
+		),
+		new ChatMessage(Microsoft.Extensions.AI.ChatRole.User, userInput)
 			},
 			options,
 			ct);
 
-		// 🔑 THIS is the only correct way to detect a tool call
+		var tools = string.Join(", ", options.Tools.Select(t => t.Name));
+
+	
 		foreach (var message in response.Messages)
 		{
 			foreach (var content in message.Contents)
 			{
 				if (content is FunctionCallContent fn)
 				{
+
+					if (fn.Name == "no_tool")
+					{
+						return new ToolDecision(
+							ShouldCallTool: false,
+							ToolName: fn.Name,
+							Arguments: JsonSerializer.SerializeToElement(fn.Arguments),
+							Confidence: "high");
+					}
+
+
 					return new ToolDecision(
 						ShouldCallTool: true,
 						ToolName: fn.Name,
 						Arguments: JsonSerializer.SerializeToElement(fn.Arguments),
 						Confidence: "high");
 				}
+				
 			}
 		}
 
@@ -80,73 +116,4 @@ public sealed class ToolRoutingService : IToolRoutingService
 			Confidence: "model-declined");
 	}
 
-
-	private static ToolDecision NoTool(string reason)
-	{
-		return new ToolDecision(
-			ShouldCallTool: false,
-			ToolName: null,
-			Arguments: null,
-			Confidence: reason);
-	}
-
-
-	// ──────────────────────────────────────────────
-	// PRIVATE IMPLEMENTATION DETAILS
-	// ──────────────────────────────────────────────
-	private static List<ChatMessage> BuildRoutingMessages(string input)
-		=> new()
-		{
-		new(Microsoft.Extensions.AI.ChatRole.System,
-@"OUTPUT FORMAT CONTRACT (STRICT):
-
-You are a routing engine, not a chat assistant.
-
-You must output EXACTLY one of the following tokens:
-
-NO_TOOL
-
-OR
-
-CALL:<tool_name>|<json>
-
-Any other output is invalid and will be discarded."),
-
-		new(Microsoft.Extensions.AI.ChatRole.User, input)
-		};
-
-
-	private static ToolDecision ParseToolDecision(string text)
-	{
-		text = text.Trim();
-
-		if (text.Equals("NO_TOOL", StringComparison.OrdinalIgnoreCase))
-		{
-			return new ToolDecision(
-				ShouldCallTool: false,
-				ToolName: null,
-				Arguments: null,
-				Confidence: "high");
-		}
-
-		if (!text.StartsWith("CALL ", StringComparison.OrdinalIgnoreCase))
-			throw new InvalidOperationException("Invalid router response");
-
-		var lines = text.Split('\n', 2);
-		if (lines.Length != 2)
-			throw new InvalidOperationException("Missing arguments");
-
-		var toolName = lines[0].Substring(5).Trim();
-
-		var args = JsonSerializer.Deserialize<Dictionary<string, object?>>(
-			lines[1],
-			new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-			?? throw new InvalidOperationException("Invalid arguments JSON");
-
-		return new ToolDecision(
-			ShouldCallTool: true,
-			ToolName: toolName,
-			Arguments: JsonSerializer.SerializeToElement(args),
-			Confidence: "high");
-	}
 }

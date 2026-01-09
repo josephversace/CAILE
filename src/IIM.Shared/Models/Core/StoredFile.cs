@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using IIM.Shared.Models.Core;
 
 namespace IIM.Shared.Models
@@ -62,10 +63,12 @@ namespace IIM.Shared.Models
 		// -----------------------------
 		// Relations
 		// -----------------------------
+		[JsonIgnore]
 		public ICollection<VirtualFile> VirtualFiles { get; set; }
 			= new List<VirtualFile>();
 
 		// Derived outputs (OCR, thumbnails, text, etc.)
+		[JsonIgnore]
 		public ICollection<ProcessedFile> ProcessedVersions { get; set; }
 			= new List<ProcessedFile>();
 

@@ -21,7 +21,8 @@ namespace IIM.Shared.Models
 		public QdrantConfig Qdrant { get; set; } = new();
 		public Neo4jConfig Neo4j { get; set; } = new();
 		public DoclingConfig Docling { get; set; } = new();
-
+		public SearXngConfig SearXNG { get; set; } = new();
+		public PlaywrightConfig Playwright { get; set; } = new();
 		public KreuzbergConfig Kreuzberg { get; set; } = new();
 		public HangfireConfig Hangfire { get; set; } = new();
 		public DataRouterConfig DataRouter { get; set; } = new();
@@ -35,6 +36,8 @@ namespace IIM.Shared.Models
 		public ToolsConfig Tools { get; set; } = new();
 
 		public EnrichmentConfig Enrichment { get; set; } = new();
+
+
 
 	}
 

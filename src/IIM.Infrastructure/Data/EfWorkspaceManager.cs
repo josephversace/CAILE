@@ -335,7 +335,7 @@ namespace IIM.Infrastructure.Data
 			CancellationToken cancellationToken = default)
 		{
 			return await _db.VirtualFiles
-				.Where(v => v.WorkspaceId == workspaceId)
+				.Where(v => v.WorkspaceId == workspaceId).Include(v => v.StoredFile)
 				.ToListAsync(cancellationToken);
 		}
 
@@ -344,7 +344,10 @@ namespace IIM.Infrastructure.Data
 			Guid workspaceId,
 			CancellationToken cancellationToken = default)
 		{
-			return await GetVirtualFilesAsync(workspaceId, cancellationToken);
+
+			var result = await GetVirtualFilesAsync(workspaceId, cancellationToken);
+
+			return result;
 		}
 
 
@@ -775,5 +778,135 @@ namespace IIM.Infrastructure.Data
 				return null;
 			}
 		}
+
+		public async Task<IngestionStepState?> GetStepAsync(
+			string storedFileHash,
+			string stepId,
+			string stepVersion,
+			string inputHash,
+			string? parametersHash,
+			CancellationToken ct = default)
+		{
+			var q = _db.IngestionStepStates.AsNoTracking().Where(x =>
+				x.StoredFileHash == storedFileHash &&
+				x.StepId == stepId &&
+				x.StepVersion == stepVersion &&
+				x.InputHash == inputHash);
+
+			if (parametersHash == null)
+				q = q.Where(x => x.ParametersHash == null);
+			else
+				q = q.Where(x => x.ParametersHash == parametersHash);
+
+			// Unique index ensures at most 1 row
+			return await q.FirstOrDefaultAsync(ct);
+		}
+
+		public async Task<IngestionStepState> UpsertStepAsync(IngestionStepState state, CancellationToken ct = default)
+		{
+			if (state == null) throw new ArgumentNullException(nameof(state));
+
+			// If caller supplies Id, try direct update
+			if (state.Id != Guid.Empty)
+			{
+				var existingById = await _db.IngestionStepStates.FirstOrDefaultAsync(x => x.Id == state.Id, ct);
+				if (existingById != null)
+				{
+					CopyMutableFields(existingById, state);
+					existingById.UpdatedAt = DateTimeOffset.UtcNow;
+
+					await _db.SaveChangesAsync(ct);
+					return existingById;
+				}
+			}
+
+			// Otherwise upsert by identity key
+			var existing = await GetStepAsync(
+				state.StoredFileHash,
+				state.StepId,
+				state.StepVersion,
+				state.InputHash,
+				state.ParametersHash,
+				ct);
+
+			if (existing != null)
+			{
+				var tracked = await _db.IngestionStepStates.FirstAsync(x => x.Id == existing.Id, ct);
+				CopyMutableFields(tracked, state);
+				tracked.UpdatedAt = DateTimeOffset.UtcNow;
+
+				await _db.SaveChangesAsync(ct);
+				return tracked;
+			}
+
+			// Insert new
+			state.Id = state.Id == Guid.Empty ? Guid.NewGuid() : state.Id;
+			state.CreatedAt = DateTimeOffset.UtcNow;
+			state.UpdatedAt = state.CreatedAt;
+
+			_db.IngestionStepStates.Add(state);
+			await _db.SaveChangesAsync(ct);
+			return state;
+		}
+
+		public async Task MarkStepRunningAsync(Guid stepStateId, CancellationToken ct = default)
+		{
+			var row = await _db.IngestionStepStates.FirstOrDefaultAsync(x => x.Id == stepStateId, ct);
+			if (row == null) return;
+
+			row.Status = IngestionStepStatus.Running;
+			row.StartedAt = DateTimeOffset.UtcNow;
+			row.UpdatedAt = DateTimeOffset.UtcNow;
+			row.AttemptCount += 1;
+
+			await _db.SaveChangesAsync(ct);
+		}
+
+		public async Task MarkStepCompletedAsync(Guid stepStateId, string? outputHash, string? metadataJson, CancellationToken ct = default)
+		{
+			var row = await _db.IngestionStepStates.FirstOrDefaultAsync(x => x.Id == stepStateId, ct);
+			if (row == null) return;
+
+			row.Status = IngestionStepStatus.Completed;
+			row.OutputHash = outputHash;
+			row.MetadataJson = Truncate(metadataJson, 32_000);
+			row.LastError = null;
+			row.CompletedAt = DateTimeOffset.UtcNow;
+			row.UpdatedAt = DateTimeOffset.UtcNow;
+
+			await _db.SaveChangesAsync(ct);
+		}
+
+		public async Task MarkStepFailedAsync(Guid stepStateId, string error, bool isFatal, CancellationToken ct = default)
+		{
+			var row = await _db.IngestionStepStates.FirstOrDefaultAsync(x => x.Id == stepStateId, ct);
+			if (row == null) return;
+
+			row.Status = IngestionStepStatus.Failed;
+			row.IsFatal = isFatal;
+			row.LastError = Truncate(error, 16_000);
+			row.CompletedAt = DateTimeOffset.UtcNow;
+			row.UpdatedAt = DateTimeOffset.UtcNow;
+
+			await _db.SaveChangesAsync(ct);
+		}
+
+		private static void CopyMutableFields(IngestionStepState target, IngestionStepState src)
+		{
+			target.WorkspaceId = src.WorkspaceId;
+			target.VirtualFileId = src.VirtualFileId;
+			target.OutputHash = src.OutputHash;
+			target.MetadataJson = src.MetadataJson;
+			target.Status = src.Status;
+			target.IsFatal = src.IsFatal;
+			target.IsDeferred = src.IsDeferred;
+		}
+
+		private static string? Truncate(string? s, int max)
+		{
+			if (string.IsNullOrEmpty(s)) return s;
+			return s.Length <= max ? s : s.Substring(0, max);
+		}
+
 	}
 }

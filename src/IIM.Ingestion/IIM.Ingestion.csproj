@@ -10,7 +10,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Blake3" Version="2.2.0" />
-		<PackageReference Include="EntityFramework" Version="5.0.0" />
+		<PackageReference Include="DocumentFormat.OpenXml" Version="3.4.1" />
+		<PackageReference Include="EntityFramework" Version="6.5.1" />
 		<PackageReference Include="Hangfire" Version="1.8.22" />
 		<PackageReference Include="OllamaSharp" Version="5.4.12" />
 		<PackageReference Include="Qdrant.Client" Version="1.16.1" />
@@ -25,5 +26,9 @@
 
     <ProjectReference Include="..\IIM.Shared\IIM.Shared.csproj" />
   </ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Interfaces\" />
+	</ItemGroup>
 
 </Project>

@@ -96,6 +96,90 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                     b.ToTable("ClassificationTags");
                 });
 
+            modelBuilder.Entity("IIM.Shared.Models.IngestionStepState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("InputHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<bool>("IsDeferred")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsFatal")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MetadataJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("OutputHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ParametersHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StepId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("StepVersion")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("StoredFileHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("VirtualFileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("WorkspaceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UpdatedAt");
+
+                    b.HasIndex("StoredFileHash", "Status");
+
+                    b.HasIndex("WorkspaceId", "VirtualFileId");
+
+                    b.HasIndex("StoredFileHash", "StepId", "StepVersion", "InputHash", "ParametersHash")
+                        .IsUnique();
+
+                    b.ToTable("IngestionStepStates");
+                });
+
             modelBuilder.Entity("IIM.Shared.Models.ProcessedFile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -438,6 +522,7 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                         .HasColumnType("integer");
 
                     b.Property<string>("StoredFileHash")
+                        .IsRequired()
                         .HasColumnType("character varying(64)");
 
                     b.PrimitiveCollection<List<string>>("Tags")
@@ -551,7 +636,8 @@ namespace IIM.Infrastructure.Migrations.WorkspaceDb
                     b.HasOne("IIM.Shared.Models.StoredFile", "StoredFile")
                         .WithMany("VirtualFiles")
                         .HasForeignKey("StoredFileHash")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("StoredFile");
                 });

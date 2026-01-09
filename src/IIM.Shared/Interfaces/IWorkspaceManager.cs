@@ -118,5 +118,23 @@ namespace IIM.Shared.Interfaces
 		/// </summary>
 		Task<string?> GetDerivedContentAsync(string storedFileHash, string processorName, CancellationToken ct);
 
+
+		Task<IngestionStepState?> GetStepAsync(
+	string storedFileHash,
+	string stepId,
+	string stepVersion,
+	string inputHash,
+	string? parametersHash,
+	CancellationToken ct = default);
+
+		Task<IngestionStepState> UpsertStepAsync(
+			IngestionStepState state,
+			CancellationToken ct = default);
+
+		Task MarkStepRunningAsync(Guid stepStateId, CancellationToken ct = default);
+		Task MarkStepCompletedAsync(Guid stepStateId, string? outputHash, string? metadataJson, CancellationToken ct = default);
+		Task MarkStepFailedAsync(Guid stepStateId, string error, bool isFatal, CancellationToken ct = default);
+
+
 	}
 }

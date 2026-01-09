@@ -60,7 +60,7 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 	{
 		await EnsureInitializedAsync();
 		if (_reasoningAgent == null)
-			throw new InvalidOperationException("No reasoning model is configured.");
+			return _chatAgent;
 		return _reasoningAgent;
 	}
 
@@ -131,7 +131,7 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 					_reasoningClient,
 					"ReasoningAssistant",
 					secondary.SystemPrompt ?? GetReasoningInstructions(),
-					true);
+					false);
 			}
 			else
 			{
@@ -255,15 +255,15 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 			return chatClient.CreateAIAgent(new ChatClientAgentOptions
 			{
 				Name = name,
-				Instructions = instructions,
+				
 				Description = "AG-UI Agent",
 				ChatOptions = new ChatOptions
 				{
 					MaxOutputTokens = 8192,
 					Temperature = 0.7f,
 					TopP = 0.9f,
-					Tools = tools,
-					ToolMode = ChatToolMode.Auto
+		
+					Instructions = instructions
 				}
 			});
 		}
@@ -272,10 +272,10 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 			return chatClient.CreateAIAgent(new ChatClientAgentOptions
 			{
 				Name = name,
-				Instructions = instructions,
 				Description = "AG-UI Agent",
 				ChatOptions = new ChatOptions
 				{
+					Instructions = instructions,
 					MaxOutputTokens = 8192,
 					Temperature = 0.7f,
 					TopP = 0.9f

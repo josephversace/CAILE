@@ -9,6 +9,7 @@ using MagikaSharp;
 using Microsoft.Agents.AI;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
+using OpenAI.Assistants;
 using Org.BouncyCastle.Ocsp;
 
 
@@ -151,29 +152,36 @@ public static class AIEndpoints
 		var toolDecision =
 			await router.DecideAsync(userMsg.Content, abort);
 
-		if (toolDecision.ShouldCallTool)
+		string result = "";
+
+		if (wsContext is null)
 		{
-			var args = toolDecision.Arguments.HasValue
-				? JsonSerializer.Deserialize<Dictionary<string, object?>>(
-					toolDecision.Arguments.Value.GetRawText())
-				: null;
 
-			var result =
-				await toolRegistry.InvokeAsync(
-					toolDecision.ToolName!,
-					args);
-
-			req.Messages.Add(new AGUIMessage
+			if (string.Equals(toolDecision.ToolName, "no_tool", StringComparison.OrdinalIgnoreCase)
+				|| !toolDecision.ShouldCallTool)
 			{
-				Role = "system",
-				Content = BuildToolResultBlock(
-					toolDecision.ToolName!,
-					result)
-			});
+				// Conversational fallthrough - no context injection needed, let the model respond naturally
+				// Don't add a system message at all, or add a minimal one:
+				// result = "CONTEXT: General conversation. Respond naturally.";
+			}
+			else if (toolDecision.ShouldCallTool && !string.IsNullOrEmpty(toolDecision.ToolName))
+			{
+				var args = toolDecision.Arguments.HasValue
+					? JsonSerializer.Deserialize<Dictionary<string, object?>>(
+						toolDecision.Arguments.Value.GetRawText())
+					: null;
+
+				result = await toolRegistry.InvokeAsync(toolDecision.ToolName!, args);
+
+				req.Messages.Add(new AGUIMessage
+				{
+					Role = "system",
+					Content = $"TOOL_RESULT: {result}\nSOURCE: {toolDecision.ToolName}"
+				});
+			}
+
 		}
-
-
-
+		
 		// Load agent + create thread
 		var agent = await agentResolver();
 

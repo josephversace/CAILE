@@ -7,6 +7,7 @@
 
 	public string Neo4jPassword { get; set; }
 
+	public string SearxngSecret { get; set; } = "";
 	// SeaweedFS
 	public SeaweedSecrets Seaweed { get; set; } = new();
 }

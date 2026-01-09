@@ -24,6 +24,9 @@ namespace IIM.Infrastructure.Data
 
 		public DbSet<ClassificationTag> ClassificationTags => Set<ClassificationTag>();
 
+		public DbSet<IngestionStepState> IngestionStepStates => Set<IngestionStepState>();
+
+
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);
@@ -50,6 +53,7 @@ namespace IIM.Infrastructure.Data
 					.WithMany(f => f.VirtualFiles)
 					.HasForeignKey(v => v.StoredFileHash)
 					.HasPrincipalKey(f => f.Blake3Hash)
+					.IsRequired(true)
 					.OnDelete(DeleteBehavior.Restrict);
 			});
 
@@ -117,6 +121,44 @@ namespace IIM.Infrastructure.Data
 			// WorkspaceUser composite key
 			modelBuilder.Entity<WorkspaceUser>()
 				.HasKey(x => new { x.WorkspaceId, x.UserId });
+
+			// IngestionStepState (Step ledger)
+			modelBuilder.Entity<IngestionStepState>(e =>
+			{
+				e.HasKey(x => x.Id);
+
+				e.Property(x => x.StoredFileHash).IsRequired();
+				e.Property(x => x.StepId).IsRequired();
+				e.Property(x => x.StepVersion).IsRequired();
+				e.Property(x => x.InputHash).IsRequired();
+
+				// Keep these reasonably bounded (optional but helps)
+				e.Property(x => x.StoredFileHash).HasMaxLength(128);
+				e.Property(x => x.StepId).HasMaxLength(128);
+				e.Property(x => x.StepVersion).HasMaxLength(64);
+				e.Property(x => x.InputHash).HasMaxLength(128);
+				e.Property(x => x.OutputHash).HasMaxLength(128);
+				e.Property(x => x.ParametersHash).HasMaxLength(128);
+
+				e.Property(x => x.MetadataJson).HasColumnType("jsonb");
+				e.Property(x => x.LastError);
+
+				// Identity/dedup constraint (this is your resumability key)
+				e.HasIndex(x => new
+				{
+					x.StoredFileHash,
+					x.StepId,
+					x.StepVersion,
+					x.InputHash,
+					x.ParametersHash
+				}).IsUnique();
+
+				// Query accelerators
+				e.HasIndex(x => new { x.StoredFileHash, x.Status });
+				e.HasIndex(x => new { x.WorkspaceId, x.VirtualFileId });
+				e.HasIndex(x => x.UpdatedAt);
+			});
+
 		}
 	}
 }

@@ -62,44 +62,87 @@ public sealed class OllamaEmbeddingGenerator
 		CancellationToken cancellationToken)
 	{
 		var results = new GeneratedEmbeddings<Embedding<float>>();
+		if (texts.Count == 0) return results;
 
-		if (texts.Count == 0)
-			return results;
+		// Optional: cap input length here too (belt + suspenders)
+		const int maxChars = 3500;
+		var safe = texts.Select(t => string.IsNullOrWhiteSpace(t) ? "" :
+			(t.Length <= maxChars ? t : t.Substring(0, maxChars))
+		).ToList();
 
-		// Ollama supports batch embedding
-		foreach (var text in texts)
+		// Batch size: keep it modest to avoid server limits
+		const int batchSize = 32;
+
+		for (int i = 0; i < safe.Count; i += batchSize)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 
-			if (string.IsNullOrWhiteSpace(text))
+			var batch = safe.Skip(i).Take(batchSize).ToList();
+
+			// Replace empties with a known short token to avoid weird server behavior
+			for (int k = 0; k < batch.Count; k++)
+				if (string.IsNullOrWhiteSpace(batch[k]))
+					batch[k] = " ";
+
+			OllamaSharp.Models.EmbedResponse response;
+			try
 			{
-				// Return zero vector for empty text
-				results.Add(new Embedding<float>(new float[_dimensions]));
+				response = await _client.EmbedAsync(new OllamaSharp.Models.EmbedRequest
+				{
+					Model = _modelId,
+					Input = batch
+				}, cancellationToken);
+			}
+			catch (OllamaSharp.Models.Exceptions.OllamaException ex)
+				when (ex.Message.Contains("exceeds the context length", StringComparison.OrdinalIgnoreCase))
+			{
+				// Hard fallback: re-run each item with aggressive truncation
+				foreach (var t in batch)
+				{
+					var tiny = t.Length <= 1500 ? t : t.Substring(0, 1500);
+
+					var one = await _client.EmbedAsync(new OllamaSharp.Models.EmbedRequest
+					{
+						Model = _modelId,
+						Input = [tiny]
+					}, cancellationToken);
+
+					results.Add(ToEmbedding(one, 0));
+				}
+
 				continue;
 			}
 
-			var response = await _client.EmbedAsync(new OllamaSharp.Models.EmbedRequest
+			if (response.Embeddings == null || response.Embeddings.Count != batch.Count)
 			{
-				Model = _modelId,
-				Input = [text]
-			}, cancellationToken);
+				// Defensive: pad zeros for missing
+				for (int k = 0; k < batch.Count; k++)
+					results.Add(new Embedding<float>(new float[_dimensions]));
+				continue;
+			}
 
-			if (response.Embeddings != null && response.Embeddings.Count > 0)
-			{
-				// OllamaSharp returns double[], convert to float[]
-				var embedding = response.Embeddings[0];
-				var floatVector = embedding.Select(d => (float)d).ToArray();
-				results.Add(new Embedding<float>(floatVector));
-			}
-			else
-			{
-				// Fallback to zero vector if no embedding returned
-				results.Add(new Embedding<float>(new float[_dimensions]));
-			}
+			for (int k = 0; k < response.Embeddings.Count; k++)
+				results.Add(ToEmbedding(response, k));
 		}
 
 		return results;
+
+		Embedding<float> ToEmbedding(OllamaSharp.Models.EmbedResponse r, int idx)
+		{
+			var v = r.Embeddings![idx];
+			var floats = v.Select(d => (float)d).ToArray();
+			return new Embedding<float>(floats.Length == _dimensions ? floats : PadOrTrim(floats));
+		}
+
+		float[] PadOrTrim(float[] v)
+		{
+			if (v.Length == _dimensions) return v;
+			var outV = new float[_dimensions];
+			Array.Copy(v, outV, Math.Min(v.Length, _dimensions));
+			return outV;
+		}
 	}
+
 
 	public object? GetService(Type serviceType, object? serviceKey = null)
 	{

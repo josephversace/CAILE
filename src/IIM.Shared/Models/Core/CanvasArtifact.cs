@@ -43,13 +43,14 @@ public sealed class CanvasArtifact
 	public string Id { get; set; } = "";
 	public ArtifactType Type { get; set; }
 	public FileClass Classification { get; set; } = FileClass.All;
-
 	public string Title { get; set; } = "";
 	public string? Content { get; set; }
 	public string? FileName { get; set; }
 	public string? ContentType { get; set; }
 	public long? SizeBytes { get; set; }
 	public string? Summary { get; set; }
+
+	public string? Bucket { get; set; }
 
 	/// <summary>
 	/// Content-addressable hash (BLAKE3). Populated after ingestion.

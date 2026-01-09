@@ -16,8 +16,9 @@ public class VirtualFile
 	public FileUploadStatus Status { get; set; }
 
 	// Points to StoredFile.Blake3Hash
-	public string? StoredFileHash { get; set; }
-	public StoredFile? StoredFile { get; set; }
+	public string StoredFileHash { get; set; } = null!;
+	public StoredFile StoredFile { get; set; } = null!;
+
 
 	public DateTime CreatedAt { get; set; }
 

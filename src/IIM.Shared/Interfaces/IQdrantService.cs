@@ -63,6 +63,7 @@ public interface IQdrantService
 	string blake3Hash,
 	Guid workspaceId,
 	Guid virtualFileId,
+	string fileName, 
 	CancellationToken ct = default);
 
 

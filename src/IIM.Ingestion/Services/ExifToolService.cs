@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using IIM.Ingestion.Interfaces;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;

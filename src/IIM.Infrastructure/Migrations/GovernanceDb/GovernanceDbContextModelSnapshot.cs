@@ -18,7 +18,7 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "hstore");
@@ -336,6 +336,7 @@ namespace IIM.Infrastructure.Migrations.GovernanceDb
                         .HasColumnType("character varying(64)");
 
                     b.Property<string>("StoredFileHash")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.PrimitiveCollection<List<string>>("Tags")

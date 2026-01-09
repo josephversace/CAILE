@@ -8,16 +8,16 @@
 
 	<ItemGroup>
 		<!-- Agent Framework packages -->
-		<PackageReference Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.0.0-preview.251125.1" />
-		<PackageReference Include="Microsoft.Agents.AI" Version="1.0.0-preview.251125.1" />
-		<PackageReference Include="Microsoft.Agents.AI.AGUI" Version="1.0.0-preview.251125.1" />
+		<PackageReference Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.0.0-preview.251219.1" />
+		<PackageReference Include="Microsoft.Agents.AI" Version="1.0.0-preview.251219.1" />
+		<PackageReference Include="Microsoft.Agents.AI.AGUI" Version="1.0.0-preview.251219.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.1">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 
 		<!-- AI Extensions - provides AsIChatClient() -->
-		<PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.0.1-preview.1.25571.5" />
+		<PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.1.1-preview.1.25612.2" />
 
 		<!-- OpenAI SDK - MUST match version required by Microsoft.Extensions.AI.OpenAI (>= 2.6.0) -->
 		<PackageReference Include="OpenAI" Version="2.8.0" />
@@ -30,7 +30,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
 		<PackageReference Include="AspNetCore.HealthChecks.Npgsql" Version="9.0.0" />
 		<PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
-		<PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
+		<PackageReference Include="DocumentFormat.OpenXml" Version="3.4.1" />
 		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.22" />
 		<PackageReference Include="Hangfire.Core" Version="1.8.22" />
 		<PackageReference Include="Hangfire.PostgreSql" Version="1.20.13" />

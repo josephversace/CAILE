@@ -1,4 +1,5 @@
 ﻿using IIM.Api.Services;
+using IIM.Application.Urls;
 using IIM.Infrastructure.AI.Intent;
 using IIM.Infrastructure.Embeddings;
 using IIM.Infrastructure.Services;
@@ -96,6 +97,10 @@ namespace IIM.Api.Extensions
 
 			//Tool Routering Service
 			services.AddScoped<IToolRoutingService, ToolRoutingService>();
+
+			services.AddHttpClient<IPlaywrightService, PlaywrightService>();
+			services.AddHttpClient<ISearchService, SearXngService>();
+			services.AddScoped<WebTools>();
 
 			return services;
 		}

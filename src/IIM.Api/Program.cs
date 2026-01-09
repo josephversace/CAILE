@@ -12,7 +12,6 @@ using IIM.Infrastructure.Data;
 using IIM.Infrastructure.Embeddings;
 using IIM.Infrastructure.Ollama;
 using IIM.Infrastructure.Services;
-using IIM.Ingestion.Interfaces;
 using IIM.Ingestion.Services;
 using IIM.Shared.Configuration;
 using IIM.Shared.Interfaces;
@@ -124,12 +123,19 @@ var apiUri = new Uri(deployment?.ApiUrl ?? "https://localhost:5080");
 
 builder.WebHost.ConfigureKestrel(k =>
 {
+
+	k.Limits.MaxRequestBodySize = null;        // allow large incoming JSON
+	k.Limits.MaxResponseBufferSize = null;     // allow large outgoing responses
+	k.Limits.MaxRequestBufferSize = null;      // prevent buffering failures
+	k.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(2);
+
 	k.ListenLocalhost(apiUri.Port, opt =>
 	{
 		if (apiUri.Scheme == "https")
 			opt.UseHttps();
 	});
 });
+
 
 var app = builder.Build();
 
@@ -241,7 +247,6 @@ app.MapFileEndpoints();
 app.MapWorkspaceEndpoints();
 app.MapRagEndpoints();
 app.MapAuthEndpoints();
-app.MapIngestionEndpoints();
 app.MapSetupEndpoints();
 app.MapAIEndpoints();
 app.MapAttachmentEndpoints();

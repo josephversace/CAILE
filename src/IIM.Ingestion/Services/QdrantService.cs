@@ -131,12 +131,12 @@ public class QdrantService : IQdrantService
 	}
 
 	public async Task AttachFileToExistingChunksAsync(
-		string blake3Hash,
-		Guid workspaceId,
-		Guid virtualFileId,
-		CancellationToken ct = default)
+	string blake3Hash,
+	Guid workspaceId,
+	Guid virtualFileId,
+	string fileName, // Added fileName
+	CancellationToken ct = default)
 	{
-		// 1. Define the filter to find all chunks for this file hash
 		var filter = new Filter
 		{
 			Must = {
@@ -149,8 +149,8 @@ public class QdrantService : IQdrantService
 		}
 		};
 
-		// 2. Prepare the partial update payload
-		// We use SetPayload because it merges with existing keys
+		// Note: Qdrant's SetPayload with a ListValue will APPEND to the list 
+		// if the key is already a list, or create it if it isn't.
 		var updatePayload = new Dictionary<string, Value>
 		{
 			["workspace_ids"] = new Value
@@ -160,16 +160,19 @@ public class QdrantService : IQdrantService
 			["virtual_file_ids"] = new Value
 			{
 				ListValue = new ListValue { Values = { new Value { StringValue = virtualFileId.ToString() } } }
+			},
+			["all_file_names"] = new Value
+			{
+				ListValue = new ListValue { Values = { new Value { StringValue = fileName } } }
 			}
 		};
 
-		// 3. Apply the update to all points matching the hash filter
 		await _client.SetPayloadAsync(_collectionName, updatePayload, filter, cancellationToken: ct);
 
 		_logger.LogInformation(
-			"Attached hash {Hash} to workspace {WorkspaceId} (Atomic Update)",
-			blake3Hash[..Math.Min(12, blake3Hash.Length)],
-			workspaceId);
+			"Attached file '{FileName}' to existing hash {Hash} (Multi-source update)",
+			fileName,
+			blake3Hash[..Math.Min(12, blake3Hash.Length)]);
 	}
 
 	private static void AddToList(
@@ -218,41 +221,29 @@ public class QdrantService : IQdrantService
 			if (!string.IsNullOrEmpty(chunk.Text))
 				payload["text"] = chunk.Text;
 
+		
 			if (chunk.Metadata != null)
 			{
+				// Initialize workspace_ids as a list
 				payload["workspace_ids"] = new Value
 				{
-					ListValue = new ListValue
-					{
-						Values =
-			{
-				new Value { StringValue = chunk.Metadata.WorkspaceId.ToString() }
-			}
-					}
+					ListValue = new ListValue { Values = { new Value { StringValue = chunk.Metadata.WorkspaceId.ToString() } } }
 				};
 
+				// Initialize virtual_file_ids as a list
 				payload["virtual_file_ids"] = new Value
 				{
-					ListValue = new ListValue
-					{
-						Values =
-			{
-				new Value { StringValue = chunk.Metadata.VirtualFileId.ToString() }
-			}
-					}
+					ListValue = new ListValue { Values = { new Value { StringValue = chunk.Metadata.VirtualFileId.ToString() } } }
 				};
 
-				if (!string.IsNullOrEmpty(chunk.Metadata.Classification))
-					payload["classification"] = chunk.Metadata.Classification;
-
-				if (chunk.Metadata.Entities?.Count > 0)
+				// Initialize all_file_names as a list
+				payload["all_file_names"] = new Value
 				{
-					var entities = new ListValue();
-					foreach (var e in chunk.Metadata.Entities)
-						entities.Values.Add(new Value { StringValue = e });
+					ListValue = new ListValue { Values = { new Value { StringValue = chunk.Metadata.FileName } } }
+				};
 
-					payload["entities"] = new Value { ListValue = entities };
-				}
+				// Keep the legacy single file_name for simple filtering if needed
+				payload["file_name"] = chunk.Metadata.FileName;
 			}
 
 			points.Add(new PointStruct
