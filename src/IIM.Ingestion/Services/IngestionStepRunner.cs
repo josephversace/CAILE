@@ -122,13 +122,11 @@ namespace IIM.Ingestion.Services
 			var defaultsOrdered = new List<string>
 			{
 				IngestionStepIds.MetaExifFast,
-
 				IngestionStepIds.DocExtractText,
+				IngestionStepIds.DocShapeDetect,
 				IngestionStepIds.IocRegexExtract,
 				IngestionStepIds.ChunkBuild,
 				IngestionStepIds.EmbedIndexQdrant,
-
-				// late (but deps can pull earlier)
 				IngestionStepIds.AiTextAnalysis,
 				IngestionStepIds.AiImageDescribe,
 				IngestionStepIds.ExcelStructureDetect,

@@ -17,7 +17,6 @@ namespace IIM.Shared.Models
 		// OUTPUT (content-addressed)
 		public string? DerivedHash { get; set; }
 
-
 		// PROCESSOR IDENTITY
 		public string ProcessorName { get; set; } = string.Empty;
 		public string? ProcessorVersion { get; set; }

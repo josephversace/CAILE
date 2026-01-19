@@ -8,7 +8,9 @@ public static class IngestionStepIds
 	public const string MetaExifFast = "meta.exif.fast";
 
 	public const string DocExtractText = "doc.extract.text";
+
 	public const string DocShapeDetect = "doc.shape.detect";
+	
 	public const string AiTextAnalysis = "ai.text.analysis";
 
 	public const string ExcelStructureDetect = "excel.structure.detect";

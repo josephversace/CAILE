@@ -312,9 +312,6 @@ namespace IIM.Api.Endpoints
 				return Results.Ok(items);
 			});
 
-		
-
-
 
 		}
 	}

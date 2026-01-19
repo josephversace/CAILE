@@ -4,7 +4,7 @@ using IIM.Infrastructure.Embeddings;
 using IIM.Infrastructure.Services;
 using IIM.Ingestion.Chunking;
 using IIM.Ingestion.Services;
-using IIM.Ingestion.Services.Steps;
+using IIM.Ingestion.Steps;
 using IIM.Shared.Dtos;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
@@ -38,7 +38,9 @@ public static class IngestionExtensions
 		services.AddScoped<IIngestionStep, MetaExifFastStep>();
 
 		// Text path
+		services.AddScoped<IIngestionStep, CoreDedupCheckStep>();
 		services.AddScoped<IIngestionStep, DocExtractTextStep>();
+		services.AddScoped<IIngestionStep, DocumentShapeDetectStep>();
 		services.AddScoped<IIngestionStep, IocRegexExtractStep>();
 		services.AddScoped<IIngestionStep, ChunkBuildStep>();
 		services.AddScoped<IIngestionStep, EmbedIndexQdrantStep>();
@@ -60,6 +62,7 @@ public static class IngestionExtensions
 		services.AddTransient<IndicatorExtractor>();
 		services.AddTransient<EntityLinkingJob>();
 		services.AddTransient<AnalysisService>();
+		services.AddTransient<IFastTextExtractor, PdfPigTextExtractionService>();
 		services.AddTransient<KreuzbergExtractionService>();
 		services.AddTransient<DoclingExtractionService>();
 		services.AddTransient<DocumentExtractionRouter>();

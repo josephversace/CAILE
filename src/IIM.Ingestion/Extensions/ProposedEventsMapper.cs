@@ -15,8 +15,10 @@ namespace IIM.Ingestion.Extensions
 				Id = ev.Id,
 				EventType = ev.EventType,
 				Timestamp = ev.Timestamp.Value,
-				// Grab the context string from the anchor occurrence
-				SharedContext = ev.Timestamp.Context?.Surrounding ?? "",
+
+				// FORENSIC FIX: Store coordinates, not the string content
+				ContextStart = ev.Timestamp.Context?.BlockStart ?? 0,
+				ContextLength = ev.Timestamp.Context?.BlockLength ?? 0,
 
 				Who = ev.Who.Select(i => new IndicatorSummary(i.Type.ToString(), i.Value)).ToList(),
 				What = ev.What.Select(i => new IndicatorSummary(i.Type.ToString(), i.Value)).ToList(),

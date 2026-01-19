@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Dtos;
 using IIM.Shared.Enums;
 using IIM.Shared.Models;
 using IIM.Shared.Models.Core;
@@ -118,18 +119,16 @@ namespace IIM.Shared.Interfaces
 		/// </summary>
 		Task<string?> GetDerivedContentAsync(string storedFileHash, string processorName, CancellationToken ct);
 
+		Task<DerivedArtifactResponse?> GetDerivedContentByHashAsync(string derivedHash,bool preview, CancellationToken ct);
+		
 
-		Task<IngestionStepState?> GetStepAsync(
-	string storedFileHash,
-	string stepId,
-	string stepVersion,
-	string inputHash,
-	string? parametersHash,
-	CancellationToken ct = default);
 
-		Task<IngestionStepState> UpsertStepAsync(
-			IngestionStepState state,
-			CancellationToken ct = default);
+		// ─────────────────────────────────────────────────────────────
+		// Ingestion Steps
+		// ─────────────────────────────────────────────────────────────
+		Task<IngestionStepState?> GetStepAsync(string storedFileHash,string stepId,string stepVersion,string inputHash,string? parametersHash, CancellationToken ct = default);
+
+		Task<IngestionStepState> UpsertStepAsync(IngestionStepState state,CancellationToken ct = default);
 
 		Task MarkStepRunningAsync(Guid stepStateId, CancellationToken ct = default);
 		Task MarkStepCompletedAsync(Guid stepStateId, string? outputHash, string? metadataJson, CancellationToken ct = default);

@@ -13,6 +13,7 @@ using IIM.Shared.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using GraphRagConfig = GraphRag.Config.GraphRagConfig;
+using IIM.Ingestion.Models;
 
 namespace IIM.Ingestion.Services;
 

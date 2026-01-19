@@ -234,7 +234,7 @@ public class IngestUrlHandler : IRequestHandler<IngestUrlCommand, IngestUrlResul
 		{
 			StoredFileHash = storedHash,
 			DerivedHash = markdownHash,
-			ProcessorName = "TextExtraction",
+			ProcessorName = "WebMarkdown",
 			ProcessorKind = "extraction",
 			ProcessorVersion = "web-canonical-v1",
 			ProcessedAt = DateTimeOffset.UtcNow,

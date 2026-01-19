@@ -28,20 +28,43 @@ public sealed class IocRegexExtractStep : IIngestionStep
 
 	public async Task<(string? OutputHash, string? MetadataJson)> ExecuteAsync(IngestionStepContext ctx, CancellationToken ct)
 	{
+		if (!ctx.TryGetExtractedText(out var text))
+		{
+			const string skip = "{\"skipped\":\"no_text\"}";
+			return ("no-text", skip);
+		}
+
+
 		var textHash = await StepIO.GetBestTextHashAsync(ctx, ct);
 		if (string.IsNullOrWhiteSpace(textHash))
 			return (null, "{\"skipped\":true,\"reason\":\"no_text_source\"}");
 
-		var text = await StepIO.ReadDerivedTextAsync(ctx.Files, textHash, ct);
+	
 		if (string.IsNullOrWhiteSpace(text))
 			return (null, "{\"skipped\":true,\"reason\":\"missing_text_blob\"}");
 
-		var shape = ctx.ShapeDetector.Detect(text);
+		// Optional: reuse shape if already computed
+		DocumentShapeResult shape;
+		if (ctx.Bag.TryGetValue("document_shape", out var s) && s is DocumentShapeResult cached)
+		{
+			shape = cached;
+		}
+		else
+		{
+			shape = ctx.ShapeDetector.Detect(text);
+			ctx.Bag["document_shape"] = shape;
+		}
+
 		var extraction = ctx.IndicatorExtractor.Extract(text, shape);
 
 		var json = JsonSerializer.Serialize(extraction);
 		var outHash = StepIO.HashUtf8(ctx.Hasher, json);
-		await StepIO.EnsureDerivedAsync(ctx.Files, outHash, Encoding.UTF8.GetBytes(json), ct);
+
+		await StepIO.EnsureDerivedAsync(
+			ctx.Files,
+			outHash,
+			Encoding.UTF8.GetBytes(json),
+			ct);
 
 		await ctx.Workspace.AddProcessedFileAsync(new ProcessedFile
 		{
@@ -61,6 +84,7 @@ public sealed class IocRegexExtractStep : IIngestionStep
 
 		return (outHash, "{\"status\":\"ok\"}");
 	}
+
 
 	public async Task<bool> VerifyAsync(IngestionStepContext ctx, string? outputHash, CancellationToken ct)
 	{

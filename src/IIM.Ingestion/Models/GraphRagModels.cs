@@ -6,7 +6,7 @@ using GraphRag.Data;
 using GraphRag.Entities;
 using GraphRag.Relationships;
 
-namespace IIM.Shared.Models
+namespace IIM.Ingestion.Models
 {
 	public record DocumentInput(string FileName, object Content);
 

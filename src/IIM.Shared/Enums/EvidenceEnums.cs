@@ -48,8 +48,9 @@ public enum FileUploadStatus
 
 public enum ProcessingStatus
 {
+    Skipped,
     Pending,
-    Processing,
+    Running,
     Completed,
     Failed
 }

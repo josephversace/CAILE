@@ -49,12 +49,14 @@ namespace IIM.Shared.Models
 
 	public sealed class IndicatorContext
 	{
-		public required string Sentence { get; set; }
-		public required string Block { get; set; }
-		public required string Surrounding { get; set; }
-		public required string SurroundingLower { get; set; } // Cached lowercase
-		public List<string> PrecedingWords { get; set; } = new();
-		public List<string> FollowingWords { get; set; } = new();
+		public int SentenceStart { get; set; }
+		public int SentenceLength { get; set; }
+
+		public int BlockStart { get; set; }
+		public int BlockLength { get; set; }
+
+		[System.Text.Json.Serialization.JsonIgnore]
+		public string SurroundingLower { get; set; } = string.Empty;
 	}
 
 

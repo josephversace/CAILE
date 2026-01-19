@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using static Google.Protobuf.Reflection.ExtensionRangeOptions.Types;
 
 namespace IIM.Shared.Models
 {

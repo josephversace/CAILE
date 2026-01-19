@@ -17,8 +17,9 @@ public sealed class AiImageDescribeStep : IIngestionStep
 	public bool RequiresBytes => true;
 	public ValueTask<(string InputHash, string? ParametersHash)> GetIdentityAsync(IngestionStepContext ctx, CancellationToken ct)
 	{
-		// Identity: file content + model choice/prompt version
-		return ValueTask.FromResult((ctx.StoredFile.Blake3Hash, "prompt:v1"));
+		// Fix: Explicitly cast or define the tuple to match the interface's nullability/naming
+		(string InputHash, string? ParametersHash) result = (ctx.StoredFile.Blake3Hash, "fast");
+		return ValueTask.FromResult(result);
 	}
 
 	public async Task<(string? OutputHash, string? MetadataJson)> ExecuteAsync(IngestionStepContext ctx, CancellationToken ct)

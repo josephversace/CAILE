@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using IIM.Shared.Dtos;
 using IIM.Shared.Enums;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
@@ -778,6 +779,63 @@ namespace IIM.Infrastructure.Data
 				return null;
 			}
 		}
+
+		private const int PreviewCharLimit = 20_000;
+
+
+		public async Task<DerivedArtifactResponse?> GetDerivedContentByHashAsync(string derivedHash,bool preview,CancellationToken ct)
+		{
+			// 1. Read raw bytes from SeaweedFS
+			var stored = await _fileStore.ReadAsync("derived", derivedHash, ct);
+			if (stored is null || stored.Length == 0)
+				return null;
+
+			// 2. Decode bytes → string
+			// NOTE: assume UTF-8 for derived artifacts (markdown/json/text)
+			var text = System.Text.Encoding.UTF8.GetString(stored);
+
+			// 3. Apply preview truncation
+			bool wasTruncated = false;
+			string content = text;
+
+			if (preview && text.Length > PreviewCharLimit)
+			{
+				content = text[..PreviewCharLimit];
+				wasTruncated = true;
+			}
+
+			// 4. Determine content type (simple, safe default)
+			var contentType = DetectContentType(content);
+
+			return new DerivedArtifactResponse
+			{
+				Success = true,
+				Content = content,
+				ContentType = contentType,
+				IsPreview = preview && wasTruncated,
+				TotalLength = text.Length,
+				SourceHash = derivedHash
+			};
+		}
+
+
+		private static string DetectContentType(string content)
+		{
+			if (string.IsNullOrWhiteSpace(content))
+				return "text/plain";
+
+			var trimmed = content.TrimStart();
+
+			if (trimmed.StartsWith("{") || trimmed.StartsWith("["))
+				return "application/json";
+
+			if (trimmed.StartsWith("#") || trimmed.Contains("\n"))
+				return "text/markdown";
+
+			return "text/plain";
+		}
+
+
 
 		public async Task<IngestionStepState?> GetStepAsync(
 			string storedFileHash,

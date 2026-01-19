@@ -66,9 +66,7 @@ namespace IIM.Infrastructure.Data
 				e.Property(p => p.StoredFileHash)
 					.IsRequired();
 
-				e.Property(p => p.DerivedHash)
-					.IsRequired();
-
+			
 				e.Property(p => p.ProcessorName)
 					.IsRequired();
 

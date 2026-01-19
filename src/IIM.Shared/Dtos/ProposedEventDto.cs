@@ -4,18 +4,19 @@ using System.Text;
 
 namespace IIM.Shared.Dtos
 {
-	public class ProposedEventDto
+	public record ProposedEventDto
 	{
-		public Guid Id { get; set; }
-		public string EventType { get; set; }
-		public string Timestamp { get; set; }
-		public string SharedContext { get; set; } // The context string for the anchor
+		public Guid Id { get; init; }
+		public string EventType { get; init; }
+		public string Timestamp { get; init; }
 
-		// Just the basics: Type and Value
-		public List<IndicatorSummary> Who { get; set; } = new();
-		public List<IndicatorSummary> What { get; set; } = new();
-		public List<IndicatorSummary> Where { get; set; } = new();
+		// Instead of string SharedContext, store where the context is
+		public int ContextStart { get; init; }
+		public int ContextLength { get; init; }
+
+		public List<IndicatorSummary> Who { get; init; }
+		public List<IndicatorSummary> What { get; init; }
+		public List<IndicatorSummary> Where { get; init; }
 	}
-
 	public record IndicatorSummary(string Type, string Value);
 }

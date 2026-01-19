@@ -93,7 +93,7 @@ public sealed class OllamaModelService : IModelService, IAsyncDisposable
                 Model = modelId,
                 Prompt = "hi",
                 Options = new RequestOptions { NumPredict = 1 },
-                KeepAlive = "1hr"  // Keep loaded indefinitely
+                KeepAlive = "1h"  // Keep loaded indefinitely
             }, ct).ToListAsync(ct);
 
             _loadedModels.Add(modelId);
@@ -111,7 +111,8 @@ public sealed class OllamaModelService : IModelService, IAsyncDisposable
     /// </summary>
     public async Task LoadModelForSlotAsync(string modelId, string slot, CancellationToken ct = default)
     {
-        EnsureReady();
+	
+		EnsureReady();
 
         // Determine which model to unload based on slot
         string? modelToUnload = slot.ToLowerInvariant() switch
@@ -150,7 +151,8 @@ public sealed class OllamaModelService : IModelService, IAsyncDisposable
 
     private async Task LoadModelCoreAsync(string modelId, CancellationToken ct)
     {
-        if (_loadedModels.Contains(modelId))
+
+		if (_loadedModels.Contains(modelId))
         {
             _log.LogInformation("Model {Model} already loaded", modelId);
             return;
@@ -178,7 +180,7 @@ public sealed class OllamaModelService : IModelService, IAsyncDisposable
                 Model = modelId,
                 Prompt = "hi",
                 Options = new RequestOptions { NumPredict = 1 },
-                KeepAlive = "1hr"
+                KeepAlive = "1h"
             }, ct).ToListAsync(ct);
 
             _loadedModels.Add(modelId);
@@ -437,10 +439,12 @@ public sealed class OllamaModelService : IModelService, IAsyncDisposable
     private static readonly HashSet<string> RecommendedPrimaryModels = new(StringComparer.OrdinalIgnoreCase)
 {
     "gemma3",           // Google
-    "llama3.2-vision",  // Meta
+    "llama3",  // Meta
     "llava",            // UW-Madison + Microsoft
     "llava-llama3",     // Community
-    "granite3.2-vision", // IBM
+    "nemotron", // Nvidia
+    "mistral-mixtral",
+    "phi"// Mistral
 };
 
     // Chinese model families to exclude

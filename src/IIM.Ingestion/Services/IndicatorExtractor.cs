@@ -326,23 +326,30 @@ public sealed partial class IndicatorExtractor
 		// Core network indicators
 		patterns.Add(new RegexPattern(IndicatorType.Cidr, Ipv4CidrRegex(), "IPv4", 0.9f));
 		patterns.Add(new RegexPattern(IndicatorType.Cidr, Ipv6CidrRegex(), "IPv6", 0.9f));
+		// Update your BuildPatternRegistry lines:
 		patterns.Add(new RegexPattern(IndicatorType.IpAddress, Ipv4Regex(), "IPv4", 0.8f,
 			filter: v => !IsLikelyDate(v),
-			confidenceAdjuster: (v, ctx, opts) => CalculateIpConfidence(v, ctx, opts)));
+			confidenceAdjuster: (v, ctx, opts, text, textLower) =>
+				CalculateIpConfidence(v, ctx, text, textLower, opts))); // Pass the late-bound text
+
 		patterns.Add(new RegexPattern(IndicatorType.IpAddress, Ipv6Regex(), "IPv6", 0.8f,
-			confidenceAdjuster: (v, ctx, opts) => CalculateIpConfidence(v, ctx, opts)));
+			confidenceAdjuster: (v, ctx, opts, text, textLower) =>
+				CalculateIpConfidence(v, ctx, text, textLower, opts)));
 		patterns.Add(new RegexPattern(IndicatorType.Asn, AsnRegex(), null, 0.85f));
 		patterns.Add(new RegexPattern(IndicatorType.MacAddress, MacAddressRegex(), null, 0.8f));
 
 		// URLs and domains
+		// URLs and domains
 		patterns.Add(new RegexPattern(IndicatorType.Url, UrlRegex(), null, 0.9f,
-			confidenceAdjuster: (v, ctx, _) => CalculateUrlConfidence(v, ctx)));
+			// Add the 5 parameters here, even if CalculateUrlConfidence only uses 2
+			confidenceAdjuster: (v, ctx, opts, txt, txtLow) => CalculateUrlConfidence(v, ctx)));
 
 		if (options.ExtractStandaloneDomains)
 		{
 			patterns.Add(new RegexPattern(IndicatorType.Domain, DomainRegex(), "Standalone", 0.6f,
 				filter: v => !options.FalsePositiveDomains.Contains(v),
-				confidenceAdjuster: (v, ctx, opts) => CalculateDomainConfidence(v, ctx)));
+				// Match the 5-parameter signature
+				confidenceAdjuster: (v, ctx, opts, txt, txtLow) => CalculateDomainConfidence(v, ctx)));
 		}
 
 		// Communication
@@ -352,27 +359,28 @@ public sealed partial class IndicatorExtractor
 		{
 			// High-confidence direct US phone numbers with country code
 			patterns.Add(new RegexPattern(IndicatorType.PhoneNumber, UsPhoneDirectRegex(), "US", 0.9f,
-				confidenceAdjuster: (v, ctx, opts) => CalculatePhoneConfidence(v, ctx, opts)));
+	// Add the extra txt and txtLow parameters to match the 5-arg delegate
+	confidenceAdjuster: (v, ctx, opts, txt, txtLow) => CalculatePhoneConfidence(v, ctx, opts)));
 
 			// Context-based phone extraction
 			patterns.Add(new RegexPattern(IndicatorType.PhoneNumber, PhoneRegex(), null, 0.5f,
-				confidenceAdjuster: (v, ctx, opts) => CalculatePhoneConfidence(v, ctx, opts)));
+				confidenceAdjuster: (v, ctx, opts, txt, txtLow) => CalculatePhoneConfidence(v, ctx, opts)));
 		}
 
 		// Cryptocurrency - Order matters: more specific patterns first
 
 		// Ethereum Transaction ID (0x + 64 hex) - check BEFORE ETH address
 		patterns.Add(new RegexPattern(IndicatorType.CryptoTransaction, EthereumTxIdRegex(), "Ethereum", 0.6f,
-			confidenceAdjuster: (v, ctx, opts) => CalculateEthTxConfidence(v, ctx)));
+			confidenceAdjuster: (v, ctx, opts, txt, txtLow) => CalculateEthTxConfidence(v, ctx)));
 
 		// Ethereum Address (0x + 40 hex)
 		patterns.Add(new RegexPattern(IndicatorType.CryptoAddress, EthereumAddressRegex(), "Ethereum", 0.5f,
 			filter: v => !IsLikelyNonCryptoHex(v),
-			confidenceAdjuster: (v, ctx, opts) => CalculateEthAddressConfidence(v, ctx)));
+			confidenceAdjuster: (v, ctx, opts, txt, txtLow) => CalculateEthAddressConfidence(v, ctx)));
 
 		// Bitcoin Address (bc1, 1, or 3 prefix)
 		patterns.Add(new RegexPattern(IndicatorType.CryptoAddress, BitcoinAddressRegex(), "Bitcoin", 0.6f,
-			confidenceAdjuster: (v, ctx, opts) => CalculateBtcAddressConfidence(v, ctx)));
+			confidenceAdjuster: (v, ctx, opts, txt, txtLow) => CalculateBtcAddressConfidence(v, ctx)));
 
 		// Monero Address
 		patterns.Add(new RegexPattern(IndicatorType.CryptoAddress, MoneroAddressRegex(), "Monero", 0.95f));
@@ -387,17 +395,17 @@ public sealed partial class IndicatorExtractor
 			filter: v => IsLikelyHash(v, options)));
 		patterns.Add(new RegexPattern(IndicatorType.FileHash, Sha256Regex(), "SHA256", 0.7f,
 			filter: v => IsLikelyHash(v, options),
-			confidenceAdjuster: (v, ctx, opts) => CalculateSha256Confidence(v, ctx, opts)));
+			confidenceAdjuster: (v, ctx, opts, txt, txtLow) => CalculateSha256Confidence(v, ctx, opts)));
 		patterns.Add(new RegexPattern(IndicatorType.FileHash, Sha1Regex(), "SHA1", 0.7f,
 			filter: v => IsLikelyHash(v, options) && !IsEthereumAddress(v),
-			confidenceAdjuster: (v, ctx, opts) => CalculateHashConfidence(v, ctx, "SHA1", opts)));
+			confidenceAdjuster: (v, ctx, opts, txt, txtLow) => CalculateHashConfidence(v, ctx, "SHA1", opts)));
 		patterns.Add(new RegexPattern(
 			IndicatorType.FileHash,
 			Md5Regex(),
 			"MD5",
 			0.7f,
 			filter: v => IsLikelyHash(v, options) && !IsLikelyGuid(v),
-			confidenceAdjuster: (v, ctx, opts) =>
+			confidenceAdjuster: (v, ctx, opts, txt, txtLow) =>
 			{
 				var score = CalculateHashConfidence(v, ctx, "MD5", opts);
 				if (ctx.SurroundingLower.Contains("md5"))
@@ -414,7 +422,7 @@ public sealed partial class IndicatorExtractor
 			FilenameRegex(),
 			null,
 			0.85f,
-			confidenceAdjuster: (v, ctx, opts) =>
+			confidenceAdjuster: (v, ctx, opts, txt, txtLow) =>
 			{
 				if (ctx.SurroundingLower.Contains("filename") || ctx.SurroundingLower.Contains("file:"))
 					return 0.95f;
@@ -424,7 +432,7 @@ public sealed partial class IndicatorExtractor
 		// Security identifiers
 		patterns.Add(new RegexPattern(IndicatorType.Cve, CveRegex(), null, 0.99f));
 		patterns.Add(new RegexPattern(IndicatorType.MitreAttack, MitreAttackRegex(), null, 0.5f,
-			confidenceAdjuster: (v, ctx, opts) => CalculateMitreConfidence(v, ctx, opts)));
+			confidenceAdjuster: (v, ctx, opts, txt, txtLow) => CalculateMitreConfidence(v, ctx, opts)));
 
 		// Cryptographic identifiers
 		patterns.Add(new CaptureGroupPattern(IndicatorType.PgpKeyId, PgpKeyIdRegex(), 1, null, 0.9f));
@@ -1120,50 +1128,76 @@ public sealed partial class IndicatorExtractor
 	// ═══════════════════════════════════════════════════════════════════════════
 	// CONFIDENCE CALCULATORS
 	// ═══════════════════════════════════════════════════════════════════════════
-
-	private static float CalculateIpConfidence(string value, IndicatorContext ctx, IndicatorExtractorOptions opts)
+	private static float CalculateIpConfidence(string value, IndicatorContext ctx, string originalText, string textLower, IndicatorExtractorOptions opts)
 	{
 		float confidence = 0.8f;
 
+		// 1. Reserved IP Check (Fast)
 		if (ReservedIpPrefixes.Any(p => value.StartsWith(p)))
 		{
 			return 0.1f;
 		}
 
+		// 2. Private IP Logic
 		bool isPrivate = opts.PrivateIpPrefixes.Any(p => value.StartsWith(p));
+
+		// FORENSIC FIX: We use the offsets to create a 'View' of the data 
+		// We don't save this string; it exists only for this calculation.
+		var surroundingSlice = textLower.AsSpan(ctx.BlockStart, ctx.BlockLength);
+
 		if (isPrivate)
 		{
-			confidence = ContainsAnyKeyword(ctx.SurroundingLower, opts.NetworkKeywords) ? 0.4f : 0.2f;
+			confidence = ContainsAnyKeyword(surroundingSlice, opts.NetworkKeywords) ? 0.4f : 0.2f;
 		}
 
-		if (ContainsAnyKeyword(ctx.PrecedingWords.Select(w => w.ToLower()).ToList(), SoftwareVersionKeywords))
+		// 3. Software Version Penalty
+		// Look at a small window before the match offset using Spans
+		var precedingWindow = textLower.AsSpan(Math.Max(0, ctx.BlockStart), Math.Max(0, ctx.SentenceStart - ctx.BlockStart));
+		if (ContainsAnyKeyword(precedingWindow, SoftwareVersionKeywords))
 		{
 			return 0.2f;
 		}
 
-		// Penalty if near "Date of Birth" or "DOB"
-		if (ctx.SurroundingLower.Contains("birth") || ctx.SurroundingLower.Contains("dob") ||
-			ctx.SurroundingLower.Contains("age"))
+		// 4. PII False Positive Penalty
+		if (surroundingSlice.Contains("birth", StringComparison.OrdinalIgnoreCase) ||
+			surroundingSlice.Contains("dob", StringComparison.OrdinalIgnoreCase) ||
+			surroundingSlice.Contains("age", StringComparison.OrdinalIgnoreCase))
 		{
 			return 0.1f;
 		}
 
-		if (ContainsAnyKeyword(ctx.SurroundingLower, opts.NetworkKeywords))
+		// 5. Confidence Boosting
+		if (ContainsAnyKeyword(surroundingSlice, opts.NetworkKeywords))
 		{
 			confidence = Math.Min(1.0f, confidence + 0.15f);
 		}
 
-		if (ContainsAnyKeyword(ctx.SurroundingLower, opts.ThreatKeywords))
+		if (ContainsAnyKeyword(surroundingSlice, opts.ThreatKeywords))
 		{
 			confidence = Math.Min(1.0f, confidence + 0.1f);
 		}
 
 		return confidence;
 	}
-
 	private static bool ContainsAnyKeyword(List<string> words, IEnumerable<string> keywords)
 	{
 		return words.Any(w => keywords.Contains(w, StringComparer.OrdinalIgnoreCase));
+	}
+
+	private static bool ContainsAnyKeyword(ReadOnlySpan<char> context, IEnumerable<string> keywords)
+	{
+		if (context.IsEmpty) return false;
+
+		foreach (var keyword in keywords)
+		{
+			// Memory-efficient check: does the span contain this keyword?
+			if (context.Contains(keyword.AsSpan(), StringComparison.OrdinalIgnoreCase))
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private static float CalculateUrlConfidence(string value, IndicatorContext ctx)
@@ -2144,22 +2178,30 @@ private int GetLineOffset(string text, int offset) => text.AsSpan(0, offset).Cou
 	private bool SharesContext(IndicatorOccurrence a, IndicatorOccurrence b, string text, DocumentShapeResult shape)
 	{
 		// 1. If it's a log, the only context that matters is the Line
+		// This remains efficient as it uses integer comparison.
 		if (shape.Shapes.HasFlag(DocumentShape.LogLike))
 		{
 			return GetLineNumber(text, a.Offset) == GetLineNumber(text, b.Offset);
 		}
 
 		// 2. Standard Narrative Context
-		bool physicalContext = a.Context.Sentence == b.Context.Sentence || a.Context.Block == b.Context.Block;
+		// FORENSIC FIX: We compare the geometric boundaries of the text (integers)
+		// instead of the actual string content. If two indicators start and end 
+		// at the same sentence coordinates, they share a sentence.
+		bool physicalContext =
+			(a.Context.SentenceStart == b.Context.SentenceStart && a.Context.SentenceLength == b.Context.SentenceLength) ||
+			(a.Context.BlockStart == b.Context.BlockStart && a.Context.BlockLength == b.Context.BlockLength);
 
 		// 3. Section Context (Never share context across section headers)
 		if (shape.Shapes.HasFlag(DocumentShape.Sectioned) && shape.Sections?.Count > 0)
 		{
+			// Find which logical sections the offsets fall into
 			var sectionA = shape.Sections.LastOrDefault(s => a.Offset >= s.StartOffset);
 			var sectionB = shape.Sections.LastOrDefault(s => b.Offset >= s.StartOffset);
 
-			// If they are in different sections, they definitely DON'T share context
-			if (sectionA?.Id != sectionB?.Id) return false;
+			// Comparison by ID is much faster and safer than comparing section titles/strings
+			if (sectionA?.Id != sectionB?.Id)
+				return false;
 		}
 
 		return physicalContext;
@@ -2250,17 +2292,16 @@ public sealed class TextBoundaries
 		var windowStart = Math.Max(0, index - 200);
 		var windowEnd = Math.Min(_text.Length, index + 200);
 
-		var surrounding = _text[windowStart..windowEnd].Trim();
-		var surroundingLower = _textLower[windowStart..windowEnd].Trim();
-
 		return new IndicatorContext
 		{
-			Sentence = _text[sentenceStart..sentenceEnd].Trim(),
-			Block = _text[lineStart..lineEnd].Trim(),
-			Surrounding = surrounding,
-			SurroundingLower = surroundingLower,
-			PrecedingWords = ExtractWords(_text, Math.Max(0, index - 100), index),
-			FollowingWords = ExtractWords(_text, index, Math.Min(_text.Length, index + 100))
+			SentenceStart = sentenceStart,
+			SentenceLength = sentenceEnd - sentenceStart,
+			BlockStart = lineStart,
+			BlockLength = lineEnd - lineStart,
+
+			// We only generate this for the "Confidence Adjuster" logic to read.
+			// It won't be saved to your 600MB output file.
+			SurroundingLower = _textLower[windowStart..windowEnd].ToString()
 		};
 	}
 
@@ -2303,10 +2344,19 @@ public interface IIndicatorPattern
 
 public sealed class RegexPattern : IIndicatorPattern
 {
+
+	public delegate float ConfidenceAdjuster(
+		string value,
+		IndicatorContext context,
+		IndicatorExtractorOptions options,
+		string sourceText,      
+		string sourceTextLower   
+	);
+
 	private readonly Regex _regex;
 	private readonly float _baseConfidence;
 	private readonly Func<string, bool>? _filter;
-	private readonly Func<string, IndicatorContext, IndicatorExtractorOptions, float>? _confidenceAdjuster;
+	private readonly ConfidenceAdjuster? _confidenceAdjuster;
 
 	public IndicatorType Type { get; }
 	public string? Subtype { get; }
@@ -2317,7 +2367,7 @@ public sealed class RegexPattern : IIndicatorPattern
 		string? subtype = null,
 		float baseConfidence = 0.7f,
 		Func<string, bool>? filter = null,
-		Func<string, IndicatorContext, IndicatorExtractorOptions, float>? confidenceAdjuster = null)
+		ConfidenceAdjuster? confidenceAdjuster = null)
 	{
 		Type = type;
 		_regex = regex;
@@ -2329,6 +2379,10 @@ public sealed class RegexPattern : IIndicatorPattern
 
 	public IEnumerable<IndicatorOccurrence> Extract(string text, string originalText, TextBoundaries boundaries, IndicatorExtractorOptions options)
 	{
+		// Pre-calculate the lowercase version once per pattern run to save CPU
+		// and avoid repeated allocations inside the loop.
+		string textLower = text.ToLowerInvariant();
+
 		foreach (Match m in _regex.Matches(text))
 		{
 			var value = m.Value;
@@ -2337,7 +2391,12 @@ public sealed class RegexPattern : IIndicatorPattern
 				continue;
 
 			var ctx = boundaries.BuildContext(m.Index);
-			var confidence = _confidenceAdjuster?.Invoke(value, ctx, options) ?? _baseConfidence;
+
+			// FORENSIC FIX: Pass 'text' and 'textLower' into the adjuster.
+			// This allows the adjuster to look at the context using Spans/Offsets
+			// without your IndicatorOccurrence object ever having to store the strings.
+			var confidence = _confidenceAdjuster?.Invoke(value, ctx, options, text, textLower)
+							 ?? _baseConfidence;
 
 			yield return new IndicatorOccurrence
 			{
@@ -2347,11 +2406,13 @@ public sealed class RegexPattern : IIndicatorPattern
 				Value = value,
 				Offset = m.Index,
 				Length = m.Length,
-				Context = ctx,
+				Context = ctx, // Context now only contains integer offsets
 				Confidence = confidence
 			};
 		}
 	}
+
+
 }
 
 /// <summary>

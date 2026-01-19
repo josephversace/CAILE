@@ -86,7 +86,7 @@ public sealed class IngestionRunnerService : IIngestionRunner
 
 		async Task<byte[]> LoadAsync(CancellationToken token)
 		{
-			var b = await _files.ReadAsync(stored.Bucket, stored.StoragePath, token).ConfigureAwait(false);
+			var b = await _files.ReadAsync(stored.Bucket, stored.Blake3Hash, token).ConfigureAwait(false);
 			bytesCache = b;
 			return b;
 		}
@@ -96,7 +96,6 @@ public sealed class IngestionRunnerService : IIngestionRunner
 			VirtualFile = vf,
 			StoredFile = stored,
 			Hasher = hasher,
-
 			Workspace = _workspace,
 			Files = _files,
 			Logger = _logger,
@@ -111,6 +110,8 @@ public sealed class IngestionRunnerService : IIngestionRunner
 			AgentFactory = _agentFactory,
 			ExcelDetector = _excelDetector,
 			ExcelCanonicalizer = _excelCanonicalizer,
+			CurrentStepId = "Initial", // Will be updated by the StepRunner during execution
+			Overrides = options.Overrides ?? new Dictionary<string, string>(),
 
 			StopCts = stopCts,
 

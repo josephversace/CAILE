@@ -16,6 +16,8 @@ public sealed class EmbedIndexQdrantStep : IIngestionStep
 
 	public bool RequiresBytes => true;
 
+	const int MaxChars = 4000;
+
 	public ValueTask<(string InputHash, string? ParametersHash)> GetIdentityAsync(IngestionStepContext ctx, CancellationToken ct)
 	{
 		// Identity: stored file + embedding vector size + pipeline params
@@ -26,6 +28,13 @@ public sealed class EmbedIndexQdrantStep : IIngestionStep
 
 	public async Task<(string? OutputHash, string? MetadataJson)> ExecuteAsync(IngestionStepContext ctx, CancellationToken ct)
 	{
+		if (!ctx.TryGetExtractedText(out var text))
+		{
+			const string skip = "{\"skipped\":\"no_text\"}";
+			return ("no-text", skip);
+		}
+
+
 		if (!ctx.Embedding.IsReady)
 			return (null, "{\"skipped\":true,\"reason\":\"embedding_not_ready\"}");
 
@@ -55,32 +64,51 @@ public sealed class EmbedIndexQdrantStep : IIngestionStep
 			return (null, "{\"skipped\":true,\"reason\":\"already_indexed\"}");
 		}
 
-		// Get chunking result from Bag (same-run) or recompute from best text hash.
 		ChunkingResult chunking;
 		DocumentShapeResult shape;
 
-		if (ctx.Bag.TryGetValue("chunking", out var cObj) && cObj is ChunkingResult cRes)
+		// ─────────────────────────────────────────────────────────────
+		// Fast path: same-run reuse
+		// ─────────────────────────────────────────────────────────────
+		if (ctx.Bag.TryGetValue("chunking", out var cObj) && cObj is ChunkingResult cachedChunking)
 		{
-			chunking = cRes;
-			shape = ctx.Bag.TryGetValue("shape", out var sObj) && sObj is DocumentShapeResult sRes
-				? sRes
-				: ctx.ShapeDetector.Detect(string.Empty);
+			chunking = cachedChunking;
+
+			if (!ctx.Bag.TryGetValue("document_shape", out var sObj) || sObj is not DocumentShapeResult cachedShape)
+				throw new InvalidOperationException("Chunking exists without document shape.");
+
+			shape = cachedShape;
 		}
 		else
 		{
-			var textHash = await StepIO.GetBestTextHashAsync(ctx, ct);
-			var text = await StepIO.ReadDerivedTextAsync(ctx.Files, textHash, ct) ?? "";
-			shape = ctx.ShapeDetector.Detect(text);
+			// ─────────────────────────────────────────────────────────
+			// Slow path: recompute from durable text
+			// ─────────────────────────────────────────────────────────
+
+
+			if (!ctx.Bag.TryGetValue("document_shape", out var sObj) || sObj is not DocumentShapeResult cachedShape)
+			{
+				shape = ctx.ShapeDetector.Detect(text);
+				ctx.Bag["document_shape"] = shape;
+			}
+			else
+			{
+				shape = cachedShape;
+			}
 
 			var options = ChunkingStrategyFactory.SelectOptionsForShape(shape) with
 			{
 				FileName = ctx.VirtualFile.FileName,
 				MimeType = ctx.StoredFile.MimeType,
-				Blake3Hash = storedHash
+				Blake3Hash = ctx.StoredFile.Blake3Hash
 			};
 
 			chunking = ctx.ChunkingFactory.Chunk(text, shape, options);
+
+			// same-run reuse
+			ctx.Bag["chunking"] = chunking;
 		}
+
 
 		if (chunking.Chunks.Count == 0)
 			return (null, "{\"skipped\":true,\"reason\":\"no_chunks\"}");
@@ -105,8 +133,8 @@ public sealed class EmbedIndexQdrantStep : IIngestionStep
 			{
 				Blake3Hash = storedHash,
 				ChunkIndex = chunk.Index,
-				Text = chunk.OverlapPrefix != null ? $"{chunk.OverlapPrefix} {chunk.Text}" : chunk.Text,
-				MaxTokens = 512,
+				Text = BuildSafeChunkText(chunk.OverlapPrefix, chunk.Text),
+				MaxTokens = 8192,
 				SemanticType = contentType.ToString().ToLowerInvariant(),
 				Metadata = metadata
 			};
@@ -150,6 +178,23 @@ public sealed class EmbedIndexQdrantStep : IIngestionStep
 		}, ct);
 
 		return (null, "{\"status\":\"ok\"}");
+	}
+
+
+
+
+	static string BuildSafeChunkText(string? prefix, string text)
+	{
+		if (string.IsNullOrWhiteSpace(prefix))
+			return Truncate(text, MaxChars);
+
+		// Cap overlap explicitly (e.g. 20%)
+		var maxPrefix = MaxChars / 5;
+		if (prefix.Length > maxPrefix)
+			prefix = prefix[^maxPrefix..];
+
+		var combined = $"{prefix} {text}";
+		return Truncate(combined, MaxChars);
 	}
 
 	public Task<bool> VerifyAsync(IngestionStepContext ctx, string? outputHash, CancellationToken ct)

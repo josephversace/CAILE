@@ -227,6 +227,8 @@ public static class ModelRegistryEndpoints
 		{
 			try
 			{
+				model = Uri.UnescapeDataString(model);
+
 				// 1. Load the model (unloads previous in that slot)
 				await modelSvc.LoadModelForSlotAsync(model, slot, ct);
 

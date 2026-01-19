@@ -6,10 +6,11 @@ using GraphRag.Community;
 using GraphRag.Data;
 using GraphRag.Entities;
 using GraphRag.Relationships;
+using IIM.Ingestion.Models;
 using IIM.Shared.Models;
 using GraphRagConfig = GraphRag.Config.GraphRagConfig;
 
-namespace IIM.Shared.Interfaces;
+namespace IIM.Ingestion.Services;
 
 public interface IGraphRagPipeline
 {

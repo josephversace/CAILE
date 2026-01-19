@@ -35,17 +35,16 @@ public sealed class AiTextAnalysisStep : IIngestionStep
 		if (StepIO.IsImage(ctx.StoredFile.MimeType))
 			return (null, "{\"skipped\":true,\"reason\":\"image\"}");
 
-		var textHash = await StepIO.GetBestTextHashAsync(ctx, ct);
-		if (string.IsNullOrWhiteSpace(textHash))
-			return (null, "{\"skipped\":true,\"reason\":\"no_text_source\"}");
-
-		var text = await StepIO.ReadDerivedTextAsync(ctx.Files, textHash, ct);
+		// Identity already guaranteed text exists; execution just consumes it
+		var text = await ctx.GetExtractedTextAsync(ct);
 		if (string.IsNullOrWhiteSpace(text))
-			return (null, "{\"skipped\":true,\"reason\":\"missing_text_blob\"}");
+			return (null, "{\"skipped\":true,\"reason\":\"missing_text\"}");
 
 		const int maxChars = 100_000;
 		var truncated = text.Length > maxChars;
-		var textForAnalysis = truncated ? text[..maxChars] + "\n\n[TRUNCATED]" : text;
+		var textForAnalysis =
+			truncated ? text[..maxChars] + "\n\n[TRUNCATED]" : text;
+
 
 		const string promptPreamble = @"
 You are a forensic analyst examining a document. Analyze this document thoroughly and provide your findings in the following structure:
@@ -97,7 +96,10 @@ Analyze the following document:
 		var modelName = ctx.AgentFactory.CurrentChatModel;
 
 		var response = await chatClient.GetResponseAsync(
-			new List<ChatMessage> { new(ChatRole.User, promptPreamble + textForAnalysis) },
+			new List<ChatMessage>
+			{
+			new(ChatRole.User, promptPreamble + textForAnalysis)
+			},
 			cancellationToken: ct);
 
 		if (string.IsNullOrWhiteSpace(response?.Text))
@@ -105,7 +107,15 @@ Analyze the following document:
 
 		var analysisText = response.Text!;
 		var outHash = StepIO.HashUtf8(ctx.Hasher, analysisText);
-		await StepIO.EnsureDerivedAsync(ctx.Files, outHash, Encoding.UTF8.GetBytes(analysisText), ct);
+
+		await StepIO.EnsureDerivedAsync(
+			ctx.Files,
+			outHash,
+			Encoding.UTF8.GetBytes(analysisText),
+			ct);
+
+		// 🔑 identity text hash (for traceability)
+		var (textHash, _) = await GetIdentityAsync(ctx, ct);
 
 		await ctx.Workspace.AddProcessedFileAsync(new ProcessedFile
 		{
@@ -126,6 +136,7 @@ Analyze the following document:
 
 		return (outHash, "{\"status\":\"ok\"}");
 	}
+
 
 	public async Task<bool> VerifyAsync(IngestionStepContext ctx, string? outputHash, CancellationToken ct)
 	{

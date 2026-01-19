@@ -26,6 +26,8 @@ namespace IIM.Ingestion.Services
 		public bool ContinueOnError { get; init; } = true;
 
 		public static IngestionRunOptions Default => new();
+
+		public Dictionary<string, string> Overrides { get; init; } = new(); 
 	}
 
 	public interface IIngestionStep
@@ -70,8 +72,51 @@ namespace IIM.Ingestion.Services
 
 		public required Func<CancellationToken, Task<byte[]>> ReadBytesAsync { get; init; }
 
+		public required string CurrentStepId { get; set; }
+		public required Dictionary<string, string> Overrides { get; init; }
+
+
+		public string? GetConfig(string key)
+		{
+			// Try step-specific first: "AiTextAnalysis.Model"
+			// Then global: "Model"
+			return Overrides.GetValueOrDefault($"{CurrentStepId}.{key}")
+				   ?? Overrides.GetValueOrDefault(key);
+		}
+
 		public async ValueTask<byte[]> GetBytesAsync(CancellationToken ct)
 			=> _bytes ??= await ReadBytesAsync(ct);
+
+		public async Task<string> GetExtractedTextAsync(CancellationToken ct)
+		{
+			if (Bag.TryGetValue("extracted_text", out var obj) && obj is string cached)
+				return cached;
+
+			if (!Bag.TryGetValue("text.hash", out var h) || h is not string textHash)
+				throw new InvalidOperationException("Text hash not available.");
+
+			var bytes = await Files.ReadAsync("derived", textHash, ct);
+			var text = Encoding.UTF8.GetString(bytes);
+
+			Bag["extracted_text"] = text;
+			return text;
+		}
+
+		public bool TryGetExtractedText(out string? text)
+		{
+			text = null;
+
+			if (!Bag.TryGetValue("text.hash", out var h) || h is not string hash)
+				return false;
+
+			text = GetExtractedTextAsync(CancellationToken.None)
+				.ConfigureAwait(false)
+				.GetAwaiter()
+				.GetResult();
+
+			return !string.IsNullOrWhiteSpace(text);
+		}
+
 
 		// in-run scratch (not persisted)
 		public Dictionary<string, object> Bag { get; } = new();

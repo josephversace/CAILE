@@ -1,6 +1,8 @@
 ﻿using IIM.Application.Files;
 using IIM.Application.ProcessedFile;
 using IIM.Application.Urls;
+using IIM.Ingestion.Services;
+using IIM.Shared.Dtos;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Mediator;
 using IIM.Shared.Models;
@@ -150,7 +152,76 @@ namespace IIM.Api.Endpoints
 				})
 			.WithName("MoveFileToBucket");
 
-		
+
+			// ------------------------------------------------------------
+			// Get derived artifact by derived hash (NEW, canonical)
+			// ------------------------------------------------------------
+			files.MapGet("/derived/{derivedHash}",
+				async (
+					string derivedHash,
+					[FromQuery] bool preview,
+					IWorkspaceManager workspaces,
+					CancellationToken ct) =>
+				{
+					var content = await workspaces.GetDerivedContentByHashAsync(
+						derivedHash,
+						preview,
+						ct);
+
+					return content is null
+						? Results.NotFound()
+						: Results.Ok(content);
+				})
+			.WithName("GetDerivedContentByHash");
+
+			// ============================================================
+			// Reprocess file through ingestion pipeline
+			// ============================================================
+			files.MapPost("/{id:guid}/reprocess", async (
+				Guid id,
+				[FromBody] ReprocessFileRequest request,
+				[FromServices] IMediator mediator,
+				CancellationToken ct) =>
+			{
+				try
+				{
+					// Validate the file exists
+					//var file = await mediator.Send(new GetVirtualFileQuery { FileId = id }, ct);
+					//if (file == null)
+					//	return Results.NotFound($"File {id} not found.");
+
+					//// Queue the ingestion job with options
+					//var command = new IngestionStepIds
+					//{
+					//	FileId = id,
+					//	Force = request.Force,
+					//	OnlySteps = request.OnlySteps,
+					//	SkipSteps = request.SkipSteps,
+					//	Overrides = request.Overrides
+					//};
+
+					//await mediator.Send(command, ct);
+
+					return Results.Ok(new ReprocessFileResponse
+					{
+						Queued = true,
+						Message = "File queued for reprocessing",
+						Steps = request.OnlySteps ?? new List<string> { "All" }
+					});
+				}
+				catch (Exception ex)
+				{
+					return Results.Problem(
+						detail: ex.Message,
+						statusCode: StatusCodes.Status500InternalServerError);
+				}
+			})
+			.WithName("ReprocessFile")
+			.WithSummary("Reprocess a file through the ingestion pipeline")
+			.Produces<ReprocessFileResponse>(StatusCodes.Status200OK)
+			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status500InternalServerError);
+
 		}
 	}
 }

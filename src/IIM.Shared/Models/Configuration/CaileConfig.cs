@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using GraphRag.Config;
 using IIM.Shared.Models.Configuration;
 
 namespace IIM.Shared.Models

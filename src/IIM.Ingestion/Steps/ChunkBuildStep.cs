@@ -30,15 +30,26 @@ public sealed class ChunkBuildStep : IIngestionStep
 
 	public async Task<(string? OutputHash, string? MetadataJson)> ExecuteAsync(IngestionStepContext ctx, CancellationToken ct)
 	{
+		if (!ctx.TryGetExtractedText(out var text))
+		{
+			const string skip = "{\"skipped\":\"no_text\"}";
+			return ("no-text", skip);
+		}
+
 		var textHash = await StepIO.GetBestTextHashAsync(ctx, ct);
 		if (string.IsNullOrWhiteSpace(textHash))
 			return (null, "{\"skipped\":true,\"reason\":\"no_text_source\"}");
 
-		var text = await StepIO.ReadDerivedTextAsync(ctx.Files, textHash, ct);
+
 		if (string.IsNullOrWhiteSpace(text))
 			return (null, "{\"skipped\":true,\"reason\":\"missing_text_blob\"}");
 
-		var shape = ctx.ShapeDetector.Detect(text);
+		if (!ctx.Bag.TryGetValue("document_shape", out var obj) || obj is not DocumentShapeResult shape)
+		{
+			shape = ctx.ShapeDetector.Detect(text);
+			ctx.Bag["document_shape"] = shape;
+		}
+
 
 		var options = ChunkingStrategyFactory.SelectOptionsForShape(shape) with
 		{

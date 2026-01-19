@@ -6,7 +6,7 @@ using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 
-namespace IIM.Ingestion.Services.Steps;
+namespace IIM.Ingestion.Services;
 
 public sealed class CoreDedupCheckStep : IIngestionStep
 {

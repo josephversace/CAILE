@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 
-namespace IIM.Ingestion.Services.Steps;
+namespace IIM.Ingestion.Services;
 
 public sealed class DocExtractTextStep : IIngestionStep
 {
@@ -54,7 +54,10 @@ public sealed class DocExtractTextStep : IIngestionStep
 		}
 
 		extractedText = StepIO.NormalizeExtractedText(extractedText);
+		
 		extractedText = StepIO.NormalizeLineBreaks(extractedText);
+
+		ctx.Bag["extracted_text"] = extractedText;
 
 		var textHash = StepIO.HashUtf8(ctx.Hasher, extractedText);
 

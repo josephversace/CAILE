@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using IIM.Shared.Enums;
-using IIM.Shared.Models;
 
 namespace IIM.Shared.Models;
 
 public enum ArtifactType
 {
+	// Existing types (preserve order for compatibility)
 	Note,
 	Code,
 	Plan,
@@ -20,8 +20,26 @@ public enum ArtifactType
 	IndicatorCollection,
 	EntityGroup,
 	ImageDescription,
-	TextAnalysis
+	TextAnalysis,
 
+	// New types for pipeline artifacts
+	StructureData,      // doc.shape.detect output
+	ChunkData,          // chunk.build output
+	IndexData,          // embed.index.qdrant status
+
+	// Web capture types
+	Screenshot,         // web.capture.screenshot (download only)
+	Thumbnail,          // web.capture.thumbnail (displayable)
+	WebContent,         // web.extract.markdown
+}
+
+public enum FileStatus
+{
+	Pending,
+	Processing,
+	Ready,
+	Failed,
+	Quarantined
 }
 
 public enum FileClass
@@ -31,12 +49,13 @@ public enum FileClass
 	Intelligence,
 	Reference,
 	Reports,
-	Derived
+	Derived,
+	WebCapture
 }
 
 /// <summary>
 /// Unified artifact model for Canvas display.
-/// Can represent WorkspaceArtifacts or VirtualFiles.
+/// Can represent WorkspaceArtifacts, VirtualFiles, or IngestionStepState outputs.
 /// </summary>
 public sealed class CanvasArtifact
 {
@@ -45,6 +64,9 @@ public sealed class CanvasArtifact
 	public FileClass Classification { get; set; } = FileClass.All;
 	public string Title { get; set; } = "";
 	public string? Content { get; set; }
+	public string? ContentHash { get; set; }
+	public bool IsContentLazy { get; set; }
+
 	public string? FileName { get; set; }
 	public string? ContentType { get; set; }
 	public long? SizeBytes { get; set; }
@@ -81,22 +103,67 @@ public sealed class CanvasArtifact
 	/// </summary>
 	public bool IsSelected { get; set; }
 
+	// ─────────────────────────────────────────────────────────────
+	// New properties for pipeline/ingestion step artifacts
+	// ─────────────────────────────────────────────────────────────
+
+	/// <summary>
+	/// Canonical step identifier (e.g. "doc.extract.text", "ioc.regex.extract").
+	/// </summary>
+	public string? StepId { get; set; }
+
+	/// <summary>
+	/// Human-readable display name for the step.
+	/// </summary>
+	public string? StepDisplayName { get; set; }
+
+	/// <summary>
+	/// Parsed metadata from MetadataJson (for display).
+	/// </summary>
+	public Dictionary<string, object>? Metadata { get; set; }
+
+	/// <summary>
+	/// Error message (truncated) for failed steps.
+	/// </summary>
+	public string? ErrorMessage { get; set; }
+
+	/// <summary>
+	/// When the step completed (for duration calculation).
+	/// </summary>
+	public DateTime? CompletedUtc { get; set; }
+
+	/// <summary>
+	/// Processing duration.
+	/// </summary>
+	public TimeSpan? Duration { get; set; }
+
+	// ─────────────────────────────────────────────────────────────
+
 	/// <summary>
 	/// True if file is ready to be added to context.
 	/// </summary>
 	public bool CanAddToContext =>
-	Type switch
-	{
-		ArtifactType.File =>
-			Status == FileUploadStatus.Completed &&
-			!string.IsNullOrEmpty(Blake3Hash),
+		Type switch
+		{
+			ArtifactType.File =>
+				Status == FileUploadStatus.Completed &&
+				!string.IsNullOrEmpty(Blake3Hash),
 
-		ArtifactType.Entity =>
-			!string.IsNullOrWhiteSpace(Id),
+			ArtifactType.Entity =>
+				!string.IsNullOrWhiteSpace(Id),
 
-		_ => !string.IsNullOrWhiteSpace(Content)
-	};
+			_ => !string.IsNullOrWhiteSpace(Content)
+		};
 
+	/// <summary>
+	/// True if this artifact has loadable content via ContentHash.
+	/// </summary>
+	public bool HasContent => !string.IsNullOrEmpty(ContentHash);
+
+	/// <summary>
+	/// True if this is a download-only artifact (like large screenshots).
+	/// </summary>
+	public bool IsDownloadOnly => StepId == "web.capture.screenshot";
 
 	/// <summary>
 	/// Convert to context chip for chat.
