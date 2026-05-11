@@ -1,72 +1,161 @@
-﻿// IIM.Shared/Models/ModelsConfig.cs
+﻿using System;
+using System.Collections.Generic;
+
 namespace IIM.Shared.Models
 {
-	public class ModelsConfig
+	// ===========================================================
+	// ROOT
+	// ===========================================================
+
+	public sealed class ModelsConfig
 	{
+		/// <summary>
+		/// Global provider defaults (used unless overridden per model)
+		/// </summary>
 		public ProviderConfig Provider { get; set; } = new();
+
+		/// <summary>
+		/// All system-owned models (embeddings, vision, tools, NER, etc.)
+		/// </summary>
 		public InfrastructureModelsConfig Infrastructure { get; set; } = new();
+
+		/// <summary>
+		/// Which models are preferred for chat / reasoning
+		/// </summary>
 		public ActiveModelsConfig Active { get; set; } = new();
-		public ToolModelsConfig Tools { get; set; } = new();
+
+		/// <summary>
+		/// Default inference values (used when a model does not specify)
+		/// </summary>
 		public InferenceDefaults Defaults { get; set; } = new();
 	}
 
-	public class ProviderConfig
+	// ===========================================================
+	// PROVIDERS
+	// ===========================================================
+
+	public sealed class ProviderConfig
 	{
+		/// <summary>
+		/// Ollama | ONNX | vLLM | Foundry | OpenAI | AzureOpenAI
+		/// </summary>
 		public string Type { get; set; } = "Ollama";
-		public string Endpoint { get; set; } = "http://localhost:11434";
+
+		public string? Endpoint { get; set; } = "http://localhost:11434";
 		public string? ApiKey { get; set; }
 	}
 
+	// ===========================================================
+	// INFRASTRUCTURE MODELS (UNIFIED)
+	// ===========================================================
 
-	public class InfrastructureModelsConfig
+	public sealed class InfrastructureModelsConfig
 	{
-		public EmbeddingModelConfig Embedding { get; set; } = new();
-		public LocalModelConfig? NER { get; set; }
-		public LocalModelConfig? Audio { get; set; }
-		public ModelConfig? Vision { get; set; }
-		public LocalModelConfig? Intent { get; set; }  
+		/// <summary>
+		/// Keyed model registry (authoritative)
+		/// Example keys: embedding.default, vision.default, tool.default
+		/// </summary>
+		public Dictionary<string, InfrastructureModelConfig> Models { get; set; }
+			= new(StringComparer.OrdinalIgnoreCase);
 	}
 
-	public class ActiveModelsConfig
+	public class ModelConfig
+	{
+		public ProviderConfig? ProviderOverride { get; set; }
+		public string ModelId { get; set; } = "";
+	
+	}
+
+
+	public sealed class InfrastructureModelConfig
+	{
+		/// <summary>
+		/// Stable identifier (must match dictionary key)
+		/// </summary>
+		public string Key { get; set; } = "";
+
+		/// <summary>
+		/// Provider-specific model identifier
+		/// </summary>
+		public string ModelId { get; set; } = "";
+
+		/// <summary>
+		/// Optional provider override for this model
+		/// </summary>
+		public ProviderConfig? ProviderOverride { get; set; }
+
+		/// <summary>
+		/// Backend hint for local models (ONNX, CUDA, ROCm, CPU)
+		/// </summary>
+		public string? Backend { get; set; }
+
+		/// <summary>
+		/// Local filesystem path (ONNX / GGUF / Whisper)
+		/// </summary>
+		public string? LocalPath { get; set; }
+
+		/// <summary>
+		/// Embedding-specific metadata (optional)
+		/// </summary>
+		public int? Dimensions { get; set; }
+		public int? MaxInputTokens { get; set; }
+
+		/// <summary>
+		/// Supported capabilities
+		/// </summary>
+		public List<ModelCapabilities> Capabilities { get; set; } = new();
+
+		/// <summary>
+		/// Optional inference overrides (falls back to Models.Defaults)
+		/// </summary>
+		public InferenceDefaults? Defaults { get; set; }
+	}
+
+	// ===========================================================
+	// ACTIVE MODELS (ROLE SELECTION)
+	// ===========================================================
+
+	public sealed class ActiveModelsConfig
 	{
 		public ActiveModelConfig Primary { get; set; } = new();
 		public ActiveModelConfig? Secondary { get; set; }
 	}
 
-	public class ToolModelsConfig
+	public sealed class ActiveModelConfig : ModelConfig
 	{
-		public ModelConfig? FunctionCalling { get; set; }
-		public ModelConfig? Intent { get; set; }
+		// Literal prompt override (highest priority)
+		public string? ExplicitPrompt { get; set; }
+
+		// Key into prompt store (DB override)
+		public string? PromptOverrideKey { get; set; }
+
+		// REQUIRED fallback key (defaults)
+		public string DefaultPromptKey { get; set; } = "chat.default";
+
+		public List<ModelCapabilities> Capabilities { get; set; } = new();
+
+		public InferenceDefaults? Defaults { get; set; }
 	}
 
-	public class ModelConfig
+	// ===========================================================
+	// SHARED TYPES
+	// ===========================================================
+
+	public enum ModelCapabilities
 	{
-		public string ModelId { get; set; } = "";
-		public double? Temperature { get; set; }
-		public int? MaxTokens { get; set; }
-		public double? TopP { get; set; }
+		None,
+		Text,
+		MultiModal,
+		Vision,
+		Audio,
+		Tools,
+		StructuredOutput,
+		Embeddings,
+		NER,
+		Intent
 	}
 
-	public class ActiveModelConfig : ModelConfig
-	{
-		public string? SystemPrompt { get; set; }
-		public bool SupportsVision { get; set; } = false;
-	}
-
-	public class EmbeddingModelConfig
-	{
-		public string ModelId { get; set; } = "";
-		public int Dimensions { get; set; } = 768;
-		public int MaxInputTokens { get; set; } = 8192;
-	}
-
-	public class LocalModelConfig
-	{
-		public string Backend { get; set; } = "ONNX";
-		public string LocalPath { get; set; } = "";
-	}
-
-	public class InferenceDefaults
+	public sealed class InferenceDefaults
 	{
 		public double Temperature { get; set; } = 0.7;
 		public int MaxTokens { get; set; } = 2048;

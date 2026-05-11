@@ -2,15 +2,28 @@
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
+using IIM.Shared.Models.Configuration;
 using Microsoft.Extensions.AI;
 
 namespace IIM.Ingestion.Services;
 
 public sealed class AiTextAnalysisStep : IIngestionStep
 {
+	public PromptResolver PromptResolver { get; init; }
+	public IPromptSnapshotProvider PromptSnapshotProvider { get; init; }
+
+	public AiTextAnalysisStep(PromptResolver promptResolver, IPromptSnapshotProvider promptSnapshot)
+	{
+		PromptResolver = promptResolver;
+		PromptSnapshotProvider = promptSnapshot;
+
+	}
 	public string Id => IngestionStepIds.AiTextAnalysis;
 	public string Version => "1.0";
+
+	private const string TextPromptKey = "analysis.text.default";
 	public IReadOnlyList<string> DependsOn => new[]
 	{
 		IngestionStepIds.DocExtractText,
@@ -45,51 +58,14 @@ public sealed class AiTextAnalysisStep : IIngestionStep
 		var textForAnalysis =
 			truncated ? text[..maxChars] + "\n\n[TRUNCATED]" : text;
 
+		var snapshot = await PromptSnapshotProvider.GetSnapshotAsync(ct: ct);
 
-		const string promptPreamble = @"
-You are a forensic analyst examining a document. Analyze this document thoroughly and provide your findings in the following structure:
-
-## 1. Document Classification
-- **Type**: (e.g., Police Report, Financial Record, Email Thread, Chat Log, Legal Document, Intelligence Report, ESP/CyberTipline Report, etc.)
-- **Source**: Identify the originating organization/system if apparent
-- **Date Range**: Any dates mentioned or time period covered
-- **Classification/Sensitivity**: Note any markings or implied sensitivity level
-
-## 2. Executive Summary
-Provide a 2-3 sentence overview of what this document contains and its significance.
-
-## 3. Key Entities Identified
-Extract and categorize:
-- **People**: Names, roles, relationships, identifying information
-- **Organizations**: Companies, agencies, platforms mentioned
-- **Locations**: Addresses, cities, countries, IP geolocations
-- **Accounts/Identifiers**: Usernames, email addresses, phone numbers, IPs, device IDs
-- **Financial**: Account numbers, transactions, amounts, cryptocurrency addresses
-
-## 4. Timeline of Events
-List key events in chronological order with dates/times if available.
-
-## 5. Critical Findings
-What are the 3-5 most important facts or findings an investigator should know immediately?
-
-## 6. Red Flags & Anomalies
-Note any inconsistencies, suspicious patterns, or items requiring follow-up.
-
-## 7. Investigative Leads
-Suggest 3-5 specific next steps or pivot points for further investigation.
-
-## 8. Related Indicators (IoCs)
-List any technical indicators that should be searched/correlated:
-- IP addresses
-- Domains/URLs
-- Email addresses
-- Hashes
-- Usernames across platforms
-
-Analyze the following document:
-
----
-";
+		var resolvedPrompt = PromptResolver.Resolve(
+			snapshot: snapshot,
+			explicitPrompt: null,
+			overrideKey: null,
+			defaultKey: TextPromptKey
+		);
 
 
 		var chatClient = await ctx.AgentFactory.GetChatClientAsync();
@@ -98,7 +74,8 @@ Analyze the following document:
 		var response = await chatClient.GetResponseAsync(
 			new List<ChatMessage>
 			{
-			new(ChatRole.User, promptPreamble + textForAnalysis)
+			new(ChatRole.System, resolvedPrompt.Content),
+						new(ChatRole.User, textForAnalysis)
 			},
 			cancellationToken: ct);
 

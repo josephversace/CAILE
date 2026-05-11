@@ -1,4 +1,3 @@
-// IIM.Infrastructure/Models/ModelConfigurationService.cs
 using System.Text.Json;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
@@ -6,18 +5,18 @@ using Microsoft.Extensions.Logging;
 
 namespace IIM.Infrastructure.Models;
 
-public class ModelConfigurationService : IModelConfigurationService
+public sealed class ModelConfigurationService : IModelConfigurationService
 {
+	private const string ModelsKey = "Models";
+
 	private readonly ILogger<ModelConfigurationService> _logger;
 	private readonly IConfigRepository _settings;
-	private readonly CaileConfig _cfg;
-
-	private const string ActiveModelsKey = "Models.ActiveOverride";
+	private readonly ModelsConfig _defaults;
 
 	private readonly JsonSerializerOptions _jsonOptions = new()
 	{
 		WriteIndented = true,
-		PropertyNameCaseInsensitive = true,
+		PropertyNameCaseInsensitive = true
 	};
 
 	public ModelConfigurationService(
@@ -27,49 +26,124 @@ public class ModelConfigurationService : IModelConfigurationService
 	{
 		_logger = logger;
 		_settings = settingsStore;
-		_cfg = cfg;
+		_defaults = cfg.Models;
 	}
 
-	public async Task<ModelsConfig> GetConfigurationAsync(CancellationToken ct = default)
-	{
-		// Start with base config from appsettings
-		var config = Clone(_cfg.Models);
+	// ===========================================================
+	// READ
+	// ===========================================================
 
-		// Check for DB override of Active models
-		var activeOverride = await _settings.GetJsonAsync<ActiveModelsConfig>(ActiveModelsKey, ct);
-		if (activeOverride != null)
+	public async Task<ModelsConfig> GetConfigurationAsync(
+		CancellationToken ct = default)
+	{
+		// 1. Settings are authoritative after first write
+		var stored = await _settings.GetJsonAsync<ModelsConfig>(ModelsKey, ct);
+		if (stored != null)
+			return stored;
+
+		// 2. First-run bootstrap (materialize defaults)
+		var materialized = Clone(_defaults);
+
+		await _settings.SetJsonAsync(
+			ModelsKey,
+			materialized,
+			category: "Models",
+			ct);
+
+		_logger.LogInformation(
+			"Models configuration initialized from defaults.");
+
+		return materialized;
+	}
+
+
+
+	// ===========================================================
+	// WRITE (FULL MATERIALIZED CONFIG)
+	// ===========================================================
+
+	public async Task SaveConfigurationAsync(
+		ModelsConfig config,
+		CancellationToken ct = default)
+	{
+		if (config == null)
+			throw new ArgumentNullException(nameof(config));
+
+		Validate(config);
+
+		await _settings.SetJsonAsync(
+			ModelsKey,
+			config,
+			category: "Models",
+			ct);
+
+		_logger.LogInformation("Models configuration saved.");
+	}
+
+
+	// ===========================================================
+	// RESET
+	// ===========================================================
+
+	public async Task ResetToDefaultsAsync(
+		CancellationToken ct = default)
+	{
+		var materialized = Clone(_defaults);
+
+		await _settings.SetJsonAsync(
+			ModelsKey,
+			materialized,
+			category: "Models",
+			ct);
+
+		_logger.LogInformation(
+			"Models configuration reset to defaults.");
+	}
+
+
+	// ===========================================================
+	// VALIDATION (FAIL FAST)
+	// ===========================================================
+
+	private static void Validate(ModelsConfig cfg)
+	{
+		if (cfg.Infrastructure.Models.Count == 0)
+			throw new InvalidOperationException(
+				"No infrastructure models configured.");
+
+		foreach (var (key, model) in cfg.Infrastructure.Models)
 		{
-			_logger.LogDebug("Applying active models override from database");
-			config.Active = activeOverride;
+			if (string.IsNullOrWhiteSpace(model.Key))
+				throw new InvalidOperationException(
+					$"Infrastructure model '{key}' is missing Key.");
+
+			if (!string.Equals(key, model.Key, StringComparison.OrdinalIgnoreCase))
+				throw new InvalidOperationException(
+					$"Infrastructure model key mismatch: '{key}' != '{model.Key}'");
+
+			if (string.IsNullOrWhiteSpace(model.ModelId) &&
+				string.IsNullOrWhiteSpace(model.LocalPath))
+				throw new InvalidOperationException(
+					$"Infrastructure model '{key}' has neither ModelId nor LocalPath.");
 		}
 
-		return config;
+		if (string.IsNullOrWhiteSpace(cfg.Active.Primary.ModelId))
+			throw new InvalidOperationException(
+				"Active.Primary.ModelKey is required.");
+
+		if (!cfg.Infrastructure.Models.ContainsKey(cfg.Active.Primary.ModelId))
+			throw new InvalidOperationException(
+				$"Active.Primary.ModelKey '{cfg.Active.Primary.ModelId}' does not exist.");
 	}
 
-	public async Task SaveActiveModelsAsync(ActiveModelsConfig active, CancellationToken ct = default)
-	{
-		if (active == null)
-			throw new ArgumentNullException(nameof(active));
-
-		if (string.IsNullOrWhiteSpace(active.Primary?.ModelId))
-			throw new ArgumentException("Primary model is required.");
-
-		await _settings.SetJsonAsync(ActiveModelsKey, active, "Models", ct);
-		_logger.LogInformation("Active models saved: Primary={Primary}, Secondary={Secondary}",
-			active.Primary.ModelId,
-			active.Secondary?.ModelId ?? "none");
-	}
-
-	public async Task ResetActiveModelsAsync(CancellationToken ct = default)
-	{
-		await _settings.DeleteAsync(ActiveModelsKey, ct);
-		_logger.LogInformation("Active models reset to defaults from appsettings");
-	}
+	// ===========================================================
+	// UTIL
+	// ===========================================================
 
 	private T Clone<T>(T src) where T : class
 	{
 		var json = JsonSerializer.Serialize(src, _jsonOptions);
 		return JsonSerializer.Deserialize<T>(json, _jsonOptions)
-			   ?? throw new InvalidOperationException("Clone failed.");
+			?? throw new InvalidOperationException("Clone failed.");
 	}
 }

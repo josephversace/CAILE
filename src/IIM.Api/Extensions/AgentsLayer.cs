@@ -1,10 +1,12 @@
 ﻿using IIM.Api.Services;
 using IIM.Application.Urls;
 using IIM.Infrastructure.AI.Intent;
+using IIM.Infrastructure.Data;
 using IIM.Infrastructure.Embeddings;
 using IIM.Infrastructure.Services;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
+using IIM.Shared.Models.Configuration;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -28,7 +30,7 @@ namespace IIM.Api.Extensions
 			{
 				var config = sp.GetRequiredService<IOptions<CaileConfig>>().Value;
 
-				var embeddingConfig = config.Models.Infrastructure.Embedding;
+				var embeddingConfig = config.Models.Infrastructure.Models["embedding"];
 				var providerConfig = config.Models.Provider;
 
 				return new OllamaEmbeddingGenerator(embeddingConfig, providerConfig);
@@ -78,17 +80,26 @@ namespace IIM.Api.Extensions
 				var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
 
 				using var scope = scopeFactory.CreateScope();
-				var configService = scope.ServiceProvider.GetRequiredService<IModelConfigurationService>();
-				var config = configService.GetConfigurationAsync().GetAwaiter().GetResult();
 
-				var endpoint = config.Provider.Endpoint;
+				var resolver = scope.ServiceProvider.GetRequiredService<IModelResolver>();
 
-				// Use the primary model for intent classification
-				// It's lightweight enough and avoids loading another model
-				var modelId = config.Active.Primary.ModelId;
+				// Resolve the intent-capable model
+				var model = resolver
+					.GetIntentModelAsync()
+					.GetAwaiter()
+					.GetResult();
 
-				return new OllamaWorkspaceIntentEngine(endpoint, modelId);
+				var provider = resolver
+					.GetProviderAsync(model)
+					.GetAwaiter()
+					.GetResult();
+
+				return new OllamaWorkspaceIntentEngine(
+					provider.Endpoint!,
+					model.ModelId
+				);
 			});
+
 			// Policy (pure decision logic)
 			services.AddScoped<IWorkspaceEvidencePlanner, WorkspaceEvidencePlanner>();
 
@@ -101,6 +112,13 @@ namespace IIM.Api.Extensions
 			services.AddHttpClient<IPlaywrightService, PlaywrightService>();
 			services.AddHttpClient<ISearchService, SearXngService>();
 			services.AddScoped<WebTools>();
+
+		
+
+			services.AddScoped<IPromptStore, EfPromptStore>();
+			services.AddScoped<IPromptSnapshotProvider, PromptSnapshotProvider>();
+			services.AddScoped<PromptResolver>();
+
 
 			return services;
 		}

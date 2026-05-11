@@ -146,8 +146,11 @@ public sealed class OllamaModelService : IModelService, IAsyncDisposable
             case "reasoning":
                 _secondaryModel = modelId;
                 break;
-        }
-    }
+			default:
+				throw new ArgumentException($"Unknown model slot '{slot}'", nameof(slot));
+
+		}
+	}
 
     private async Task LoadModelCoreAsync(string modelId, CancellationToken ct)
     {
@@ -262,7 +265,7 @@ public sealed class OllamaModelService : IModelService, IAsyncDisposable
         return Task.FromResult(alias);
     }
 
-    public async Task<IReadOnlyList<FoundryModelDto>> GetAvailableModelsDtoAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<ModelCatalogEntryDto>> GetAvailableModelsDtoAsync(CancellationToken ct = default)
     {
         // For Ollama, "available" could mean models in the library
         // This would require scraping ollama.com/library - not practical
@@ -270,56 +273,108 @@ public sealed class OllamaModelService : IModelService, IAsyncDisposable
         return await GetCachedModelsDtoAsync(ct);
     }
 
-    public async Task<IReadOnlyList<FoundryModelDto>> GetCachedModelsDtoAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<ModelCatalogEntryDto>> GetCachedModelsDtoAsync(CancellationToken ct = default)
     {
         EnsureReady();
 
         var models = await _client!.ListLocalModelsAsync(ct);
 
-        return models.Select(m => new FoundryModelDto
-        {
-            Id = m.Name,
-            DisplayName = m.Name,
-            RawName = m.Name,
-            FoundryModelId = m.Name,  // Ollama uses the full name for inference
-            Alias = ExtractShortName(m.Name),
-            Device = "GPU",  // Ollama handles this internally
-            Task = "chat completion",
-            FileSizeMb = m.Size / (1024.0 * 1024.0),
-            IsLoaded = _loadedModels.Contains(m.Name),
-            SupportsChat = true,
-            // Could parse model name for more accurate capability detection
-            SupportsCoding = m.Name.Contains("code", StringComparison.OrdinalIgnoreCase),
-            SupportsVision = IsRecommendedPrimary(m.Name),
-            SupportsMultimodal = IsRecommendedPrimary(m.Name),
-            SupportsEmbedding = m.Name.Contains("embed", StringComparison.OrdinalIgnoreCase),
-            ProviderType = "ollama"
-        }).ToList();
-    }
+		return models.Select(m =>
+		{
 
-    public async Task<IReadOnlyList<FoundryModelDto>> GetLoadedModelsDtoAsync(CancellationToken ct = default)
+			var capabilities = InferCapabilitiesHeuristically(m.Name);
+
+			return new ModelCatalogEntryDto
+			{
+				// ===================================================
+				// IDENTITY
+				// ===================================================
+				Key = ExtractShortName(m.Name),     // canonical CAILE key
+				ModelId = m.Name,                  // Ollama inference id
+				Alias = ExtractShortName(m.Name),
+
+				// ===================================================
+				// DISPLAY
+				// ===================================================
+				DisplayName = m.Name,
+				RawName = m.Name,
+
+				// ===================================================
+				// PROVIDER / RUNTIME
+				// ===================================================
+				ProviderType = "ollama",
+				Backend = "ollama",
+				Device = "auto",                   // Ollama abstracts this
+				IsLoaded = _loadedModels.Contains(m.Name),
+
+				// ===================================================
+				// CAPABILITIES
+				// ===================================================
+				Capabilities = capabilities,
+
+				// ===================================================
+				// SIZE / METADATA
+				// ===================================================
+				FileSizeMb = m.Size / (1024.0 * 1024.0),
+				License = null,
+				Version = null
+			};
+		})
+	.ToList();
+
+	}
+
+	public async Task<IReadOnlyList<ModelCatalogEntryDto>> GetLoadedModelsDtoAsync(CancellationToken ct = default)
     {
         EnsureReady();
 
         var runningModels = await _client!.ListRunningModelsAsync(ct);
 
-        return runningModels.Select(m => new FoundryModelDto
-        {
-            Id = m.Name,
-            DisplayName = m.Name,
-            RawName = m.Name,
-            FoundryModelId = m.Name,
-            Alias = ExtractShortName(m.Name),
-            Device = "GPU",
-            Task = "chat completion",
-            FileSizeMb = m.Size / (1024.0 * 1024.0),
-            IsLoaded = true,
-            SupportsChat = true,
-            ProviderType = "ollama"
-        }).ToList();
-    }
+        return runningModels.Select(m =>
+		{
 
-    public async Task<IReadOnlyList<FoundryModelDto>> GetAllWithStatusDtoAsync(CancellationToken ct = default)
+			var capabilities = InferCapabilitiesHeuristically(m.Name);
+
+			return new ModelCatalogEntryDto
+			{
+				// ===================================================
+				// IDENTITY
+				// ===================================================
+				Key = ExtractShortName(m.Name),     // canonical CAILE key
+				ModelId = m.Name,                  // Ollama inference id
+				Alias = ExtractShortName(m.Name),
+
+				// ===================================================
+				// DISPLAY
+				// ===================================================
+				DisplayName = m.Name,
+				RawName = m.Name,
+
+				// ===================================================
+				// PROVIDER / RUNTIME
+				// ===================================================
+				ProviderType = "ollama",
+				Backend = "ollama",
+				Device = "auto",                   // Ollama abstracts this
+				IsLoaded = _loadedModels.Contains(m.Name),
+
+				// ===================================================
+				// CAPABILITIES
+				// ===================================================
+				Capabilities = capabilities,
+
+				// ===================================================
+				// SIZE / METADATA
+				// ===================================================
+				FileSizeMb = m.Size / (1024.0 * 1024.0),
+				License = null,
+				Version = null
+			};
+		})
+	.ToList();
+	}
+
+    public async Task<IReadOnlyList<ModelCatalogEntryDto>> GetAllWithStatusDtoAsync(CancellationToken ct = default)
     {
         var cached = await GetCachedModelsDtoAsync(ct);
         var running = await _client!.ListRunningModelsAsync(ct);
@@ -328,7 +383,7 @@ public sealed class OllamaModelService : IModelService, IAsyncDisposable
         // Update IsLoaded status
         foreach (var model in cached)
         {
-            model.IsLoaded = runningNames.Contains(model.FoundryModelId);
+            model.IsLoaded = runningNames.Contains(model.RawName);
         }
 
         return cached;
@@ -342,20 +397,20 @@ public sealed class OllamaModelService : IModelService, IAsyncDisposable
     /// Returns multimodal models suitable for Primary chat slot.
     /// Filters to recommended families only.
     /// </summary>
-    public async Task<IReadOnlyList<FoundryModelDto>> GetPrimaryModelsAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<ModelCatalogEntryDto>> GetPrimaryModelsAsync(CancellationToken ct = default)
     {
         var all = await GetCachedModelsDtoAsync(ct);
-        return all.Where(m => IsRecommendedPrimary(m.FoundryModelId)).ToList();
+        return all.Where(m => IsRecommendedPrimary(m.ModelId)).ToList();
     }
 
     /// <summary>
     /// Returns chat models suitable for Secondary/reasoning slot.
     /// Excludes Chinese model families.
     /// </summary>
-    public async Task<IReadOnlyList<FoundryModelDto>> GetSecondaryModelsAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<ModelCatalogEntryDto>> GetSecondaryModelsAsync(CancellationToken ct = default)
     {
         var all = await GetCachedModelsDtoAsync(ct);
-        return all.Where(m => m.SupportsChat && !IsExcludedFamily(m.FoundryModelId)).ToList();
+        return all.Where(m => m.Capabilities.Contains(ModelCapabilities.Text) && !IsExcludedFamily(m.ModelId)).ToList();
     }
 
     /// <summary>
@@ -409,12 +464,28 @@ public sealed class OllamaModelService : IModelService, IAsyncDisposable
             .ToList();
     }
 
+	public async Task<(string? Primary, string? Secondary)> GetActiveSlotsAsync(
+		CancellationToken ct = default)
+	{
+		await EnsureInitializedAsync(ct);
 
-    // ─────────────────────────────────────────────────────────────
-    // Ollama-specific helpers
-    // ─────────────────────────────────────────────────────────────
+		// If slots are empty, do NOT guess — let the agent factory hydrate
+		if (_primaryModel == null && _secondaryModel == null)
+		{
+			_log.LogInformation("Active slots not initialized yet");
+		}
 
-    private async Task PullModelAsync(string modelId, CancellationToken ct)
+		return (_primaryModel, _secondaryModel);
+	}
+
+
+
+
+	// ─────────────────────────────────────────────────────────────
+	// Ollama-specific helpers
+	// ─────────────────────────────────────────────────────────────
+
+	private async Task PullModelAsync(string modelId, CancellationToken ct)
     {
         _log.LogInformation("Pulling model {Model} from Ollama registry...", modelId);
 
@@ -450,7 +521,7 @@ public sealed class OllamaModelService : IModelService, IAsyncDisposable
     // Chinese model families to exclude
     private static readonly HashSet<string> ExcludedModelFamilies = new(StringComparer.OrdinalIgnoreCase)
 {
-    "qwen", "deepseek", "yi", "minicpm", "glm", "baichuan", "internlm"
+    "deepseek", "yi", "minicpm", "glm", "baichuan", "internlm"
 };
 
     /// <summary>
@@ -469,11 +540,90 @@ public sealed class OllamaModelService : IModelService, IAsyncDisposable
         return fullName;
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // Disposal
-    // ─────────────────────────────────────────────────────────────
+	private static IReadOnlyList<ModelCapabilities> InferCapabilitiesHeuristically(string name)
+	{
+		var caps = new HashSet<ModelCapabilities>();
 
-    public ValueTask DisposeAsync()
+    
+        if (name.Contains("gemma3")) {
+
+            if (name.Contains("gemma3:1b"))
+            {
+                caps.Add(ModelCapabilities.Text);
+            }
+            else
+            {
+                caps.Add(ModelCapabilities.Text);
+                caps.Add(ModelCapabilities.MultiModal);
+                caps.Add(ModelCapabilities.Vision);
+
+
+            }
+        }
+
+        if (name.Contains("nemotron"))
+        {
+			caps.Add(ModelCapabilities.Text);
+		}
+        // ============================
+        // EMBEDDINGS
+        // ============================
+        if (name.Contains("embed") || name.Contains("nomic") || name.Contains("bert"))
+        {
+            caps.Add(ModelCapabilities.Embeddings);
+            return caps.ToList(); // embeddings are exclusive
+
+        }
+
+		// ============================
+		// VISION / MULTIMODAL
+		// ============================
+		if (name.Contains("vision") || name.Contains("llava") || name.Contains("moondream"))
+		{
+			caps.Add(ModelCapabilities.Vision);
+		
+		}
+
+		// ============================
+		// AUDIO
+		// ============================
+		if (name.Contains("whisper"))
+		{
+			caps.Add(ModelCapabilities.Audio);
+		}
+
+       
+
+		// ============================
+		// TOOLS (best-effort)
+		// ============================
+		if (
+			name.Contains("llama3:8b") ||
+			name.Contains("mistral") ||
+			name.Contains("phi")
+		)
+		{
+			caps.Add(ModelCapabilities.Text);
+			caps.Add(ModelCapabilities.Tools);
+		}
+
+		// ============================
+		// DEFAULT FALLBACK
+		// ============================
+		if (caps.Count == 0)
+		{
+			caps.Add(ModelCapabilities.Text);
+		}
+
+		return caps.ToList();
+	}
+
+
+	// ─────────────────────────────────────────────────────────────
+	// Disposal
+	// ─────────────────────────────────────────────────────────────
+
+	public ValueTask DisposeAsync()
     {
         _initLock.Dispose();
         // OllamaApiClient doesn't implement IDisposable

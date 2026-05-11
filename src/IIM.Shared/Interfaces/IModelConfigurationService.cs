@@ -4,28 +4,31 @@ using IIM.Shared.Models;
 
 namespace IIM.Shared.Interfaces
 {
-    /// <summary>
-    /// Provides access to model configuration.
-    /// Reads from appsettings (via CaileConfig) with optional database overrides for Active models.
-    /// </summary>
-    public interface IModelConfigurationService
-    {
-        /// <summary>
-        /// Gets the current models configuration.
-        /// Infrastructure comes from appsettings (immutable).
-        /// Active models may have database overrides.
-        /// </summary>
-        Task<ModelsConfig> GetConfigurationAsync(CancellationToken ct = default);
+	/// <summary>
+	/// Provides access to the authoritative, materialized models configuration.
+	/// After initial bootstrap, configuration is read from and written to the settings store.
+	/// </summary>
+	public interface IModelConfigurationService
+	{
+		/// <summary>
+		/// Gets the current models configuration.
+		/// The returned configuration is authoritative and fully materialized.
+		/// </summary>
+		Task<ModelsConfig> GetConfigurationAsync(
+			CancellationToken ct = default);
 
-        /// <summary>
-        /// Updates the active models configuration.
-        /// Only Primary and Secondary can be changed at runtime.
-        /// </summary>
-        Task SaveActiveModelsAsync(ActiveModelsConfig active, CancellationToken ct = default);
+		/// <summary>
+		/// Saves the full models configuration.
+		/// Callers must provide a complete, valid ModelsConfig.
+		/// </summary>
+		Task SaveConfigurationAsync(
+			ModelsConfig config,
+			CancellationToken ct = default);
 
-        /// <summary>
-        /// Resets active models to the defaults from appsettings.
-        /// </summary>
-        Task ResetActiveModelsAsync(CancellationToken ct = default);
-    }
+		/// <summary>
+		/// Resets the models configuration back to the installer/appsettings defaults.
+		/// </summary>
+		Task ResetToDefaultsAsync(
+			CancellationToken ct = default);
+	}
 }

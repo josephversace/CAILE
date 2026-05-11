@@ -13,6 +13,12 @@ namespace IIM.Shared.Interfaces
 		Task<ToolDecision> DecideAsync(
 			string userInput,
 			CancellationToken ct = default);
-	}
+	
 
+	Task<ToolDecision> DecideAsync(
+	string userInput,
+	bool allowWebSearch,
+	CancellationToken ct = default);
+
+	}
 }

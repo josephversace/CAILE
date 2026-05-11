@@ -16,6 +16,27 @@ namespace IIM.Shared.Models
 		[JsonPropertyName("retrievedChunks")] public List<string>? RetrievedChunks { get; set; }
 		[JsonPropertyName("retrievedEntities")] public List<string>? RetrievedEntities { get; set; }
 		[JsonPropertyName("retrievedRelationships")] public List<string>? RetrievedRelationships { get; set; }
+
+		[JsonPropertyName("modelOverrides")]
+		public ModelOverrideContext? ModelOverrides { get; set; }
+
+		[JsonPropertyName("capabilities")]
+		public AGUICapabilities? Capabilities { get; set; }
+	}
+
+	public sealed class ModelOverrideContext
+	{
+		[JsonPropertyName("primary")]
+		public string? Primary { get; set; }
+
+		[JsonPropertyName("secondary")]
+		public string? Secondary { get; set; }
+	}
+
+	public sealed class AGUICapabilities
+	{
+		[JsonPropertyName("enableWebSearch")]
+		public bool EnableWebSearch { get; set; }
 	}
 
 	public class AGUIMessage

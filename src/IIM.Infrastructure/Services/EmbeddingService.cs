@@ -57,7 +57,7 @@ namespace IIM.Infrastructure.Services
 			_generator = scope.ServiceProvider
 				.GetRequiredService<IEmbeddingGenerator<EmbeddingWorkItem, Embedding<float>>>();
 
-			VectorSize = embeddingCfg.Dimensions;
+			VectorSize = embeddingCfg.Dimensions.Value;
 		}
 
 		public async Task<IReadOnlyList<float[]>> EmbedAsync(

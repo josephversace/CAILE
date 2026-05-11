@@ -16,6 +16,9 @@ public sealed class WorkspaceContext
 	public Guid WorkspaceId { get; init; }
 	public WorkspaceIntent Intent { get; init; }
 
+
+	public string? PromptProfileKey { get; set; } = "";
+
 	/// <summary>
 	/// Semantic chunks retrieved for this query.
 	/// May be full document text (ChunkIndex = -1) or individual chunks.

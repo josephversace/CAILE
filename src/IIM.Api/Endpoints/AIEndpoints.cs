@@ -1,9 +1,11 @@
 ﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using IIM.Api.Services;
 using IIM.Infrastructure.Services;
 using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
+using IIM.Shared.Models.Configuration;
 using IIM.Shared.Models.Core;
 using MagikaSharp;
 using Microsoft.Agents.AI;
@@ -36,13 +38,11 @@ public static class AIEndpoints
 		IAIAgentFactory agentFactory,
 		IWorkspaceEvidencePlanner evidencePlanner,
 		IWorkspaceContextManager contextManager,
-		IToolRegistry tools)
+		IToolRegistry tools,
+		PromptResolver promptResolver,
+		IPromptSnapshotProvider promptSnapshot)
 	{
-
-
-		//await RunAgentAsync(ctx, agentFactory.GetChatAgentAsync, evidencePlanner, contextManager, tools);
-
-		await RunAgentAsync(ctx, agentFactory.GetChatAgentAsync, evidencePlanner, contextManager, tools);
+		await RunAgentAsync(ctx,agentFactory.GetChatAgentAsync,evidencePlanner, contextManager, tools, promptResolver, promptSnapshot);
 	}
 
 	private static async Task HandleReasoningAsync(
@@ -50,9 +50,11 @@ public static class AIEndpoints
 		IAIAgentFactory agentFactory,
 		IWorkspaceEvidencePlanner evidencePlanner,
 		IWorkspaceContextManager contextManager,
-		IToolRegistry tools)
+		IToolRegistry tools,
+		PromptResolver promptResolver,
+		IPromptSnapshotProvider promptSnapshot)
 	{
-		await RunAgentAsync(ctx, agentFactory.GetReasoningAgentAsync, evidencePlanner, contextManager, tools);
+		await RunAgentAsync(ctx,agentFactory.GetReasoningAgentAsync,evidencePlanner,contextManager,tools,promptResolver,promptSnapshot);
 	}
 
 	// ============================================================
@@ -60,10 +62,12 @@ public static class AIEndpoints
 	// ============================================================
 	private static async Task RunAgentAsync(
 		HttpContext ctx,
-		Func<Task<AIAgent>> agentResolver,
+		Func<AgentExecutionContext?, Task<AIAgent>> agentResolver,
 		IWorkspaceEvidencePlanner agentEvidencePlanner,
 		IWorkspaceContextManager workspaceContext,
-		IToolRegistry toolRegistry)
+		IToolRegistry toolRegistry,
+		PromptResolver promptResolver,
+		IPromptSnapshotProvider promptSnapshotProvider)
 	{
 		// SSE headers
 		ctx.Response.Headers["Content-Type"] = "text/event-stream";
@@ -84,6 +88,10 @@ public static class AIEndpoints
 
 		AGUIRequest? req = null;
 		WorkspaceContext? wsContext = null;
+
+		var promptSnapshot = await promptSnapshotProvider.GetSnapshotAsync(ct: abort);
+
+
 		try
 		{
 			req = await JsonSerializer.DeserializeAsync<AGUIRequest>(
@@ -149,8 +157,8 @@ public static class AIEndpoints
 		var router =
 		ctx.RequestServices.GetRequiredService<IToolRoutingService>();
 
-		var toolDecision =
-			await router.DecideAsync(userMsg.Content, abort);
+		var toolDecision = await router.DecideAsync(userMsg.Content, allowWebSearch: req.Capabilities?.EnableWebSearch == true, abort);
+
 
 		string result = "";
 
@@ -181,9 +189,22 @@ public static class AIEndpoints
 			}
 
 		}
-		
+
 		// Load agent + create thread
-		var agent = await agentResolver();
+		var agent = await agentResolver(
+		new AgentExecutionContext
+		{
+			ModelOverrides = req.ModelOverrides
+		});
+
+
+		var resolvedPrompt = promptResolver.Resolve(
+	snapshot: promptSnapshot,
+	explicitPrompt: null, 
+	overrideKey: wsContext?.PromptProfileKey, 
+	defaultKey: "chat.default"
+);
+
 
 
 		var thread = agent.GetNewThread();
@@ -197,7 +218,14 @@ public static class AIEndpoints
 
 		//string prompt = BuildAugmentedPrompt(req.Messages, wsContext);
 
-		var cleanMessages = BuildAugmentedPrompt(req.Messages, wsContext);
+		var cleanMessages = BuildAugmentedPrompt(req.Messages, wsContext, resolvedPrompt.Content);
+
+		var telemetry = new RunTelemetry
+		{
+			PromptCharCount = cleanMessages.Length,
+			ContextTokenEstimate = wsContext?.TotalTokenEstimate ?? 0
+		};
+
 
 		string messageId = $"msg_{Guid.NewGuid():N}";
 
@@ -248,6 +276,8 @@ public static class AIEndpoints
 					{
 						string t = text.Text;
 
+						telemetry.AddCompletionText(t);
+
 						// Regular text delta
 						await WriteEvent(ctx, new
 						{
@@ -292,11 +322,20 @@ public static class AIEndpoints
 			threadId = req.ThreadId,
 			runId = req.RunId,
 			type = "RUN_FINISHED",
-			result = (object?)null,
+
+			telemetry = new
+			{
+				promptTokens = telemetry.PromptCharCount / 4,
+				completionTokens = telemetry.CompletionTokenEstimate,
+				tokensPerSecond = Math.Round(telemetry.TokensPerSecond, 2),
+				contextTokens = telemetry.ContextTokenEstimate
+			},
+
 			newRetrievedChunks = wsContext?.NewChunkIds ?? [],
 			newRetrievedEntities = wsContext?.NewEntityIds ?? [],
 			newRetrievedRelationships = wsContext?.NewRelationshipIds ?? []
 		}, abort);
+
 	}
 
 
@@ -432,15 +471,19 @@ public static class AIEndpoints
 
 
 
-	private static string BuildAugmentedPrompt(List<AGUIMessage> messages, WorkspaceContext ctx)
-	{
-
+	private static string BuildAugmentedPrompt(List<AGUIMessage> messages,WorkspaceContext? ctx,string systemPrompt)
+	{ 
 		if (ctx == null) {
 
 			return string.Join("\n", messages.Select(m => $"<|{m.Role}|>\n{m.Content}"));
 		}
 
 		var sb = new StringBuilder();
+
+		// SYSTEM PROMPT (from resolver)
+		sb.AppendLine(systemPrompt);
+		sb.AppendLine();
+
 
 		// System context block
 		sb.AppendLine("<context>");

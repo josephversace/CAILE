@@ -250,6 +250,7 @@ app.MapAuthEndpoints();
 app.MapSetupEndpoints();
 app.MapAIEndpoints();
 app.MapAttachmentEndpoints();
+app.MapPromptRegistryEndpoints();
 
 
 

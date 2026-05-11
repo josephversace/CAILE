@@ -1,105 +1,152 @@
-﻿// IIM.Infrastructure/Models/ModelResolver.cs
-using IIM.Shared.Interfaces;
+﻿using IIM.Shared.Interfaces;
 using IIM.Shared.Models;
 using Microsoft.Extensions.Logging;
 
-namespace IIM.Infrastructure.Models;
-
-public class ModelResolver : IModelResolver
+public sealed class ModelResolver : IModelResolver
 {
 	private readonly IModelConfigurationService _configService;
-	private readonly CaileConfig _config;
 	private readonly ILogger<ModelResolver> _logger;
 
 	public ModelResolver(
 		IModelConfigurationService configService,
-		CaileConfig config,
 		ILogger<ModelResolver> logger)
 	{
 		_configService = configService;
-		_config = config;
 		_logger = logger;
 	}
 
-	public async Task<ActiveModelConfig> GetPrimaryModelAsync(CancellationToken ct = default)
+	// ===========================================================
+	// CHAT / REASONING (ACTIVE MODELS)
+	// ===========================================================
+
+	public async Task<ActiveModelConfig> GetPrimaryModelAsync(
+		CancellationToken ct = default)
 	{
 		var cfg = await _configService.GetConfigurationAsync(ct);
 		return cfg.Active.Primary;
 	}
 
-	public async Task<ActiveModelConfig?> GetSecondaryModelAsync(CancellationToken ct = default)
+	public async Task<ActiveModelConfig?> GetSecondaryModelAsync(
+		CancellationToken ct = default)
 	{
 		var cfg = await _configService.GetConfigurationAsync(ct);
-		return cfg.Active.Secondary;
+		return cfg.Active.Secondary == null
+			? null
+			: cfg.Active.Secondary;
 	}
 
-	public async Task<EmbeddingModelConfig> GetEmbeddingModelAsync(CancellationToken ct = default)
+	// ===========================================================
+	// CAPABILITY-BASED RESOLUTION
+	// ===========================================================
+
+	public async Task<InfrastructureModelConfig> GetEmbeddingModelAsync(
+		CancellationToken ct = default)
+		=> await ResolveByCapabilityAsync(ModelCapabilities.Embeddings, ct);
+
+	public async Task<InfrastructureModelConfig> GetVisionModelAsync(
+		CancellationToken ct = default)
+		=> await ResolveByCapabilityAsync(ModelCapabilities.Vision, ct);
+
+	public async Task<InfrastructureModelConfig> GetFunctionCallingModelAsync(
+		CancellationToken ct = default)
+		=> await ResolveByCapabilityAsync(ModelCapabilities.Tools, ct);
+
+	public async Task<InfrastructureModelConfig> GetIntentModelAsync(
+		CancellationToken ct = default)
+		=> await ResolveByCapabilityAsync(ModelCapabilities.Intent, ct);
+
+	public async Task<InfrastructureModelConfig> GetNerModelAsync(
+		CancellationToken ct = default)
+		=> await ResolveByCapabilityAsync(ModelCapabilities.NER, ct);
+
+	public async Task<InfrastructureModelConfig> GetAudioModelAsync(
+		CancellationToken ct = default)
+		=> await ResolveByCapabilityAsync(ModelCapabilities.Audio, ct);
+
+	public async Task<ActiveModelConfig> ResolveActiveByModelIdAsync(string modelId, CancellationToken ct = default)
 	{
 		var cfg = await _configService.GetConfigurationAsync(ct);
-		return cfg.Infrastructure.Embedding;
+
+		if (cfg.Active.Primary.ModelId == modelId)
+			return cfg.Active.Primary;
+
+		if (cfg.Active.Secondary?.ModelId == modelId)
+			return cfg.Active.Secondary;
+
+		throw new KeyNotFoundException(
+			$"Active model '{modelId}' is not configured.");
 	}
 
-	public async Task<ModelConfig?> GetFunctionCallingModelAsync(CancellationToken ct = default)
+
+	// ===========================================================
+	// PROVIDER / DEFAULTS
+	// ===========================================================
+
+	public async Task<ProviderConfig> GetProviderAsync(
+	ActiveModelConfig model,
+	CancellationToken ct = default)
 	{
 		var cfg = await _configService.GetConfigurationAsync(ct);
-		return cfg.Tools.FunctionCalling;
+		return model.ProviderOverride ?? cfg.Provider;
 	}
 
-	public async Task<ModelConfig?> GetVisionModelAsync(CancellationToken ct = default)
+	public async Task<InferenceDefaults> GetInferenceDefaultsAsync(
+	ActiveModelConfig model,
+	CancellationToken ct = default)
+	{
+		var cfg = await _configService.GetConfigurationAsync(ct);
+		return model.Defaults ?? cfg.Defaults;
+	}
+
+	public async Task<ProviderConfig> GetProviderAsync(
+		InfrastructureModelConfig model,
+		CancellationToken ct = default)
+	{
+		var cfg = await _configService.GetConfigurationAsync(ct);
+		return model.ProviderOverride ?? cfg.Provider;
+	}
+
+	public async Task<InferenceDefaults> GetInferenceDefaultsAsync(
+		InfrastructureModelConfig model,
+		CancellationToken ct = default)
+	{
+		var cfg = await _configService.GetConfigurationAsync(ct);
+		return model.Defaults ?? cfg.Defaults;
+	}
+
+	// ===========================================================
+	// INTERNAL HELPERS
+	// ===========================================================
+
+	private static InfrastructureModelConfig ResolveByKey(
+		ModelsConfig cfg,
+		string key)
+	{
+		if (!cfg.Infrastructure.Models.TryGetValue(key, out var model))
+			throw new KeyNotFoundException($"Model '{key}' not found.");
+
+		return model;
+	}
+
+	private async Task<InfrastructureModelConfig> ResolveByCapabilityAsync(
+		ModelCapabilities capability,
+		CancellationToken ct)
 	{
 		var cfg = await _configService.GetConfigurationAsync(ct);
 
-		// Prefer dedicated vision model
-		if (cfg.Infrastructure.Vision != null)
-			return cfg.Infrastructure.Vision;
+		var match = cfg.Infrastructure.Models.Values
+			.FirstOrDefault(m => m.Capabilities.Contains(capability));
 
-		// Fall back to Primary if it supports vision
-		if (cfg.Active.Primary.SupportsVision)
+		if (match == null)
 		{
-			return new ModelConfig
-			{
-				ModelId = cfg.Active.Primary.ModelId,
-				Temperature = cfg.Active.Primary.Temperature,
-				MaxTokens = cfg.Active.Primary.MaxTokens,
-				TopP = cfg.Active.Primary.TopP
-			};
+			_logger.LogError(
+				"No infrastructure model configured with capability '{Capability}'",
+				capability);
+
+			throw new InvalidOperationException(
+				$"No model configured for capability '{capability}'.");
 		}
 
-		return null;
+		return match;
 	}
-
-	public async Task<LocalModelConfig?> GetNerModelAsync(CancellationToken ct = default)
-	{
-		var cfg = await _configService.GetConfigurationAsync(ct);
-		return cfg.Infrastructure.NER;
-	}
-
-	public async Task<LocalModelConfig?> GetAudioModelAsync(CancellationToken ct = default)
-	{
-		var cfg = await _configService.GetConfigurationAsync(ct);
-		return cfg.Infrastructure.Audio;
-	}
-
-	public async Task<ModelConfig> GetIntentModelAsync(CancellationToken ct = default)
-	{
-		var cfg = await _configService.GetConfigurationAsync(ct);
-
-		// Use dedicated intent model if configured, otherwise fall back to Primary
-		if (cfg.Tools.Intent != null && !string.IsNullOrEmpty(cfg.Tools.Intent.ModelId))
-		{
-			return cfg.Tools.Intent;
-		}
-
-		// Fall back to Primary with intent-optimized settings
-		return new ModelConfig
-		{
-			ModelId = cfg.Active.Primary.ModelId,
-			Temperature = 0.0,
-			MaxTokens = 20
-		};
-	}
-
-	public ProviderConfig GetProvider() => _config.Models.Provider;
-
-	public InferenceDefaults GetDefaults() => _config.Models.Defaults;
 }

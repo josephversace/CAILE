@@ -16,7 +16,9 @@ public sealed class OllamaEmbeddingGenerator
 
 	public EmbeddingGeneratorMetadata Metadata { get; }
 
-	public OllamaEmbeddingGenerator(EmbeddingModelConfig config, ProviderConfig provider)
+	public OllamaEmbeddingGenerator(
+		InfrastructureModelConfig config,
+		ProviderConfig provider)
 	{
 		ArgumentNullException.ThrowIfNull(config);
 		ArgumentNullException.ThrowIfNull(provider);
@@ -24,8 +26,17 @@ public sealed class OllamaEmbeddingGenerator
 		if (string.IsNullOrWhiteSpace(config.ModelId))
 			throw new ArgumentException("Embedding model ID is required.", nameof(config));
 
+		if (!config.Capabilities.Contains(ModelCapabilities.Embeddings))
+			throw new InvalidOperationException(
+				$"Model '{config.ModelId}' is not marked as an embedding model.");
+
+		if (config.Dimensions is null)
+			throw new InvalidOperationException(
+				$"Embedding model '{config.ModelId}' must define Dimensions.");
+
 		_modelId = config.ModelId;
-		_dimensions = config.Dimensions;
+		_dimensions = config.Dimensions.Value;
+
 		_client = new OllamaApiClient(new Uri(provider.Endpoint));
 
 		Metadata = new EmbeddingGeneratorMetadata(
@@ -34,6 +45,7 @@ public sealed class OllamaEmbeddingGenerator
 			defaultModelId: _modelId,
 			defaultModelDimensions: _dimensions);
 	}
+
 
 	public async Task<GeneratedEmbeddings<Embedding<float>>> GenerateAsync(
 		IEnumerable<EmbeddingWorkItem> values,

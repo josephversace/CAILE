@@ -1,14 +1,15 @@
-﻿using System.Text;
-using System.Text.Json;
-using IIM.Infrastructure.Ollama;
+﻿using IIM.Infrastructure.Ollama;
 using IIM.Shared.Interfaces;
+using IIM.Shared.Models;
+using IIM.Shared.Models.Configuration;
+using IIM.Shared.Models.Core;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using OllamaSharp;
 
 namespace IIM.Api.Services;
 
-public class AIAgentFactory : IAIAgentFactory, IDisposable
+public sealed class AIAgentFactory : IAIAgentFactory, IDisposable
 {
 	private readonly IServiceProvider _services;
 	private readonly IToolRegistry _tools;
@@ -22,12 +23,10 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 	private IChatClient? _reasoningClient;
 	private IChatClient? _functionClient;
 
-
-
 	private string _chatModel = "";
 	private string _reasoningModel = "";
-	private string _functionModel = "";
-	private string _endpoint = "";
+
+	private bool _initialized;
 
 	public string CurrentChatModel => _chatModel;
 	public string CurrentReasoningModel => _reasoningModel;
@@ -48,6 +47,8 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 		_reasoningAgent = null;
 		_chatClient = null;
 		_reasoningClient = null;
+		_functionClient = null;
+		_initialized = false;
 	}
 
 	public async Task<AIAgent> GetChatAgentAsync()
@@ -59,9 +60,7 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 	public async Task<AIAgent> GetReasoningAgentAsync()
 	{
 		await EnsureInitializedAsync();
-		if (_reasoningAgent == null)
-			return _chatAgent;
-		return _reasoningAgent;
+		return _reasoningAgent ?? _chatAgent!;
 	}
 
 	public async Task<IChatClient> GetChatClientAsync()
@@ -82,9 +81,109 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 		return _functionClient;
 	}
 
+	public async Task<AIAgent> GetChatAgentAsync(AgentExecutionContext? context)
+	{
+		// Fast path: no override → existing cached behavior
+		var modelId = context?.ModelOverrides?.Primary;
+		if (string.IsNullOrWhiteSpace(modelId))
+			return await GetChatAgentAsync();
 
-	private bool _initialized;
+		using var scope = _services.CreateScope();
 
+		var resolver = scope.ServiceProvider.GetRequiredService<IModelResolver>();
+		var modelSvc = scope.ServiceProvider.GetRequiredService<IModelService>();
+		var promptSnapshots = scope.ServiceProvider.GetRequiredService<IPromptSnapshotProvider>();
+		var promptResolver = scope.ServiceProvider.GetRequiredService<PromptResolver>();
+		var configSvc = scope.ServiceProvider.GetRequiredService<IModelConfigurationService>();
+
+		// ✅ DO NOT resolve via "configured models" — just synthesize
+		var overrideModel = new ActiveModelConfig
+		{
+			ModelId = modelId!,
+			ProviderOverride = null,
+			Defaults = null,
+			ExplicitPrompt = null,
+			PromptOverrideKey = null
+		};
+
+		var provider = await resolver.GetProviderAsync(overrideModel);
+		var defaults = await resolver.GetInferenceDefaultsAsync(overrideModel);
+
+		await modelSvc.LoadModelForSlotAsync(overrideModel.ModelId, "primary");
+
+		var cfg = await configSvc.GetConfigurationAsync();
+		var snapshot = await promptSnapshots.GetSnapshotAsync();
+
+		// ✅ Keep the PRIMARY prompt settings (only model changes)
+		var prompt = promptResolver.Resolve(
+			snapshot,
+			cfg.Active.Primary.ExplicitPrompt,
+			cfg.Active.Primary.PromptOverrideKey,
+			"chat.default");
+
+		_logger.LogInformation("Using PRIMARY model override: {ModelId}", overrideModel.ModelId);
+
+		return CreateAgent(
+			CreateChatClient(provider.Endpoint!, overrideModel.ModelId),
+			"ChatAssistant",
+			prompt.Content,
+			defaults);
+	}
+
+
+	public async Task<AIAgent> GetReasoningAgentAsync(AgentExecutionContext? context)
+	{
+		var modelId = context?.ModelOverrides?.Secondary;
+		if (string.IsNullOrWhiteSpace(modelId))
+			return await GetReasoningAgentAsync();
+
+		using var scope = _services.CreateScope();
+
+		var resolver = scope.ServiceProvider.GetRequiredService<IModelResolver>();
+		var modelSvc = scope.ServiceProvider.GetRequiredService<IModelService>();
+		var promptSnapshots = scope.ServiceProvider.GetRequiredService<IPromptSnapshotProvider>();
+		var promptResolver = scope.ServiceProvider.GetRequiredService<PromptResolver>();
+		var configSvc = scope.ServiceProvider.GetRequiredService<IModelConfigurationService>();
+
+		var overrideModel = new ActiveModelConfig
+		{
+			ModelId = modelId!,
+			ProviderOverride = null,
+			Defaults = null,
+			ExplicitPrompt = null,
+			PromptOverrideKey = null
+		};
+
+		var provider = await resolver.GetProviderAsync(overrideModel);
+		var defaults = await resolver.GetInferenceDefaultsAsync(overrideModel);
+
+		await modelSvc.LoadModelForSlotAsync(overrideModel.ModelId, "secondary");
+
+		var cfg = await configSvc.GetConfigurationAsync();
+		var snapshot = await promptSnapshots.GetSnapshotAsync();
+
+		// ✅ Keep SECONDARY prompt settings (only model changes)
+		var prompt = promptResolver.Resolve(
+			snapshot,
+			cfg.Active.Secondary?.ExplicitPrompt,
+			cfg.Active.Secondary?.PromptOverrideKey,
+			"reasoning.default");
+
+		_logger.LogInformation("Using SECONDARY model override: {ModelId}", overrideModel.ModelId);
+
+		return CreateAgent(
+			CreateChatClient(provider.Endpoint!, overrideModel.ModelId),
+			"ReasoningAssistant",
+			prompt.Content,
+			defaults);
+	}
+
+
+
+
+	// ===========================================================
+	// INITIALIZATION
+	// ===========================================================
 	private async Task EnsureInitializedAsync()
 	{
 		if (_initialized)
@@ -99,63 +198,93 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 			_logger.LogInformation("Initializing AI agents...");
 
 			using var scope = _services.CreateScope();
+
 			var resolver = scope.ServiceProvider.GetRequiredService<IModelResolver>();
 			var modelSvc = scope.ServiceProvider.GetRequiredService<IModelService>();
+			var configSvc = scope.ServiceProvider.GetRequiredService<IModelConfigurationService>();
+			var _promptSnapshots = scope.ServiceProvider.GetRequiredService<IPromptSnapshotProvider>();
+			var _promptResolver = scope.ServiceProvider.GetRequiredService<PromptResolver>();
 
 			await modelSvc.EnsureInitializedAsync();
-			_endpoint = modelSvc.InferenceEndpoint;
 
-			// Primary model (required)
-			var primary = await resolver.GetPrimaryModelAsync();
-			_chatModel = primary.ModelId;
-			_logger.LogInformation("Initializing chat model: {Model}", _chatModel);
+			var cfg = await configSvc.GetConfigurationAsync();
+			var promptSnapshot = await _promptSnapshots.GetSnapshotAsync();
+
+			// ===================================================
+			// PRIMARY (CHAT)
+			// ===================================================
+			var primaryModel = await resolver.GetPrimaryModelAsync();
+
+
+
+			var primaryProvider = await resolver.GetProviderAsync(primaryModel);
+			var primaryDefaults = await resolver.GetInferenceDefaultsAsync(primaryModel);
+
+			_chatModel = primaryModel.ModelId;
 
 			await modelSvc.LoadModelForSlotAsync(_chatModel, "primary");
-			_chatClient = CreateChatClient(_chatModel);
+
+			var primaryPrompt = _promptResolver.Resolve(
+				promptSnapshot,
+				cfg.Active.Primary.ExplicitPrompt,
+				cfg.Active.Primary.PromptOverrideKey,
+				"chat.default"
+			);
+
+			_chatClient = CreateChatClient(primaryProvider.Endpoint!, _chatModel);
 			_chatAgent = CreateAgent(
 				_chatClient,
 				"ChatAssistant",
-				primary.SystemPrompt ?? GetChatInstructions(),
-				false);
+				primaryPrompt.Content,
+				primaryDefaults
+			);
 
-			// Secondary model (optional)
-			var secondary = await resolver.GetSecondaryModelAsync();
-			if (secondary != null && !string.IsNullOrWhiteSpace(secondary.ModelId))
+			// ===================================================
+			// SECONDARY (REASONING)
+			// ===================================================
+			var secondaryModel = await resolver.GetSecondaryModelAsync();
+
+			if (secondaryModel != null)
 			{
-				_reasoningModel = secondary.ModelId;
-				_logger.LogInformation("Initializing reasoning model: {Model}", _reasoningModel);
+				var secondaryProvider = await resolver.GetProviderAsync(secondaryModel);
+				var secondaryDefaults = await resolver.GetInferenceDefaultsAsync(secondaryModel);
+
+				_reasoningModel = secondaryModel.ModelId;
 
 				await modelSvc.LoadModelForSlotAsync(_reasoningModel, "secondary");
-				_reasoningClient = CreateChatClient(_reasoningModel);
+
+				var secondaryPrompt = _promptResolver.Resolve(
+					promptSnapshot,
+					cfg.Active.Secondary!.ExplicitPrompt,
+					cfg.Active.Secondary.PromptOverrideKey,
+					"reasoning.default"
+				);
+
+				_reasoningClient = CreateChatClient(
+					secondaryProvider.Endpoint!,
+					_reasoningModel);
+
 				_reasoningAgent = CreateAgent(
 					_reasoningClient,
 					"ReasoningAssistant",
-					secondary.SystemPrompt ?? GetReasoningInstructions(),
-					false);
+					secondaryPrompt.Content,
+					secondaryDefaults
+				);
 			}
-			else
+
+			// ===================================================
+			// FUNCTION CALLING (OPTIONAL)
+			// ===================================================
+			var functionModel = await resolver.GetFunctionCallingModelAsync();
+
+			if (functionModel != null)
 			{
-				_reasoningModel = "";
-				_reasoningClient = null;
-				_reasoningAgent = null;
+				var provider = await resolver.GetProviderAsync(functionModel);
+
+				_functionClient = CreateChatClient(
+					provider.Endpoint!,
+					functionModel.ModelId);
 			}
-			var functionCfg = await resolver.GetFunctionCallingModelAsync();
-
-			if (functionCfg != null && !string.IsNullOrWhiteSpace(functionCfg.ModelId))
-			{
-				_logger.LogInformation(
-					"Initializing function-calling model: {Model}",
-					functionCfg.ModelId);
-
-				var functionModel = await resolver.GetFunctionCallingModelAsync();
-
-				_functionClient = CreateChatClient(functionModel.ModelId);
-			}
-			else
-			{
-				_functionClient = null;
-			}
-
 
 			_initialized = true;
 
@@ -170,163 +299,66 @@ public class AIAgentFactory : IAIAgentFactory, IDisposable
 		}
 	}
 
-	public async Task ReloadModelsAsync()
+	// ===========================================================
+	// HELPERS
+	// ===========================================================
+	private static IChatClient CreateChatClient(string endpoint, string model)
 	{
-		await _initLock.WaitAsync();
-		try
-		{
-			using var scope = _services.CreateScope();
-			var resolver = scope.ServiceProvider.GetRequiredService<IModelResolver>();
-			var modelSvc = scope.ServiceProvider.GetRequiredService<IModelService>();
-
-			await modelSvc.EnsureInitializedAsync();
-			_endpoint = modelSvc.InferenceEndpoint;
-
-			// Check if chat model changed
-			var primary = await resolver.GetPrimaryModelAsync();
-			var newChatModel = primary.ModelId;
-
-			if (!string.Equals(_chatModel, newChatModel, StringComparison.OrdinalIgnoreCase)
-				&& !string.IsNullOrEmpty(newChatModel))
-			{
-				_logger.LogInformation("Chat model changed: {Old} → {New}", _chatModel, newChatModel);
-
-				await modelSvc.LoadModelForSlotAsync(newChatModel, "primary");
-				_chatModel = newChatModel;
-				_chatClient = CreateChatClient(_chatModel);
-				_chatAgent = CreateAgent(
-					_chatClient,
-					"ChatAssistant",
-					primary.SystemPrompt ?? GetChatInstructions(),
-					false);
-			}
-
-			// Check if reasoning model changed
-			var secondary = await resolver.GetSecondaryModelAsync();
-			var newReasoningModel = secondary?.ModelId ?? "";
-
-			if (!string.Equals(_reasoningModel, newReasoningModel, StringComparison.OrdinalIgnoreCase))
-			{
-				_logger.LogInformation("Reasoning model changed: {Old} → {New}", _reasoningModel, newReasoningModel);
-
-				if (!string.IsNullOrEmpty(newReasoningModel))
-				{
-					await modelSvc.LoadModelForSlotAsync(newReasoningModel, "secondary");
-					_reasoningModel = newReasoningModel;
-					_reasoningClient = CreateChatClient(_reasoningModel);
-					_reasoningAgent = CreateAgent(
-						_reasoningClient,
-						"ReasoningAssistant",
-						secondary!.SystemPrompt ?? GetReasoningInstructions(),
-						true);
-				}
-				else
-				{
-					await modelSvc.UnloadSlotAsync("secondary");
-					_reasoningModel = "";
-					_reasoningClient = null;
-					_reasoningAgent = null;
-				}
-			}
-		}
-		finally
-		{
-			_initLock.Release();
-		}
-	}
-
-	private IChatClient CreateChatClient(string model)
-	{
-		// OllamaSharp implements IChatClient directly
-		// Remove /v1 suffix if present since OllamaSharp uses native API
-		var baseEndpoint = _endpoint.Replace("/v1", "");
+		var baseEndpoint = endpoint.Replace("/v1", "");
 		return new OllamaApiClient(new Uri(baseEndpoint))
 		{
 			SelectedModel = model
 		};
 	}
 
-	private AIAgent CreateAgent(IChatClient chatClient, string name, string instructions, bool enableTools)
+	private AIAgent CreateAgent(
+		IChatClient chatClient,
+		string name,
+		string instructions,
+		InferenceDefaults defaults)
 	{
-		if (enableTools)
+		return chatClient.CreateAIAgent(new ChatClientAgentOptions
 		{
-			var tools = _tools.GetAIFunctions();
-
-			return chatClient.CreateAIAgent(new ChatClientAgentOptions
+			Name = name,
+			Description = "AG-UI Agent",
+			ChatOptions = new ChatOptions
 			{
-				Name = name,
-				
-				Description = "AG-UI Agent",
-				ChatOptions = new ChatOptions
-				{
-					MaxOutputTokens = 8192,
-					Temperature = 0.7f,
-					TopP = 0.9f,
-		
-					Instructions = instructions
-				}
-			});
-		}
-		else
-		{
-			return chatClient.CreateAIAgent(new ChatClientAgentOptions
-			{
-				Name = name,
-				Description = "AG-UI Agent",
-				ChatOptions = new ChatOptions
-				{
-					Instructions = instructions,
-					MaxOutputTokens = 8192,
-					Temperature = 0.7f,
-					TopP = 0.9f
-				}
-			});
-		}
+				Instructions = instructions,
+				MaxOutputTokens = defaults.MaxTokens,
+				Temperature = (float)defaults.Temperature,
+				TopP = (float)defaults.TopP
+			}
+		});
 	}
 
-	private string GetChatInstructions() => @"
-### ROLE
-You are a professional investigative analyst assistant.
+	public async Task ReloadModelsAsync()
+	{
+		await _initLock.WaitAsync();
+		try
+		{
+			_logger.LogInformation("Reloading AI agents due to configuration change.");
 
-### GENERAL BEHAVIOR
-- When no <context> is provided, answer helpfully using your general knowledge.
-- When <context> IS provided, ground your answers strictly in that evidence.
+			// Tear down all cached state
+			_chatAgent = null;
+			_reasoningAgent = null;
+			_chatClient = null;
+			_reasoningClient = null;
+			_functionClient = null;
 
-### WHEN CONTEXT IS PROVIDED
-- Only use information from <context> tags
-- If insufficient evidence, say so clearly
-- Never fabricate entities, dates, or conclusions
-- Quote or paraphrase only what exists in context
+			_chatModel = "";
+			_reasoningModel = "";
 
-### OUTPUT STYLE
-- Be concise and direct (1-3 sentences typical)
-- No chain-of-thought explanations
-- Plain text, no LaTeX or markdown tables
-";
+			_initialized = false;
+		}
+		finally
+		{
+			_initLock.Release();
+		}
 
-	private string GetReasoningInstructions() => @"
-You are an investigative analyst chat assistant.
+		// Force re-init on next access
+		await EnsureInitializedAsync();
+	}
 
-GENERAL RULES:
-1. Answer concisely and directly.
-2. Do NOT show chain-of-thought. Use short explanations only when needed.
-3. For regex: give only the regex + a 1–2 line summary.
-4. For math: give the final answer unless asked for steps.
-5. Avoid LaTeX unless the user explicitly requests it.
-
-TOOL USE RULES:
-1. If you need to use a tool, output ONLY a <tool_call>{...}</tool_call> block.
-2. Nothing is allowed before or after the <tool_call> block.
-3. Arguments MUST be valid JSON.
-4. Never describe or explain the tool call.
-5. After receiving tool results, the system will send you a follow-up message.
-   At that time, answer normally and DO NOT call another tool unless necessary.
-
-FAILURE MODES TO AVOID:
-- Do NOT mix natural language with tool_call JSON.
-- Do NOT add emojis, prefixes, suffixes, or other characters around a tool call.
-- Do NOT hallucinate tool names.
-";
 
 	public void Dispose()
 	{
